@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"math"
 	mrand "math/rand"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -37,9 +38,12 @@ import (
 )
 
 var (
-	bind                = flag.String("bind", ":8923", "TCP port to bind HTTP to")
+	bind                = flag.String("bind", ":8923", "network address to bind HTTP to")
+	bindNetwork         = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty = flag.Int("difficulty", 4, "difficulty of the challenge")
-	metricsBind         = flag.String("metrics-bind", ":9090", "TCP port to bind metrics to")
+	metricsBind         = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
+	metricsBindNetwork  = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
+	socketMode          = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
 	robotsTxt           = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
 	policyFname         = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
 	slogLevel           = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
@@ -99,6 +103,38 @@ func doHealthCheck() error {
 	}
 
 	return nil
+}
+
+func setupListener(network string, address string) (net.Listener, string) {
+	formattedAddress := ""
+	switch network {
+	case "unix":
+		formattedAddress = "unix:" + address
+	case "tcp":
+		formattedAddress = "http://localhost" + address
+	default:
+		formattedAddress = fmt.Sprintf(`(%s) %s`, network, address)
+	}
+
+	listener, err := net.Listen(network, address)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to bind to %s: %w", formattedAddress, err))
+	}
+
+	// additional permission handling for unix sockets
+	if network == "unix" {
+		mode, err := strconv.ParseUint(*socketMode, 8, 0)
+		if err != nil {
+			log.Fatal(fmt.Errorf("could not parse socket mode %s: %w", *socketMode, err))
+		}
+
+		err = os.Chmod(address, os.FileMode(mode))
+		if err != nil {
+			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
+		}
+	}
+
+	return listener, formattedAddress
 }
 
 func main() {
@@ -161,14 +197,17 @@ func main() {
 
 	mux.HandleFunc("/", s.maybeReverseProxy)
 
-	slog.Info("listening", "url", "http://localhost"+*bind, "difficulty", *challengeDifficulty, "serveRobotsTXT", *robotsTxt, "target", *target, "version", anubis.Version)
-	log.Fatal(http.ListenAndServe(*bind, mux))
+	listener, url := setupListener(*bindNetwork, *bind)
+	slog.Info("listening", "url", url, "difficulty", *challengeDifficulty, "serveRobotsTXT", *robotsTxt, "target", *target, "version", anubis.Version)
+	log.Fatal(http.Serve(listener, mux))
 }
 
 func metricsServer() {
 	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
-	slog.Debug("listening for metrics", "url", "http://localhost"+*metricsBind)
-	log.Fatal(http.ListenAndServe(*metricsBind, nil))
+
+	listener, url := setupListener(*metricsBindNetwork, *metricsBind)
+	slog.Debug("listening for metrics", "url", url)
+	log.Fatal(http.Serve(listener, nil))
 }
 
 func sha256sum(text string) (string, error) {
