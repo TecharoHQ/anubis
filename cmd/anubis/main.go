@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
@@ -20,8 +21,11 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/TecharoHQ/anubis"
@@ -125,11 +129,13 @@ func setupListener(network string, address string) (net.Listener, string) {
 	if network == "unix" {
 		mode, err := strconv.ParseUint(*socketMode, 8, 0)
 		if err != nil {
+			listener.Close()
 			log.Fatal(fmt.Errorf("could not parse socket mode %s: %w", *socketMode, err))
 		}
 
 		err = os.Chmod(address, os.FileMode(mode))
 		if err != nil {
+			listener.Close()
 			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
 		}
 	}
@@ -191,23 +197,59 @@ func main() {
 		})
 	}
 
+	wg := new(sync.WaitGroup)
+	// install signal handler
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	if *metricsBind != "" {
-		go metricsServer()
+		wg.Add(1)
+		go metricsServer(ctx, wg.Done)
 	}
 
 	mux.HandleFunc("/", s.maybeReverseProxy)
 
+	srv := http.Server{Handler: mux}
 	listener, url := setupListener(*bindNetwork, *bind)
 	slog.Info("listening", "url", url, "difficulty", *challengeDifficulty, "serveRobotsTXT", *robotsTxt, "target", *target, "version", anubis.Version)
-	log.Fatal(http.Serve(listener, mux))
+
+	go func() {
+		<-ctx.Done()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(c); err != nil {
+			log.Printf("cannot shut down: %v", err)
+		}
+	}()
+
+	if err := srv.Serve(listener); err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
+	wg.Wait()
 }
 
-func metricsServer() {
-	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
+func metricsServer(ctx context.Context, done func()) {
+	defer done()
 
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	srv := http.Server{Handler: mux}
 	listener, url := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", url)
-	log.Fatal(http.Serve(listener, nil))
+
+	go func() {
+		<-ctx.Done()
+		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(c); err != nil {
+			log.Printf("cannot shut down: %v", err)
+		}
+	}()
+
+	if err := srv.Serve(listener); err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
 }
 
 func sha256sum(text string) (string, error) {
