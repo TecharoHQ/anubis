@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The README now points to TecharoHQ/anubis instead of Xe/x
 - Images are built using ko instead of `docker buildx build`
   [#13](https://github.com/TecharoHQ/anubis/pull/13)
 

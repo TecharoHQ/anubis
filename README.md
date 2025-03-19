@@ -22,7 +22,7 @@ If you want to try this out, connect to [git.xeserv.us](https://git.xeserv.us).
 
 ## Support
 
-If you run into any issues running Anubis, please [open an issue](https://github.com/Xe/x/issues/new?template=Blank+issue) and tag it with the Anubis tag. Please include all the information I would need to diagnose your issue.
+If you run into any issues running Anubis, please [open an issue](https://github.com/TecharoHQ/anubis/issues/new?template=Blank+issue) and tag it with the Anubis tag. Please include all the information I would need to diagnose your issue.
 
 For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in the Patron discord in the channel `#anubis`.
 
@@ -149,7 +149,15 @@ Anubis uses an ed25519 keypair to sign the JWTs issued when challenges are passe
 
 Anubis is meant to sit between your reverse proxy (such as Nginx or Caddy) and your target service. One instance of Anubis must be used per service you are protecting.
 
-Anubis is shipped in the Docker image [`ghcr.io/xe/x/anubis:latest`](https://github.com/Xe/x/pkgs/container/x%2Fanubis). Other methods to install Anubis may exist, but the Docker image is currently the only supported method.
+Anubis is shipped in the Docker repo [`ghcr.io/techarohq/anubis`](https://github.com/TecharoHQ/anubis/pkgs/container/anubis). The following tags exist for your convenience:
+
+| Tag           | Meaning                                                                                                                            |
+| :------------ | :--------------------------------------------------------------------------------------------------------------------------------- |
+| `latest`      | The latest [tagged release](https://github.com/TecharoHQ/anubis/releases), if you are in doubt, start here.                        |
+| `main`        | The current build on the `main` branch. Only use this if you need the latest and greatest features as they are merged into `main`. |
+| `pr-<number>` | The build associated with PR `#<number>`. Only use this for debugging issues fixed by a PR.                                        |
+
+Other methods to install Anubis may exist, but the Docker image is currently the only supported method.
 
 The Docker image runs Anubis as user ID 1000 and group ID 1000. If you are mounting external volumes into Anubis' container, please be sure they are owned by or writable to this user/group.
 
@@ -177,7 +185,7 @@ Add Anubis to your compose file pointed at your service:
 ```yaml
 services:
   anubis-nginx:
-    image: ghcr.io/xe/x/anubis:latest
+    image: ghcr.io/techarohq/anubis:latest
     environment:
       BIND: ":8080"
       DIFFICULTY: "5"
@@ -205,7 +213,7 @@ Attach Anubis to your Deployment:
 containers:
   # ...
   - name: anubis
-    image: ghcr.io/xe/x/anubis:latest
+    image: ghcr.io/techarohq/anubis:latest
     imagePullPolicy: Always
     env:
       - name: "BIND"
