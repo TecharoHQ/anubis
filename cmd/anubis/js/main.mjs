@@ -11,9 +11,8 @@ const u = (url = "", params = {}) => {
   return result.toString();
 };
 
-const imageURL = (mood) => {
-  return `/.within.website/x/cmd/anubis/static/img/${mood}.webp`;
-};
+const imageURL = (mood, cacheBuster) =>
+  u(`/.within.website/x/cmd/anubis/static/img/${mood}.webp`, { cacheBuster });
 
 (async () => {
   const status = document.getElementById('status');
@@ -63,7 +62,7 @@ const imageURL = (mood) => {
 
   title.innerHTML = "Success!";
   status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
-  image.src = imageURL(`happy?cacheBuster=${anubisVersion}`);
+  image.src = imageURL("happy", anubisVersion);
   spinner.innerHTML = "";
   spinner.style.display = "none";
 
