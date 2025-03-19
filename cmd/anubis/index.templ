@@ -1,19 +1,18 @@
 package main
 
 import (
-"github.com/TecharoHQ/anubis"
-"github.com/TecharoHQ/anubis/xess"
+	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/xess"
 )
 
 templ base(title string, body templ.Component) {
-<!DOCTYPE html>
-<html>
-
-<head>
-  <title>{ title }</title>
-  <link rel="stylesheet" href={ xess.URL } />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>{ title }</title>
+			<link rel="stylesheet" href={ xess.URL }/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<style>
     body,
     html {
       height: 100%;
@@ -139,60 +138,74 @@ templ base(title string, body templ.Component) {
         transform: rotate(360deg);
       }
     }
-  </style>
-</head>
-
-<body id="top">
-  <main>
-    <center>
-      <h1 id="title" class=".centered-div">{ title }</h1>
-    </center>
-    @body
-    <footer>
-      <center>
-        <p>Protected by <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
-            href="https://techaro.lol">Techaro</a>.</p>
-      </center>
-    </footer>
-  </main>
-</body>
-
-</html>
+      </style>
+			@templ.JSONScript("anubis_version", anubis.Version)
+		</head>
+		<body id="top">
+			<main>
+				<center>
+					<h1 id="title" class=".centered-div">{ title }</h1>
+				</center>
+				@body
+				<footer>
+					<center>
+						<p>
+							Protected by <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
+	href="https://techaro.lol"
+>Techaro</a>.
+						</p>
+					</center>
+				</footer>
+			</main>
+		</body>
+	</html>
 }
 
 templ index() {
-<div class="centered-div">
-  <img id="image" width="256" src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-    anubis.Version } />
-  <img style="display:none;" width="256" src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
-    anubis.Version } />
-  <p id="status">Loading...</p>
-  <script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version
-    }></script>
-  <div id="spinner" class="lds-roller">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-  <noscript>
-    <p>Sadly, you must enable JavaScript to get past this challenge. This is required because AI companies have changed
-      the social contract around how website hosting works. A no-JS solution is a work-in-progress.</p>
-  </noscript>
-  <div id="testarea"></div>
-</div>
+	<div class="centered-div">
+		<img
+			id="image"
+			width="256"
+			src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
+    anubis.Version }
+		/>
+		<img
+			style="display:none;"
+			width="256"
+			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
+    anubis.Version }
+		/>
+		<p id="status">Loading...</p>
+		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
+		<div id="spinner" class="lds-roller">
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+		</div>
+		<noscript>
+			<p>
+				Sadly, you must enable JavaScript to get past this challenge. This is required because AI companies have changed
+				the social contract around how website hosting works. A no-JS solution is a work-in-progress.
+			</p>
+		</noscript>
+		<div id="testarea"></div>
+	</div>
 }
 
 templ errorPage(message string) {
-<div class="centered-div">
-  <img id="image" width="256" src={ "/.within.website/x/cmd/anubis/static/img/sad.webp?cacheBuster=" + anubis.Version
-    } />
-  <p>{ message }.</p>
-  <button onClick="window.location.reload();">Try again</button>
-  <p><a href="/">Go home</a></p>
-</div>
+	<div class="centered-div">
+		<img
+			id="image"
+			width="256"
+			src={ "/.within.website/x/cmd/anubis/static/img/sad.webp?cacheBuster=" + anubis.Version }
+		/>
+		<p>{ message }.</p>
+		<button onClick="window.location.reload();">Try again</button>
+		<p><a href="/">Go home</a></p>
+	</div>
 }

@@ -20,6 +20,8 @@ const imageURL = (mood) => {
   const image = document.getElementById('image');
   const title = document.getElementById('title');
   const spinner = document.getElementById('spinner');
+  const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
+
   // const testarea = document.getElementById('testarea');
 
   // const videoWorks = await testVideo(testarea);
@@ -57,15 +59,16 @@ const imageURL = (mood) => {
   const t0 = Date.now();
   const { hash, nonce } = await process(challenge, difficulty);
   const t1 = Date.now();
+  console.log({ hash, nonce });
 
   title.innerHTML = "Success!";
   status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
-  image.src = imageURL("happy");
+  image.src = imageURL(`happy?cacheBuster=${anubisVersion}`);
   spinner.innerHTML = "";
   spinner.style.display = "none";
 
   setTimeout(() => {
     const redir = window.location.href;
     window.location.href = u("/.within.website/x/cmd/anubis/api/pass-challenge", { response: hash, nonce, redir, elapsedTime: t1 - t0 });
-  }, 2000);
+  }, 250);
 })();
