@@ -30,14 +30,24 @@ func main() {
 
 	koDockerRepo := strings.TrimRight(*dockerRepo, "/"+filepath.Base(*dockerRepo))
 	version, err := run("git describe --tags --always --dirty")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	commitTimestamp, err := run("git log -1 --format='%ct'")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	slog.Debug(
 		"ko env",
 		"KO_DOCKER_REPO", koDockerRepo,
+		"SOURCE_DATE_EPOCH", commitTimestamp,
 		"VERSION", version,
 	)
 
 	os.Setenv("KO_DOCKER_REPO", koDockerRepo)
+	os.Setenv("SOURCE_DATE_EPOCH", commitTimestamp)
 	os.Setenv("VERSION", version)
 
 	setOutput("version", version)
