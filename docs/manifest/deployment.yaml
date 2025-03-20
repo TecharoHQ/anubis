@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: anubis-docs
-        image: ghcr.io/techarohq/anubis/docs
+        image: ghcr.io/techarohq/anubis/docs:pr-35
         resources:
           limits:
             memory: "128Mi"

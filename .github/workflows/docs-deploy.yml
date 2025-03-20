@@ -48,3 +48,17 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           push: true
+
+      - name: Apply k8s manifests to aeacus
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.AEACUS_KUBECONFIG }}
+        with:
+          args: apply -k docs/manifest
+
+      - name: Apply k8s manifests to aeacus
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.AEACUS_KUBECONFIG }}
+        with:
+          args: rollout restart -n default deploy/anubis-docs
