@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Don't duplicate work across multiple threads [#36](https://github.com/TecharoHQ/anubis/pull/36)
 - Documentation has been moved to https://anubis.techaro.lol/ with sources in docs/
 
 ## 1.13.0
