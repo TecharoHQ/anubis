@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [ "main" ]
-  ## TODO remove
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read

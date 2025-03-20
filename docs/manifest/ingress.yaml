@@ -21,4 +21,4 @@ spec:
               service:
                 name: anubis-docs
                 port:
-                  name: http
+                  name: anubis
