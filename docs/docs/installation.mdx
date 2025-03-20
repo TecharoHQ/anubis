@@ -1,0 +1,135 @@
+---
+sidebar_position: 20
+title: Setting up Anubis
+---
+
+Anubis is meant to sit between your reverse proxy (such as Nginx or Caddy) and your target service. One instance of Anubis must be used per service you are protecting.
+
+Anubis is shipped in the Docker repo [`ghcr.io/techarohq/anubis`](https://github.com/TecharoHQ/anubis/pkgs/container/anubis). The following tags exist for your convenience:
+
+| Tag                 | Meaning                                                                                                                            |
+| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------- |
+| `latest`            | The latest [tagged release](https://github.com/TecharoHQ/anubis/releases), if you are in doubt, start here.                        |
+| `v<version number>` | The Anubis image for [any given tagged release](https://github.com/TecharoHQ/anubis/tags)                                          |
+| `main`              | The current build on the `main` branch. Only use this if you need the latest and greatest features as they are merged into `main`. |
+| `pr-<number>`       | The build associated with PR `#<number>`. Only use this for debugging issues fixed by a PR.                                        |
+
+Other methods to install Anubis may exist, but the Docker image is currently the only supported method.
+
+The Docker image runs Anubis as user ID 1000 and group ID 1000. If you are mounting external volumes into Anubis' container, please be sure they are owned by or writable to this user/group.
+
+Anubis has very minimal system requirements. I suspect that 128Mi of ram may be sufficient for a large number of concurrent clients. Anubis may be a poor fit for apps that use WebSockets and maintain open connections, but I don't have enough real-world experience to know one way or another.
+
+Anubis uses these environment variables for configuration:
+
+| Environment Variable | Default value              | Explanation                                                                                                                                                                                                                                                                              |
+| :------------------- | :------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BIND`               | `:8923`                    | The TCP port that Anubis listens on.                                                                                                                                                                                                                                                     |
+| `DIFFICULTY`         | `5`                        | The difficulty of the challenge, or the number of leading zeroes that must be in successful responses.                                                                                                                                                                                   |
+| `METRICS_BIND`       | `:9090`                    | The TCP port that Anubis serves Prometheus metrics on.                                                                                                                                                                                                                                   |
+| `POLICY_FNAME`       | `/data/cfg/botPolicy.json` | The file containing [bot policy configuration](./policies.md). See the bot policy documentation for more details.                                                                                                                                                                        |
+| `SERVE_ROBOTS_TXT`   | `false`                    | If set `true`, Anubis will serve a default `robots.txt` file that disallows all known AI scrapers by name and then additionally disallows every scraper. This is useful if facts and circumstances make it difficult to change the underlying service to serve such a `robots.txt` file. |
+| `TARGET`             | `http://localhost:3923`    | The URL of the service that Anubis should forward valid requests to.                                                                                                                                                                                                                     |
+
+## Docker compose
+
+Add Anubis to your compose file pointed at your service:
+
+```yaml
+services:
+  anubis-nginx:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      BIND: ":8080"
+      DIFFICULTY: "5"
+      METRICS_BIND: ":9090"
+      SERVE_ROBOTS_TXT: "true"
+      TARGET: "http://nginx"
+    ports:
+      - 8080:8080
+  nginx:
+    image: nginx
+    volumes:
+      - "./www:/usr/share/nginx/html"
+      - "./botPolicy.json:/data/cfg/botPolicy.json"
+```
+
+## Kubernetes
+
+This example makes the following assumptions:
+
+- Your target service is listening on TCP port `5000`.
+- Anubis will be listening on port `8080`.
+
+Attach Anubis to your Deployment:
+
+```yaml
+containers:
+  # ...
+  - name: anubis
+    image: ghcr.io/techarohq/anubis:latest
+    imagePullPolicy: Always
+    env:
+      - name: "BIND"
+        value: ":8080"
+      - name: "DIFFICULTY"
+        value: "5"
+      - name: "METRICS_BIND"
+        value: ":9090"
+      - name: "SERVE_ROBOTS_TXT"
+        value: "true"
+      - name: "TARGET"
+        value: "http://localhost:5000"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 250m
+        memory: 128Mi
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
+```
+
+Then add a Service entry for Anubis:
+
+```yaml
+# ...
+spec:
+  ports:
+    # diff-add
+    - protocol: TCP
+      # diff-add
+      port: 8080
+      # diff-add
+      targetPort: 8080
+      # diff-add
+      name: anubis
+```
+
+Then point your Ingress to the Anubis port:
+
+```yaml
+  rules:
+  - host: git.xeserv.us
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: git
+            port:
+              # diff-remove
+              name: http
+              # diff-add
+              name: anubis
+```

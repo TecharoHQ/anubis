@@ -1,0 +1,8 @@
+{
+  "label": "Design",
+  "position": 10,
+  "link": {
+    "type": "generated-index",
+    "description": "How Anubis is designed and the tradeoffs it makes."
+  }
+}

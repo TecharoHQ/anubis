@@ -1,3 +1,7 @@
+---
+sidebar_position: 999
+---
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

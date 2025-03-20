@@ -1,4 +1,8 @@
-# Policies
+---
+sidebar_position: 30
+---
+
+# Policy Definitions
 
 Out of the box, Anubis is pretty heavy-handed. It will aggressively challenge everything that might be a browser (usually indicated by having `Mozilla` in its user agent). However, some bots are smart enough to get past the challenge. Some things that look like bots may actually be fine (IE: RSS readers). Some resources need to be visible no matter what. Some resources and remotes are fine to begin with.
 
@@ -50,7 +54,7 @@ Here is a minimal policy file that will protect against most scraper bots:
 }
 ```
 
-This allows requests to [`/.well-known`](https://en.wikipedia.org/wiki/Well-known_URI), `/favicon.ico`, `/robots.txt`, and challenges any request that has the word `Mozilla` in its User-Agent string. The [default policy file](../botPolicies.json) is a bit more cohesive, but this should be more than enough for most users.
+This allows requests to [`/.well-known`](https://en.wikipedia.org/wiki/Well-known_URI), `/favicon.ico`, `/robots.txt`, and challenges any request that has the word `Mozilla` in its User-Agent string. The [default policy file](https://github.com/TecharoHQ/anubis/blob/main/cmd/anubis/botPolicies.json) is a bit more cohesive, but this should be more than enough for most users.
 
 If no rules match the request, it is allowed through.
 

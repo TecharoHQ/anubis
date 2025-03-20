@@ -1,0 +1,34 @@
+---
+title: When using Caddy with Gitea/Forgejo
+---
+
+Gitea/Forgejo relies on the reverse proxy setting the `X-Real-Ip` header. Caddy does not do this out of the gate. Modify your Caddyfile like this:
+
+```python
+ellenjoe.int.within.lgbt {
+  # ...
+  # diff-remove
+  reverse_proxy http://localhost:3000
+  # diff-add
+  reverse_proxy http://localhost:3000 {
+    # diff-add
+    header_up X-Real-Ip {remote_host}
+  # diff-add
+  }
+  # ...
+}
+```
+
+Ensure that Gitea/Forgejo have `[security].REVERSE_PROXY_TRUSTED_PROXIES` set to the IP ranges that Anubis will appear from. Typically this is sufficient:
+
+```ini
+[security]
+REVERSE_PROXY_TRUSTED_PROXIES = 127.0.0.0/8,::1/128
+```
+
+However if you are running Anubis in a separate Pod/Deployment in Kubernetes, you may have to adjust this to the IP range of the Pod space in your Container Networking Interface plugin:
+
+```ini
+[security]
+REVERSE_PROXY_TRUSTED_PROXIES = 10.192.0.0/12
+```

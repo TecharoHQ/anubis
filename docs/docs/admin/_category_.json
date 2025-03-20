@@ -1,0 +1,8 @@
+{
+  "label": "Administrative guides",
+  "position": 40,
+  "link": {
+    "type": "generated-index",
+    "description": "Tradeoffs and considerations you may want to keep in mind when using Anubis."
+  }
+}

@@ -1,0 +1,14 @@
+apiVersion: tor.k8s.torproject.org/v1alpha2
+kind: OnionService
+metadata:
+  name: anubis-docs
+spec:
+  version: 3
+  rules:
+  - port:
+      number: 80
+    backend:
+      service:
+        name: anubis-docs
+        port:
+          number: 80
