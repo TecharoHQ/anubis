@@ -288,7 +288,24 @@ func New(target, policyFname string) (*Server, error) {
 		return nil, fmt.Errorf("failed to generate ed25519 key: %w", err)
 	}
 
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+
+	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
+	if u.Scheme == "unix" {
+		// clean path up so we don't use the socket path in proxied requests
+		addr := u.Path
+		u.Path = ""
+		// tell transport how to dial unix sockets
+		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
+			dialer := net.Dialer{}
+			return dialer.DialContext(ctx, "unix", addr)
+		}
+		// tell transport how to handle the unix url scheme
+		transport.RegisterProtocol("unix", unixRoundTripper{Transport: transport})
+	}
+
 	rp := httputil.NewSingleHostReverseProxy(u)
+	rp.Transport = transport
 
 	var fin io.ReadCloser
 
@@ -319,6 +336,22 @@ func New(target, policyFname string) (*Server, error) {
 		policy:     policy,
 		dnsblCache: NewDecayMap[string, dnsbl.DroneBLResponse](),
 	}, nil
+}
+
+// https://github.com/oauth2-proxy/oauth2-proxy/blob/master/pkg/upstream/http.go#L124
+type unixRoundTripper struct {
+	Transport *http.Transport
+}
+
+// set bare minimum stuff
+func (t unixRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	if req.Host == "" {
+		req.Host = "localhost"
+	}
+	req.URL.Host = req.Host // proxy error: no Host in request URL
+	req.URL.Scheme = "http" // make http.Transport happy and avoid an infinite recursion
+	return t.Transport.RoundTrip(req)
 }
 
 type Server struct {
