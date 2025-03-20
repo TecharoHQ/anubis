@@ -25,7 +25,8 @@ export function process(data, difficulty = 5, threads = navigator.hardwareConcur
       worker.postMessage({
         data,
         difficulty,
-        nonce: 1000000 * i,
+        nonce: i,
+        threads,
       });
 
       workers.push(worker);
@@ -52,10 +53,11 @@ function processTask() {
       let data = event.data.data;
       let difficulty = event.data.difficulty;
       let hash;
-      let nonce = event.data.nonce || 0;
+      let nonce = event.data.nonce;
+      let threads = event.data.threads;
 
       while (true) {
-        const currentHash = await sha256(data + nonce++);
+        const currentHash = await sha256(data + nonce);
         const thisHash = new Uint8Array(currentHash);
         let valid = true;
 
@@ -76,9 +78,9 @@ function processTask() {
           console.log(hash);
           break;
         }
-      }
 
-      nonce -= 1; // last nonce was post-incremented
+        nonce += threads;
+      }
 
       postMessage({
         hash,
