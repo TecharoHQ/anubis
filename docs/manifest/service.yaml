@@ -9,6 +9,6 @@ spec:
   - port: 80
     targetPort: 80
     name: http
-  - port: 8080
-    targetPort: 8080
+  - port: 8081
+    targetPort: 8081
     name: anubis
