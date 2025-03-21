@@ -253,13 +253,10 @@ func metricsServer(ctx context.Context, done func()) {
 	}
 }
 
-func sha256sum(text string) (string, error) {
+func sha256sum(text string) string {
 	hash := sha256.New()
-	_, err := hash.Write([]byte(text))
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(hash.Sum(nil)), nil
+	hash.Write([]byte(text))
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -274,8 +271,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 		fp,
 		difficulty,
 	)
-	result, _ := sha256sum(data)
-	return result
+	return sha256sum(data)
 }
 
 func New(target, policyFname string) (*Server, error) {
@@ -502,13 +498,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	calcString := fmt.Sprintf("%s%d", challenge, nonce)
-	calculated, err := sha256sum(calcString)
-	if err != nil {
-		lg.Error("failed to calculate sha256sum", "path", r.URL.Path, "err", err)
-		clearCookie(w)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	calculated := sha256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(claims["response"].(string)), []byte(calculated)) != 1 {
 		lg.Debug("invalid response", "path", r.URL.Path)
@@ -598,13 +588,7 @@ func (s *Server) passChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	calcString := fmt.Sprintf("%s%d", challenge, nonce)
-	calculated, err := sha256sum(calcString)
-	if err != nil {
-		clearCookie(w)
-		lg.Debug("can't parse shasum", "err", err)
-		templ.Handler(base("Oh noes!", errorPage("failed to calculate sha256sum")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-		return
-	}
+	calculated := sha256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
 		clearCookie(w)

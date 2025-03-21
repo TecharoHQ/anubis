@@ -46,7 +46,7 @@ func (b Bot) Hash() (string, error) {
 		userAgentRex = b.UserAgent.String()
 	}
 
-	return sha256sum(fmt.Sprintf("%s::%s::%s", b.Name, pathRex, userAgentRex))
+	return sha256sum(fmt.Sprintf("%s::%s::%s", b.Name, pathRex, userAgentRex)), nil
 }
 
 func parseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
