@@ -111,19 +111,21 @@ func doHealthCheck() error {
 }
 
 func setupListener(network string, address string) (net.Listener, string) {
+	listener, err := net.Listen(network, address)
+	if err != nil {
+		log.Fatalf("failed to bind to (%s) %s: %v", network, address, err)
+	}
+	// use actual port in case port in the address parameter is empty or "0"
+	address = listener.Addr().String()
+
 	formattedAddress := ""
 	switch network {
 	case "unix":
 		formattedAddress = "unix:" + address
-	case "tcp":
-		formattedAddress = "http://localhost" + address
+	case "tcp", "tcp4", "tcp6":
+		formattedAddress = "http://" + address
 	default:
 		formattedAddress = fmt.Sprintf(`(%s) %s`, network, address)
-	}
-
-	listener, err := net.Listen(network, address)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to bind to %s: %w", formattedAddress, err))
 	}
 
 	// additional permission handling for unix sockets
