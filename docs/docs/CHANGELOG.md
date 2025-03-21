@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v1.14.0
+
+Livia sas Junius
+
+> Fail to do as my lord commands...and I will spare him the trouble of blocking you.
+
 - Add explanation of what Anubis is doing to the challenge page [#25](https://github.com/TecharoHQ/anubis/issues/25)
 - Administrators can now define artificially hard challenges using the "slow" algorithm:
 
