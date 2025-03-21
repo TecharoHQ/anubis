@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed and clarified installation instructions
+- Introduced integration tests using Playwright
 
 ## v1.14.2
 
