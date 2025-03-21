@@ -66,6 +66,7 @@ const imageURL = (mood, cacheBuster) =>
     image.src = imageURL("sad", anubisVersion);
     spinner.innerHTML = "";
     spinner.style.display = "none";
+    return;
   }
 
   status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}`;

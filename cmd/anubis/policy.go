@@ -105,6 +105,9 @@ func parseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			}
 		} else {
 			parsedBot.Challenge = b.Challenge
+			if parsedBot.Challenge.Algorithm == config.AlgorithmUnknown {
+				parsedBot.Challenge.Algorithm = config.AlgorithmFast
+			}
 		}
 
 		result.Bots = append(result.Bots, parsedBot)
