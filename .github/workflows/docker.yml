@@ -16,6 +16,7 @@ permissions:
   packages: write
   attestations: write
   id-token: write
+  pull-requests: write
 
 jobs:
   build:
@@ -56,6 +57,16 @@ jobs:
         id: build
         run: |
           go run ./cmd/containerbuild --docker-repo ghcr.io/techarohq/anubis --slog-level debug
+
+      - name: "Comment about where to test this"
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: |
+            You can try this PR out by using the following docker image:
+
+            ```
+            ${{ steps.build.outputs.docker_image }}
+            ```
       
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2

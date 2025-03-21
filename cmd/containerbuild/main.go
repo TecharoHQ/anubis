@@ -19,8 +19,24 @@ var (
 	dockerLabels      = flag.String("docker-labels", os.Getenv("DOCKER_METADATA_OUTPUT_LABELS"), "Docker image labels")
 	dockerRepo        = flag.String("docker-repo", "registry.int.xeserv.us/techaro/anubis", "Docker image repository for Anubis")
 	dockerTags        = flag.String("docker-tags", os.Getenv("DOCKER_METADATA_OUTPUT_TAGS"), "newline separated docker tags including the registry name")
+	githubActor       = flag.String("github-actor", "", "GitHub actor")
+	githubEventName   = flag.String("github-event-name", "", "GitHub event name")
+	pullRequestID     = flag.Int("pull-request-id", -1, "GitHub pull request ID")
 	slogLevel         = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
+
+	knownContributors = []string{
+		"Xe",
+	}
 )
+
+func inList(needle string, haystack []string) bool {
+	for _, h := range haystack {
+		if h == needle {
+			return true
+		}
+	}
+	return false
+}
 
 func main() {
 	flagenv.Parse()
@@ -29,6 +45,27 @@ func main() {
 	internal.InitSlog(*slogLevel)
 
 	koDockerRepo := strings.TrimRight(*dockerRepo, "/"+filepath.Base(*dockerRepo))
+
+	if *githubEventName == "pull_request" && !inList(*githubActor, knownContributors) {
+		if *pullRequestID == -1 {
+			log.Fatal("Must set --pull-request-id when --github-event-name=pull_request")
+		}
+
+		*dockerRepo = fmt.Sprintf("ttl.sh/techaro/pr-%d/anubis", *pullRequestID)
+		*dockerTags = fmt.Sprintf("ttl.sh/techaro/pr-%d/anubis:24h", *pullRequestID)
+		koDockerRepo = fmt.Sprintf("ttl.sh/techaro/pr-%d", *pullRequestID)
+
+		slog.Info(
+			"Building image for pull request",
+			"docker-repo", *dockerRepo,
+			"docker-tags", *dockerTags,
+			"github-event-name", *githubEventName,
+			"pull-request-id", *pullRequestID,
+		)
+	}
+
+	setOutput("docker_image", strings.SplitN(*dockerTags, "\n", 2)[0])
+
 	version, err := run("git describe --tags --always --dirty")
 	if err != nil {
 		log.Fatal(err)
@@ -129,6 +166,7 @@ func run(command string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	slog.Debug("running command", "command", command)
 	cmd := exec.Command(bin, "-c", command)
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
