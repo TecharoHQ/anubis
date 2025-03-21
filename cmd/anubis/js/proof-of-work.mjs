@@ -1,6 +1,6 @@
 // https://dev.to/ratmd/simple-proof-of-work-in-javascript-3kgm
 
-export function process(data, difficulty = 5, threads = navigator.hardwareConcurrency) {
+export function process(data, difficulty = 5, threads = (navigator.hardwareConcurrency || 1)) {
   return new Promise((resolve, reject) => {
     let webWorkerURL = URL.createObjectURL(new Blob([
       '(', processTask(), ')()'

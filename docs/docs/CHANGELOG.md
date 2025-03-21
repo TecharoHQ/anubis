@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation has been moved to https://anubis.techaro.lol/ with sources in docs/
 - Removed several visible AI artifacts (e.g., 6 fingers) [#37](https://github.com/TecharoHQ/anubis/pull/37)
 - [KagiBot](https://kagi.com/bot) is allowed through the filter [#44](https://github.com/TecharoHQ/anubis/pull/44)
+- Fixed hang when navigator.hardwareConcurrency is undefined
 
 ## 1.13.0
 
