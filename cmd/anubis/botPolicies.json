@@ -21,6 +21,11 @@
       "action": "ALLOW"
     },
     {
+      "name": "kagibot",
+      "user_agent_regex": "\\+https\\:\\/\\/kagi\\.com/bot",
+      "action": "ALLOW"
+    },
+    {
       "name": "us-artificial-intelligence-scraper",
       "user_agent_regex": "\\+https\\:\\/\\/github\\.com\\/US-Artificial-Intelligence\\/scraper",
       "action": "DENY"
