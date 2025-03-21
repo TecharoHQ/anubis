@@ -453,38 +453,23 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return s.pub, nil
-	})
+	}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
 
-	if !token.Valid {
-		lg.Debug("invalid token", "path", r.URL.Path)
+	if err != nil || !token.Valid {
+		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		clearCookie(w)
 		s.renderIndex(w, r)
 		return
 	}
 
-	claims := token.Claims.(jwt.MapClaims)
-
-	exp, ok := claims["exp"].(float64)
-	if !ok {
-		lg.Debug("exp is not int64", "ok", ok, "typeof(exp)", fmt.Sprintf("%T", exp))
-		clearCookie(w)
-		s.renderIndex(w, r)
-		return
-	}
-
-	if exp := time.Unix(int64(exp), 0); time.Now().After(exp) {
-		lg.Debug("token has expired", "exp", exp.Format(time.RFC3339))
-		clearCookie(w)
-		s.renderIndex(w, r)
-		return
-	}
-
-	if token.Valid && randomJitter() {
+	if randomJitter() {
 		r.Header.Add("X-Anubis-Status", "PASS-BRIEF")
 		lg.Debug("cookie is not enrolled into secondary screening")
 		s.rp.ServeHTTP(w, r)
 		return
 	}
+
+	claims := token.Claims.(jwt.MapClaims)
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
