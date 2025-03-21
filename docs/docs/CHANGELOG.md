@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed and clarified installation instructions
 - Introduced integration tests using Playwright
+- Derive signing key from configurable secret [#70](https://github.com/TecharoHQ/anubis/issues/70)
 
 ## v1.14.2
 

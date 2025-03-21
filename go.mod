@@ -10,6 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.21.1
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/yl2chen/cidranger v1.0.2
+	golang.org/x/crypto v0.36.0
 )
 
 require (

@@ -39,6 +39,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/crypto/hkdf"
 )
 
 var (
@@ -54,6 +55,7 @@ var (
 	target              = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck         = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	debugXRealIPDefault = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
+	secret              = flag.String("secret", "", "generate random signing key if empty or use value to derive the key")
 
 	//go:embed static botPolicies.json
 	static embed.FS
@@ -158,7 +160,12 @@ func main() {
 		return
 	}
 
-	s, err := New(*target, *policyFname)
+	private, err := newPrivateKey(*secret)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s, err := New(*target, *policyFname, private)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -288,15 +295,15 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	return sha256sum(data)
 }
 
-func New(target, policyFname string) (*Server, error) {
+func New(target, policyFname string, private ed25519.PrivateKey) (*Server, error) {
 	u, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
 	}
 
-	pub, priv, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate ed25519 key: %w", err)
+	public, ok := private.Public().(ed25519.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("invalid public key type: %T", private.Public())
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -342,8 +349,8 @@ func New(target, policyFname string) (*Server, error) {
 
 	return &Server{
 		rp:         rp,
-		priv:       priv,
-		pub:        pub,
+		priv:       private,
+		pub:        public,
 		policy:     policy,
 		dnsblCache: NewDecayMap[string, dnsbl.DroneBLResponse](),
 	}, nil
@@ -708,4 +715,17 @@ func serveMainJSWithBestEncoding(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/javascript")
 	http.ServeFileFS(w, r, static, "static/js/main.mjs")
+}
+
+func newPrivateKey(secret string) (ed25519.PrivateKey, error) {
+	rr := rand.Reader
+	if secret != "" {
+		rr = hkdf.New(sha256.New, []byte(secret), nil, []byte("ed25519 signing key"))
+	}
+
+	_, private, err := ed25519.GenerateKey(rr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate ed25519 private key: %w", err)
+	}
+	return private, nil
 }
