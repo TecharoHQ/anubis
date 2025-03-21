@@ -37,6 +37,7 @@ type Bot struct {
 	Path       *regexp.Regexp
 	RemoteAddr []string
 	Action     config.Rule `json:"action"`
+	Challenge  *config.ChallengeRules
 }
 
 func (b Bot) Hash() (string, error) {
@@ -52,7 +53,7 @@ func (b Bot) Hash() (string, error) {
 	return sha256sum(fmt.Sprintf("%s::%s::%s", b.Name, pathRex, userAgentRex))
 }
 
-func parseConfig(fin io.Reader, fname string) (*ParsedConfig, error) {
+func parseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
 	var c config.Config
 	if err := json.NewDecoder(fin).Decode(&c); err != nil {
 		return nil, fmt.Errorf("can't parse policy config JSON %s: %w", fname, err)
@@ -101,6 +102,19 @@ func parseConfig(fin io.Reader, fname string) (*ParsedConfig, error) {
 				continue
 			} else {
 				parsedBot.Path = path
+			}
+		}
+
+		if b.Challenge == nil {
+			parsedBot.Challenge = &config.ChallengeRules{
+				Difficulty: defaultDifficulty,
+				ReportAs:   defaultDifficulty,
+				Algorithm:  config.AlgorithmFast,
+			}
+		} else {
+			parsedBot.Challenge = b.Challenge
+			if parsedBot.Challenge.Algorithm == config.AlgorithmUnknown {
+				parsedBot.Challenge.Algorithm = config.AlgorithmFast
 			}
 		}
 
@@ -176,5 +190,11 @@ func (s *Server) check(r *http.Request) (CheckResult, *Bot) {
 		}
 	}
 
-	return cr("default/allow", config.RuleAllow), nil
+	return cr("default/allow", config.RuleAllow), &Bot{
+		Challenge: &config.ChallengeRules{
+			Difficulty: defaultDifficulty,
+			ReportAs:   defaultDifficulty,
+			Algorithm:  config.AlgorithmFast,
+		},
+	}
 }

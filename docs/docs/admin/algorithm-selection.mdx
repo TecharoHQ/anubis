@@ -1,0 +1,12 @@
+---
+title: Proof-of-Work Algorithm Selection
+---
+
+Anubis offers two proof-of-work algorithms:
+
+- `"fast"`: highly optimized JavaScript that will run as fast as your computer lets it
+- `"slow"`: intentionally slow JavaScript that will waste time and memory
+
+The fast algorithm is used by default to limit impacts on users' computers. Administrators may configure individual bot policy rules to use the slow algorithm in order to make known malicious clients waitloop and do nothing useful.
+
+Generally, you should use the fast algorithm unless you have a good reason not to.

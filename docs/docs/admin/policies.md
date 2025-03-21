@@ -68,6 +68,29 @@ There are three actions that can be returned from a rule:
 
 Name your rules in lower case using kebab-case. Rule names will be exposed in Prometheus metrics.
 
+Rules can also have their own challenge settings. These are customized using the `"challenge"` key. For example, here is a rule that makes challenges artificially hard for connections with the substring "bot" in their user agent:
+
+```json
+{
+  "name": "generic-bot-catchall",
+  "user_agent_regex": "(?i:bot|crawler)",
+  "action": "CHALLENGE",
+  "challenge": {
+    "difficulty": 16,
+    "report_as": 4,
+    "algorithm": "slow"
+  }
+}
+```
+
+Challenges can be configured with these settings:
+
+| Key          | Example  | Description                                                                                                                                                                                    |
+| :----------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `difficulty` | `4`      | The challenge difficulty (number of leading zeros) for proof-of-work. See [Why does Anubis use Proof-of-Work?](/docs/design/why-proof-of-work) for more details.                               |
+| `report_as`  | `4`      | What difficulty the UI should report to the user. Useful for messing with industrial-scale scraping efforts.                                                                                   |
+| `algorithm`  | `"fast"` | The algorithm used on the client to run proof-of-work calculations. This must be set to `"fast"` or `"slow"`. See [Proof-of-Work Algorithm Selection](./algorithm-selection) for more details. |
+
 In case your service needs it for risk calculation reasons, Anubis exposes information about the rules that any requests match using a few headers:
 
 | Header            | Explanation                                          | Example          |

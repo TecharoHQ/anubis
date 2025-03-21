@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Administrators can now define artificially hard challenges using the "slow" algorithm:
+
+  ```json
+  {
+    "name": "generic-bot-catchall",
+    "user_agent_regex": "(?i:bot|crawler)",
+    "action": "CHALLENGE",
+    "challenge": {
+      "difficulty": 16,
+      "report_as": 4,
+      "algorithm": "slow"
+    }
+  }
+  ```
+
+  This allows administrators to cause particularly malicious clients to use unreasonable amounts of CPU. The UI will also lie to the client about the difficulty.
+
 - Docker images now explicitly call `docker.io/library/<thing>` to increase compatibility with Podman et. al
   [#21](https://github.com/TecharoHQ/anubis/pull/21)
 - Don't overflow the image when browser windows are small (eg. on phones)

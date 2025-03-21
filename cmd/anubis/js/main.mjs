@@ -1,5 +1,11 @@
-import { process } from './proof-of-work.mjs';
-import { testVideo } from './video.mjs';
+import processFast from "./proof-of-work.mjs";
+import processSlow from "./proof-of-work-slow.mjs";
+import { testVideo } from "./video.mjs";
+
+const algorithms = {
+  "fast": processFast,
+  "slow": processSlow,
+}
 
 // from Xeact
 const u = (url = "", params = {}) => {
@@ -37,7 +43,7 @@ const imageURL = (mood, cacheBuster) =>
 
   status.innerHTML = 'Calculating...';
 
-  const { challenge, difficulty } = await fetch("/.within.website/x/cmd/anubis/api/make-challenge", { method: "POST" })
+  const { challenge, rules } = await fetch("/.within.website/x/cmd/anubis/api/make-challenge", { method: "POST" })
     .then(r => {
       if (!r.ok) {
         throw new Error("Failed to fetch config");
@@ -47,16 +53,26 @@ const imageURL = (mood, cacheBuster) =>
     .catch(err => {
       title.innerHTML = "Oh no!";
       status.innerHTML = `Failed to fetch config: ${err.message}`;
-      image.src = imageURL("sad");
+      image.src = imageURL("sad", anubisVersion);
       spinner.innerHTML = "";
       spinner.style.display = "none";
       throw err;
     });
 
-  status.innerHTML = `Calculating...<br/>Difficulty: ${difficulty}`;
+  const process = algorithms[rules.algorithm];
+  if (!process) {
+    title.innerHTML = "Oh no!";
+    status.innerHTML = `Failed to resolve check algorithm. You may want to reload the page.`;
+    image.src = imageURL("sad", anubisVersion);
+    spinner.innerHTML = "";
+    spinner.style.display = "none";
+    return;
+  }
+
+  status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}`;
 
   const t0 = Date.now();
-  const { hash, nonce } = await process(challenge, difficulty);
+  const { hash, nonce } = await process(challenge, rules.difficulty);
   const t1 = Date.now();
   console.log({ hash, nonce });
 
