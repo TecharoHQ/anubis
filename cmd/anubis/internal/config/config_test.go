@@ -129,6 +129,44 @@ func TestBotValid(t *testing.T) {
 			},
 			err: ErrChallengeRuleHasWrongAlgorithm,
 		},
+		{
+			name: "invalid cidr range",
+			bot: Bot{
+				Name:       "mozilla-ua",
+				Action:     RuleAllow,
+				RemoteAddr: []string{"0.0.0.0/33"},
+			},
+			err: ErrInvalidCIDR,
+		},
+		{
+			name: "only filter by IP range",
+			bot: Bot{
+				Name:       "mozilla-ua",
+				Action:     RuleAllow,
+				RemoteAddr: []string{"0.0.0.0/0"},
+			},
+			err: nil,
+		},
+		{
+			name: "filter by user agent and IP range",
+			bot: Bot{
+				Name:           "mozilla-ua",
+				Action:         RuleAllow,
+				UserAgentRegex: p("Mozilla"),
+				RemoteAddr:     []string{"0.0.0.0/0"},
+			},
+			err: nil,
+		},
+		{
+			name: "filter by path and IP range",
+			bot: Bot{
+				Name:       "mozilla-ua",
+				Action:     RuleAllow,
+				PathRegex:  p("^.*$"),
+				RemoteAddr: []string{"0.0.0.0/0"},
+			},
+			err: nil,
+		},
 	}
 
 	for _, cs := range tests {

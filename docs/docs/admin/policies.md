@@ -68,6 +68,8 @@ There are three actions that can be returned from a rule:
 
 Name your rules in lower case using kebab-case. Rule names will be exposed in Prometheus metrics.
 
+### Challenge configuration
+
 Rules can also have their own challenge settings. These are customized using the `"challenge"` key. For example, here is a rule that makes challenges artificially hard for connections with the substring "bot" in their user agent:
 
 ```json
@@ -90,6 +92,33 @@ Challenges can be configured with these settings:
 | `difficulty` | `4`      | The challenge difficulty (number of leading zeros) for proof-of-work. See [Why does Anubis use Proof-of-Work?](/docs/design/why-proof-of-work) for more details.                               |
 | `report_as`  | `4`      | What difficulty the UI should report to the user. Useful for messing with industrial-scale scraping efforts.                                                                                   |
 | `algorithm`  | `"fast"` | The algorithm used on the client to run proof-of-work calculations. This must be set to `"fast"` or `"slow"`. See [Proof-of-Work Algorithm Selection](./algorithm-selection) for more details. |
+
+### Remote IP based filtering
+
+The `remote_addresses` field of a Bot rule allows you to set the IP range that this ruleset applies to.
+
+For example, you can allow a search engine to connect if and only if its IP address matches the ones they published:
+
+```json
+{
+  "name": "qwantbot",
+  "user_agent_regex": "\\+https\\:\\/\\/help\\.qwant\\.com/bot/",
+  "action": "ALLOW",
+  "remote_addresses": ["91.242.162.0/24"]
+}
+```
+
+This also works at an IP range level without any other checks:
+
+```json
+{
+  "name": "internal-network",
+  "action": "ALLOW",
+  "remote_addresses": ["100.64.0.0/10"]
+}
+```
+
+## Risk calculation for downstream services
 
 In case your service needs it for risk calculation reasons, Anubis exposes information about the rules that any requests match using a few headers:
 

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/TecharoHQ/anubis/cmd/anubis/internal/config"
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,12 +32,12 @@ type ParsedConfig struct {
 }
 
 type Bot struct {
-	Name       string
-	UserAgent  *regexp.Regexp
-	Path       *regexp.Regexp
-	RemoteAddr []string
-	Action     config.Rule `json:"action"`
-	Challenge  *config.ChallengeRules
+	Name      string
+	UserAgent *regexp.Regexp
+	Path      *regexp.Regexp
+	Action    config.Rule `json:"action"`
+	Challenge *config.ChallengeRules
+	Ranger    cidranger.Ranger
 }
 
 func (b Bot) Hash() (string, error) {
@@ -82,7 +82,16 @@ func parseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		}
 
 		if b.RemoteAddr != nil && len(b.RemoteAddr) > 0 {
-			parsedBot.RemoteAddr = b.RemoteAddr
+			parsedBot.Ranger = cidranger.NewPCTrieRanger()
+
+			for _, cidr := range b.RemoteAddr {
+				_, rng, err := net.ParseCIDR(cidr)
+				if err != nil {
+					return nil, fmt.Errorf("[unexpected] range %s not parsing: %w", cidr, err)
+				}
+
+				parsedBot.Ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
+			}
 		}
 
 		if b.UserAgentRegex != nil {
@@ -148,44 +157,47 @@ func cr(name string, rule config.Rule) CheckResult {
 	}
 }
 
+func (s *Server) checkRemoteAddress(b Bot, addr net.IP) bool {
+	if b.Ranger == nil {
+		return false
+	}
+
+	ok, err := b.Ranger.Contains(addr)
+	if err != nil {
+		log.Panicf("[unexpected] something very funky is going on, %q does not have a calculable network number: %v", addr.String(), err)
+	}
+
+	return ok
+}
+
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (CheckResult, *Bot) {
+func (s *Server) check(r *http.Request) (CheckResult, *Bot, error) {
+	host := r.Header.Get("X-Real-Ip")
+	if host == "" {
+		return zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+	}
+
+	addr := net.ParseIP(host)
+	if addr == nil {
+		return zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
+	}
+
 	for _, b := range s.policy.Bots {
 		if b.UserAgent != nil {
-			if b.UserAgent.MatchString(r.UserAgent()) {
-				return cr("bot/"+b.Name, b.Action), &b
+			if uaMatch := b.UserAgent.MatchString(r.UserAgent()); uaMatch || (uaMatch && s.checkRemoteAddress(b, addr)) {
+				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 
 		if b.Path != nil {
-			if b.Path.MatchString(r.URL.Path) {
-				return cr("bot/"+b.Name, b.Action), &b
+			if pathMatch := b.Path.MatchString(r.URL.Path); pathMatch || (pathMatch && s.checkRemoteAddress(b, addr)) {
+				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 
-		if b.RemoteAddr != nil && len(b.RemoteAddr) > 0 {
-			for _, cidrString := range b.RemoteAddr {
-				ranger := cidranger.NewPCTrieRanger()
-
-				_, network, _ := net.ParseCIDR(cidrString)
-				_ = ranger.Insert(cidranger.NewBasicRangerEntry(*network))
-
-				ipToCheck := [3]string{
-					strings.Split(r.RemoteAddr, ":")[0],
-					r.Header.Get("X-Real-Ip"),
-					r.Header.Get("X-Forwarded-For"),
-				}
-
-				for _, ip := range ipToCheck {
-					ipInCidr, err := ranger.Contains(net.ParseIP(ip))
-					if err != nil {
-						continue
-					}
-
-					if ipInCidr {
-						return cr("bot/"+b.Name, b.Action), &b
-					}
-				}
+		if b.Ranger != nil {
+			if s.checkRemoteAddress(b, addr) {
+				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 	}
@@ -196,5 +208,5 @@ func (s *Server) check(r *http.Request) (CheckResult, *Bot) {
 			ReportAs:   defaultDifficulty,
 			Algorithm:  config.AlgorithmFast,
 		},
-	}
+	}, nil
 }

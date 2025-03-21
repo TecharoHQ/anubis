@@ -53,6 +53,7 @@ var (
 	slogLevel           = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	target              = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck         = flag.Bool("healthcheck", false, "run a health check against Anubis")
+	debugXRealIPDefault = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
 
 	//go:embed static botPolicies.json
 	static embed.FS
@@ -210,9 +211,21 @@ func main() {
 
 	mux.HandleFunc("/", s.maybeReverseProxy)
 
-	srv := http.Server{Handler: mux}
+	var h http.Handler
+	h = mux
+	h = internal.DefaultXRealIP(*debugXRealIPDefault, h)
+
+	srv := http.Server{Handler: h}
 	listener, url := setupListener(*bindNetwork, *bind)
-	slog.Info("listening", "url", url, "difficulty", *challengeDifficulty, "serveRobotsTXT", *robotsTxt, "target", *target, "version", anubis.Version)
+	slog.Info(
+		"listening",
+		"url", url,
+		"difficulty", *challengeDifficulty,
+		"serveRobotsTXT", *robotsTxt,
+		"target", *target,
+		"version", anubis.Version,
+		"debug-x-real-ip-default", *debugXRealIPDefault,
+	)
 
 	go func() {
 		<-ctx.Done()
@@ -364,11 +377,7 @@ type Server struct {
 }
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
-	cr, rule := s.check(r)
-	r.Header.Add("X-Anubis-Rule", cr.Name)
-	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg := slog.With(
-		"check_result", cr,
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),
@@ -376,6 +385,17 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		r.Header.Get("X-Forwarded-For"),
 		"x-real-ip", r.Header.Get("X-Real-Ip"),
 	)
+
+	cr, rule, err := s.check(r)
+	if err != nil {
+		lg.Error("check failed", "err", err)
+		templ.Handler(base("Oh noes!", errorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+
+	r.Header.Add("X-Anubis-Rule", cr.Name)
+	r.Header.Add("X-Anubis-Action", string(cr.Rule))
+	lg = lg.With("check_result", cr)
 	policyApplications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
 
 	ip := r.Header.Get("X-Real-Ip")
@@ -530,10 +550,21 @@ func (s *Server) renderIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) makeChallenge(w http.ResponseWriter, r *http.Request) {
-	cr, rule := s.check(r)
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
-
 	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
+
+	cr, rule, err := s.check(r)
+	if err != nil {
+		lg.Error("check failed", "err", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(struct {
+			Error string `json:"error"`
+		}{
+			Error: "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"makeChallenge\"",
+		})
+		return
+	}
+	lg = lg.With("check_result", cr)
+	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	json.NewEncoder(w).Encode(struct {
 		Challenge string                 `json:"challenge"`
@@ -547,15 +578,21 @@ func (s *Server) makeChallenge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) passChallenge(w http.ResponseWriter, r *http.Request) {
-	cr, rule := s.check(r)
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),
 		"x-forwarded-for", r.Header.Get("X-Forwarded-For"),
 		"x-real-ip", r.Header.Get("X-Real-Ip"),
-		"cr", cr,
 	)
+
+	cr, rule, err := s.check(r)
+	if err != nil {
+		lg.Error("check failed", "err", err)
+		templ.Handler(base("Oh noes!", errorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+	lg = lg.With("check_result", cr)
 
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
