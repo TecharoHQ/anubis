@@ -1,0 +1,8 @@
+{
+  "label": "User guides",
+  "position": 60,
+  "link": {
+    "type": "generated-index",
+    "description": "Information for users on sites that use Anubis."
+  }
+}
