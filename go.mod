@@ -7,6 +7,7 @@ require (
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/prometheus/client_golang v1.21.1
+	github.com/yl2chen/cidranger v1.0.2
 )
 
 require (
