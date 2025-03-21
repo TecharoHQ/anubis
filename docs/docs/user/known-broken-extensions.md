@@ -2,8 +2,7 @@
 title: List of known browser extensions that can break Anubis
 ---
 
-This page contains a list of all of the browser extensions that are know to break Anubis' functionality and their associated GitHub issues, along with instructions on how to work around the issue.
-
+This page contains a list of all of the browser extensions that are known to break Anubis' functionality and their associated GitHub issues, along with instructions on how to work around the issue.
 ## [JShelter](https://jshelter.org/)
 
 | Extension    | JShelter                                      |
