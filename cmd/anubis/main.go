@@ -469,8 +469,13 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims := token.Claims.(jwt.MapClaims)
-
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		lg.Debug("invalid token claims type", "path", r.URL.Path)
+		clearCookie(w)
+		s.renderIndex(w, r)
+		return
+	}
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	if claims["challenge"] != challenge {
