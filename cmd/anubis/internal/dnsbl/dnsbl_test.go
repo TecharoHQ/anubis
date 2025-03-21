@@ -3,6 +3,7 @@ package dnsbl
 import (
 	"fmt"
 	"net"
+	"os"
 	"testing"
 )
 
@@ -46,6 +47,11 @@ func TestReverse6(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
+	if os.Getenv("DONT_USE_NETWORK") != "" {
+		t.Skip("test requires network egress")
+		return
+	}
+
 	resp, err := Lookup("27.65.243.194")
 	if err != nil {
 		t.Fatalf("it broked: %v", err)
