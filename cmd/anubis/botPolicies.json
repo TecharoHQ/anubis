@@ -66,6 +66,16 @@
       "action": "DENY"
     },
     {
+      "name": "generic-bot-catchall",
+      "user_agent_regex": "(?i:bot|crawler)",
+      "action": "CHALLENGE",
+      "challenge": {
+        "difficulty": 16,
+        "report_as": 4,
+        "algorithm": "slow"
+      }
+    },
+    {
       "name": "generic-browser",
       "user_agent_regex": "Mozilla",
       "action": "CHALLENGE"

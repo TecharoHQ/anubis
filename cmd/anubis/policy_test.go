@@ -13,7 +13,7 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 	}
 	defer fin.Close()
 
-	if _, err := parseConfig(fin, "botPolicies.json"); err != nil {
+	if _, err := parseConfig(fin, "botPolicies.json", defaultDifficulty); err != nil {
 		t.Fatalf("can't parse config: %v", err)
 	}
 }
@@ -33,7 +33,7 @@ func TestGoodConfigs(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := parseConfig(fin, fin.Name()); err != nil {
+			if _, err := parseConfig(fin, fin.Name(), defaultDifficulty); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -55,7 +55,7 @@ func TestBadConfigs(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := parseConfig(fin, fin.Name()); err == nil {
+			if _, err := parseConfig(fin, fin.Name(), defaultDifficulty); err == nil {
 				t.Fatal(err)
 			} else {
 				t.Log(err)

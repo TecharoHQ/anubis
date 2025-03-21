@@ -87,6 +87,48 @@ func TestBotValid(t *testing.T) {
 			},
 			err: ErrInvalidPathRegex,
 		},
+		{
+			name: "challenge difficulty too low",
+			bot: Bot{
+				Name:      "mozilla-ua",
+				Action:    RuleChallenge,
+				PathRegex: p("Mozilla"),
+				Challenge: &ChallengeRules{
+					Difficulty: 0,
+					ReportAs:   4,
+					Algorithm:  "fast",
+				},
+			},
+			err: ErrChallengeDifficultyTooLow,
+		},
+		{
+			name: "challenge difficulty too high",
+			bot: Bot{
+				Name:      "mozilla-ua",
+				Action:    RuleChallenge,
+				PathRegex: p("Mozilla"),
+				Challenge: &ChallengeRules{
+					Difficulty: 420,
+					ReportAs:   4,
+					Algorithm:  "fast",
+				},
+			},
+			err: ErrChallengeDifficultyTooHigh,
+		},
+		{
+			name: "challenge wrong algorithm",
+			bot: Bot{
+				Name:      "mozilla-ua",
+				Action:    RuleChallenge,
+				PathRegex: p("Mozilla"),
+				Challenge: &ChallengeRules{
+					Difficulty: 420,
+					ReportAs:   4,
+					Algorithm:  "high quality rips",
+				},
+			},
+			err: ErrChallengeRuleHasWrongAlgorithm,
+		},
 	}
 
 	for _, cs := range tests {

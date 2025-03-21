@@ -9,17 +9,26 @@ import (
 type Rule string
 
 const (
-	RuleUnknown   = ""
-	RuleAllow     = "ALLOW"
-	RuleDeny      = "DENY"
-	RuleChallenge = "CHALLENGE"
+	RuleUnknown   Rule = ""
+	RuleAllow     Rule = "ALLOW"
+	RuleDeny      Rule = "DENY"
+	RuleChallenge Rule = "CHALLENGE"
+)
+
+type Algorithm string
+
+const (
+	AlgorithmUnknown Algorithm = ""
+	AlgorithmFast    Algorithm = "fast"
+	AlgorithmSlow    Algorithm = "slow"
 )
 
 type Bot struct {
-	Name           string  `json:"name"`
-	UserAgentRegex *string `json:"user_agent_regex"`
-	PathRegex      *string `json:"path_regex"`
-	Action         Rule    `json:"action"`
+	Name           string          `json:"name"`
+	UserAgentRegex *string         `json:"user_agent_regex"`
+	PathRegex      *string         `json:"path_regex"`
+	Action         Rule            `json:"action"`
+	Challenge      *ChallengeRules `json:"challenge,omitempty"`
 }
 
 var (
@@ -66,8 +75,51 @@ func (b Bot) Valid() error {
 		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))
 	}
 
+	if b.Action == RuleChallenge && b.Challenge != nil {
+		if err := b.Challenge.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config: bot entry for %q is not valid:\n%w", b.Name, errors.Join(errs...))
+	}
+
+	return nil
+}
+
+type ChallengeRules struct {
+	Difficulty int       `json:"difficulty"`
+	ReportAs   int       `json:"report_as"`
+	Algorithm  Algorithm `json:"algorithm"`
+}
+
+var (
+	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
+	ErrChallengeDifficultyTooLow      = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
+	ErrChallengeDifficultyTooHigh     = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
+)
+
+func (cr ChallengeRules) Valid() error {
+	var errs []error
+
+	if cr.Difficulty < 1 {
+		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
+	}
+
+	if cr.Difficulty > 64 {
+		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
+	}
+
+	switch cr.Algorithm {
+	case AlgorithmFast, AlgorithmSlow, AlgorithmUnknown:
+		// do nothing, it's all good
+	default:
+		errs = append(errs, fmt.Errorf("%w: %q", ErrChallengeRuleHasWrongAlgorithm, cr.Algorithm))
+	}
+
+	if len(errs) != 0 {
+		return fmt.Errorf("config: challenge rules entry is not valid:\n%w", errors.Join(errs...))
 	}
 
 	return nil

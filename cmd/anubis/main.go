@@ -44,7 +44,7 @@ import (
 var (
 	bind                = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork         = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
-	challengeDifficulty = flag.Int("difficulty", 4, "difficulty of the challenge")
+	challengeDifficulty = flag.Int("difficulty", defaultDifficulty, "difficulty of the challenge")
 	metricsBind         = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
 	metricsBindNetwork  = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
 	socketMode          = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
@@ -85,8 +85,9 @@ var (
 )
 
 const (
-	cookieName = "within.website-x-cmd-anubis-auth"
-	staticPath = "/.within.website/x/cmd/anubis/"
+	cookieName        = "within.website-x-cmd-anubis-auth"
+	staticPath        = "/.within.website/x/cmd/anubis/"
+	defaultDifficulty = 4
 )
 
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
@@ -261,7 +262,7 @@ func sha256sum(text string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (s *Server) challengeFor(r *http.Request) string {
+func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.priv.Seed())
 
 	data := fmt.Sprintf(
@@ -271,7 +272,7 @@ func (s *Server) challengeFor(r *http.Request) string {
 		r.UserAgent(),
 		time.Now().UTC().Round(24*7*time.Hour).Format(time.RFC3339),
 		fp,
-		*challengeDifficulty,
+		difficulty,
 	)
 	result, _ := sha256sum(data)
 	return result
@@ -324,7 +325,7 @@ func New(target, policyFname string) (*Server, error) {
 
 	defer fin.Close()
 
-	policy, err := parseConfig(fin, policyFname)
+	policy, err := parseConfig(fin, policyFname, *challengeDifficulty)
 	if err != nil {
 		return nil, err // parseConfig sets a fancy error for us
 	}
@@ -485,7 +486,9 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if claims["challenge"] != s.challengeFor(r) {
+	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+
+	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
 		clearCookie(w)
 		s.renderIndex(w, r)
@@ -498,7 +501,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		nonce = int(v)
 	}
 
-	calcString := fmt.Sprintf("%s%d", s.challengeFor(r), nonce)
+	calcString := fmt.Sprintf("%s%d", challenge, nonce)
 	calculated, err := sha256sum(calcString)
 	if err != nil {
 		lg.Error("failed to calculate sha256sum", "path", r.URL.Path, "err", err)
@@ -527,24 +530,32 @@ func (s *Server) renderIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) makeChallenge(w http.ResponseWriter, r *http.Request) {
-	challenge := s.challengeFor(r)
-	difficulty := *challengeDifficulty
+	cr, rule := s.check(r)
+	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
 
 	json.NewEncoder(w).Encode(struct {
-		Challenge  string `json:"challenge"`
-		Difficulty int    `json:"difficulty"`
+		Challenge string                 `json:"challenge"`
+		Rules     *config.ChallengeRules `json:"rules"`
 	}{
-		Challenge:  challenge,
-		Difficulty: difficulty,
+		Challenge: challenge,
+		Rules:     rule.Challenge,
 	})
-	lg.Debug("made challenge", "challenge", challenge, "difficulty", difficulty)
+	lg.Debug("made challenge", "challenge", challenge, "rules", rule.Challenge, "cr", cr)
 	challengesIssued.Inc()
 }
 
 func (s *Server) passChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
+	cr, rule := s.check(r)
+	lg := slog.With(
+		"user_agent", r.UserAgent(),
+		"accept_language", r.Header.Get("Accept-Language"),
+		"priority", r.Header.Get("Priority"),
+		"x-forwarded-for", r.Header.Get("X-Forwarded-For"),
+		"x-real-ip", r.Header.Get("X-Real-Ip"),
+		"cr", cr,
+	)
 
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
@@ -576,7 +587,7 @@ func (s *Server) passChallenge(w http.ResponseWriter, r *http.Request) {
 	response := r.FormValue("response")
 	redir := r.FormValue("redir")
 
-	challenge := s.challengeFor(r)
+	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	nonce, err := strconv.Atoi(nonceStr)
 	if err != nil {
