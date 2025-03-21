@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [KagiBot](https://kagi.com/bot) is allowed through the filter [#44](https://github.com/TecharoHQ/anubis/pull/44)
 - Fixed hang when navigator.hardwareConcurrency is undefined
 - Support Unix domain sockets [#45](https://github.com/TecharoHQ/anubis/pull/45)
+- Allow filtering by remote addresses
 
 ## 1.13.0
 
