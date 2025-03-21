@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation has been moved to https://anubis.techaro.lol/ with sources in docs/
 - Removed several visible AI artifacts (e.g., 6 fingers) [#37](https://github.com/TecharoHQ/anubis/pull/37)
 - Fixed hang when navigator.hardwareConcurrency is undefined
+- Support Unix domain sockets [#45](https://github.com/TecharoHQ/anubis/pull/45)
 
 ## 1.13.0
 
