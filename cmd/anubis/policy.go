@@ -156,14 +156,21 @@ func (s *Server) check(r *http.Request) (CheckResult, *Bot) {
 				_, network, _ := net.ParseCIDR(cidrString)
 				_ = ranger.Insert(cidranger.NewBasicRangerEntry(*network))
 
-				ip := strings.Split(r.RemoteAddr, ":")[0]
-				ipInCidr, err := ranger.Contains(net.ParseIP(ip))
-				if err != nil {
-					continue
+				ipToCheck := [3]string{
+					strings.Split(r.RemoteAddr, ":")[0],
+					r.Header.Get("X-Real-Ip"),
+					r.Header.Get("X-Forwarded-For"),
 				}
 
-				if ipInCidr {
-					return cr("bot/"+b.Name, b.Action), &b
+				for _, ip := range ipToCheck {
+					ipInCidr, err := ranger.Contains(net.ParseIP(ip))
+					if err != nil {
+						continue
+					}
+
+					if ipInCidr {
+						return cr("bot/"+b.Name, b.Action), &b
+					}
 				}
 			}
 		}
