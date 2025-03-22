@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"sync"
 	"syscall"
@@ -23,6 +24,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
+	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -44,6 +46,7 @@ var (
 	target               = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck          = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress     = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
+	debugBenchmarkJS     = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -173,6 +176,16 @@ func main() {
 	}
 	fmt.Println()
 
+	// replace the bot policy rules with a single rule that always benchmarks
+	if *debugBenchmarkJS {
+		userAgent := regexp.MustCompile(".")
+		policy.Bots = []botPolicy.Bot{{
+			Name:      "",
+			UserAgent: userAgent,
+			Action:    config.RuleBenchmark,
+		}}
+	}
+
 	var priv ed25519.PrivateKey
 	if *ed25519PrivateKeyHex == "" {
 		_, priv, err = ed25519.GenerateKey(rand.Reader)
@@ -225,6 +238,7 @@ func main() {
 		"target", *target,
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
+		"debug-benchmark-js", *debugBenchmarkJS,
 	)
 
 	go func() {
