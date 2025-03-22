@@ -5,8 +5,9 @@ go 1.24.1
 require (
 	github.com/a-h/templ v0.3.833
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/prometheus/client_golang v1.21.1
+	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/yl2chen/cidranger v1.0.2
 )
 
@@ -34,7 +35,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
