@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed and clarified installation instructions
+- Changed default challenge logic for "Gecko" in the User-Agent string
+  instead of "Mozilla" [#78](https://github.com/TecharoHQ/anubis/pull/78)
 
 ## v1.14.2
 
