@@ -26,15 +26,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
-	"github.com/TecharoHQ/anubis/lib/consts"
-	"github.com/TecharoHQ/anubis/lib/decaymap"
-	"github.com/TecharoHQ/anubis/lib/dnsbl"
+	"github.com/TecharoHQ/anubis/decaymap"
+	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/policy/bot"
-	"github.com/TecharoHQ/anubis/lib/policy/checkresult"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
-	"github.com/TecharoHQ/anubis/lib/utils"
 	"github.com/TecharoHQ/anubis/web"
 )
 
@@ -90,7 +88,7 @@ func New(target, policyFname string, challengeDifficulty int) (*Server, error) {
 			return dialer.DialContext(ctx, "unix", addr)
 		}
 		// tell transport how to handle the unix url scheme
-		transport.RegisterProtocol("unix", utils.UnixRoundTripper{Transport: transport})
+		transport.RegisterProtocol("unix", UnixRoundTripper{Transport: transport})
 	}
 
 	rp := httputil.NewSingleHostReverseProxy(u)
@@ -124,7 +122,7 @@ func New(target, policyFname string, challengeDifficulty int) (*Server, error) {
 		priv:       priv,
 		pub:        pub,
 		Policy:     policy,
-		DNSBLCache: decaymap.NewDecayMap[string, dnsbl.DroneBLResponse](),
+		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
 	}, nil
 }
 
@@ -133,7 +131,7 @@ type Server struct {
 	priv                ed25519.PrivateKey
 	pub                 ed25519.PublicKey
 	Policy              *policy.ParsedConfig
-	DNSBLCache          *decaymap.DecayMap[string, dnsbl.DroneBLResponse]
+	DNSBLCache          *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	ChallengeDifficulty int
 }
 
@@ -149,7 +147,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 		fp,
 		difficulty,
 	)
-	return utils.SHA256sum(data)
+	return internal.SHA256sum(data)
 }
 
 func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
@@ -201,7 +199,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		s.rp.ServeHTTP(w, r)
 		return
 	case config.RuleDeny:
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
@@ -220,29 +218,29 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
 	default:
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
-	ckie, err := r.Cookie(consts.CookieName)
+	ckie, err := r.Cookie(anubis.CookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -253,12 +251,12 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
 
-	if utils.RandomJitter() {
+	if randomJitter() {
 		r.Header.Add("X-Anubis-Status", "PASS-BRIEF")
 		lg.Debug("cookie is not enrolled into secondary screening")
 		s.rp.ServeHTTP(w, r)
@@ -268,7 +266,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -276,7 +274,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -288,12 +286,12 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	calcString := fmt.Sprintf("%s%d", challenge, nonce)
-	calculated := utils.SHA256sum(calcString)
+	calculated := internal.SHA256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(claims["response"].(string)), []byte(calculated)) != 1 {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -356,7 +354,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Debug("no nonce")
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing nonce")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -364,7 +362,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	elapsedTimeStr := r.FormValue("elapsedTime")
 	if elapsedTimeStr == "" {
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Debug("no elapsedTime")
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing elapsedTime")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -372,7 +370,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	elapsedTime, err := strconv.ParseFloat(elapsedTimeStr, 64)
 	if err != nil {
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Debug("elapsedTime doesn't parse", "err", err)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid elapsedTime")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -388,17 +386,17 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	nonce, err := strconv.Atoi(nonceStr)
 	if err != nil {
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Debug("nonce doesn't parse", "err", err)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid nonce")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
 	calcString := fmt.Sprintf("%s%d", challenge, nonce)
-	calculated := utils.SHA256sum(calcString)
+	calculated := internal.SHA256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Debug("hash does not match", "got", response, "want", calculated)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
@@ -407,7 +405,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	// compare the leading zeroes
 	if !strings.HasPrefix(response, strings.Repeat("0", s.ChallengeDifficulty)) {
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		lg.Debug("difficulty check failed", "response", response, "difficulty", s.ChallengeDifficulty)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
@@ -426,13 +424,13 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := token.SignedString(s.priv)
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
-		utils.ClearCookie(w)
+		ClearCookie(w)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("failed to sign JWT")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     consts.CookieName,
+		Name:     anubis.CookieName,
 		Value:    tokenString,
 		Expires:  time.Now().Add(24 * 7 * time.Hour),
 		SameSite: http.SameSiteLaxMode,
@@ -450,47 +448,47 @@ func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 }
 
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (checkresult.CheckResult, *bot.Bot, error) {
+func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
-		return decaymap.Zilch[checkresult.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
 	}
 
 	addr := net.ParseIP(host)
 	if addr == nil {
-		return decaymap.Zilch[checkresult.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
+		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
 	for _, b := range s.Policy.Bots {
 		if b.UserAgent != nil {
 			if uaMatch := b.UserAgent.MatchString(r.UserAgent()); uaMatch || (uaMatch && s.checkRemoteAddress(b, addr)) {
-				return checkresult.CR("bot/"+b.Name, b.Action), &b, nil
+				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 
 		if b.Path != nil {
 			if pathMatch := b.Path.MatchString(r.URL.Path); pathMatch || (pathMatch && s.checkRemoteAddress(b, addr)) {
-				return checkresult.CR("bot/"+b.Name, b.Action), &b, nil
+				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 
 		if b.Ranger != nil {
 			if s.checkRemoteAddress(b, addr) {
-				return checkresult.CR("bot/"+b.Name, b.Action), &b, nil
+				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 	}
 
-	return checkresult.CR("default/allow", config.RuleAllow), &bot.Bot{
+	return cr("default/allow", config.RuleAllow), &policy.Bot{
 		Challenge: &config.ChallengeRules{
-			Difficulty: consts.DefaultDifficulty,
-			ReportAs:   consts.DefaultDifficulty,
+			Difficulty: anubis.DefaultDifficulty,
+			ReportAs:   anubis.DefaultDifficulty,
 			Algorithm:  config.AlgorithmFast,
 		},
 	}, nil
 }
 
-func (s *Server) checkRemoteAddress(b bot.Bot, addr net.IP) bool {
+func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 	if b.Ranger == nil {
 		return false
 	}

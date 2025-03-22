@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	aerrs "github.com/TecharoHQ/anubis/lib/errors"
 )
 
 func p[V any](v V) *V { return &v }
@@ -42,7 +40,7 @@ func TestBotValid(t *testing.T) {
 				Action:         RuleChallenge,
 				UserAgentRegex: p("Mozilla"),
 			},
-			err: aerrs.ErrBotMustHaveName,
+			err: ErrBotMustHaveName,
 		},
 		{
 			name: "no rule matcher",
@@ -50,7 +48,7 @@ func TestBotValid(t *testing.T) {
 				Name:   "broken-rule",
 				Action: RuleAllow,
 			},
-			err: aerrs.ErrBotMustHaveUserAgentOrPath,
+			err: ErrBotMustHaveUserAgentOrPath,
 		},
 		{
 			name: "both user-agent and path",
@@ -60,7 +58,7 @@ func TestBotValid(t *testing.T) {
 				UserAgentRegex: p("Mozilla"),
 				PathRegex:      p("^/.secret-place/.*$"),
 			},
-			err: aerrs.ErrBotMustHaveUserAgentOrPathNotBoth,
+			err: ErrBotMustHaveUserAgentOrPathNotBoth,
 		},
 		{
 			name: "unknown action",
@@ -69,7 +67,7 @@ func TestBotValid(t *testing.T) {
 				Action:         RuleUnknown,
 				UserAgentRegex: p("Mozilla"),
 			},
-			err: aerrs.ErrUnknownAction,
+			err: ErrUnknownAction,
 		},
 		{
 			name: "invalid user agent regex",
@@ -78,7 +76,7 @@ func TestBotValid(t *testing.T) {
 				Action:         RuleChallenge,
 				UserAgentRegex: p("a(b"),
 			},
-			err: aerrs.ErrInvalidUserAgentRegex,
+			err: ErrInvalidUserAgentRegex,
 		},
 		{
 			name: "invalid path regex",
@@ -87,7 +85,7 @@ func TestBotValid(t *testing.T) {
 				Action:    RuleChallenge,
 				PathRegex: p("a(b"),
 			},
-			err: aerrs.ErrInvalidPathRegex,
+			err: ErrInvalidPathRegex,
 		},
 		{
 			name: "challenge difficulty too low",
@@ -138,7 +136,7 @@ func TestBotValid(t *testing.T) {
 				Action:     RuleAllow,
 				RemoteAddr: []string{"0.0.0.0/33"},
 			},
-			err: aerrs.ErrInvalidCIDR,
+			err: ErrInvalidCIDR,
 		},
 		{
 			name: "only filter by IP range",

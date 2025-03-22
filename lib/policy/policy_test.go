@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
-	"github.com/TecharoHQ/anubis/lib/consts"
 )
 
 func TestDefaultPolicyMustParse(t *testing.T) {
@@ -16,7 +16,7 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 	}
 	defer fin.Close()
 
-	if _, err := ParseConfig(fin, "botPolicies.json", consts.DefaultDifficulty); err != nil {
+	if _, err := ParseConfig(fin, "botPolicies.json", anubis.DefaultDifficulty); err != nil {
 		t.Fatalf("can't parse config: %v", err)
 	}
 }
@@ -36,7 +36,7 @@ func TestGoodConfigs(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := ParseConfig(fin, fin.Name(), consts.DefaultDifficulty); err != nil {
+			if _, err := ParseConfig(fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -58,7 +58,7 @@ func TestBadConfigs(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := ParseConfig(fin, fin.Name(), consts.DefaultDifficulty); err == nil {
+			if _, err := ParseConfig(fin, fin.Name(), anubis.DefaultDifficulty); err == nil {
 				t.Fatal(err)
 			} else {
 				t.Log(err)

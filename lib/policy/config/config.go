@@ -5,8 +5,17 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+)
 
-	aerrs "github.com/TecharoHQ/anubis/lib/errors"
+var (
+	ErrNoBotRulesDefined                 = errors.New("config: must define at least one (1) bot rule")
+	ErrBotMustHaveName                   = errors.New("config.Bot: must set name")
+	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set either user_agent_regex, path_regex, or remote_addresses")
+	ErrBotMustHaveUserAgentOrPathNotBoth = errors.New("config.Bot: must set either user_agent_regex, path_regex, and not both")
+	ErrUnknownAction                     = errors.New("config.Bot: unknown action")
+	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
+	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
+	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
 )
 
 type Rule string
@@ -39,33 +48,33 @@ func (b BotConfig) Valid() error {
 	var errs []error
 
 	if b.Name == "" {
-		errs = append(errs, aerrs.ErrBotMustHaveName)
+		errs = append(errs, ErrBotMustHaveName)
 	}
 
 	if b.UserAgentRegex == nil && b.PathRegex == nil && (b.RemoteAddr == nil || len(b.RemoteAddr) == 0) {
-		errs = append(errs, aerrs.ErrBotMustHaveUserAgentOrPath)
+		errs = append(errs, ErrBotMustHaveUserAgentOrPath)
 	}
 
 	if b.UserAgentRegex != nil && b.PathRegex != nil {
-		errs = append(errs, aerrs.ErrBotMustHaveUserAgentOrPathNotBoth)
+		errs = append(errs, ErrBotMustHaveUserAgentOrPathNotBoth)
 	}
 
 	if b.UserAgentRegex != nil {
 		if _, err := regexp.Compile(*b.UserAgentRegex); err != nil {
-			errs = append(errs, aerrs.ErrInvalidUserAgentRegex, err)
+			errs = append(errs, ErrInvalidUserAgentRegex, err)
 		}
 	}
 
 	if b.PathRegex != nil {
 		if _, err := regexp.Compile(*b.PathRegex); err != nil {
-			errs = append(errs, aerrs.ErrInvalidPathRegex, err)
+			errs = append(errs, ErrInvalidPathRegex, err)
 		}
 	}
 
 	if b.RemoteAddr != nil && len(b.RemoteAddr) > 0 {
 		for _, cidr := range b.RemoteAddr {
 			if _, _, err := net.ParseCIDR(cidr); err != nil {
-				errs = append(errs, aerrs.ErrInvalidCIDR, err)
+				errs = append(errs, ErrInvalidCIDR, err)
 			}
 		}
 	}
@@ -74,7 +83,7 @@ func (b BotConfig) Valid() error {
 	case RuleAllow, RuleChallenge, RuleDeny:
 		// okay
 	default:
-		errs = append(errs, fmt.Errorf("%w: %q", aerrs.ErrUnknownAction, b.Action))
+		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))
 	}
 
 	if b.Action == RuleChallenge && b.Challenge != nil {
@@ -136,7 +145,7 @@ func (c Config) Valid() error {
 	var errs []error
 
 	if len(c.Bots) == 0 {
-		errs = append(errs, aerrs.ErrNoBotRulesDefined)
+		errs = append(errs, ErrNoBotRulesDefined)
 	}
 
 	for _, b := range c.Bots {

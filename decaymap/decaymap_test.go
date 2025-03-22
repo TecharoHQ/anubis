@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-func TestDecayMap(t *testing.T) {
-	dm := NewDecayMap[string, string]()
+func TestImpl(t *testing.T) {
+	dm := New[string, string]()
 
 	dm.Set("test", "hi", 5*time.Minute)
 

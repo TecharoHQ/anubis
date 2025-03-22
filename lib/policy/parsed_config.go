@@ -4,7 +4,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/TecharoHQ/anubis/lib/policy/bot"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
@@ -18,7 +17,7 @@ var (
 type ParsedConfig struct {
 	orig config.Config
 
-	Bots  []bot.Bot
+	Bots  []Bot
 	DNSBL bool
 }
 

@@ -19,7 +19,6 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib"
-	"github.com/TecharoHQ/anubis/lib/consts"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
@@ -31,7 +30,7 @@ import (
 var (
 	bind                = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork         = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
-	challengeDifficulty = flag.Int("difficulty", consts.DefaultDifficulty, "difficulty of the challenge")
+	challengeDifficulty = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
 	metricsBind         = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
 	metricsBindNetwork  = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
 	socketMode          = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
@@ -42,12 +41,6 @@ var (
 	healthcheck         = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	debugXRealIPDefault = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
 )
-
-//go:generate go tool github.com/a-h/templ/cmd/templ generate
-//go:generate esbuild js/main.mjs --sourcemap --bundle --minify --outfile=static/js/main.mjs
-//go:generate gzip -f -k static/js/main.mjs
-//go:generate zstd -f -k --ultra -22 static/js/main.mjs
-//go:generate brotli -fZk static/js/main.mjs
 
 func doHealthCheck() error {
 	resp, err := http.Get("http://localhost" + *metricsBind + "/metrics")
@@ -133,7 +126,7 @@ func main() {
 	mux := http.NewServeMux()
 	xess.Mount(mux)
 
-	mux.Handle(consts.StaticPath, internal.UnchangingCache(http.StripPrefix(consts.StaticPath, http.FileServerFS(web.Static))))
+	mux.Handle(anubis.StaticPath, internal.UnchangingCache(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static))))
 
 	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
 

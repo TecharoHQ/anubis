@@ -10,7 +10,6 @@ import (
 
 	"github.com/yl2chen/cidranger"
 
-	"github.com/TecharoHQ/anubis/lib/policy/bot"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
@@ -35,7 +34,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		}
 
 		var botParseErr error
-		parsedBot := bot.Bot{
+		parsedBot := Bot{
 			Name:   b.Name,
 			Action: b.Action,
 		}
