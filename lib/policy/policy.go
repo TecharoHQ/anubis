@@ -8,10 +8,33 @@ import (
 	"net"
 	"regexp"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/yl2chen/cidranger"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
+
+var (
+	PolicyApplications = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "anubis_policy_results",
+		Help: "The results of each policy rule",
+	}, []string{"rule", "action"})
+)
+
+type ParsedConfig struct {
+	orig config.Config
+
+	Bots              []Bot
+	DNSBL             bool
+	DefaultDifficulty int
+}
+
+func NewParsedConfig(orig config.Config) *ParsedConfig {
+	return &ParsedConfig{
+		orig: orig,
+	}
+}
 
 func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
 	var c config.Config
@@ -26,6 +49,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 	var err error
 
 	result := NewParsedConfig(c)
+	result.DefaultDifficulty = defaultDifficulty
 
 	for _, b := range c.Bots {
 		if berr := b.Valid(); berr != nil {

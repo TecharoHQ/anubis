@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
@@ -14,8 +13,6 @@ import (
 	"math"
 	"net"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -34,6 +31,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
+	"github.com/TecharoHQ/anubis/xess"
 )
 
 var (
@@ -64,75 +62,94 @@ var (
 	})
 )
 
-func New(target, policyFname string, challengeDifficulty int) (*Server, error) {
-	u, err := url.Parse(target)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse target URL: %w", err)
-	}
+type Options struct {
+	Next           http.Handler
+	Policy         *policy.ParsedConfig
+	ServeRobotsTXT bool
+}
 
-	pub, priv, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate ed25519 key: %w", err)
-	}
-
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-
-	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
-	if u.Scheme == "unix" {
-		// clean path up so we don't use the socket path in proxied requests
-		addr := u.Path
-		u.Path = ""
-		// tell transport how to dial unix sockets
-		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
-			dialer := net.Dialer{}
-			return dialer.DialContext(ctx, "unix", addr)
-		}
-		// tell transport how to handle the unix url scheme
-		transport.RegisterProtocol("unix", UnixRoundTripper{Transport: transport})
-	}
-
-	rp := httputil.NewSingleHostReverseProxy(u)
-	rp.Transport = transport
-
+func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
 	var fin io.ReadCloser
+	var err error
 
-	if policyFname != "" {
-		fin, err = os.Open(policyFname)
+	if fname != "" {
+		fin, err = os.Open(fname)
 		if err != nil {
-			return nil, fmt.Errorf("can't parse policy file %s: %w", policyFname, err)
+			return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
 		}
 	} else {
-		policyFname = "(data)/botPolicies.json"
+		fname = "(data)/botPolicies.json"
 		fin, err = data.BotPolicies.Open("botPolicies.json")
 		if err != nil {
-			return nil, fmt.Errorf("[unexpected] can't parse builtin policy file %s: %w", policyFname, err)
+			return nil, fmt.Errorf("[unexpected] can't parse builtin policy file %s: %w", fname, err)
 		}
 	}
 
 	defer fin.Close()
 
-	policy, err := policy.ParseConfig(fin, policyFname, challengeDifficulty)
+	policy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+
+	return policy, err
+}
+
+func New(opts Options) (*Server, error) {
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate ed25519 key: %w", err)
+	}
 
 	if err != nil {
 		return nil, err // parseConfig sets a fancy error for us
 	}
 
-	return &Server{
-		rp:         rp,
+	result := &Server{
+		next:       opts.Next,
 		priv:       priv,
 		pub:        pub,
-		Policy:     policy,
+		policy:     opts.Policy,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
-	}, nil
+	}
+
+	mux := http.NewServeMux()
+	xess.Mount(mux)
+
+	mux.Handle(anubis.StaticPath, internal.UnchangingCache(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static))))
+
+	if opts.ServeRobotsTXT {
+		mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
+		})
+
+		mux.HandleFunc("/.well-known/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
+		})
+	}
+
+	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
+
+	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/make-challenge", result.MakeChallenge)
+	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
+	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/test-error", result.TestError)
+
+	mux.HandleFunc("/", result.MaybeReverseProxy)
+
+	result.mux = mux
+
+	return result, nil
 }
 
 type Server struct {
-	rp                  *httputil.ReverseProxy
+	mux                 *http.ServeMux
+	next                http.Handler
 	priv                ed25519.PrivateKey
 	pub                 ed25519.PublicKey
-	Policy              *policy.ParsedConfig
+	policy              *policy.ParsedConfig
 	DNSBLCache          *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	ChallengeDifficulty int
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.mux.ServeHTTP(w, r)
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -174,7 +191,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	ip := r.Header.Get("X-Real-Ip")
 
-	if s.Policy.DNSBL && ip != "" {
+	if s.policy.DNSBL && ip != "" {
 		resp, ok := s.DNSBLCache.Get(ip)
 		if !ok {
 			lg.Debug("looking up ip in dnsbl")
@@ -196,7 +213,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
-		s.rp.ServeHTTP(w, r)
+		s.next.ServeHTTP(w, r)
 		return
 	case config.RuleDeny:
 		ClearCookie(w)
@@ -259,7 +276,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if randomJitter() {
 		r.Header.Add("X-Anubis-Status", "PASS-BRIEF")
 		lg.Debug("cookie is not enrolled into secondary screening")
-		s.rp.ServeHTTP(w, r)
+		s.next.ServeHTTP(w, r)
 		return
 	}
 
@@ -298,7 +315,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	slog.Debug("all checks passed")
 	r.Header.Add("X-Anubis-Status", "PASS-FULL")
-	s.rp.ServeHTTP(w, r)
+	s.next.ServeHTTP(w, r)
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
@@ -459,7 +476,7 @@ func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
-	for _, b := range s.Policy.Bots {
+	for _, b := range s.policy.Bots {
 		if b.UserAgent != nil {
 			if uaMatch := b.UserAgent.MatchString(r.UserAgent()); uaMatch || (uaMatch && s.checkRemoteAddress(b, addr)) {
 				return cr("bot/"+b.Name, b.Action), &b, nil

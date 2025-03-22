@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -18,11 +20,9 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/lib"
+	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
-	"github.com/TecharoHQ/anubis/xess"
-	"github.com/a-h/templ"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -90,6 +90,34 @@ func setupListener(network string, address string) (net.Listener, string) {
 	return listener, formattedAddress
 }
 
+func makeReverseProxy(target string) (http.Handler, error) {
+	u, err := url.Parse(target)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse target URL: %w", err)
+	}
+
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+
+	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
+	if u.Scheme == "unix" {
+		// clean path up so we don't use the socket path in proxied requests
+		addr := u.Path
+		u.Path = ""
+		// tell transport how to dial unix sockets
+		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
+			dialer := net.Dialer{}
+			return dialer.DialContext(ctx, "unix", addr)
+		}
+		// tell transport how to handle the unix url scheme
+		transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
+	}
+
+	rp := httputil.NewSingleHostReverseProxy(u)
+	rp.Transport = transport
+
+	return rp, nil
+}
+
 func main() {
 	flagenv.Parse()
 	flag.Parse()
@@ -103,13 +131,18 @@ func main() {
 		return
 	}
 
-	s, err := lib.New(*target, *policyFname, *challengeDifficulty)
+	rp, err := makeReverseProxy(*target)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("can't make reverse proxy: %v", err)
+	}
+
+	policy, err := libanubis.LoadPoliciesOrDefault(*policyFname, *challengeDifficulty)
+	if err != nil {
+		log.Fatalf("can't parse policy file: %v", err)
 	}
 
 	fmt.Println("Rule error IDs:")
-	for _, rule := range s.Policy.Bots {
+	for _, rule := range policy.Bots {
 		if rule.Action != config.RuleDeny {
 			continue
 		}
@@ -123,25 +156,13 @@ func main() {
 	}
 	fmt.Println()
 
-	mux := http.NewServeMux()
-	xess.Mount(mux)
-
-	mux.Handle(anubis.StaticPath, internal.UnchangingCache(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static))))
-
-	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
-
-	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/make-challenge", s.MakeChallenge)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/pass-challenge", s.PassChallenge)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/test-error", s.TestError)
-
-	if *robotsTxt {
-		mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
-		})
-
-		mux.HandleFunc("/.well-known/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
-		})
+	s, err := libanubis.New(libanubis.Options{
+		Next:           rp,
+		Policy:         policy,
+		ServeRobotsTXT: *robotsTxt,
+	})
+	if err != nil {
+		log.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
 	wg := new(sync.WaitGroup)
@@ -154,10 +175,8 @@ func main() {
 		go metricsServer(ctx, wg.Done)
 	}
 
-	mux.HandleFunc("/", s.MaybeReverseProxy)
-
 	var h http.Handler
-	h = mux
+	h = s
 	h = internal.DefaultXRealIP(*debugXRealIPDefault, h)
 	h = internal.XForwardedForToXRealIP(h)
 
@@ -210,11 +229,6 @@ func metricsServer(ctx context.Context, done func()) {
 	if err := srv.Serve(listener); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
-}
-
-func ohNoes(w http.ResponseWriter, r *http.Request, err error) {
-	slog.Error("super fatal error", "err", err)
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage("An internal server error happened")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 }
 
 func serveMainJSWithBestEncoding(w http.ResponseWriter, r *http.Request) {

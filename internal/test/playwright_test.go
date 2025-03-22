@@ -1,5 +1,3 @@
-//go:build integration
-
 // Integration tests for Anubis, using Playwright.
 //
 // These tests require an already running Anubis and Playwright server.
@@ -16,31 +14,60 @@
 package test
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 
+	"github.com/TecharoHQ/anubis"
+	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/playwright-community/playwright-go"
 )
 
 var (
-	anubisServer          = flag.String("anubis", "http://localhost:8923", "Anubis server URL")
 	serverBindAddr        = flag.String("bind", "localhost:3923", "test server bind address")
+	playwrightPort        = flag.Int("playwright-port", 3000, "Playwright port")
 	playwrightServer      = flag.String("playwright", "ws://localhost:3000", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
 	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 5*time.Minute, "maximum time for hard Playwright requests")
 
 	testCases = []testCase{
-		{name: "firefox", action: actionChallenge, realIP: placeholderIP, userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0"},
-		{name: "headlessChrome", action: actionDeny, realIP: placeholderIP, userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.28 Safari/537.36"},
-		{name: "kagiBadIP", action: actionChallenge, isHard: true, realIP: placeholderIP, userAgent: "Mozilla/5.0 (compatible; Kagibot/1.0; +https://kagi.com/bot)"},
-		{name: "kagiGoodIP", action: actionAllow, realIP: "216.18.205.234", userAgent: "Mozilla/5.0 (compatible; Kagibot/1.0; +https://kagi.com/bot)"},
-		{name: "unknownAgent", action: actionAllow, realIP: placeholderIP, userAgent: "AnubisTest/0"},
+		{
+			name:      "firefox",
+			action:    actionChallenge,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0",
+		},
+		{
+			name:      "headlessChrome",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.28 Safari/537.36",
+		},
+		{
+			name:      "kagiBadIP",
+			action:    actionChallenge,
+			isHard:    true,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (compatible; Kagibot/1.0; +https://kagi.com/bot)",
+		},
+		{
+			name:      "kagiGoodIP",
+			action:    actionAllow,
+			realIP:    "216.18.205.234",
+			userAgent: "Mozilla/5.0 (compatible; Kagibot/1.0; +https://kagi.com/bot)",
+		},
+		{
+			name:      "unknownAgent",
+			action:    actionAllow,
+			realIP:    placeholderIP,
+			userAgent: "AnubisTest/0",
+		},
 	}
 )
 
@@ -49,7 +76,8 @@ const (
 	actionDeny      action = "DENY"
 	actionChallenge action = "CHALLENGE"
 
-	placeholderIP = "fd11:5ee:bad:c0de::"
+	placeholderIP     = "fd11:5ee:bad:c0de::"
+	playwrightVersion = "1.50.1"
 )
 
 type action string
@@ -61,9 +89,86 @@ type testCase struct {
 	realIP, userAgent string
 }
 
+func doesNPXExist(t *testing.T) {
+	t.Helper()
+
+	if _, err := exec.LookPath("npx"); err != nil {
+		t.Skipf("npx not found in PATH, skipping integration smoke testing: %v", err)
+	}
+}
+
+func run(t *testing.T, command string) string {
+	t.Helper()
+
+	shPath, err := exec.LookPath("sh")
+	if err != nil {
+		t.Fatalf("[unexpected] %v", err)
+	}
+
+	t.Logf("running command: %s", command)
+
+	cmd := exec.Command(shPath, "-c", command)
+	cmd.Stdin = nil
+	cmd.Stderr = os.Stderr
+	output, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("can't run command: %v", err)
+	}
+
+	return string(output)
+}
+
+func daemonize(t *testing.T, command string) {
+	t.Helper()
+
+	shPath, err := exec.LookPath("sh")
+	if err != nil {
+		t.Fatalf("[unexpected] %v", err)
+	}
+
+	t.Logf("daemonizing command: %s", command)
+
+	cmd := exec.Command(shPath, "-c", command)
+	cmd.Stdin = nil
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("can't daemonize command: %v", err)
+	}
+
+	t.Cleanup(func() {
+		cmd.Process.Kill()
+	})
+}
+
+func startPlaywright(t *testing.T) {
+	t.Helper()
+
+	run(t, fmt.Sprintf("npx --yes playwright@%s install", playwrightVersion))
+	daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
+
+	for true {
+		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
+			time.Sleep(250 * time.Millisecond)
+			continue
+		}
+		break
+	}
+}
+
 func TestPlaywrightBrowser(t *testing.T) {
+	if os.Getenv("DONT_USE_NETWORK") != "" {
+		t.Skip("test requires network egress")
+		return
+	}
+
+	doesNPXExist(t)
+	startPlaywright(t)
+
 	pw := setupPlaywright(t)
-	spawnTestServer(t)
+	anubisURL := spawnAnubis(t)
+
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
 	for _, typ := range browsers {
@@ -75,7 +180,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 					t.Skip("skipping hard challenge with deadline")
 				}
 
-				perfomedAction := executeTestCase(t, tc, typ)
+				perfomedAction := executeTestCase(t, tc, typ, anubisURL)
 
 				if perfomedAction != tc.action {
 					t.Errorf("unexpected test result, expected %s, got %s", tc.action, perfomedAction)
@@ -97,7 +202,7 @@ func buildBrowserConnect(name string) string {
 	return u.String()
 }
 
-func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType) action {
+func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string) action {
 	deadline, _ := t.Deadline()
 
 	browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
@@ -129,7 +234,7 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType) acti
 	// Attempt challenge.
 
 	start := time.Now()
-	_, err = page.Goto(*anubisServer, playwright.PageGotoOptions{
+	_, err = page.Goto(anubisURL, playwright.PageGotoOptions{
 		Timeout: pwTimeout(tc, deadline),
 	})
 	if err != nil {
@@ -252,25 +357,34 @@ func setupPlaywright(t *testing.T) *playwright.Playwright {
 	return pw
 }
 
-func spawnTestServer(t *testing.T) {
+func spawnAnubis(t *testing.T) string {
 	t.Helper()
 
-	s := new(http.Server)
-	s.Addr = *serverBindAddr
-	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/html")
 		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
 	})
 
-	go func() {
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			t.Logf("test HTTP server terminated unexpectedly: %v", err)
-		}
-	}()
+	policy, err := libanubis.LoadPoliciesOrDefault("", anubis.DefaultDifficulty)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s, err := libanubis.New(libanubis.Options{
+		Next:           h,
+		Policy:         policy,
+		ServeRobotsTXT: true,
+	})
+	if err != nil {
+		t.Fatalf("can't construct libanubis.Server: %v", err)
+	}
+
+	ts := httptest.NewServer(s)
+	t.Log(ts.URL)
 
 	t.Cleanup(func() {
-		if err := s.Shutdown(context.Background()); err != nil {
-			t.Fatalf("could not shutdown test server: %v", err)
-		}
+		ts.Close()
 	})
+
+	return ts.URL
 }
