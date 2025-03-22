@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed and clarified installation instructions
+- Fixed bot check to only apply if address range matches
 
 ## v1.14.2
 
