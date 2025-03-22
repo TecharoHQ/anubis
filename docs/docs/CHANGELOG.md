@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed and clarified installation instructions
+- Hide the directory listings for Anubis' internal static content
 
 ## v1.14.2
 
