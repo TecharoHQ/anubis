@@ -1,4 +1,4 @@
-package checkresult
+package lib
 
 import (
 	"log/slog"
@@ -17,7 +17,7 @@ func (cr CheckResult) LogValue() slog.Value {
 		slog.String("rule", string(cr.Rule)))
 }
 
-func CR(name string, rule config.Rule) CheckResult {
+func cr(name string, rule config.Rule) CheckResult {
 	return CheckResult{
 		Name: name,
 		Rule: rule,

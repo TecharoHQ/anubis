@@ -1,9 +1,9 @@
-package utils
+package lib
 
 import (
 	"math/rand"
 )
 
-func RandomJitter() bool {
+func randomJitter() bool {
 	return rand.Intn(100) > 10
 }

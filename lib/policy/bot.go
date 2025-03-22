@@ -1,11 +1,11 @@
-package bot
+package policy
 
 import (
 	"fmt"
 	"regexp"
 
+	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
-	"github.com/TecharoHQ/anubis/lib/utils"
 	"github.com/yl2chen/cidranger"
 )
 
@@ -28,5 +28,5 @@ func (b Bot) Hash() (string, error) {
 		userAgentRex = b.UserAgent.String()
 	}
 
-	return utils.SHA256sum(fmt.Sprintf("%s::%s::%s", b.Name, pathRex, userAgentRex)), nil
+	return internal.SHA256sum(fmt.Sprintf("%s::%s::%s", b.Name, pathRex, userAgentRex)), nil
 }
