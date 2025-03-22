@@ -1,6 +1,11 @@
 // https://dev.to/ratmd/simple-proof-of-work-in-javascript-3kgm
 
-export default function process(data, difficulty = 5, _threads = 1) {
+export default function process(
+  data,
+  difficulty = 5,
+  progressCallback = null,
+  _threads = 1,
+) {
   console.debug("slow algo");
   return new Promise((resolve, reject) => {
     let webWorkerURL = URL.createObjectURL(new Blob([
@@ -10,8 +15,12 @@ export default function process(data, difficulty = 5, _threads = 1) {
     let worker = new Worker(webWorkerURL);
 
     worker.onmessage = (event) => {
-      worker.terminate();
-      resolve(event.data);
+      if (typeof event.data === "number") {
+        progressCallback?.(event.data);
+      } else {
+        worker.terminate();
+        resolve(event.data);
+      }
     };
 
     worker.onerror = (event) => {
@@ -47,6 +56,9 @@ function processTask() {
       let hash;
       let nonce = 0;
       do {
+        if (nonce & 1023 === 0) {
+          postMessage(nonce);
+        }
         hash = await sha256(data + nonce++);
       } while (hash.substring(0, difficulty) !== Array(difficulty + 1).join('0'));
 
