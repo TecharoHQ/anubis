@@ -155,11 +155,14 @@ func startPlaywright(t *testing.T) {
 
 	for true {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
-			time.Sleep(250 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			continue
 		}
 		break
 	}
+
+	//nosleep:bypass XXX(Xe): Playwright doesn't have a good way to signal readiness. This is a HACK that will just let the tests pass.
+	time.Sleep(2 * time.Second)
 }
 
 func TestPlaywrightBrowser(t *testing.T) {
@@ -178,7 +181,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 
 	for _, typ := range browsers {
 		for _, tc := range testCases {
-			name := fmt.Sprintf("%s@%s", tc.name, typ.Name())
+			name := fmt.Sprintf("%s/%s", tc.name, typ.Name())
 			t.Run(name, func(t *testing.T) {
 				_, hasDeadline := t.Deadline()
 				if tc.isHard && hasDeadline {
