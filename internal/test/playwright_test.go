@@ -180,13 +180,42 @@ func TestPlaywrightBrowser(t *testing.T) {
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
 	for _, typ := range browsers {
-		for _, tc := range testCases {
-			name := fmt.Sprintf("%s/%s", tc.name, typ.Name())
-			t.Run(name, func(t *testing.T) {
-				if name == "firefox/chromium" {
-					t.Skip("XXX(Xe): this test just fails for now. Fix later.")
-				}
+		t.Run(typ.Name()+"/warmup", func(t *testing.T) {
+			browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
+				ExposeNetwork: playwright.String("<loopback>"),
+			})
+			if err != nil {
+				t.Fatalf("could not connect to remote browser: %v", err)
+			}
+			defer browser.Close()
 
+			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
+				AcceptDownloads: playwright.Bool(false),
+				ExtraHttpHeaders: map[string]string{
+					"X-Real-Ip": "127.0.0.1",
+				},
+				UserAgent: playwright.String("Sephiroth"),
+			})
+			if err != nil {
+				t.Fatalf("could not create context: %v", err)
+			}
+			defer ctx.Close()
+
+			page, err := ctx.NewPage()
+			if err != nil {
+				t.Fatalf("could not create page: %v", err)
+			}
+			defer page.Close()
+
+			timeout := 2.0
+			page.Goto(anubisURL, playwright.PageGotoOptions{
+				Timeout: &timeout,
+			})
+		})
+
+		for _, tc := range testCases {
+			name := fmt.Sprintf("%s/%s", typ.Name(), tc.name)
+			t.Run(name, func(t *testing.T) {
 				_, hasDeadline := t.Deadline()
 				if tc.isHard && hasDeadline {
 					t.Skip("skipping hard challenge with deadline")
