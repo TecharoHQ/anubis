@@ -54,6 +54,7 @@ var (
 	target              = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck         = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	debugXRealIPDefault = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
+	debugBenchmarkJS    = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
 
 	//go:embed static botPolicies.json
 	static embed.FS
@@ -96,6 +97,7 @@ const (
 //go:generate gzip -f -k static/js/main.mjs
 //go:generate zstd -f -k --ultra -22 static/js/main.mjs
 //go:generate brotli -fZk static/js/main.mjs
+//go:generate esbuild js/bench.mjs --sourcemap --bundle --minify --outfile=static/debug/bench.mjs
 
 func doHealthCheck() error {
 	resp, err := http.Get("http://localhost" + *metricsBind + "/metrics")
@@ -226,6 +228,7 @@ func main() {
 		"target", *target,
 		"version", anubis.Version,
 		"debug-x-real-ip-default", *debugXRealIPDefault,
+		"debug-benchmark-js", *debugBenchmarkJS,
 	)
 
 	go func() {
@@ -439,6 +442,11 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		templ.Handler(base("Oh noes!", errorPage(fmt.Sprintf("Access Denied: error code %s", hash))), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
 		return
 	case config.RuleChallenge:
+		if *debugBenchmarkJS {
+			lg.Debug("issuing benchmark challenge")
+			s.renderIndex(w, r)
+			return
+		}
 		lg.Debug("challenge requested")
 	default:
 		clearCookie(w)
@@ -525,9 +533,14 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) renderIndex(w http.ResponseWriter, r *http.Request) {
-	templ.Handler(
-		base("Making sure you're not a bot!", index()),
-	).ServeHTTP(w, r)
+	var handler *templ.ComponentHandler
+	if !*debugBenchmarkJS {
+		handler = templ.Handler(base("Making sure you're not a bot!", index()))
+	} else {
+		handler = templ.Handler(base("Benchmarking Anubis!", bench()))
+	}
+
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) makeChallenge(w http.ResponseWriter, r *http.Request) {
