@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func zilch[T any]() T {
+func Zilch[T any]() T {
 	var zero T
 	return zero
 }
@@ -57,7 +57,7 @@ func (m *DecayMap[K, V]) Get(key K) (V, bool) {
 	m.lock.RUnlock()
 
 	if !ok {
-		return zilch[V](), false
+		return Zilch[V](), false
 	}
 
 	if time.Now().After(value.expiry) {
@@ -69,7 +69,7 @@ func (m *DecayMap[K, V]) Get(key K) (V, bool) {
 		}
 		m.lock.Unlock()
 
-		return zilch[V](), false
+		return Zilch[V](), false
 	}
 
 	return value.Value, true

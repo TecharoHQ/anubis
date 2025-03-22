@@ -113,7 +113,7 @@ func New(target, policyFname string, challengeDifficulty int) (*Server, error) {
 
 	defer fin.Close()
 
-	policy, err := policy.ParseConfig(fin, policyFname, *challengeDifficulty)
+	policy, err := policy.ParseConfig(fin, policyFname, challengeDifficulty)
 
 	if err != nil {
 		return nil, err // parseConfig sets a fancy error for us
@@ -153,11 +153,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 }
 
 func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
-	cr, rule := s.check(r)
-	r.Header.Add("X-Anubis-Rule", cr.Name)
-	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg := slog.With(
-		"check_result", cr,
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),
@@ -176,7 +172,6 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	r.Header.Add("X-Anubis-Rule", cr.Name)
 	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg = lg.With("check_result", cr)
-
 	policy.PolicyApplications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
 
 	ip := r.Header.Get("X-Real-Ip")
@@ -257,7 +252,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
 
 	if err != nil || !token.Valid {
-		lg.Debug("invalid token", "path", r.URL.Path)
+		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		utils.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
@@ -458,12 +453,12 @@ func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 func (s *Server) check(r *http.Request) (checkresult.CheckResult, *bot.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
-		return zilch[checkresult.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+		return decaymap.Zilch[checkresult.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
 	}
 
 	addr := net.ParseIP(host)
 	if addr == nil {
-		return zilch[checkresult.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
+		return decaymap.Zilch[checkresult.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
 	for _, b := range s.Policy.Bots {
