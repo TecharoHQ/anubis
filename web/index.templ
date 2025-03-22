@@ -1,0 +1,217 @@
+package web
+
+import (
+	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/xess"
+)
+
+templ base(title string, body templ.Component) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>{ title }</title>
+			<link rel="stylesheet" href={ xess.URL }/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<style>
+    body,
+    html {
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .centered-div {
+      text-align: center;
+    }
+
+    .lds-roller,
+    .lds-roller div,
+    .lds-roller div:after {
+      box-sizing: border-box;
+    }
+
+    .lds-roller {
+      display: inline-block;
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .lds-roller div {
+      animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      transform-origin: 40px 40px;
+    }
+
+    .lds-roller div:after {
+      content: " ";
+      display: block;
+      position: absolute;
+      width: 7.2px;
+      height: 7.2px;
+      border-radius: 50%;
+      background: currentColor;
+      margin: -3.6px 0 0 -3.6px;
+    }
+
+    .lds-roller div:nth-child(1) {
+      animation-delay: -0.036s;
+    }
+
+    .lds-roller div:nth-child(1):after {
+      top: 62.62742px;
+      left: 62.62742px;
+    }
+
+    .lds-roller div:nth-child(2) {
+      animation-delay: -0.072s;
+    }
+
+    .lds-roller div:nth-child(2):after {
+      top: 67.71281px;
+      left: 56px;
+    }
+
+    .lds-roller div:nth-child(3) {
+      animation-delay: -0.108s;
+    }
+
+    .lds-roller div:nth-child(3):after {
+      top: 70.90963px;
+      left: 48.28221px;
+    }
+
+    .lds-roller div:nth-child(4) {
+      animation-delay: -0.144s;
+    }
+
+    .lds-roller div:nth-child(4):after {
+      top: 72px;
+      left: 40px;
+    }
+
+    .lds-roller div:nth-child(5) {
+      animation-delay: -0.18s;
+    }
+
+    .lds-roller div:nth-child(5):after {
+      top: 70.90963px;
+      left: 31.71779px;
+    }
+
+    .lds-roller div:nth-child(6) {
+      animation-delay: -0.216s;
+    }
+
+    .lds-roller div:nth-child(6):after {
+      top: 67.71281px;
+      left: 24px;
+    }
+
+    .lds-roller div:nth-child(7) {
+      animation-delay: -0.252s;
+    }
+
+    .lds-roller div:nth-child(7):after {
+      top: 62.62742px;
+      left: 17.37258px;
+    }
+
+    .lds-roller div:nth-child(8) {
+      animation-delay: -0.288s;
+    }
+
+    .lds-roller div:nth-child(8):after {
+      top: 56px;
+      left: 12.28719px;
+    }
+
+    @keyframes lds-roller {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+      </style>
+			@templ.JSONScript("anubis_version", anubis.Version)
+		</head>
+		<body id="top">
+			<main>
+				<center>
+					<h1 id="title" class=".centered-div">{ title }</h1>
+				</center>
+				@body
+				<footer>
+					<center>
+						<p>
+							Protected by <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
+	href="https://techaro.lol"
+>Techaro</a>. Made with ❤️ in 🇨🇦.
+						</p>
+					</center>
+				</footer>
+			</main>
+		</body>
+	</html>
+}
+
+templ index() {
+	<div class="centered-div">
+		<img
+			id="image"
+			style="width:100%;max-width:256px;"
+			src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
+    anubis.Version }
+		/>
+		<img
+			style="display:none;"
+			style="width:100%;max-width:256px;"
+			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
+    anubis.Version }
+		/>
+		<p id="status">Loading...</p>
+		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
+		<div id="spinner" class="lds-roller">
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+		</div>
+		<details>
+			<summary>Why am I seeing this?</summary>
+			<p>You are seeing this because the administrator of this website has set up <a href="https://github.com/TecharoHQ/anubis">Anubis</a> to protect the server against the scourge of <a href="https://thelibre.news/foss-infrastructure-is-under-attack-by-ai-companies/">AI companies aggressively scraping websites</a>. This can and does cause downtime for the websites, which makes their resources inaccessible for everyone.</p>
+			<p>Anubis is a compromise. Anubis uses a <a href="https://anubis.techaro.lol/docs/design/why-proof-of-work">Proof-of-Work</a> scheme in the vein of <a href="https://en.wikipedia.org/wiki/Hashcash">Hashcash</a>, a proposed proof-of-work scheme for reducing email spam. The idea is that at individual scales the additional load is ignorable, but at mass scraper levels it adds up and makes scraping much more expensive.</p>
+			<p>Ultimately, this is a hack whose real purpose is to give a "good enough" placeholder solution so that more time can be spent on fingerprinting and identifying headless browsers (EG: via how they do font rendering) so that the challenge proof of work page doesn't need to be presented to users that are much more likely to be legitimate.</p>
+			<p>Please note that Anubis requires the use of modern JavaScript features that plugins like <a href="https://jshelter.org/">JShelter</a> will disable. Please disable JShelter or other such plugins for this domain.</p>
+		</details>
+		<noscript>
+			<p>
+				Sadly, you must enable JavaScript to get past this challenge. This is required because AI companies have changed
+				the social contract around how website hosting works. A no-JS solution is a work-in-progress.
+			</p>
+		</noscript>
+		<div id="testarea"></div>
+	</div>
+}
+
+templ errorPage(message string) {
+	<div class="centered-div">
+		<img
+			id="image"
+			style="width:100%;max-width:256px;"
+			src={ "/.within.website/x/cmd/anubis/static/img/sad.webp?cacheBuster=" + anubis.Version }
+		/>
+		<p>{ message }.</p>
+		<button onClick="window.location.reload();">Try again</button>
+		<p><a href="/">Go home</a></p>
+	</div>
+}
