@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/sebest/xff"
@@ -59,6 +60,17 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 			r.Header.Set("X-Real-Ip", ip)
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Do not allow browsing directory listings in paths that end with /
+func NoBrowsing(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
