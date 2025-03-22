@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed and clarified installation instructions
+
 ## v1.14.2
 
 Livia sas Junius: Echo 2
