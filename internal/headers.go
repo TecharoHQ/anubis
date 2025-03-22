@@ -3,6 +3,7 @@ package internal
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/sebest/xff"
@@ -21,16 +22,16 @@ func UnchangingCache(next http.Handler) http.Handler {
 	})
 }
 
-// DefaultXRealIP sets the X-Real-Ip header to the given value if and only if
-// it is not an empty string.
-func DefaultXRealIP(defaultIP string, next http.Handler) http.Handler {
-	if defaultIP == "" {
-		slog.Debug("skipping middleware, defaultIP is empty")
+// RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
+// the setting is enabled by the user.
+func RemoteXRealIP(useRemoteAddress *bool, next http.Handler) http.Handler {
+	if useRemoteAddress == nil || *useRemoteAddress == false {
+		slog.Debug("skipping middleware, useRemoteAddress is empty")
 		return next
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Set("X-Real-Ip", defaultIP)
+		r.Header.Set("X-Real-Ip", strings.Split(r.RemoteAddr, ":")[0])
 		next.ServeHTTP(w, r)
 	})
 }
