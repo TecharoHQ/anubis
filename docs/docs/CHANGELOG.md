@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed and clarified installation instructions
 - Introduced integration tests using Playwright
 - Introduced the `DEBUG_BENCHMARK_JS` environment variable for testing the proof-of-work performance.
+- Verification page now shows hash rate and a progress bar for completion probability.
 
 ## v1.14.2
 
