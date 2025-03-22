@@ -181,7 +181,7 @@ func main() {
 	mux := http.NewServeMux()
 	xess.Mount(mux)
 
-	mux.Handle(staticPath, internal.UnchangingCache(http.StripPrefix(staticPath, http.FileServerFS(static))))
+	mux.Handle(staticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(staticPath, http.FileServerFS(static)))))
 
 	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
 
