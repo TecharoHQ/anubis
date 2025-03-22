@@ -145,7 +145,12 @@ func daemonize(t *testing.T, command string) {
 func startPlaywright(t *testing.T) {
 	t.Helper()
 
-	run(t, fmt.Sprintf("npx --yes playwright@%s install", playwrightVersion))
+	if os.Getenv("CI") == "true" {
+		run(t, fmt.Sprintf("npx --yes playwright@%s install --with-deps", playwrightVersion))
+	} else {
+		run(t, fmt.Sprintf("npx --yes playwright@%s install", playwrightVersion))
+	}
+
 	daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
 
 	for true {

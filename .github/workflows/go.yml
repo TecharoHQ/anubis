@@ -56,6 +56,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-golang-
 
+    - name: Cache playwright binaries
+      uses: actions/cache@v3
+      id: playwright-cache
+      with:
+        path: |
+          ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/go.sum') }}
+
     - name: Build
       run: go build ./...
 
