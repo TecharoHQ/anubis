@@ -10,14 +10,19 @@ const algorithms = {
 const status = document.getElementById("status");
 const difficultyInput = document.getElementById("difficulty-input");
 const algorithmSelect = document.getElementById("algorithm-select");
+const compareSelect = document.getElementById("compare-select");
+const header = document.getElementById("table-header");
+const headerCompare = document.getElementById("table-header-compare");
 const results = document.getElementById("results");
 
 const setupControls = () => {
   difficultyInput.value = defaultDifficulty;
   for (const alg of Object.keys(algorithms)) {
-    const option = document.createElement("option");
-    option.value = option.innerText = alg;
-    algorithmSelect.append(option);
+    const option1 = document.createElement("option");
+    algorithmSelect.append(option1);
+    const option2 = document.createElement("option");
+    compareSelect.append(option2);
+    option1.value = option1.innerText = option2.value = option2.innerText = alg;
   }
 };
 
@@ -48,10 +53,16 @@ const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
 };
 
 const stats = { time: 0, iters: 0 };
+const comparison = { time: 0, iters: 0 };
 const updateStatus = () => {
-  const rate = stats.iters / stats.time;
-  if (Number.isFinite(rate)) {
-    status.innerText = `Average hashrate: ${rate.toFixed(3)}kH/s`;
+  const mainRate = stats.iters / stats.time;
+  const compareRate = comparison.iters / comparison.time;
+  if (Number.isFinite(mainRate)) {
+    status.innerText = `Average hashrate: ${mainRate.toFixed(3)}kH/s`;
+    if (Number.isFinite(compareRate)) {
+      const change = ((mainRate - compareRate) / mainRate) * 100;
+      status.innerText += ` vs ${compareRate.toFixed(3)}kH/s (${change.toFixed(2)}% change)`;
+    }
   } else {
     status.innerText = "Benchmarking...";
   }
@@ -67,6 +78,7 @@ const tableCell = (text) => {
 const benchmarkLoop = async (controller) => {
   const difficulty = difficultyInput.value;
   const algorithm = algorithmSelect.value;
+  const compareAlgorithm = compareSelect.value;
   updateStatus();
 
   try {
@@ -88,8 +100,17 @@ const benchmarkLoop = async (controller) => {
     if (atBottom) {
       results.scrollTop = results.scrollHeight - results.clientHeight;
     }
-
     updateStatus();
+
+    if (compareAlgorithm !== "NONE") {
+      const { time, nonce } = await benchmarkTrial(
+        comparison,
+        difficulty,
+        compareAlgorithm,
+        controller.signal,
+      );
+      tr.append(tableCell(`${time}ms`), tableCell(nonce));
+    }
   } catch (e) {
     if (e !== false) {
       status.innerText = e;
@@ -103,17 +124,29 @@ const benchmarkLoop = async (controller) => {
 let controller = null;
 const reset = () => {
   stats.time = stats.iters = 0;
+  comparison.time = comparison.iters = 0;
   results.innerHTML = status.innerText = "";
+
+  const table = results.parentElement;
+  if (compareSelect.value !== "NONE") {
+    table.style.gridTemplateColumns = "repeat(4,auto)";
+    header.style.display = "none";
+    headerCompare.style.display = "contents";
+  } else {
+    table.style.gridTemplateColumns = "repeat(2,auto)";
+    header.style.display = "contents";
+    headerCompare.style.display = "none";
+  }
 
   if (controller != null) {
     controller.abort();
   }
   controller = new AbortController();
-
   benchmarkLoop(controller);
 };
 
 setupControls();
 difficultyInput.addEventListener("change", reset);
 algorithmSelect.addEventListener("change", reset);
+compareSelect.addEventListener("change", reset);
 reset();
