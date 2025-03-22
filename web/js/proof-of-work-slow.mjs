@@ -3,6 +3,7 @@
 export default function process(
   data,
   difficulty = 5,
+  signal = null,
   progressCallback = null,
   _threads = 1,
 ) {
@@ -13,19 +14,33 @@ export default function process(
     ], { type: 'application/javascript' }));
 
     let worker = new Worker(webWorkerURL);
+    const terminate = () => {
+      worker.terminate();
+      if (signal != null) {
+        // clean up listener to avoid memory leak
+        signal.removeEventListener("abort", terminate);
+        if (signal.aborted) {
+          console.log("PoW aborted");
+          reject(false);
+        }
+      }
+    };
+    if (signal != null) {
+      signal.addEventListener("abort", terminate, { once: true });
+    }
 
     worker.onmessage = (event) => {
       if (typeof event.data === "number") {
         progressCallback?.(event.data);
       } else {
-        worker.terminate();
+        terminate();
         resolve(event.data);
       }
     };
 
     worker.onerror = (event) => {
-      worker.terminate();
-      reject();
+      terminate();
+      reject(event);
     };
 
     worker.postMessage({

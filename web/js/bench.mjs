@@ -21,7 +21,7 @@ const setupControls = () => {
   }
 };
 
-const benchmarkTrial = async (stats, difficulty, algorithm) => {
+const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
   if (!(difficulty >= 1)) {
     throw new Error(`Invalid difficulty: ${difficulty}`);
   }
@@ -37,7 +37,7 @@ const benchmarkTrial = async (stats, difficulty, algorithm) => {
     .join("");
 
   const t0 = performance.now();
-  const { hash, nonce } = await process(challenge, Number(difficulty));
+  const { hash, nonce } = await process(challenge, Number(difficulty), signal);
   const t1 = performance.now();
   console.log({ hash, nonce });
 
@@ -64,13 +64,18 @@ const tableCell = (text) => {
   return td;
 };
 
-const benchmarkLoop = async () => {
+const benchmarkLoop = async (controller) => {
   const difficulty = difficultyInput.value;
   const algorithm = algorithmSelect.value;
   updateStatus();
 
   try {
-    const { time, nonce } = await benchmarkTrial(stats, difficulty, algorithm);
+    const { time, nonce } = await benchmarkTrial(
+      stats,
+      difficulty,
+      algorithm,
+      controller.signal,
+    );
 
     const tr = document.createElement("tr");
     tr.style.display = "contents";
@@ -86,18 +91,26 @@ const benchmarkLoop = async () => {
 
     updateStatus();
   } catch (e) {
-    status.innerText = e;
+    if (e !== false) {
+      status.innerText = e;
+    }
     return;
   }
 
-  benchmarkLoop();
+  benchmarkLoop(controller);
 };
 
+let controller = null;
 const reset = () => {
   stats.time = stats.iters = 0;
   results.innerHTML = status.innerText = "";
 
-  benchmarkLoop();
+  if (controller != null) {
+    controller.abort();
+  }
+  controller = new AbortController();
+
+  benchmarkLoop(controller);
 };
 
 setupControls();
