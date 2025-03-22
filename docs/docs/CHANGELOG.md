@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed and clarified installation instructions
 - Introduced integration tests using Playwright
 - Refactor & Split up Anubis into cmd and lib.go
+- Fixed bot check to only apply if address range matches
 
 ## v1.14.2
 

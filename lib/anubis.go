@@ -478,13 +478,13 @@ func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 
 	for _, b := range s.policy.Bots {
 		if b.UserAgent != nil {
-			if uaMatch := b.UserAgent.MatchString(r.UserAgent()); uaMatch || (uaMatch && s.checkRemoteAddress(b, addr)) {
+			if b.UserAgent.MatchString(r.UserAgent()) && s.checkRemoteAddress(b, addr) {
 				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
 
 		if b.Path != nil {
-			if pathMatch := b.Path.MatchString(r.URL.Path); pathMatch || (pathMatch && s.checkRemoteAddress(b, addr)) {
+			if b.Path.MatchString(r.URL.Path) && s.checkRemoteAddress(b, addr) {
 				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
@@ -507,7 +507,7 @@ func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 
 func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 	if b.Ranger == nil {
-		return false
+		return true
 	}
 
 	ok, err := b.Ranger.Contains(addr)
