@@ -4,6 +4,7 @@ export default function process(
   data,
   difficulty = 5,
   signal = null,
+  progressCallback = null,
   _threads = 1,
 ) {
   console.debug("slow algo");
@@ -30,8 +31,12 @@ export default function process(
     }
 
     worker.onmessage = (event) => {
-      terminate();
-      resolve(event.data);
+      if (typeof event.data === "number") {
+        progressCallback?.(event.data);
+      } else {
+        terminate();
+        resolve(event.data);
+      }
     };
 
     worker.onerror = (event) => {
@@ -67,6 +72,9 @@ function processTask() {
       let hash;
       let nonce = 0;
       do {
+        if (nonce & 1023 === 0) {
+          postMessage(nonce);
+        }
         hash = await sha256(data + nonce++);
       } while (hash.substring(0, difficulty) !== Array(difficulty + 1).join('0'));
 

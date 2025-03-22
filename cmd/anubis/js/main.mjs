@@ -69,10 +69,26 @@ const imageURL = (mood, cacheBuster) =>
     return;
   }
 
-  status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}`;
+  status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}, Speed: `;
+  const rateText = document.createTextNode("0kH/s");
+  status.appendChild(rateText);
+
+  let lastSpeedUpdate = 0;
 
   const t0 = Date.now();
-  const { hash, nonce } = await process(challenge, rules.difficulty);
+  const { hash, nonce } = await process(
+    challenge,
+    rules.difficulty,
+    null,
+    (iters) => {
+      const delta = Date.now() - t0;
+      // only update the speed every second so it's less visually distracting
+      if (delta - lastSpeedUpdate > 1000) {
+        lastSpeedUpdate = delta;
+        rateText.data = `${(iters / delta).toFixed(3)}kH/s`;
+      }
+    },
+  );
   const t1 = Date.now();
   console.log({ hash, nonce });
 

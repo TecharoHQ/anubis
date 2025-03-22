@@ -2,6 +2,7 @@ export default function process(
   data,
   difficulty = 5,
   signal = null,
+  progressCallback = null,
   threads = (navigator.hardwareConcurrency || 1),
 ) {
   console.debug("fast algo");
@@ -31,8 +32,12 @@ export default function process(
       let worker = new Worker(webWorkerURL);
 
       worker.onmessage = (event) => {
-        terminate();
-        resolve(event.data);
+        if (typeof event.data === "number") {
+          progressCallback?.(event.data);
+        } else {
+          terminate();
+          resolve(event.data);
+        }
       };
 
       worker.onerror = (event) => {
@@ -74,6 +79,8 @@ function processTask() {
       let nonce = event.data.nonce;
       let threads = event.data.threads;
 
+      const threadId = nonce;
+
       while (true) {
         const currentHash = await sha256(data + nonce);
         const thisHash = new Uint8Array(currentHash);
@@ -97,7 +104,21 @@ function processTask() {
           break;
         }
 
+        const oldNonce = nonce;
         nonce += threads;
+
+        // send a progess update every 1024 iterations. since each thread checks
+        // separate values, one simple way to do this is by bit masking the
+        // nonce for multiples of 1024. unfortunately, if the number of threads
+        // is not prime, only some of the threads will be sending the status
+        // update and they will get behind the others. this is slightly more
+        // complicated but ensures an even distribution between threads.
+        if (
+          nonce > oldNonce | 1023 && // we've wrapped past 1024
+          (nonce >> 10) % threads === threadId // and it's our turn
+        ) {
+          postMessage(nonce);
+        }
       }
 
       postMessage({
