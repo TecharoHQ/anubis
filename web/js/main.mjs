@@ -37,7 +37,7 @@ const dependencies = [
   const status = document.getElementById('status');
   const image = document.getElementById('image');
   const title = document.getElementById('title');
-  const spinner = document.getElementById('spinner');
+  const progress = document.getElementById('progress');
   const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
 
   const ohNoes = ({
@@ -46,8 +46,7 @@ const dependencies = [
     title.innerHTML = titleMsg;
     status.innerHTML = statusMsg;
     image.src = imageSrc;
-    spinner.innerHTML = "";
-    spinner.style.display = "none";
+    progress.style.display = "none";
   };
 
   if (!window.isSecureContext) {
@@ -68,8 +67,7 @@ const dependencies = [
   //   title.innerHTML = "Oh no!";
   //   status.innerHTML = "Checks failed. Please check your browser's settings and try again.";
   //   image.src = imageURL("sad");
-  //   spinner.innerHTML = "";
-  //   spinner.style.display = "none";
+  //   progress.style.display = "none";
   //   return;
   // }
 
@@ -113,7 +111,7 @@ const dependencies = [
   }
 
   status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}, `;
-  spinner.style.display = "block";
+  progress.style.display = "inline-block";
 
   // the whole text, including "Speed:", as a single node, because some browsers
   // (Firefox mobile) present screen readers with each node as a separate piece
@@ -122,6 +120,8 @@ const dependencies = [
   status.appendChild(rateText);
 
   let lastSpeedUpdate = 0;
+  let showingApology = false;
+  const likelihood = Math.pow(16, -rules.report_as);
   try {
     const t0 = Date.now();
     const { hash, nonce } = await process(
@@ -134,6 +134,26 @@ const dependencies = [
           lastSpeedUpdate = delta;
           rateText.data = `Speed: ${(iters / delta).toFixed(3)}kH/s`;
         }
+
+        // the probability of still being on the page is (1 - likelihood) ^ iters.
+        // by definition, half of the time the progress bar only gets to half, so
+        // apply a polynomial ease-out function to move faster in the beginning
+        // and then slow down as things get increasingly unlikely. quadratic felt
+        // the best in testing, but this may need adjustment in the future.
+        const probability = Math.pow(1 - likelihood, iters);
+        const distance = (1 - Math.pow(probability, 2)) * 100;
+        progress["aria-valuenow"] = distance;
+        progress.firstElementChild.style.width = `${distance}%`;
+
+        if (probability < 0.1 && !showingApology) {
+          status.append(
+            document.createElement("br"),
+            document.createTextNode(
+              "Verification is taking longer than expected. Please do not refresh the page.",
+            ),
+          );
+          showingApology = true;
+        }
       },
     );
     const t1 = Date.now();
@@ -142,8 +162,7 @@ const dependencies = [
     title.innerHTML = "Success!";
     status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
     image.src = imageURL("happy", anubisVersion);
-    spinner.innerHTML = "";
-    spinner.style.display = "none";
+    progress.style.display = "none";
 
     setTimeout(() => {
       const redir = window.location.href;

@@ -41,6 +41,7 @@ Many other small changes were made, including but not limited to:
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
 - Fix CI based browser smoke test
+- Verification page now shows hash rate and a progress bar for completion probability.
 
 Users running Anubis' test suite may run into issues with the integration tests on Windows hosts. This is a known issue and will be fixed at some point in the future. In the meantime, use the Windows Subsystem for Linux (WSL).
 
