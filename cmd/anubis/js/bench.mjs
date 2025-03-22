@@ -21,7 +21,7 @@ const setupControls = () => {
   });
 };
 
-const benchmarkTrial = async () => {
+const benchmarkTrial = async (signal) => {
   const difficulty = Number(difficultyInput.value);
   if (!(difficulty >= 1)) {
     throw new Error(`Invalid difficulty: ${difficultyInput.value}`);
@@ -38,7 +38,7 @@ const benchmarkTrial = async () => {
     .join("");
 
   const t0 = Date.now();
-  const { hash, nonce } = await process(challenge, difficulty);
+  const { hash, nonce } = await process(challenge, difficulty, signal);
   const t1 = Date.now();
   console.log({ hash, nonce });
 
@@ -52,21 +52,21 @@ const tableCell = (text) => {
   return td;
 };
 
-let benchmarking = false;
+let controller = null;
 let totalTime = 0;
 let totalIters = 0;
-const startBenchmark = async () => {
-  if (benchmarking) {
-    return; // avoid multiple simultaneous benchmarks
+const startBenchmark = async (signal) => {
+  if (controller != null) {
+    controller.abort();
   }
+  controller = new AbortController();
 
-  benchmarking = true;
   if (totalTime == 0) {
     status.innerText = "Benchmarking...";
   }
 
   try {
-    const { difficulty, time, nonce } = await benchmarkTrial();
+    const { difficulty, time, nonce } = await benchmarkTrial(controller.signal);
 
     totalTime += time;
     totalIters += nonce;
@@ -85,12 +85,13 @@ const startBenchmark = async () => {
 
     status.innerText = `Average hashrate: ${(totalIters / totalTime).toFixed(3)}kH/s`;
   } catch (e) {
-    status.innerText = e;
-    benchmarking = false;
+    if (e !== false) {
+      status.innerText = e;
+    }
+    controller = null;
     return;
   }
 
-  benchmarking = false;
   startBenchmark();
 };
 
