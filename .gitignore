@@ -1,2 +1,6 @@
 .env
 *.rpm
+
+# Go binaries and test artifacts
+main
+*.test
