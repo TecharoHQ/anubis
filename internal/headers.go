@@ -2,8 +2,8 @@ package internal
 
 import (
 	"log/slog"
+	"net"
 	"net/http"
-	"strings"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/sebest/xff"
@@ -24,14 +24,18 @@ func UnchangingCache(next http.Handler) http.Handler {
 
 // RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
 // the setting is enabled by the user.
-func RemoteXRealIP(useRemoteAddress *bool, next http.Handler) http.Handler {
-	if useRemoteAddress == nil || *useRemoteAddress == false {
+func RemoteXRealIP(useRemoteAddress bool, next http.Handler) http.Handler {
+	if useRemoteAddress == false {
 		slog.Debug("skipping middleware, useRemoteAddress is empty")
 		return next
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Set("X-Real-Ip", strings.Split(r.RemoteAddr, ":")[0])
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			panic(err) // this should never happen
+		}
+		r.Header.Set("X-Real-Ip", host)
 		next.ServeHTTP(w, r)
 	})
 }
