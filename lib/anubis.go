@@ -513,7 +513,3 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 
 	return ok
 }
-
-func (s *Server) SetNext(next http.Handler) {
-	s.next = next
-}
