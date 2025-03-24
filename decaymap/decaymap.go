@@ -64,7 +64,7 @@ func (m *Impl[K, V]) Get(key K) (V, bool) {
 		m.lock.Lock()
 		// Since previously reading m.data[key], the value may have been updated.
 		// Delete the entry only if the expiry time is still the same.
-		if m.data[key].expiry == value.expiry {
+		if m.data[key].expiry.Equal(value.expiry) {
 			delete(m.data, key)
 		}
 		m.lock.Unlock()

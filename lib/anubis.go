@@ -98,10 +98,6 @@ func New(opts Options) (*Server, error) {
 		return nil, fmt.Errorf("failed to generate ed25519 key: %w", err)
 	}
 
-	if err != nil {
-		return nil, err // parseConfig sets a fancy error for us
-	}
-
 	result := &Server{
 		next:       opts.Next,
 		priv:       priv,
@@ -516,4 +512,8 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 	}
 
 	return ok
+}
+
+func (s *Server) SetNext(next http.Handler) {
+	s.next = next
 }

@@ -51,7 +51,7 @@ func (b BotConfig) Valid() error {
 		errs = append(errs, ErrBotMustHaveName)
 	}
 
-	if b.UserAgentRegex == nil && b.PathRegex == nil && (b.RemoteAddr == nil || len(b.RemoteAddr) == 0) {
+	if b.UserAgentRegex == nil && b.PathRegex == nil && len(b.RemoteAddr) == 0 {
 		errs = append(errs, ErrBotMustHaveUserAgentOrPath)
 	}
 
@@ -71,7 +71,7 @@ func (b BotConfig) Valid() error {
 		}
 	}
 
-	if b.RemoteAddr != nil && len(b.RemoteAddr) > 0 {
+	if len(b.RemoteAddr) > 0 {
 		for _, cidr := range b.RemoteAddr {
 			if _, _, err := net.ParseCIDR(cidr); err != nil {
 				errs = append(errs, ErrInvalidCIDR, err)

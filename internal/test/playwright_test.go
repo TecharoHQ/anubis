@@ -153,7 +153,7 @@ func startPlaywright(t *testing.T) {
 
 	daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
 
-	for true {
+	for {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
 			time.Sleep(500 * time.Millisecond)
 			continue
@@ -355,7 +355,7 @@ func pwTimeout(tc testCase, deadline time.Time) *float64 {
 		max = *playwrightMaxHardTime
 	}
 
-	d := deadline.Sub(time.Now())
+	d := time.Until(deadline)
 	if d <= 0 || d > max {
 		return playwright.Float(float64(max.Milliseconds()))
 	}

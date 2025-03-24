@@ -46,24 +46,23 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		return nil, err
 	}
 
-	var err error
+	var validationErrs []error
 
 	result := NewParsedConfig(c)
 	result.DefaultDifficulty = defaultDifficulty
 
 	for _, b := range c.Bots {
 		if berr := b.Valid(); berr != nil {
-			err = errors.Join(err, berr)
+			validationErrs = append(validationErrs, berr)
 			continue
 		}
 
-		var botParseErr error
 		parsedBot := Bot{
 			Name:   b.Name,
 			Action: b.Action,
 		}
 
-		if b.RemoteAddr != nil && len(b.RemoteAddr) > 0 {
+		if len(b.RemoteAddr) > 0 {
 			parsedBot.Ranger = cidranger.NewPCTrieRanger()
 
 			for _, cidr := range b.RemoteAddr {
@@ -79,7 +78,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		if b.UserAgentRegex != nil {
 			userAgent, err := regexp.Compile(*b.UserAgentRegex)
 			if err != nil {
-				botParseErr = errors.Join(botParseErr, fmt.Errorf("while compiling user agent regexp: %w", err))
+				validationErrs = append(validationErrs, fmt.Errorf("while compiling user agent regexp: %w", err))
 				continue
 			} else {
 				parsedBot.UserAgent = userAgent
@@ -89,7 +88,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		if b.PathRegex != nil {
 			path, err := regexp.Compile(*b.PathRegex)
 			if err != nil {
-				botParseErr = errors.Join(botParseErr, fmt.Errorf("while compiling path regexp: %w", err))
+				validationErrs = append(validationErrs, fmt.Errorf("while compiling path regexp: %w", err))
 				continue
 			} else {
 				parsedBot.Path = path
@@ -112,8 +111,8 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		result.Bots = append(result.Bots, parsedBot)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("errors validating policy config JSON %s: %w", fname, err)
+	if len(validationErrs) > 0 {
+		return nil, fmt.Errorf("errors validating policy config JSON %s: %w", fname, errors.Join(validationErrs...))
 	}
 
 	result.DNSBL = c.DNSBL
