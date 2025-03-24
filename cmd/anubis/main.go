@@ -214,7 +214,7 @@ func main() {
 
 	var h http.Handler
 	h = s
-	h = internal.RemoteXRealIP(*useRemoteAddress, h)
+	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 
 	srv := http.Server{Handler: h}
