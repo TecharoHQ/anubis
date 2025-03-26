@@ -322,24 +322,24 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) RedirectToIndex(w http.ResponseWriter, r *http.Request) {
-	returnUrl := r.URL.String()
-	indexUrl := "/.within.website/x/cmd/anubis/api/index?r=" + url.QueryEscape(returnUrl)
+	redir := r.URL.String()
+	indexUrl := "/.within.website/x/cmd/anubis/api/index?r=" + url.QueryEscape(redir)
 	http.Redirect(w, r, indexUrl, http.StatusTemporaryRedirect)
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
-	returnUrl := r.URL.Query().Get("r")
+	redir := r.URL.Query().Get("r")
 
-	lg := slog.With("return_url", returnUrl, "user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
+	lg := slog.With("return_url", redir, "user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
 
-	if returnUrl == "" {
+	if redir == "" {
 		lg.Error("no return URL provided")
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
 	templ.Handler(
-		web.Base("Making sure you're not a bot!", web.Index(returnUrl)),
+		web.Base("Making sure you're not a bot!", web.Index(redir)),
 	).ServeHTTP(w, r)
 }
 

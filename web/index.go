@@ -6,8 +6,8 @@ func Base(title string, body templ.Component) templ.Component {
 	return base(title, body)
 }
 
-func Index(redirectUrl string) templ.Component {
-	return index(redirectUrl)
+func Index(redir string) templ.Component {
+	return index(redir)
 }
 
 func ErrorPage(msg string) templ.Component {
