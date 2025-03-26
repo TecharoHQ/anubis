@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -237,7 +238,7 @@ func main() {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 	wg.Wait()
@@ -262,7 +263,7 @@ func metricsServer(ctx context.Context, done func()) {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 }

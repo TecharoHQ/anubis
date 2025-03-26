@@ -30,7 +30,6 @@ import (
 )
 
 var (
-	serverBindAddr        = flag.String("bind", "localhost:3923", "test server bind address")
 	playwrightPort        = flag.Int("playwright-port", 3000, "Playwright port")
 	playwrightServer      = flag.String("playwright", "ws://localhost:3000", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
@@ -371,7 +370,7 @@ func saveScreenshot(t *testing.T, page playwright.Page) {
 		return
 	}
 
-	f, err := os.CreateTemp("", "anubis-test-fail-*.png")
+	f, err := os.CreateTemp(t.TempDir(), "anubis-test-fail-*.png")
 	if err != nil {
 		t.Logf("could not create temporary file: %v", err)
 		return

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -65,8 +66,8 @@ var (
 type Options struct {
 	Next           http.Handler
 	Policy         *policy.ParsedConfig
-	ServeRobotsTXT bool
 	PrivateKey     ed25519.PrivateKey
+	ServeRobotsTXT bool
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -88,9 +89,9 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 
 	defer fin.Close()
 
-	policy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	parsedPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
 
-	return policy, err
+	return parsedPolicy, err
 }
 
 func New(opts Options) (*Server, error) {
@@ -469,7 +470,7 @@ func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
-		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+		return decaymap.Zilch[CheckResult](), nil, errors.New("[misconfiguration] X-Real-Ip header is not set")
 	}
 
 	addr := net.ParseIP(host)

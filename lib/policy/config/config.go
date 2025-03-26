@@ -100,9 +100,9 @@ func (b BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
+	Algorithm  Algorithm `json:"algorithm"`
 	Difficulty int       `json:"difficulty"`
 	ReportAs   int       `json:"report_as"`
-	Algorithm  Algorithm `json:"algorithm"`
 }
 
 var (

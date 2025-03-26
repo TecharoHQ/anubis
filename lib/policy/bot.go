@@ -10,12 +10,12 @@ import (
 )
 
 type Bot struct {
-	Name      string
+	Ranger    cidranger.Ranger
 	UserAgent *regexp.Regexp
 	Path      *regexp.Regexp
-	Action    config.Rule `json:"action"`
 	Challenge *config.ChallengeRules
-	Ranger    cidranger.Ranger
+	Name      string
+	Action    config.Rule `json:"action"`
 }
 
 func (b Bot) Hash() (string, error) {
