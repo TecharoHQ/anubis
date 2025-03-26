@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
 - Changed the base image to alpine and switched user to a non-root user
+- Extra cookie options can be set such as the name, domain, and partitioned flag [#73](https://github.com/TecharoHQ/anubis/issues/73)
+- Make dark mode diff lines readable in the documentation
 
 ## v1.14.2
 
