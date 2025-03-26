@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
+- Added a no-cache header to the challenge page
 
 ## v1.14.2
 
