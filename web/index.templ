@@ -160,7 +160,7 @@ templ base(title string, body templ.Component) {
 	</html>
 }
 
-templ index() {
+templ index(returnUrl string) {
 	<div class="centered-div">
 		<img
 			id="image"
@@ -175,6 +175,9 @@ templ index() {
     anubis.Version }
 		/>
 		<p id="status">Loading...</p>
+    <script>
+      window.returnUrl = {{returnUrl}}
+    </script>
 		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
 		<div id="spinner" class="lds-roller">
 			<div></div>

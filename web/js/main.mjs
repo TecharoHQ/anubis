@@ -83,7 +83,7 @@ const imageURL = (mood, cacheBuster) =>
   spinner.style.display = "none";
 
   setTimeout(() => {
-    const redir = window.location.href;
+    const redir = window.returnUrl;
     window.location.href = u("/.within.website/x/cmd/anubis/api/pass-challenge", { response: hash, nonce, redir, elapsedTime: t1 - t0 });
   }, 250);
 })();
