@@ -130,7 +130,7 @@ func New(opts Options) (*Server, error) {
 	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
 
 	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/make-challenge", result.MakeChallenge)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
+	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
 	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/test-error", result.TestError)
 	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/index", result.RenderIndex)
 

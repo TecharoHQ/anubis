@@ -175,9 +175,12 @@ templ index(returnUrl string) {
     anubis.Version }
 		/>
 		<p id="status">Loading...</p>
-    <script>
-      window.returnUrl = {{returnUrl}}
-    </script>
+		<form id="pass_form" method="post" action="/.within.website/x/cmd/anubis/api/pass-challenge">
+			<input type="hidden" name="response" />
+			<input type="hidden" name="nonce" />
+			<input type="hidden" name="redir" value={returnUrl} />
+			<input type="hidden" name="elapsedTime" />
+		</form>
 		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
 		<div id="spinner" class="lds-roller">
 			<div></div>
