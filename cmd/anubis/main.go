@@ -33,6 +33,9 @@ import (
 var (
 	bind                 = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork          = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
+	cookieDomain         = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookieName           = flag.String("cookie-name", anubis.CookieName, "the name of the cookie that Anubis stores challenge pass records in")
+	cookiePartitioned    = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
 	challengeDifficulty  = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
 	ed25519PrivateKeyHex = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	metricsBind          = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
