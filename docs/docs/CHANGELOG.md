@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bot check to only apply if address range matches
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
+- Make dark mode diff lines readable in the documentation
 
 ## v1.14.2
 
