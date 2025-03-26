@@ -212,6 +212,7 @@ func main() {
 	h = s
 	h = internal.DefaultXRealIP(*debugXRealIPDefault, h)
 	h = internal.XForwardedForToXRealIP(h)
+	h = internal.NoStoreCache(h)
 
 	srv := http.Server{Handler: h}
 	listener, url := setupListener(*bindNetwork, *bind)

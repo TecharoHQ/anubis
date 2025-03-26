@@ -48,3 +48,11 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// NoStoreCache sets the Cache-Control header to no-store for the response.
+func NoStoreCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
