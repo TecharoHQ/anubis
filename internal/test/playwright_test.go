@@ -32,6 +32,7 @@ import (
 )
 
 var (
+	serverBindAddr        = flag.String("bind", "localhost:3923", "test server bind address")
 	playwrightPort        = flag.Int("playwright-port", 3000, "Playwright port")
 	playwrightServer      = flag.String("playwright", "ws://localhost:3000", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
@@ -433,6 +434,8 @@ func spawnAnubis(t *testing.T) string {
 	}
 
 	ts := httptest.NewServer(s)
+	ts.Config.Addr = *serverBindAddr
+
 	t.Log(ts.URL)
 
 	t.Cleanup(func() {
