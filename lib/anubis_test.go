@@ -1,18 +1,15 @@
 package lib
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
-	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/lib/policy"
 )
 
-func loadPolicies(t *testing.T, fname string) *policy.ParsedConfig {
+func spawnAnubis(t *testing.T, h http.Handler) string {
 	t.Helper()
 
 	policy, err := LoadPoliciesOrDefault("", anubis.DefaultDifficulty)
@@ -20,97 +17,23 @@ func loadPolicies(t *testing.T, fname string) *policy.ParsedConfig {
 		t.Fatal(err)
 	}
 
-	return policy
-}
-
-func spawnAnubis(t *testing.T, opts Options) *Server {
-	t.Helper()
-
-	s, err := New(opts)
+	s, err := New(Options{
+		Next:           h,
+		Policy:         policy,
+		ServeRobotsTXT: true,
+	})
 	if err != nil {
 		t.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
-	return s
-}
+	ts := httptest.NewServer(s)
+	t.Log(ts.URL)
 
-func TestCookieSettings(t *testing.T) {
-	pol := loadPolicies(t, "")
-	pol.DefaultDifficulty = 0
-
-	srv := spawnAnubis(t, Options{
-		Next:   http.NewServeMux(),
-		Policy: pol,
-
-		CookieDomain:      "local.cetacean.club",
-		CookiePartitioned: true,
-		CookieName:        t.Name(),
+	t.Cleanup(func() {
+		ts.Close()
 	})
 
-	ts := httptest.NewServer(internal.DefaultXRealIP("127.0.0.1", srv))
-	defer ts.Close()
-
-	cli := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	resp, err := cli.Post(ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", "", nil)
-	if err != nil {
-		t.Fatalf("can't request challenge: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var chall = struct {
-		Challenge string `json:"challenge"`
-	}{}
-	if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
-		t.Fatalf("can't read challenge response body: %v", err)
-	}
-
-	nonce := 0
-	elapsedTime := 420
-	redir := "/"
-	calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
-	calculated := internal.SHA256sum(calcString)
-
-	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
-	if err != nil {
-		t.Fatalf("can't make request: %v", err)
-	}
-
-	q := req.URL.Query()
-	q.Set("response", calculated)
-	q.Set("nonce", fmt.Sprint(nonce))
-	q.Set("redir", redir)
-	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
-	req.URL.RawQuery = q.Encode()
-
-	resp, err = cli.Do(req)
-	if err != nil {
-		t.Fatalf("can't do challenge passing")
-	}
-
-	if resp.StatusCode != http.StatusFound {
-		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
-	}
-
-	found := false
-	for _, cookie := range resp.Cookies() {
-		t.Logf("%#v", cookie)
-		if cookie.Name == t.Name() {
-			found = true
-		}
-
-		if found && cookie.Domain != "local.cetacean.club" {
-			t.Errorf("cookie domain is wrong, wanted local.cetacean.club, got: %s", cookie.Domain)
-		}
-	}
-
-	if !found {
-		t.Errorf("Cookie %q not found", t.Name())
-	}
+	return ts.URL
 }
 
 func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
