@@ -13,9 +13,12 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/a-h/templ"
@@ -67,6 +70,7 @@ type Options struct {
 	Policy         *policy.ParsedConfig
 	ServeRobotsTXT bool
 	PrivateKey     ed25519.PrivateKey
+	DefaultTarget  *url.URL
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -104,11 +108,13 @@ func New(opts Options) (*Server, error) {
 	}
 
 	result := &Server{
-		next:       opts.Next,
-		priv:       opts.PrivateKey,
-		pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
-		policy:     opts.Policy,
-		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
+		next:          opts.Next,
+		priv:          opts.PrivateKey,
+		pub:           opts.PrivateKey.Public().(ed25519.PublicKey),
+		policy:        opts.Policy,
+		DNSBLCache:    decaymap.New[string, dnsbl.DroneBLResponse](),
+		proxyCache:    sync.Map{},
+		defaultTarget: opts.DefaultTarget,
 	}
 
 	mux := http.NewServeMux()
@@ -147,6 +153,28 @@ type Server struct {
 	policy              *policy.ParsedConfig
 	DNSBLCache          *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	ChallengeDifficulty int
+	proxyCache          sync.Map // map[string]*httputil.ReverseProxy
+	defaultTarget       *url.URL
+}
+
+func (s *Server) getOrCreateReverseProxy(targetUrl string) (*httputil.ReverseProxy, error) {
+	if proxy, found := s.proxyCache.Load(targetUrl); found {
+		return proxy.(*httputil.ReverseProxy), nil
+	}
+
+	u, err := url.Parse(targetUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse target URL %s: %w", targetUrl, err)
+	}
+
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+
+	rp := httputil.NewSingleHostReverseProxy(u)
+	rp.Transport = transport
+
+	s.proxyCache.Store(targetUrl, rp)
+
+	return rp, nil
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -177,6 +205,25 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		r.Header.Get("X-Forwarded-For"),
 		"x-real-ip", r.Header.Get("X-Real-Ip"),
 	)
+
+	targetBackend := r.Header.Get("X-Target-Backend")
+	var handler http.Handler
+
+	// if the target backend is set, use it, else use the default backend
+	if targetBackend != "" {
+		lg = lg.With("target_backend", targetBackend)
+		rp, err := s.getOrCreateReverseProxy(targetBackend)
+		if err != nil {
+			lg.Error("failed to create reverse proxy for dynamic target", "err", err)
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: invalid X-Target-Backend header. Please contact the administrator.")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			return
+		}
+		lg.Debug("using dynamic backend target", "target", targetBackend)
+		handler = rp
+	} else {
+		handler = s.next
+		lg.Debug("using default backend handler")
+	}
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -214,7 +261,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
-		s.next.ServeHTTP(w, r)
+		handler.ServeHTTP(w, r)
 		return
 	case config.RuleDeny:
 		ClearCookie(w)
@@ -277,7 +324,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if randomJitter() {
 		r.Header.Add("X-Anubis-Status", "PASS-BRIEF")
 		lg.Debug("cookie is not enrolled into secondary screening")
-		s.next.ServeHTTP(w, r)
+		handler.ServeHTTP(w, r)
 		return
 	}
 
@@ -316,7 +363,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	slog.Debug("all checks passed")
 	r.Header.Add("X-Anubis-Status", "PASS-FULL")
-	s.next.ServeHTTP(w, r)
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {

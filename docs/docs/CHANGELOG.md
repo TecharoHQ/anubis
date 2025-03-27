@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
+- Added a header 'X-Target-Backend' to redirect the request to a different backend/target than the TARGET (default is TARGET)
 
 ## v1.14.2
 
