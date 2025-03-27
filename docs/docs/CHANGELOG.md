@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
+- Add the ability to set the cookie domain with the envvar `COOKIE_DOMAIN=techaro.lol` for all domains under `techaro.lol`
+- Add the ability to set the cookie partitioned flag with the envvar `COOKIE_PARTITIONED=true`
+- Fix CI based browser smoke test
 
 ## v1.14.2
 
