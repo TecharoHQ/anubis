@@ -64,11 +64,15 @@ var (
 )
 
 type Options struct {
-	Next           http.Handler
-	Policy         *policy.ParsedConfig
-	PrivateKey     ed25519.PrivateKey
-	ServeRobotsTXT bool
-}
+ 	Next           http.Handler
+ 	Policy         *policy.ParsedConfig
+ 	ServeRobotsTXT bool
+ 	PrivateKey     ed25519.PrivateKey
+ 
+ 	CookieDomain      string
+ 	CookieName        string
+ 	CookiePartitioned bool
+ }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
 	var fin io.ReadCloser
@@ -109,6 +113,7 @@ func New(opts Options) (*Server, error) {
 		priv:       opts.PrivateKey,
 		pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
 		policy:     opts.Policy,
+		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
 	}
 
@@ -146,6 +151,7 @@ type Server struct {
 	priv                ed25519.PrivateKey
 	pub                 ed25519.PublicKey
 	policy              *policy.ParsedConfig
+	opts                Options
 	DNSBLCache          *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	ChallengeDifficulty int
 }
@@ -218,7 +224,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		s.next.ServeHTTP(w, r)
 		return
 	case config.RuleDeny:
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
@@ -237,29 +243,29 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
 	default:
-		ClearCookie(w)
+		s.ClearCookie(w)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
-	ckie, err := r.Cookie(anubis.CookieName)
+	ckie, err := r.Cookie(s.opts.CookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -270,7 +276,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -285,7 +291,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -293,7 +299,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -310,7 +316,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if subtle.ConstantTimeCompare([]byte(claims["response"].(string)), []byte(calculated)) != 1 {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
-		ClearCookie(w)
+		s.ClearCookie(w)
 		s.RenderIndex(w, r)
 		return
 	}
@@ -373,7 +379,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Debug("no nonce")
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing nonce")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -381,7 +387,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	elapsedTimeStr := r.FormValue("elapsedTime")
 	if elapsedTimeStr == "" {
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Debug("no elapsedTime")
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing elapsedTime")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -389,7 +395,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	elapsedTime, err := strconv.ParseFloat(elapsedTimeStr, 64)
 	if err != nil {
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Debug("elapsedTime doesn't parse", "err", err)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid elapsedTime")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -405,7 +411,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	nonce, err := strconv.Atoi(nonceStr)
 	if err != nil {
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Debug("nonce doesn't parse", "err", err)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid nonce")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -415,7 +421,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	calculated := internal.SHA256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Debug("hash does not match", "got", response, "want", calculated)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
@@ -424,7 +430,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	// compare the leading zeroes
 	if !strings.HasPrefix(response, strings.Repeat("0", s.ChallengeDifficulty)) {
-		ClearCookie(w)
+		s.ClearCookie(w)
 		lg.Debug("difficulty check failed", "response", response, "difficulty", s.ChallengeDifficulty)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
@@ -443,17 +449,18 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := token.SignedString(s.priv)
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
-		ClearCookie(w)
+		s.ClearCookie(w)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("failed to sign JWT")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     anubis.CookieName,
-		Value:    tokenString,
-		Expires:  time.Now().Add(24 * 7 * time.Hour),
-		SameSite: http.SameSiteLaxMode,
-		Path:     "/",
+		Name:        s.opts.CookieName,
+		Value:       tokenString,
+		Expires:     time.Now().Add(24 * 7 * time.Hour),
+		Domain:      s.opts.CookieDomain,
+		Partitioned: s.opts.CookiePartitioned,
+		SameSite:    http.SameSiteLaxMode,
 	})
 
 	challengesValidated.Inc()
