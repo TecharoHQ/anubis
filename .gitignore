@@ -1,4 +1,5 @@
 .env
+*.deb
 *.rpm
 
 # Go binaries and test artifacts
