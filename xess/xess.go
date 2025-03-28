@@ -13,11 +13,10 @@ import (
 )
 
 //go:generate go run github.com/a-h/templ/cmd/templ@latest generate
-//go:generate npm ci
 //go:generate npm run build
 
 var (
-	//go:embed xess.min.css xess.css static
+	//go:embed *.css static
 	Static embed.FS
 
 	URL = "/.within.website/x/xess/xess.css"

@@ -69,8 +69,13 @@ jobs:
         npx --yes playwright@1.50.1 install --with-deps
         npx --yes playwright@1.50.1 run-server --port 3000 &
 
+    - name: install node deps
+      run: |
+        npm ci
+        npm run assets
+
     - name: Build
       run: go build ./...
 
     - name: Test
-      run: go test -v ./...
+      run: npm run test

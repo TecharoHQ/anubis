@@ -20,11 +20,29 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.24.x'
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
 
-      - uses: ko-build/setup-ko@v0.8
+      - name: Setup Homebrew cellar cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/linuxbrew/.linuxbrew/Cellar
+            /home/linuxbrew/.linuxbrew/bin
+            /home/linuxbrew/.linuxbrew/etc
+            /home/linuxbrew/.linuxbrew/include
+            /home/linuxbrew/.linuxbrew/lib
+            /home/linuxbrew/.linuxbrew/opt
+            /home/linuxbrew/.linuxbrew/sbin
+            /home/linuxbrew/.linuxbrew/share
+            /home/linuxbrew/.linuxbrew/var
+          key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-homebrew-cellar-
+
+      - name: Install Brew dependencies
+        run: |
+          brew bundle
 
       - name: Docker meta
         id: meta
@@ -35,9 +53,12 @@ jobs:
       - name: Build and push
         id: build
         run: |
-          go run ./cmd/containerbuild --docker-repo ghcr.io/techarohq/anubis --slog-level debug
+          npm ci
+          npm run container
         env:
           PULL_REQUEST_ID: ${{ github.event.number }}
+          DOCKER_REPO: ghcr.io/techarohq/anubis
+          SLOG_LEVEL: debug
 
       - run: |
           echo "Test this with:"
