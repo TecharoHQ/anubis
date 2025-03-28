@@ -39,6 +39,7 @@ const dependencies = [
   const title = document.getElementById('title');
   const spinner = document.getElementById('spinner');
   const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
+  const form = document.getElementById("pass_form");
 
   const ohNoes = ({
     titleMsg, statusMsg, imageSrc,
@@ -128,16 +129,10 @@ const dependencies = [
     spinner.style.display = "none";
 
     setTimeout(() => {
-      const redir = window.location.href;
-
-      window.location.replace(
-        u("/.within.website/x/cmd/anubis/api/pass-challenge", {
-          response: hash,
-          nonce,
-          redir,
-          elapsedTime: t1 - t0
-        }),
-      );
+      form.response.value = hash;
+      form.nonce.value = nonce;
+      form.elapsedTime.value = t1 - t0;
+      form.submit();
     }, 250);
   } catch (err) {
     ohNoes({
