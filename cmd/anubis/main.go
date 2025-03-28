@@ -5,8 +5,10 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"net"
@@ -66,7 +68,9 @@ func doHealthCheck() error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -95,13 +99,13 @@ func setupListener(network string, address string) (net.Listener, string) {
 	if network == "unix" {
 		mode, err := strconv.ParseUint(*socketMode, 8, 0)
 		if err != nil {
-			listener.Close()
+			_ = listener.Close()
 			log.Fatal(fmt.Errorf("could not parse socket mode %s: %w", *socketMode, err))
 		}
 
 		err = os.Chmod(address, os.FileMode(mode))
 		if err != nil {
-			listener.Close()
+			_ = listener.Close()
 			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
 		}
 	}
@@ -238,7 +242,7 @@ func main() {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 	wg.Wait()
@@ -263,7 +267,7 @@ func metricsServer(ctx context.Context, done func()) {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 }

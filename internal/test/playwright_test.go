@@ -21,6 +21,8 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -100,14 +102,15 @@ func doesNPXExist(t *testing.T) {
 func run(t *testing.T, command string) string {
 	t.Helper()
 
-	shPath, err := exec.LookPath("sh")
-	if err != nil {
-		t.Fatalf("[unexpected] %v", err)
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/C", command)
+	} else {
+		cmd = exec.Command("sh", "-c", command)
 	}
 
 	t.Logf("running command: %s", command)
 
-	cmd := exec.Command(shPath, "-c", command)
 	cmd.Stdin = nil
 	cmd.Stderr = os.Stderr
 	output, err := cmd.Output()
@@ -121,14 +124,15 @@ func run(t *testing.T, command string) string {
 func daemonize(t *testing.T, command string) {
 	t.Helper()
 
-	shPath, err := exec.LookPath("sh")
-	if err != nil {
-		t.Fatalf("[unexpected] %v", err)
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/C", "start", "/B", command)
+	} else {
+		cmd = exec.Command("sh", "-c", command+" &")
 	}
 
 	t.Logf("daemonizing command: %s", command)
 
-	cmd := exec.Command(shPath, "-c", command)
 	cmd.Stdin = nil
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -138,7 +142,9 @@ func daemonize(t *testing.T, command string) {
 	}
 
 	t.Cleanup(func() {
-		cmd.Process.Kill()
+		if cmd.Process != nil {
+			cmd.Process.Kill()
+		}
 	})
 }
 
@@ -354,14 +360,14 @@ func pwFail(t *testing.T, page playwright.Page, format string, args ...any) erro
 }
 
 func pwTimeout(tc testCase, deadline time.Time) *float64 {
-	max := *playwrightMaxTime
+	maxTimeout := *playwrightMaxTime
 	if tc.isHard {
-		max = *playwrightMaxHardTime
+		maxTimeout = *playwrightMaxHardTime
 	}
 
 	d := time.Until(deadline)
-	if d <= 0 || d > max {
-		return playwright.Float(float64(max.Milliseconds()))
+	if d <= 0 || d > maxTimeout {
+		return playwright.Float(float64(maxTimeout.Milliseconds()))
 	}
 	return playwright.Float(float64(d.Milliseconds()))
 }
@@ -375,7 +381,11 @@ func saveScreenshot(t *testing.T, page playwright.Page) {
 		return
 	}
 
-	f, err := os.CreateTemp("", "anubis-test-fail-*.png")
+	tempDir := t.TempDir()
+	filename := fmt.Sprintf("anubis-test-fail-%d.png", time.Now().UnixNano())
+	fullPath := filepath.Join(tempDir, filename)
+
+	f, err := os.Create(fullPath)
 	if err != nil {
 		t.Logf("could not create temporary file: %v", err)
 		return
@@ -388,9 +398,8 @@ func saveScreenshot(t *testing.T, page playwright.Page) {
 		return
 	}
 
-	t.Logf("screenshot saved to %s", f.Name())
+	t.Logf("screenshot saved to %s", fullPath)
 }
-
 func setupPlaywright(t *testing.T) *playwright.Playwright {
 	err := playwright.Install(&playwright.RunOptions{
 		SkipInstallBrowsers: true,
@@ -429,6 +438,8 @@ func spawnAnubis(t *testing.T) string {
 	}
 
 	ts := httptest.NewServer(s)
+	ts.Config.Addr = *serverBindAddr
+
 	t.Log(ts.URL)
 
 	t.Cleanup(func() {

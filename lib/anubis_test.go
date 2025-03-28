@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
@@ -124,7 +125,7 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 	})
 
 	for i := 1; i < 10; i++ {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			policy, err := LoadPoliciesOrDefault("", i)
 			if err != nil {
 				t.Fatal(err)

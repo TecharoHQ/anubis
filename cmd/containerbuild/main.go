@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -113,11 +114,6 @@ type image struct {
 	tag        string
 }
 
-func newlineSep2Comma(inp string) string {
-	lines := strings.Split(inp, "\n")
-	return strings.Join(lines, ",")
-}
-
 func parseImageList(imageList string) ([]image, error) {
 	images := strings.Split(imageList, "\n")
 	var result []image
@@ -137,7 +133,7 @@ func parseImageList(imageList string) ([]image, error) {
 	}
 
 	if len(result) == 0 {
-		return nil, fmt.Errorf("no images provided, bad flags??")
+		return nil, errors.New("no images provided, bad flags??")
 	}
 
 	return result, nil

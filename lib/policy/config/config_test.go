@@ -170,7 +170,7 @@ func TestBotValid(t *testing.T) {
 	}
 
 	for _, cs := range tests {
-		cs := cs
+
 		t.Run(cs.name, func(t *testing.T) {
 			err := cs.bot.Valid()
 			if err == nil && cs.err == nil {
@@ -198,7 +198,7 @@ func TestConfigValidKnownGood(t *testing.T) {
 	}
 
 	for _, st := range finfos {
-		st := st
+
 		t.Run(st.Name(), func(t *testing.T) {
 			fin, err := os.Open(filepath.Join("testdata", "good", st.Name()))
 			if err != nil {
@@ -225,7 +225,7 @@ func TestConfigValidBad(t *testing.T) {
 	}
 
 	for _, st := range finfos {
-		st := st
+
 		t.Run(st.Name(), func(t *testing.T) {
 			fin, err := os.Open(filepath.Join("testdata", "bad", st.Name()))
 			if err != nil {
