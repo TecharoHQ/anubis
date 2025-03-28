@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Static asset builds are now done on demand instead of the results being committed to source control
 - The Dockerfile has been removed as it is no longer in use
 - Developer documentation has been added to the docs site
+- Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
 
 ## v1.15.0
 

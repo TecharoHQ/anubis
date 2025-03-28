@@ -5,7 +5,7 @@ import { testVideo } from "./video.mjs";
 const algorithms = {
   "fast": processFast,
   "slow": processSlow,
-}
+};
 
 // from Xeact
 const u = (url = "", params = {}) => {
@@ -20,6 +20,19 @@ const u = (url = "", params = {}) => {
 const imageURL = (mood, cacheBuster) =>
   u(`/.within.website/x/cmd/anubis/static/img/${mood}.webp`, { cacheBuster });
 
+const dependencies = [
+  {
+    name: "WebCrypto",
+    msg: "Your browser doesn't have a functioning web.crypto element. Are you viewing this over a secure context?",
+    value: window.crypto,
+  },
+  {
+    name: "Web Workers",
+    msg: "Your browser doesn't support web workers (Anubis uses this to avoid freezing your browser). Do you have a plugin like JShelter installed?",
+    value: window.Worker,
+  },
+];
+
 (async () => {
   const status = document.getElementById('status');
   const image = document.getElementById('image');
@@ -27,6 +40,25 @@ const imageURL = (mood, cacheBuster) =>
   const spinner = document.getElementById('spinner');
   const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
   const form = document.getElementById("pass_form");
+
+  const ohNoes = ({
+    titleMsg, statusMsg, imageSrc,
+  }) => {
+    title.innerHTML = titleMsg;
+    status.innerHTML = statusMsg;
+    image.src = imageSrc;
+    spinner.innerHTML = "";
+    spinner.style.display = "none";
+  };
+
+  if (!window.isSecureContext) {
+    ohNoes({
+      titleMsg: "Your context is not secure!",
+      statusMsg: `Try connecting over HTTPS or let the admin know to set up HTTPS. For more information, see <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure">MDN</a>.`,
+      imageSrc: imageURL("sad", anubisVersion),
+    });
+    return;
+  }
 
   // const testarea = document.getElementById('testarea');
 
@@ -44,6 +76,17 @@ const imageURL = (mood, cacheBuster) =>
 
   status.innerHTML = 'Calculating...';
 
+  for (const val of dependencies) {
+    const { value, name, msg } = val;
+    if (!value) {
+      ohNoes({
+        titleMsg: `Missing feature ${name}`,
+        statusMsg: msg,
+        imageSrc: imageURL("sad", anubisVersion),
+      })
+    }
+  }
+
   const { challenge, rules } = await fetch("/.within.website/x/cmd/anubis/api/make-challenge", { method: "POST" })
     .then(r => {
       if (!r.ok) {
@@ -52,42 +95,50 @@ const imageURL = (mood, cacheBuster) =>
       return r.json();
     })
     .catch(err => {
-      title.innerHTML = "Oh no!";
-      status.innerHTML = `Failed to fetch config: ${err.message}`;
-      image.src = imageURL("sad", anubisVersion);
-      spinner.innerHTML = "";
-      spinner.style.display = "none";
+      ohNoes({
+        titleMsg: "Internal error!",
+        statusMsg: `Failed to fetch challenge config: ${err.message}`,
+        imageSrc: imageURL("sad", anubisVersion),
+      });
       throw err;
     });
 
   const process = algorithms[rules.algorithm];
   if (!process) {
-    title.innerHTML = "Oh no!";
-    status.innerHTML = `Failed to resolve check algorithm. You may want to reload the page.`;
-    image.src = imageURL("sad", anubisVersion);
-    spinner.innerHTML = "";
-    spinner.style.display = "none";
+    ohNoes({
+      titleMsg: "Challenge error!",
+      statusMsg: `Failed to resolve check algorithm. You may want to reload the page.`,
+      imageSrc: imageURL("sad", anubisVersion),
+    });
     return;
   }
 
   status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}`;
+  spinner.style.display = "block";
 
-  const t0 = Date.now();
-  const { hash, nonce } = await process(challenge, rules.difficulty);
-  const t1 = Date.now();
-  console.log({ hash, nonce });
+  try {
+    const t0 = Date.now();
+    const { hash, nonce } = await process(challenge, rules.difficulty);
+    const t1 = Date.now();
+    console.log({ hash, nonce });
 
-  title.innerHTML = "Success!";
-  status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
-  image.src = imageURL("happy", anubisVersion);
-  spinner.innerHTML = "";
-  spinner.style.display = "none";
+    title.innerHTML = "Success!";
+    status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
+    image.src = imageURL("happy", anubisVersion);
+    spinner.innerHTML = "";
+    spinner.style.display = "none";
 
-  setTimeout(() => {
-    form.response.value = hash;
-    form.nonce.value = nonce;
-    form.elapsedTime.value = t1 - t0;
-    form.submit();
-  }, 250);
-
+    setTimeout(() => {
+      form.response.value = hash;
+      form.nonce.value = nonce;
+      form.elapsedTime.value = t1 - t0;
+      form.submit();
+    }, 250);
+  } catch (err) {
+    ohNoes({
+      titleMsg: "Calculation error!",
+      statusMsg: `Failed to calculate challenge: ${err.message}`,
+      imageSrc: imageURL("sad", anubisVersion),
+    });
+  }
 })();

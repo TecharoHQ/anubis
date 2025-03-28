@@ -13,7 +13,6 @@ import (
 )
 
 //go:generate go run github.com/a-h/templ/cmd/templ@latest generate
-//go:generate npm run build
 
 var (
 	//go:embed *.css static
