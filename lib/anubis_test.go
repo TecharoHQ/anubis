@@ -97,20 +97,25 @@ func TestCookieSettings(t *testing.T) {
 		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 	}
 
-	found := false
+	var ckie *http.Cookie
 	for _, cookie := range resp.Cookies() {
 		t.Logf("%#v", cookie)
-		if cookie.Name == t.Name() {
-			found = true
-		}
-
-		if found && cookie.Domain != "local.cetacean.club" {
-			t.Errorf("cookie domain is wrong, wanted local.cetacean.club, got: %s", cookie.Domain)
+		if cookie.Name == anubis.CookieName {
+			ckie = cookie
+			break
 		}
 	}
 
-	if !found {
-		t.Errorf("Cookie %q not found", t.Name())
+	if ckie.Domain != "local.cetacean.club" {
+		t.Errorf("cookie domain is wrong, wanted local.cetacean.club, got: %s", ckie.Domain)
+	}
+
+	if ckie.Partitioned != srv.opts.CookiePartitioned {
+		t.Errorf("wanted partitioned flag %v, got: %v", srv.opts.CookiePartitioned, ckie.Partitioned)
+	}
+
+	if ckie == nil {
+		t.Errorf("Cookie %q not found", anubis.CookieName)
 	}
 }
 

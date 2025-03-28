@@ -3,17 +3,18 @@ package lib
 import (
 	"net/http"
 	"time"
+
+	"github.com/TecharoHQ/anubis"
 )
 
 func (s *Server) ClearCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:        s.opts.CookieName,
-		Value:       "",
-		Expires:     time.Now().Add(-1 * time.Hour),
-		MaxAge:      -1,
-		Domain:      s.opts.CookieDomain,
-		Partitioned: s.opts.CookiePartitioned,
-		SameSite:    http.SameSiteLaxMode,
+		Name:     anubis.CookieName,
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		MaxAge:   -1,
+		SameSite: http.SameSiteLaxMode,
+		Domain:   s.opts.CookieDomain,
 	})
 }
 

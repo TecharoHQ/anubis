@@ -248,7 +248,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ckie, err := r.Cookie(s.opts.CookieName)
+	ckie, err := r.Cookie(anubis.CookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
@@ -455,12 +455,13 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:        s.opts.CookieName,
+		Name:        anubis.CookieName,
 		Value:       tokenString,
 		Expires:     time.Now().Add(24 * 7 * time.Hour),
+		SameSite:    http.SameSiteLaxMode,
 		Domain:      s.opts.CookieDomain,
 		Partitioned: s.opts.CookiePartitioned,
-		SameSite:    http.SameSiteLaxMode,
+		Path:        "/",
 	})
 
 	challengesValidated.Inc()

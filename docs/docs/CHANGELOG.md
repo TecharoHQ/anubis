@@ -11,15 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v1.15.0
+
+Zenos yae Galvus
+
+> Yes...the coming days promise to be most interesting. Most interesting.
+
+Headline changes:
+
 - ed25519 signing keys for Anubis can be stored in the flag `--ed25519-private-key-hex` or envvar `ED25519_PRIVATE_KEY_HEX`; if one is not provided when Anubis starts, a new one is generated and logged
+- Add the ability to set the cookie domain with the envvar `COOKIE_DOMAIN=techaro.lol` for all domains under `techaro.lol`
+- Add the ability to set the cookie partitioned flag with the envvar `COOKIE_PARTITIONED=true`
+
+Many other small changes were made, including but not limited to:
+
 - Fixed and clarified installation instructions
 - Introduced integration tests using Playwright
 - Refactor & Split up Anubis into cmd and lib.go
 - Fixed bot check to only apply if address range matches
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
-- Extra cookie options can be set such as the name, domain, and partitioned flag [#73](https://github.com/TecharoHQ/anubis/issues/73)
 - Make dark mode diff lines readable in the documentation
+- Fix CI based browser smoke test
+
+Users running Anubis' test suite may run into issues with the integration tests on Windows hosts. This is a known issue and will be fixed at some point in the future. In the meantime, use the Windows Subsystem for Linux (WSL).
 
 ## v1.14.2
 
