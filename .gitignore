@@ -5,3 +5,5 @@
 # Go binaries and test artifacts
 main
 *.test
+
+node_modules

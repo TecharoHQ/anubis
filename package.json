@@ -1,0 +1,23 @@
+{
+  "name": "@techaro/anubis",
+  "version": "1.0.0-see-VERSION-file",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run assets && go test ./...",
+    "test:integration": "npm run assets && go test ./internal/test",
+    "assets": "./web/build.sh && ./xess/build.sh",
+    "dev": "npm run assets && go run ./cmd/anubis",
+    "container": "npm run assets && go run ./cmd/containerbuild"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cssnano": "^7.0.6",
+    "cssnano-preset-advanced": "^7.0.6",
+    "postcss-cli": "^11.0.0",
+    "postcss-import": "^16.1.0",
+    "postcss-import-url": "^7.2.0",
+    "postcss-url": "^10.1.3"
+  }
+}
