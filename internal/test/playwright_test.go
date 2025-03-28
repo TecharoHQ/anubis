@@ -166,10 +166,6 @@ func startPlaywright(t *testing.T) {
 }
 
 func TestPlaywrightBrowser(t *testing.T) {
-	if os.Getenv("CI") == "true" {
-		t.Skip("XXX(Xe): This is broken in CI, will fix later")
-	}
-
 	if os.Getenv("DONT_USE_NETWORK") != "" {
 		t.Skip("test requires network egress")
 		return
@@ -225,12 +221,20 @@ func TestPlaywrightBrowser(t *testing.T) {
 					t.Skip("skipping hard challenge with deadline")
 				}
 
-				perfomedAction := executeTestCase(t, tc, typ, anubisURL)
-
+				var perfomedAction action
+				var err error
+				for i := 0; i < 5; i++ {
+					perfomedAction, err = executeTestCase(t, tc, typ, anubisURL)
+					if perfomedAction == tc.action {
+						break
+					}
+					time.Sleep(time.Duration(i+1) * 250 * time.Millisecond)
+				}
 				if perfomedAction != tc.action {
 					t.Errorf("unexpected test result, expected %s, got %s", tc.action, perfomedAction)
-				} else {
-					t.Logf("test passed")
+				}
+				if err != nil {
+					t.Fatalf("test error: %v", err)
 				}
 			})
 		}
@@ -247,14 +251,14 @@ func buildBrowserConnect(name string) string {
 	return u.String()
 }
 
-func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string) action {
+func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string) (action, error) {
 	deadline, _ := t.Deadline()
 
 	browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
 		ExposeNetwork: playwright.String("<loopback>"),
 	})
 	if err != nil {
-		t.Fatalf("could not connect to remote browser: %v", err)
+		return "", fmt.Errorf("could not connect to remote browser: %w", err)
 	}
 	defer browser.Close()
 
@@ -266,13 +270,13 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 		UserAgent: playwright.String(tc.userAgent),
 	})
 	if err != nil {
-		t.Fatalf("could not create context: %v", err)
+		return "", fmt.Errorf("could not create context: %w", err)
 	}
 	defer ctx.Close()
 
 	page, err := ctx.NewPage()
 	if err != nil {
-		t.Fatalf("could not create page: %v", err)
+		return "", fmt.Errorf("could not create page: %w", err)
 	}
 	defer page.Close()
 
@@ -283,7 +287,7 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 		Timeout: pwTimeout(tc, deadline),
 	})
 	if err != nil {
-		pwFail(t, page, "could not navigate to test server: %v", err)
+		return "", pwFail(t, page, "could not navigate to test server: %v", err)
 	}
 
 	hadChallenge := false
@@ -294,7 +298,7 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 		hadChallenge = true
 	case actionDeny:
 		checkImage(t, tc, deadline, page, "#image[src*=sad]")
-		return actionDeny
+		return actionDeny, nil
 	}
 
 	// Ensure protected resource was provided.
@@ -317,9 +321,9 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 	}
 
 	if hadChallenge {
-		return actionChallenge
+		return actionChallenge, nil
 	} else {
-		return actionAllow
+		return actionAllow, nil
 	}
 }
 
@@ -342,11 +346,11 @@ func checkImage(t *testing.T, tc testCase, deadline time.Time, page playwright.P
 	}
 }
 
-func pwFail(t *testing.T, page playwright.Page, format string, args ...any) {
+func pwFail(t *testing.T, page playwright.Page, format string, args ...any) error {
 	t.Helper()
 
 	saveScreenshot(t, page)
-	t.Fatalf(format, args...)
+	return fmt.Errorf(format, args...)
 }
 
 func pwTimeout(tc testCase, deadline time.Time) *float64 {

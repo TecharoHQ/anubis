@@ -52,7 +52,7 @@ Here is a minimal policy file that will protect against most scraper bots:
 }
 ```
 
-This allows requests to [`/.well-known`](https://en.wikipedia.org/wiki/Well-known_URI), `/favicon.ico`, `/robots.txt`, and challenges any request that has the word `Mozilla` in its User-Agent string. The [default policy file](https://github.com/TecharoHQ/anubis/blob/main/cmd/anubis/botPolicies.json) is a bit more cohesive, but this should be more than enough for most users.
+This allows requests to [`/.well-known`](https://en.wikipedia.org/wiki/Well-known_URI), `/favicon.ico`, `/robots.txt`, and challenges any request that has the word `Mozilla` in its User-Agent string. The [default policy file](https://github.com/TecharoHQ/anubis/blob/main/data/botPolicies.json) is a bit more cohesive, but this should be more than enough for most users.
 
 If no rules match the request, it is allowed through.
 
