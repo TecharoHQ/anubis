@@ -1,0 +1,8 @@
+{
+  "label": "Developer guides",
+  "position": 50,
+  "link": {
+    "type": "generated-index",
+    "description": "Guides and suggestions to make Anubis development go smoothly for everyone."
+  }
+}

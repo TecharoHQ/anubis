@@ -34,6 +34,8 @@ var (
 	bind                 = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork          = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty  = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
+	cookieDomain         = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookiePartitioned    = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
 	ed25519PrivateKeyHex = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	metricsBind          = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
 	metricsBindNetwork   = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
@@ -43,7 +45,7 @@ var (
 	slogLevel            = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	target               = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck          = flag.Bool("healthcheck", false, "run a health check against Anubis")
-	debugXRealIPDefault  = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
+	useRemoteAddress     = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	allowedTargetsFname  = flag.String("allowed-targets-fname", "", "full path to a JSON file containing a list of allowed targets")
 )
 
@@ -200,10 +202,12 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		Next:           rp,
-		Policy:         policy,
-		ServeRobotsTXT: *robotsTxt,
-		PrivateKey:     priv,
+		Next:              rp,
+		Policy:            policy,
+		ServeRobotsTXT:    *robotsTxt,
+		PrivateKey:        priv,
+		CookieDomain:      *cookieDomain,
+		CookiePartitioned: *cookiePartitioned,
 		AllowedTargets: allowedTargets,
 	})
 	if err != nil {
@@ -222,7 +226,7 @@ func main() {
 
 	var h http.Handler
 	h = s
-	h = internal.DefaultXRealIP(*debugXRealIPDefault, h)
+	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 
 	srv := http.Server{Handler: h}
@@ -234,7 +238,7 @@ func main() {
 		"serveRobotsTXT", *robotsTxt,
 		"target", *target,
 		"version", anubis.Version,
-		"debug-x-real-ip-default", *debugXRealIPDefault,
+		"use-remote-address", *useRemoteAddress,
 	)
 
 	go func() {

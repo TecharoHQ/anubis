@@ -2,7 +2,9 @@ package internal
 
 import (
 	"log/slog"
+	"net"
 	"net/http"
+	"strings"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/sebest/xff"
@@ -21,16 +23,29 @@ func UnchangingCache(next http.Handler) http.Handler {
 	})
 }
 
-// DefaultXRealIP sets the X-Real-Ip header to the given value if and only if
-// it is not an empty string.
-func DefaultXRealIP(defaultIP string, next http.Handler) http.Handler {
-	if defaultIP == "" {
-		slog.Debug("skipping middleware, defaultIP is empty")
+// RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
+// the setting is enabled by the user.
+func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
+	if useRemoteAddress == false {
+		slog.Debug("skipping middleware, useRemoteAddress is empty")
 		return next
 	}
 
+	if bindNetwork == "unix" {
+		// For local sockets there is no real remote address but the localhost
+		// address should be sensible.
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Header.Set("X-Real-Ip", "127.0.0.1")
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Set("X-Real-Ip", defaultIP)
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			panic(err) // this should never happen
+		}
+		r.Header.Set("X-Real-Ip", host)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -45,6 +60,17 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 			r.Header.Set("X-Real-Ip", ip)
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Do not allow browsing directory listings in paths that end with /
+func NoBrowsing(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

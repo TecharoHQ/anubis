@@ -11,7 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Hide the directory listings for Anubis' internal static content
+- Changed `--debug-x-real-ip-default` to `--use-remote-address`, getting the IP address from the request's socket address instead.
+- DroneBL lookups have been disabled by default
+- Static asset builds are now done on demand instead of the results being committed to source control
+- The Dockerfile has been removed as it is no longer in use
+- Developer documentation has been added to the docs site
+- Added a header 'X-Target-Backend' to redirect the request to a different backend/target than the TARGET (default is TARGET)
+
+## v1.15.0
+
+Zenos yae Galvus
+
+> Yes...the coming days promise to be most interesting. Most interesting.
+
+Headline changes:
+
 - ed25519 signing keys for Anubis can be stored in the flag `--ed25519-private-key-hex` or envvar `ED25519_PRIVATE_KEY_HEX`; if one is not provided when Anubis starts, a new one is generated and logged
+- Add the ability to set the cookie domain with the envvar `COOKIE_DOMAIN=techaro.lol` for all domains under `techaro.lol`
+- Add the ability to set the cookie partitioned flag with the envvar `COOKIE_PARTITIONED=true`
+
+Many other small changes were made, including but not limited to:
+
 - Fixed and clarified installation instructions
 - Introduced integration tests using Playwright
 - Refactor & Split up Anubis into cmd and lib.go
@@ -19,7 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
-- Added a header 'X-Target-Backend' to redirect the request to a different backend/target than the TARGET (default is TARGET)
+- Fix CI based browser smoke test
+
+Users running Anubis' test suite may run into issues with the integration tests on Windows hosts. This is a known issue and will be fixed at some point in the future. In the meantime, use the Windows Subsystem for Linux (WSL).
 
 ## v1.14.2
 
