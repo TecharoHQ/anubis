@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added a no-store Cache-Control header to the challenge page
 
 ## v1.15.0
 
@@ -32,7 +33,6 @@ Many other small changes were made, including but not limited to:
 - Fix default difficulty setting that was broken in a refactor
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
-- Added a no-store Cache-Control header to the challenge page
 - Fix CI based browser smoke test
 
 Users running Anubis' test suite may run into issues with the integration tests on Windows hosts. This is a known issue and will be fixed at some point in the future. In the meantime, use the Windows Subsystem for Linux (WSL).
