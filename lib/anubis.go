@@ -71,6 +71,7 @@ type Options struct {
 	ServeRobotsTXT bool
 	PrivateKey     ed25519.PrivateKey
 	DefaultTarget  *url.URL
+	AllowedTargets *AllowedTargets
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -115,6 +116,7 @@ func New(opts Options) (*Server, error) {
 		DNSBLCache:    decaymap.New[string, dnsbl.DroneBLResponse](),
 		proxyCache:    sync.Map{},
 		defaultTarget: opts.DefaultTarget,
+		allowedTargets: opts.AllowedTargets,
 	}
 
 	mux := http.NewServeMux()
@@ -155,6 +157,7 @@ type Server struct {
 	ChallengeDifficulty int
 	proxyCache          sync.Map // map[string]*httputil.ReverseProxy
 	defaultTarget       *url.URL
+	allowedTargets      *AllowedTargets
 }
 
 func (s *Server) getOrCreateReverseProxy(targetUrl string) (*httputil.ReverseProxy, error) {
@@ -211,11 +214,23 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	// if the target backend is set, use it, else use the default backend
 	if targetBackend != "" {
+		if s.allowedTargets == nil {
+            lg.Warn("X-Target-Backend header provided but no allowed targets configured", "target_backend", targetBackend)
+            templ.Handler(web.Base("Oh noes!", web.ErrorPage("Dynamic target routing not enabled. Please contact the administrator")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
+            return
+        }
+        
+        if !s.allowedTargets.IsAllowed(targetBackend) {
+            lg.Warn("X-Target-Backend header provided but target is not in allowed list", "target_backend", targetBackend)
+            templ.Handler(web.Base("Oh noes!", web.ErrorPage("The requested target is not allowed. Please contact the administrator")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
+            return
+        }
+
 		lg = lg.With("target_backend", targetBackend)
 		rp, err := s.getOrCreateReverseProxy(targetBackend)
 		if err != nil {
 			lg.Error("failed to create reverse proxy for dynamic target", "err", err)
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: invalid X-Target-Backend header. Please contact the administrator.")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: invalid X-Target-Backend header. Please contact the administrator")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
 		lg.Debug("using dynamic backend target", "target", targetBackend)

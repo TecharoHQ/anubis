@@ -44,6 +44,7 @@ var (
 	target               = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck          = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	debugXRealIPDefault  = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
+	allowedTargetsFname  = flag.String("allowed-targets-fname", "", "full path to a JSON file containing a list of allowed targets")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -158,6 +159,16 @@ func main() {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
 
+	var allowedTargets *libanubis.AllowedTargets
+    if *allowedTargetsFname != "" {
+        allowedTargets, err = libanubis.LoadAllowedTargets(*allowedTargetsFname)
+        if err != nil {
+            log.Fatalf("can't load allowed targets file: %v", err)
+        }
+		defer allowedTargets.Close()
+        slog.Info("loaded allowed targets", "count", len(allowedTargets.AllowedTargets))
+    }
+
 	fmt.Println("Rule error IDs:")
 	for _, rule := range policy.Bots {
 		if rule.Action != config.RuleDeny {
@@ -193,6 +204,7 @@ func main() {
 		Policy:         policy,
 		ServeRobotsTXT: *robotsTxt,
 		PrivateKey:     priv,
+		AllowedTargets: allowedTargets,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
