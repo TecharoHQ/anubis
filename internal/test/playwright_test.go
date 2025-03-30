@@ -1,3 +1,5 @@
+//go:build !windows
+
 // Integration tests for Anubis, using Playwright.
 //
 // These tests require an already running Anubis and Playwright server.
