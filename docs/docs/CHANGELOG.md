@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Added a no-store Cache-Control header to the challenge page
 
+- Hide the directory listings for Anubis' internal static content
+- Changed `--debug-x-real-ip-default` to `--use-remote-address`, getting the IP address from the request's socket address instead.
+- DroneBL lookups have been disabled by default
+- Static asset builds are now done on demand instead of the results being committed to source control
+- The Dockerfile has been removed as it is no longer in use
+- Developer documentation has been added to the docs site
+- Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
+
 ## v1.15.0
 
 Zenos yae Galvus

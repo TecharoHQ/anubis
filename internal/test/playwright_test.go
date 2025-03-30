@@ -30,9 +30,8 @@ import (
 )
 
 var (
-	serverBindAddr        = flag.String("bind", "localhost:3923", "test server bind address")
-	playwrightPort        = flag.Int("playwright-port", 3000, "Playwright port")
-	playwrightServer      = flag.String("playwright", "ws://localhost:3000", "Playwright server URL")
+	playwrightPort        = flag.Int("playwright-port", 9001, "Playwright port")
+	playwrightServer      = flag.String("playwright", "ws://localhost:9001", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
 	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 5*time.Minute, "maximum time for hard Playwright requests")
 

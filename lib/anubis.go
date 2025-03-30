@@ -119,7 +119,7 @@ func New(opts Options) (*Server, error) {
 	mux := http.NewServeMux()
 	xess.Mount(mux)
 
-	mux.Handle(anubis.StaticPath, internal.UnchangingCache(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static))))
+	mux.Handle(anubis.StaticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static)))))
 
 	if opts.ServeRobotsTXT {
 		mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

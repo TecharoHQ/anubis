@@ -128,6 +128,11 @@ templ base(title string, body templ.Component) {
       left: 12.28719px;
     }
 
+    .mx-auto {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     @keyframes lds-roller {
       0% {
         transform: rotate(0deg);
@@ -176,7 +181,7 @@ templ index() {
 		/>
 		<p id="status">Loading...</p>
 		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
-		<div id="spinner" class="lds-roller">
+		<div id="spinner" class="lds-roller mx-auto" style="display:none;">
 			<div></div>
 			<div></div>
 			<div></div>

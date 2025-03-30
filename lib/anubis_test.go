@@ -47,7 +47,7 @@ func TestCookieSettings(t *testing.T) {
 		CookieName:        t.Name(),
 	})
 
-	ts := httptest.NewServer(internal.DefaultXRealIP("127.0.0.1", srv))
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
 	defer ts.Close()
 
 	cli := &http.Client{

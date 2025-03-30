@@ -16,7 +16,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -25,7 +24,6 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
-	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -45,7 +43,7 @@ var (
 	slogLevel            = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	target               = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
 	healthcheck          = flag.Bool("healthcheck", false, "run a health check against Anubis")
-	debugXRealIPDefault  = flag.String("debug-x-real-ip-default", "", "If set, replace empty X-Real-Ip headers with this value, useful only for debugging Anubis and running it locally")
+	useRemoteAddress     = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -214,7 +212,7 @@ func main() {
 
 	var h http.Handler
 	h = s
-	h = internal.DefaultXRealIP(*debugXRealIPDefault, h)
+	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 
 	srv := http.Server{Handler: h}
@@ -226,7 +224,7 @@ func main() {
 		"serveRobotsTXT", *robotsTxt,
 		"target", *target,
 		"version", anubis.Version,
-		"debug-x-real-ip-default", *debugXRealIPDefault,
+		"use-remote-address", *useRemoteAddress,
 	)
 
 	go func() {
@@ -266,25 +264,4 @@ func metricsServer(ctx context.Context, done func()) {
 	if err := srv.Serve(listener); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
-}
-
-func serveMainJSWithBestEncoding(w http.ResponseWriter, r *http.Request) {
-	priorityList := []string{"zstd", "br", "gzip"}
-	enc2ext := map[string]string{
-		"zstd": "zst",
-		"br":   "br",
-		"gzip": "gz",
-	}
-
-	for _, enc := range priorityList {
-		if strings.Contains(r.Header.Get("Accept-Encoding"), enc) {
-			w.Header().Set("Content-Type", "text/javascript")
-			w.Header().Set("Content-Encoding", enc)
-			http.ServeFileFS(w, r, web.Static, "static/js/main.mjs."+enc2ext[enc])
-			return
-		}
-	}
-
-	w.Header().Set("Content-Type", "text/javascript")
-	http.ServeFileFS(w, r, web.Static, "static/js/main.mjs")
 }

@@ -19,7 +19,6 @@ var (
 	dockerLabels      = flag.String("docker-labels", os.Getenv("DOCKER_METADATA_OUTPUT_LABELS"), "Docker image labels")
 	dockerRepo        = flag.String("docker-repo", "registry.int.xeserv.us/techaro/anubis", "Docker image repository for Anubis")
 	dockerTags        = flag.String("docker-tags", os.Getenv("DOCKER_METADATA_OUTPUT_TAGS"), "newline separated docker tags including the registry name")
-	githubActor       = flag.String("github-actor", "", "GitHub actor")
 	githubEventName   = flag.String("github-event-name", "", "GitHub event name")
 	pullRequestID     = flag.Int("pull-request-id", -1, "GitHub pull request ID")
 	slogLevel         = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
@@ -111,11 +110,6 @@ func main() {
 type image struct {
 	repository string
 	tag        string
-}
-
-func newlineSep2Comma(inp string) string {
-	lines := strings.Split(inp, "\n")
-	return strings.Join(lines, ",")
 }
 
 func parseImageList(imageList string) ([]image, error) {
