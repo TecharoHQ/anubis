@@ -6,7 +6,7 @@ title: Building Anubis without Docker
 
 These instructions may work, but for right now they are informative for downstream packagers more than they are ready-made instructions for administrators wanting to run Anubis on their servers.
 
-:::end
+:::
 
 ## Tools needed
 

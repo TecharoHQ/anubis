@@ -1,6 +1,7 @@
 export default function process(
   data,
   difficulty = 5,
+  signal = null,
   progressCallback = null,
   threads = (navigator.hardwareConcurrency || 1),
 ) {
@@ -11,6 +12,20 @@ export default function process(
     ], { type: 'application/javascript' }));
 
     const workers = [];
+    const terminate = () => {
+      workers.forEach((w) => w.terminate());
+      if (signal != null) {
+        // clean up listener to avoid memory leak
+        signal.removeEventListener("abort", terminate);
+        if (signal.aborted) {
+          console.log("PoW aborted");
+          reject(false);
+        }
+      }
+    };
+    if (signal != null) {
+      signal.addEventListener("abort", terminate, { once: true });
+    }
 
     for (let i = 0; i < threads; i++) {
       let worker = new Worker(webWorkerURL);
@@ -19,14 +34,14 @@ export default function process(
         if (typeof event.data === "number") {
           progressCallback?.(event.data);
         } else {
-          workers.forEach(worker => worker.terminate());
+          terminate();
           resolve(event.data);
         }
       };
 
       worker.onerror = (event) => {
-        worker.terminate();
-        reject();
+        terminate();
+        reject(event);
       };
 
       worker.postMessage({

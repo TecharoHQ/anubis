@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Integration tests now work on Windows! ([#133](https://github.com/TecharoHQ/anubis/pull/133)) 
+- Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
 - Added a no-store Cache-Control header to the challenge page
 - Hide the directory listings for Anubis' internal static content
 - Changed `--debug-x-real-ip-default` to `--use-remote-address`, getting the IP address from the request's socket address instead.
@@ -20,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Developer documentation has been added to the docs site
 - Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
 - Verification page now shows hash rate and a progress bar for completion probability.
+- Added the `--debug-benchmark-js` flag for testing proof-of-work performance during development.
+- Use `TrimSuffix` instead of `TrimRight` on containerbuild
+- Fix the startup logs to correctly show the address and port the server is listening on
+- Add [LibreJS](https://www.gnu.org/software/librejs/) banner to Anubis JavaScript to allow LibreJS users to run the challenge
 
 ## v1.15.0
 

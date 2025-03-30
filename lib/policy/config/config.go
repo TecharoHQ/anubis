@@ -25,6 +25,7 @@ const (
 	RuleAllow     Rule = "ALLOW"
 	RuleDeny      Rule = "DENY"
 	RuleChallenge Rule = "CHALLENGE"
+	RuleBenchmark Rule = "DEBUG_BENCHMARK"
 )
 
 type Algorithm string
@@ -80,7 +81,7 @@ func (b BotConfig) Valid() error {
 	}
 
 	switch b.Action {
-	case RuleAllow, RuleChallenge, RuleDeny:
+	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny:
 		// okay
 	default:
 		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))

@@ -127,6 +127,7 @@ const dependencies = [
     const { hash, nonce } = await process(
       challenge,
       rules.difficulty,
+      null,
       (iters) => {
         const delta = Date.now() - t0;
         // only update the speed every second so it's less visually distracting
