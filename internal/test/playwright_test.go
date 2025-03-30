@@ -32,6 +32,7 @@ import (
 )
 
 var (
+	serverBindAddr        = flag.String("bind", ":8923", "network address to bind the temp anubis instance to")
 	playwrightPort        = flag.Int("playwright-port", 9001, "Playwright port")
 	playwrightServer      = flag.String("playwright", "ws://localhost:9001", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
