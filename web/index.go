@@ -13,3 +13,7 @@ func Index() templ.Component {
 func ErrorPage(msg string) templ.Component {
 	return errorPage(msg)
 }
+
+func Bench() templ.Component {
+	return bench()
+}

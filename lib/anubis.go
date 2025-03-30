@@ -241,6 +241,10 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
+	case config.RuleBenchmark:
+		lg.Debug("serving benchmark page")
+		s.RenderBench(w, r)
+		return
 	default:
 		s.ClearCookie(w)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
@@ -332,6 +336,12 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
 		),
 	)
 	handler.ServeHTTP(w, r)
+}
+
+func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(
+		web.Base("Benchmarking Anubis!", web.Bench()),
+	).ServeHTTP(w, r)
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
