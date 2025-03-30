@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Dockerfile has been removed as it is no longer in use
 - Developer documentation has been added to the docs site
 - Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
+- Verification page now shows hash rate and a progress bar for completion probability.
 
 ## v1.15.0
 
@@ -41,7 +42,6 @@ Many other small changes were made, including but not limited to:
 - Linting fixes
 - Make dark mode diff lines readable in the documentation
 - Fix CI based browser smoke test
-- Verification page now shows hash rate and a progress bar for completion probability.
 
 Users running Anubis' test suite may run into issues with the integration tests on Windows hosts. This is a known issue and will be fixed at some point in the future. In the meantime, use the Windows Subsystem for Linux (WSL).
 
