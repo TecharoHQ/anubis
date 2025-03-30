@@ -30,7 +30,7 @@ func main() {
 
 	internal.InitSlog(*slogLevel)
 
-	koDockerRepo := strings.TrimRight(*dockerRepo, "/"+filepath.Base(*dockerRepo))
+	koDockerRepo := strings.TrimSuffix(*dockerRepo, "/"+filepath.Base(*dockerRepo))
 
 	if *githubEventName == "pull_request" && *pullRequestID != -1 {
 		*dockerRepo = fmt.Sprintf("ttl.sh/techaro/pr-%d/anubis", *pullRequestID)
