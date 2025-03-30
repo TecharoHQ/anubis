@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `TrimSuffix` instead of `TrimRight` on containerbuild
 - Fix the startup logs to correctly show the address and port the server is listening on
 - Add [LibreJS](https://www.gnu.org/software/librejs/) banner to Anubis JavaScript to allow LibreJS users to run the challenge
+- Added a wait with button continue + 30 second auto continue after 30s if you click "Why am I seeing this?"
 
 ## v1.15.0
 
