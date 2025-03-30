@@ -37,7 +37,8 @@ func TestCleanup(t *testing.T) {
 	dm.Set("test2", "hi2", 2*time.Second)
 	dm.Set("test3", "hi3", 3*time.Second)
 
-	time.Sleep(2 * time.Second)
+	dm.expire("test1") // Force expire test1
+	dm.expire("test2") // Force expire test2
 
 	dm.Cleanup()
 
