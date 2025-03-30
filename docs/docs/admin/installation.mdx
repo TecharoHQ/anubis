@@ -55,6 +55,7 @@ Anubis uses these environment variables for configuration:
 | `POLICY_FNAME`            | unset                   | The file containing [bot policy configuration](./policies.md). See the bot policy documentation for more details. If unset, the default bot policy configuration is used.                                                                                                                |
 | `SERVE_ROBOTS_TXT`        | `false`                 | If set `true`, Anubis will serve a default `robots.txt` file that disallows all known AI scrapers by name and then additionally disallows every scraper. This is useful if facts and circumstances make it difficult to change the underlying service to serve such a `robots.txt` file. |
 | `TARGET`                  | `http://localhost:3923` | The URL of the service that Anubis should forward valid requests to. Supports Unix domain sockets, set this to a URI like so: `unix:///path/to/socket.sock`.                                                                                                                             |
+| `USE_REMOTE_ADDRESS`      | unset                   | If set to `true`, Anubis will take the client's IP from the network socket. For production deployments, it is expected that a reverse proxy is used in front of Anubis, which pass the IP using headers, instead.                                                                        |
 
 ### Key generation
 

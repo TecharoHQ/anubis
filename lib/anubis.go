@@ -120,7 +120,7 @@ func New(opts Options) (*Server, error) {
 	mux := http.NewServeMux()
 	xess.Mount(mux)
 
-	mux.Handle(anubis.StaticPath, internal.UnchangingCache(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static))))
+	mux.Handle(anubis.StaticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static)))))
 
 	if opts.ServeRobotsTXT {
 		mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +163,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.priv.Seed())
 
-	data := fmt.Sprintf(
+	challengeData := fmt.Sprintf(
 		"Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
 		r.Header.Get("Accept-Language"),
 		r.Header.Get("X-Real-Ip"),
@@ -172,7 +172,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 		fp,
 		difficulty,
 	)
-	return internal.SHA256sum(data)
+	return internal.SHA256sum(challengeData)
 }
 
 func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
@@ -327,9 +327,12 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
-	templ.Handler(
-		web.Base("Making sure you're not a bot!", web.Index()),
-	).ServeHTTP(w, r)
+	handler := internal.NoStoreCache(
+		templ.Handler(
+			web.Base("Making sure you\\'re not a bot!", web.Index()),
+		),
+	)
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
