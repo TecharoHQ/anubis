@@ -56,7 +56,7 @@ func (m *Impl[K, V]) Get(key K) (V, bool) {
 	value, ok := m.data[key]
 	m.lock.RUnlock()
 
-	if (!ok) {
+	if !ok {
 		return Zilch[V](), false
 	}
 
@@ -97,4 +97,11 @@ func (m *Impl[K, V]) Cleanup() {
 			delete(m.data, key)
 		}
 	}
+}
+
+// Len returns the number of entries in the DecayMap.
+func (m *Impl[K, V]) Len() int {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return len(m.data)
 }

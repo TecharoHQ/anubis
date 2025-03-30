@@ -38,17 +38,22 @@ func TestCleanup(t *testing.T) {
 	dm.Set("test3", "hi3", 3*time.Second)
 
 	time.Sleep(2 * time.Second)
+
 	dm.Cleanup()
 
-	if _, ok := dm.Get("test1"); ok {
-		t.Error("test1 should have been cleaned up")
+	finalLen := dm.Len() // Get the length after cleanup
+
+	if finalLen != 1 { // "test3" should be the only one left
+		t.Errorf("Cleanup failed to remove expired entries. Expected length 1, got %d", finalLen)
 	}
 
+	if _, ok := dm.Get("test1"); ok { // Verify Get still behaves correctly after Cleanup
+		t.Error("test1 should not be found after cleanup")
+	}
 	if _, ok := dm.Get("test2"); ok {
-		t.Error("test2 should have been cleaned up")
+		t.Error("test2 should not be found after cleanup")
 	}
-
 	if val, ok := dm.Get("test3"); !ok || val != "hi3" {
-		t.Error("test3 should not have been cleaned up")
+		t.Error("test3 should still be found after cleanup")
 	}
 }
