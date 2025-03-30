@@ -7,6 +7,7 @@ const algorithms = {
   "slow": processSlow,
 };
 
+// from Xeact
 const u = (url = "", params = {}) => {
   let result = new URL(url, window.location.href);
   Object.entries(params).forEach(([k, v]) => result.searchParams.set(k, v));
@@ -101,11 +102,24 @@ function showContinueBar(hash, nonce, t0, t1) {
   if (!window.isSecureContext) {
     ohNoes({
       titleMsg: "Your context is not secure!",
-      statusMsg: `Try connecting over HTTPS or let the admin know to set up HTTPS.`,
+      statusMsg: `Try connecting over HTTPS or let the admin know to set up HTTPS. For more information, see <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure">MDN</a>.`,
       imageSrc: imageURL("sad", anubisVersion),
     });
     return;
   }
+
+  // const testarea = document.getElementById('testarea');
+
+  // const videoWorks = await testVideo(testarea);
+  // console.log(`videoWorks: ${videoWorks}`);
+
+  // if (!videoWorks) {
+  //   title.innerHTML = "Oh no!";
+  //   status.innerHTML = "Checks failed. Please check your browser's settings and try again.";
+  //   image.src = imageURL("sad");
+  //   progress.style.display = "none";
+  //   return;
+  // }
 
   status.innerHTML = 'Calculating...';
 
@@ -137,7 +151,7 @@ function showContinueBar(hash, nonce, t0, t1) {
   if (!process) {
     ohNoes({
       titleMsg: "Challenge error!",
-      statusMsg: `Failed to resolve check algorithm.`,
+      statusMsg: `Failed to resolve check algorithm. You may want to reload the page.`,
       imageSrc: imageURL("sad", anubisVersion),
     });
     return;
@@ -145,7 +159,10 @@ function showContinueBar(hash, nonce, t0, t1) {
 
   status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}, `;
   progress.style.display = "inline-block";
-
+  
+  // the whole text, including "Speed:", as a single node, because some browsers
+  // (Firefox mobile) present screen readers with each node as a separate piece
+  // of text.
   const rateText = document.createTextNode("Speed: 0kH/s");
   status.appendChild(rateText);
 
@@ -161,11 +178,17 @@ function showContinueBar(hash, nonce, t0, t1) {
       null,
       (iters) => {
         const delta = Date.now() - t0;
+        // only update the speed every second so it's less visually distracting
         if (delta - lastSpeedUpdate > 1000) {
           lastSpeedUpdate = delta;
           rateText.data = `Speed: ${(iters / delta).toFixed(3)}kH/s`;
         }
-
+        // the probability of still being on the page is (1 - likelihood) ^ iters.
+        // by definition, half of the time the progress bar only gets to half, so
+        // apply a polynomial ease-out function to move faster in the beginning
+        // and then slow down as things get increasingly unlikely. quadratic felt
+        // the best in testing, but this may need adjustment in the future.
+        
         const probability = Math.pow(1 - likelihood, iters);
         const distance = (1 - Math.pow(probability, 2)) * 100;
         progress["aria-valuenow"] = distance;
