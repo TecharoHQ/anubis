@@ -138,6 +138,20 @@ func makeReverseProxy(target string) (http.Handler, error) {
 	return rp, nil
 }
 
+func startDecayMapCleanup(ctx context.Context, s *libanubis.Server) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			s.CleanupDecayMap()
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 func main() {
 	flagenv.Parse()
 	flag.Parse()
@@ -222,6 +236,8 @@ func main() {
 		wg.Add(1)
 		go metricsServer(ctx, wg.Done)
 	}
+
+	go startDecayMapCleanup(ctx, s)
 
 	var h http.Handler
 	h = s

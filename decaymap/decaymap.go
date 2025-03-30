@@ -85,3 +85,23 @@ func (m *Impl[K, V]) Set(key K, value V, ttl time.Duration) {
 		expiry: time.Now().Add(ttl),
 	}
 }
+
+// Cleanup removes all expired entries from the DecayMap.
+func (m *Impl[K, V]) Cleanup() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	now := time.Now()
+	for key, entry := range m.data {
+		if now.After(entry.expiry) {
+			delete(m.data, key)
+		}
+	}
+}
+
+// Len returns the number of entries in the DecayMap.
+func (m *Impl[K, V]) Len() int {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return len(m.data)
+}
