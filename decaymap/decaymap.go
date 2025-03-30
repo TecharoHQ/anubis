@@ -56,7 +56,7 @@ func (m *Impl[K, V]) Get(key K) (V, bool) {
 	value, ok := m.data[key]
 	m.lock.RUnlock()
 
-	if !ok {
+	if (!ok) {
 		return Zilch[V](), false
 	}
 
@@ -83,5 +83,18 @@ func (m *Impl[K, V]) Set(key K, value V, ttl time.Duration) {
 	m.data[key] = decayMapEntry[V]{
 		Value:  value,
 		expiry: time.Now().Add(ttl),
+	}
+}
+
+// Cleanup removes all expired entries from the DecayMap.
+func (m *Impl[K, V]) Cleanup() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	now := time.Now()
+	for key, entry := range m.data {
+		if now.After(entry.expiry) {
+			delete(m.data, key)
+		}
 	}
 }

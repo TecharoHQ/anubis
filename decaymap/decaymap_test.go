@@ -29,3 +29,26 @@ func TestImpl(t *testing.T) {
 		t.Error("got value even though it was supposed to be expired")
 	}
 }
+
+func TestCleanup(t *testing.T) {
+	dm := New[string, string]()
+
+	dm.Set("test1", "hi1", 1*time.Second)
+	dm.Set("test2", "hi2", 2*time.Second)
+	dm.Set("test3", "hi3", 3*time.Second)
+
+	time.Sleep(2 * time.Second)
+	dm.Cleanup()
+
+	if _, ok := dm.Get("test1"); ok {
+		t.Error("test1 should have been cleaned up")
+	}
+
+	if _, ok := dm.Get("test2"); ok {
+		t.Error("test2 should have been cleaned up")
+	}
+
+	if val, ok := dm.Get("test3"); !ok || val != "hi3" {
+		t.Error("test3 should not have been cleaned up")
+	}
+}
