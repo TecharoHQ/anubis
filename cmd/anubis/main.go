@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -79,7 +80,11 @@ func setupListener(network string, address string) (net.Listener, string) {
 	case "unix":
 		formattedAddress = "unix:" + address
 	case "tcp":
-		formattedAddress = "http://localhost" + address
+		if strings.HasPrefix(address, ":") { // assume it's just a port e.g. :4259
+			formattedAddress = "http://localhost" + address
+		} else {
+			formattedAddress = "http://" + address
+		}
 	default:
 		formattedAddress = fmt.Sprintf(`(%s) %s`, network, address)
 	}
@@ -232,10 +237,10 @@ func main() {
 	h = internal.XForwardedForToXRealIP(h)
 
 	srv := http.Server{Handler: h}
-	listener, url := setupListener(*bindNetwork, *bind)
+	listener, listenerUrl := setupListener(*bindNetwork, *bind)
 	slog.Info(
 		"listening",
-		"url", url,
+		"url", listenerUrl,
 		"difficulty", *challengeDifficulty,
 		"serveRobotsTXT", *robotsTxt,
 		"target", *target,
