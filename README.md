@@ -22,7 +22,7 @@ If you want to try this out, connect to [anubis.techaro.lol](https://anubis.tech
 
 ## Support
 
-If you run into any issues running Anubis, please [open an issue](https://github.com/TecharoHQ/anubis/issues/new?template=Blank+issue) and tag it with the Anubis tag. Please include all the information I would need to diagnose your issue.
+If you run into any issues running Anubis, please [open an issue](https://github.com/TecharoHQ/anubis/issues/new?template=Blank+issue). Please include all the information I would need to diagnose your issue.
 
 For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in the Patron discord in the channel `#anubis`.
 
