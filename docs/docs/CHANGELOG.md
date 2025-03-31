@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `TrimSuffix` instead of `TrimRight` on containerbuild
 - Fix the startup logs to correctly show the address and port the server is listening on
 - Add [LibreJS](https://www.gnu.org/software/librejs/) banner to Anubis JavaScript to allow LibreJS users to run the challenge
-
+- Fixed a typo in the challenge page title.
 ## v1.15.0
 
 Zenos yae Galvus

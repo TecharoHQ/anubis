@@ -332,7 +332,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
 	handler := internal.NoStoreCache(
 		templ.Handler(
-			web.Base("Making sure you\\'re not a bot!", web.Index()),
+			web.Base("Making sure you're not a bot!", web.Index()),
 		),
 	)
 	handler.ServeHTTP(w, r)
