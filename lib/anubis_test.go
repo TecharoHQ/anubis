@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
@@ -36,7 +37,7 @@ func spawnAnubis(t *testing.T, opts Options) *Server {
 
 func TestCookieSettings(t *testing.T) {
 	pol := loadPolicies(t, "")
-	pol.DefaultDifficulty = 0
+	pol.DefaultDifficulty = 4
 
 	srv := spawnAnubis(t, Options{
 		Next:   http.NewServeMux(),
@@ -72,8 +73,16 @@ func TestCookieSettings(t *testing.T) {
 	nonce := 0
 	elapsedTime := 420
 	redir := "/"
-	calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
-	calculated := internal.SHA256sum(calcString)
+	calculated := ""
+
+	for {
+		calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
+		calculated = internal.SHA256sum(calcString)
+		if strings.HasPrefix(calculated, "0000") {
+			break
+		}
+		nonce += 1
+	}
 
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
 	if err != nil {
