@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
@@ -75,19 +76,13 @@ func TestCookieSettings(t *testing.T) {
 	calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
 	calculated := internal.SHA256sum(calcString)
 
-	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
-	if err != nil {
-		t.Fatalf("can't make request: %v", err)
-	}
-
-	q := req.URL.Query()
+	q := url.Values{}
 	q.Set("response", calculated)
 	q.Set("nonce", fmt.Sprint(nonce))
 	q.Set("redir", redir)
 	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
-	req.URL.RawQuery = q.Encode()
 
-	resp, err = cli.Do(req)
+	resp, err = cli.PostForm(ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", q)
 	if err != nil {
 		t.Fatalf("can't do challenge passing")
 	}
