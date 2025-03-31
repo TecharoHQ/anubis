@@ -8,4 +8,4 @@ Checklist:
 
 - [ ] Added a description of the changes to the `[Unreleased]` section of docs/docs/CHANGELOG.md
 - [ ] Added test cases to [the relevant parts of the codebase](https://anubis.techaro.lol/docs/developer/code-quality)
-- [ ] Ran integration tests `npm run test:integration`
+- [ ] Ran integration tests `npm run test:integration` (unsupported on Windows, please use WSL)
