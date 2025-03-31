@@ -339,13 +339,8 @@ func (s *Server) RedirectToIndex(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
 	redir := r.URL.Query().Get("r")
-
-	lg := slog.With("return_url", redir, "user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
-
 	if redir == "" {
-		lg.Error("no return URL provided")
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-		return
+		redir = "/"
 	}
 
 	handler := internal.NoStoreCache(
@@ -437,11 +432,15 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	response := r.FormValue("response")
 	redir := r.FormValue("redir")
 
-	if !strings.HasPrefix(redir, "/") {
-		s.ClearCookie(w)
-		lg.Debug("redirect to another host", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid redirect")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-		return
+	redirUrl, err := url.ParseRequestURI(redir)
+	if err != nil {
+		lg.Warn("tried to redirect to invalid URL", "redir", redir, "err", err)
+		redir = "/"
+	}
+
+	if redirUrl.Host != "" {
+		lg.Warn("tried to redirect to external URL", "redir", redir)
+		redir = "/"
 	}
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
