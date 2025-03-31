@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a wait with button continue + 30 second auto continue after 30s if you click "Why am I seeing this?"
 - Fixed a typo in the challenge page title.
 - Disabled running integration tests on Windows hosts due to it's reliance on posix features (see [#133](https://github.com/TecharoHQ/anubis/pull/133#issuecomment-2764732309)).
+- Check the computed hash's prefix on the server side.
 
 ## v1.15.0
 
