@@ -12,7 +12,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 )
 
-//go:generate go run github.com/a-h/templ/cmd/templ@latest generate
+//go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 var (
 	//go:embed *.css static

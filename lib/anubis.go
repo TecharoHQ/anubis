@@ -164,7 +164,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.priv.Seed())
 
-	data := fmt.Sprintf(
+	challengeData := fmt.Sprintf(
 		"Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
 		r.Header.Get("Accept-Language"),
 		r.Header.Get("X-Real-Ip"),
@@ -173,7 +173,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 		fp,
 		difficulty,
 	)
-	return internal.SHA256sum(data)
+	return internal.SHA256sum(challengeData)
 }
 
 func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
@@ -243,6 +243,10 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
+	case config.RuleBenchmark:
+		lg.Debug("serving benchmark page")
+		s.RenderBench(w, r)
+		return
 	default:
 		s.ClearCookie(w)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
@@ -344,8 +348,17 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	handler := internal.NoStoreCache(
+		templ.Handler(
+			web.Base("Making sure you're not a bot!", web.Index(redir)),
+		),
+	)
+	handler.ServeHTTP(w, r)
+}
+
+func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(
-		web.Base("Making sure you're not a bot!", web.Index(redir)),
+		web.Base("Benchmarking Anubis!", web.Bench()),
 	).ServeHTTP(w, r)
 }
 
@@ -550,4 +563,8 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 	}
 
 	return ok
+}
+
+func (s *Server) CleanupDecayMap() {
+	s.DNSBLCache.Cleanup()
 }

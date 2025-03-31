@@ -1,12 +1,16 @@
-go.install();
-
-["amd64", "arm64"].forEach(goarch => {
+["amd64", "arm64", "riscv64"].forEach(goarch => {
     [deb, rpm].forEach(method => method.build({
         name: "anubis",
         description: "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
         homepage: "https://anubis.techaro.lol",
         license: "MIT",
         goarch,
+
+        documentation: {
+            "./README.md": "README.md",
+            "./LICENSE": "LICENSE",
+            "./docs/docs/CHANGELOG.md": "CHANGELOG.md",
+        },
 
         build: (out) => {
             // install Anubis binary

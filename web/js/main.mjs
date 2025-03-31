@@ -10,10 +10,7 @@ const algorithms = {
 // from Xeact
 const u = (url = "", params = {}) => {
   let result = new URL(url, window.location.href);
-  Object.entries(params).forEach((kv) => {
-    let [k, v] = kv;
-    result.searchParams.set(k, v);
-  });
+  Object.entries(params).forEach(([k, v]) => result.searchParams.set(k, v));
   return result.toString();
 };
 
@@ -33,22 +30,74 @@ const dependencies = [
   },
 ];
 
+function showContinueBar(hash, nonce, t0, t1) {
+  const barContainer = document.createElement("div");
+  barContainer.style.marginTop = "1rem";
+  barContainer.style.width = "100%";
+  barContainer.style.maxWidth = "32rem";
+  barContainer.style.background = "#3c3836";
+  barContainer.style.borderRadius = "4px";
+  barContainer.style.overflow = "hidden";
+  barContainer.style.cursor = "pointer";
+  barContainer.style.height = "2rem";
+  barContainer.style.marginLeft = "auto";
+  barContainer.style.marginRight = "auto";
+  barContainer.title = "Click to continue";
+
+  const barInner = document.createElement("div");
+  barInner.className = "bar-inner";
+  barInner.style.display = "flex";
+  barInner.style.alignItems = "center";
+  barInner.style.justifyContent = "center";
+  barInner.style.color = "white";
+  barInner.style.fontWeight = "bold";
+  barInner.style.height = "100%";
+  barInner.style.width = "0";
+  barInner.innerText = "I've finished reading, continue →";
+
+  barContainer.appendChild(barInner);
+  document.body.appendChild(barContainer);
+
+  requestAnimationFrame(() => {
+    barInner.style.width = "100%";
+  });
+
+  barContainer.onclick = () => {
+    const redir = window.location.href;
+    window.location.replace(
+      u("/.within.website/x/cmd/anubis/api/pass-challenge", {
+        response: hash,
+        nonce,
+        redir,
+        elapsedTime: t1 - t0
+      })
+    );
+  };
+}
+
 (async () => {
   const status = document.getElementById('status');
   const image = document.getElementById('image');
   const title = document.getElementById('title');
-  const spinner = document.getElementById('spinner');
+  const progress = document.getElementById('progress');
   const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
   const form = document.getElementById("pass_form");
+  const details = document.querySelector('details');
+  let userReadDetails = false;
 
-  const ohNoes = ({
-    titleMsg, statusMsg, imageSrc,
-  }) => {
+  if (details) {
+    details.addEventListener("toggle", () => {
+      if (details.open) {
+        userReadDetails = true;
+      }
+    });
+  }
+  
+  const ohNoes = ({ titleMsg, statusMsg, imageSrc }) => {
     title.innerHTML = titleMsg;
     status.innerHTML = statusMsg;
     image.src = imageSrc;
-    spinner.innerHTML = "";
-    spinner.style.display = "none";
+    progress.style.display = "none";
   };
 
   if (!window.isSecureContext) {
@@ -69,29 +118,25 @@ const dependencies = [
   //   title.innerHTML = "Oh no!";
   //   status.innerHTML = "Checks failed. Please check your browser's settings and try again.";
   //   image.src = imageURL("sad");
-  //   spinner.innerHTML = "";
-  //   spinner.style.display = "none";
+  //   progress.style.display = "none";
   //   return;
   // }
 
   status.innerHTML = 'Calculating...';
 
-  for (const val of dependencies) {
-    const { value, name, msg } = val;
+  for (const { value, name, msg } of dependencies) {
     if (!value) {
       ohNoes({
         titleMsg: `Missing feature ${name}`,
         statusMsg: msg,
         imageSrc: imageURL("sad", anubisVersion),
-      })
+      });
     }
   }
 
   const { challenge, rules } = await fetch("/.within.website/x/cmd/anubis/api/make-challenge", { method: "POST" })
     .then(r => {
-      if (!r.ok) {
-        throw new Error("Failed to fetch config");
-      }
+      if (!r.ok) throw new Error("Failed to fetch config");
       return r.json();
     })
     .catch(err => {
@@ -113,27 +158,99 @@ const dependencies = [
     return;
   }
 
-  status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}`;
-  spinner.style.display = "block";
+  status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}, `;
+  progress.style.display = "inline-block";
+  
+  // the whole text, including "Speed:", as a single node, because some browsers
+  // (Firefox mobile) present screen readers with each node as a separate piece
+  // of text.
+  const rateText = document.createTextNode("Speed: 0kH/s");
+  status.appendChild(rateText);
+
+  let lastSpeedUpdate = 0;
+  let showingApology = false;
+  const likelihood = Math.pow(16, -rules.report_as);
 
   try {
     const t0 = Date.now();
-    const { hash, nonce } = await process(challenge, rules.difficulty);
+    const { hash, nonce } = await process(
+      challenge,
+      rules.difficulty,
+      null,
+      (iters) => {
+        const delta = Date.now() - t0;
+        // only update the speed every second so it's less visually distracting
+        if (delta - lastSpeedUpdate > 1000) {
+          lastSpeedUpdate = delta;
+          rateText.data = `Speed: ${(iters / delta).toFixed(3)}kH/s`;
+        }
+        // the probability of still being on the page is (1 - likelihood) ^ iters.
+        // by definition, half of the time the progress bar only gets to half, so
+        // apply a polynomial ease-out function to move faster in the beginning
+        // and then slow down as things get increasingly unlikely. quadratic felt
+        // the best in testing, but this may need adjustment in the future.
+        
+        const probability = Math.pow(1 - likelihood, iters);
+        const distance = (1 - Math.pow(probability, 2)) * 100;
+        progress["aria-valuenow"] = distance;
+        progress.firstElementChild.style.width = `${distance}%`;
+
+        if (probability < 0.1 && !showingApology) {
+          status.append(
+            document.createElement("br"),
+            document.createTextNode(
+              "Verification is taking longer than expected. Please do not refresh the page.",
+            ),
+          );
+          showingApology = true;
+        }
+      },
+    );
     const t1 = Date.now();
     console.log({ hash, nonce });
 
     title.innerHTML = "Success!";
     status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
     image.src = imageURL("happy", anubisVersion);
-    spinner.innerHTML = "";
-    spinner.style.display = "none";
+    progress.style.display = "none";
 
-    setTimeout(() => {
-      form.response.value = hash;
-      form.nonce.value = nonce;
-      form.elapsedTime.value = t1 - t0;
-      form.submit();
-    }, 250);
+    if (userReadDetails) {
+      const container = document.getElementById("progress");
+    
+      // Style progress bar as a continue button
+      container.style.display = "flex";
+      container.style.alignItems = "center";
+      container.style.justifyContent = "center";
+      container.style.height = "2rem";
+      container.style.borderRadius = "1rem";
+      container.style.cursor = "pointer";
+      container.style.background = "#b16286";
+      container.style.color = "white";
+      container.style.fontWeight = "bold";
+      container.style.outline = "4px solid #b16286";
+      container.style.outlineOffset = "2px";
+      container.style.width = "min(20rem, 90%)";
+      container.style.margin = "1rem auto 2rem";
+      container.innerHTML = "I've finished reading, continue →";
+    
+      function onDetailsExpand() {
+        form.response.value = hash;
+        form.nonce.value = nonce;
+        form.elapsedTime.value = t1 - t0;
+        form.submit();
+      }
+    
+      container.onclick = onDetailsExpand;
+      setTimeout(onDetailsExpand, 30000);
+    
+    } else {
+      setTimeout(() => {
+        form.response.value = hash;
+        form.nonce.value = nonce;
+        form.elapsedTime.value = t1 - t0;
+        form.submit();
+      }, 250);
+    }
   } catch (err) {
     ohNoes({
       titleMsg: "Calculation error!",

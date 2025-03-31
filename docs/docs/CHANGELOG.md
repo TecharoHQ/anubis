@@ -10,7 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
+- Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
+- Added a no-store Cache-Control header to the challenge page
 - Hide the directory listings for Anubis' internal static content
 - Changed `--debug-x-real-ip-default` to `--use-remote-address`, getting the IP address from the request's socket address instead.
 - DroneBL lookups have been disabled by default
@@ -18,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Dockerfile has been removed as it is no longer in use
 - Developer documentation has been added to the docs site
 - Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
+- Verification page now shows hash rate and a progress bar for completion probability.
+- Added the `--debug-benchmark-js` flag for testing proof-of-work performance during development.
+- Use `TrimSuffix` instead of `TrimRight` on containerbuild
+- Fix the startup logs to correctly show the address and port the server is listening on
+- Add [LibreJS](https://www.gnu.org/software/librejs/) banner to Anubis JavaScript to allow LibreJS users to run the challenge
+- Added a wait with button continue + 30 second auto continue after 30s if you click "Why am I seeing this?"
+- Fixed a typo in the challenge page title.
+- Disabled running integration tests on Windows hosts due to it's reliance on posix features (see [#133](https://github.com/TecharoHQ/anubis/pull/133#issuecomment-2764732309)).
 
 ## v1.15.0
 

@@ -26,7 +26,7 @@ func UnchangingCache(next http.Handler) http.Handler {
 // RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
 // the setting is enabled by the user.
 func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
-	if useRemoteAddress == false {
+	if !useRemoteAddress {
 		slog.Debug("skipping middleware, useRemoteAddress is empty")
 		return next
 	}
@@ -63,6 +63,15 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// NoStoreCache sets the Cache-Control header to no-store for the response.
+func NoStoreCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+	  next.ServeHTTP(w, r)
+	})
+}
+
 
 // Do not allow browsing directory listings in paths that end with /
 func NoBrowsing(next http.Handler) http.Handler {
