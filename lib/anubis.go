@@ -145,14 +145,13 @@ func New(opts Options) (*Server, error) {
 }
 
 type Server struct {
-	mux                 *http.ServeMux
-	next                http.Handler
-	priv                ed25519.PrivateKey
-	pub                 ed25519.PublicKey
-	policy              *policy.ParsedConfig
-	opts                Options
-	DNSBLCache          *decaymap.Impl[string, dnsbl.DroneBLResponse]
-	ChallengeDifficulty int
+	mux        *http.ServeMux
+	next       http.Handler
+	priv       ed25519.PrivateKey
+	pub        ed25519.PublicKey
+	policy     *policy.ParsedConfig
+	opts       Options
+	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -441,9 +440,9 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// compare the leading zeroes
-	if !strings.HasPrefix(response, strings.Repeat("0", s.ChallengeDifficulty)) {
+	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
 		s.ClearCookie(w)
-		lg.Debug("difficulty check failed", "response", response, "difficulty", s.ChallengeDifficulty)
+		lg.Debug("difficulty check failed", "response", response, "difficulty", rule.Challenge.Difficulty)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
 		return
