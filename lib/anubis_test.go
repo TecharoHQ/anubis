@@ -34,6 +34,79 @@ func spawnAnubis(t *testing.T, opts Options) *Server {
 	return s
 }
 
+type challenge struct {
+	Challenge string `json:"challenge"`
+}
+
+func makeChallenge(t *testing.T, ts *httptest.Server) challenge {
+	t.Helper()
+
+	resp, err := ts.Client().Post(ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", "", nil)
+	if err != nil {
+		t.Fatalf("can't request challenge: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var chall challenge
+	if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
+		t.Fatalf("can't read challenge response body: %v", err)
+	}
+
+	return chall
+}
+
+// Regression test for CVE-2025-24369
+func TestCVE2025_24369(t *testing.T) {
+	pol := loadPolicies(t, "")
+	pol.DefaultDifficulty = 4
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:      "local.cetacean.club",
+		CookiePartitioned: true,
+		CookieName:        t.Name(),
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	chall := makeChallenge(t, ts)
+	calcString := fmt.Sprintf("%s%d", chall.Challenge, 0)
+	calculated := internal.SHA256sum(calcString)
+	nonce := 0
+	elapsedTime := 420
+	redir := "/"
+
+	cli := ts.Client()
+	cli.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
+	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+
+	q := req.URL.Query()
+	q.Set("response", calculated)
+	q.Set("nonce", fmt.Sprint(nonce))
+	q.Set("redir", redir)
+	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		t.Fatalf("can't do challenge passing")
+	}
+
+	if resp.StatusCode == http.StatusFound {
+		t.Log("Regression on CVE-2025-24369")
+		t.Errorf("wanted HTTP status %d, got: %d", http.StatusForbidden, resp.StatusCode)
+	}
+}
+
 func TestCookieSettings(t *testing.T) {
 	pol := loadPolicies(t, "")
 	pol.DefaultDifficulty = 0
@@ -72,8 +145,9 @@ func TestCookieSettings(t *testing.T) {
 	nonce := 0
 	elapsedTime := 420
 	redir := "/"
+	calculated := ""
 	calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
-	calculated := internal.SHA256sum(calcString)
+	calculated = internal.SHA256sum(calcString)
 
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
 	if err != nil {
