@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
@@ -32,22 +33,23 @@ import (
 )
 
 var (
-	bind                 = flag.String("bind", ":8923", "network address to bind HTTP to")
-	bindNetwork          = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
-	challengeDifficulty  = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
-	cookieDomain         = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
-	cookiePartitioned    = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
-	ed25519PrivateKeyHex = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
-	metricsBind          = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
-	metricsBindNetwork   = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
-	socketMode           = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
-	robotsTxt            = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
-	policyFname          = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
-	slogLevel            = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	target               = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
-	healthcheck          = flag.Bool("healthcheck", false, "run a health check against Anubis")
-	useRemoteAddress     = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
-	debugBenchmarkJS     = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
+	bind                     = flag.String("bind", ":8923", "network address to bind HTTP to")
+	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
+	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
+	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
+	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
+	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
+	metricsBindNetwork       = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
+	socketMode               = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
+	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
+	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
+	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
+	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
+	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
+	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
+	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -206,18 +208,30 @@ func main() {
 	}
 
 	var priv ed25519.PrivateKey
-	if *ed25519PrivateKeyHex == "" {
+	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
+		log.Fatal("do not specify both ED25519_PRIVATE_KEY_HEX and ED25519_PRIVATE_KEY_HEX_FILE")
+	} else if *ed25519PrivateKeyHex != "" {
+		priv, err = keyFromHex(*ed25519PrivateKeyHex)
+		if err != nil {
+			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
+		}
+	} else if *ed25519PrivateKeyHexFile != "" {
+		hex, err := os.ReadFile(*ed25519PrivateKeyHexFile)
+		if err != nil {
+			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
+		}
+
+		priv, err = keyFromHex(string(bytes.TrimSpace(hex)))
+		if err != nil {
+			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
+		}
+	} else {
 		_, priv, err = ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
 
 		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
-	} else {
-		priv, err = keyFromHex(*ed25519PrivateKeyHex)
-		if err != nil {
-			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
-		}
 	}
 
 	s, err := libanubis.New(libanubis.Options{
