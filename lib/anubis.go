@@ -334,7 +334,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 func (s *Server) RedirectToIndex(w http.ResponseWriter, r *http.Request) {
 	redir := r.URL.RequestURI()
 	indexUrl := "/.within.website/x/cmd/anubis/api/index?r=" + url.QueryEscape(redir)
-	http.Redirect(w, r, indexUrl, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, indexUrl, http.StatusSeeOther)
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
