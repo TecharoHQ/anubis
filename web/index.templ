@@ -73,7 +73,7 @@ templ base(title string, body templ.Component) {
 	</html>
 }
 
-templ index() {
+templ index(ogTags map[string]string) {
 	<div class="centered-div">
 		<img
 			id="image"
@@ -107,6 +107,9 @@ templ index() {
 		</noscript>
 		<div id="testarea"></div>
 	</div>
+	@for key, value := range ogTags {
+		<meta property={ key } content={ value }/>
+	}
 }
 
 templ errorPage(message string) {

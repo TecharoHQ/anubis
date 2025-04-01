@@ -50,6 +50,9 @@ var (
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
+	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
+	ogExpiryTime             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
+	ogQueryDistinct          = flag.String("og-query-distinct", "", "regex pattern to determine distinct cache keys for Open Graph tags")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -241,6 +244,9 @@ func main() {
 		PrivateKey:        priv,
 		CookieDomain:      *cookieDomain,
 		CookiePartitioned: *cookiePartitioned,
+		OGPassthrough:     *ogPassthrough,
+		OGExpiryTime:      *ogExpiryTime,
+		OGQueryDistinct:   *ogQueryDistinct,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -274,6 +280,9 @@ func main() {
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
 		"debug-benchmark-js", *debugBenchmarkJS,
+		"og-passthrough", *ogPassthrough,
+		"og-expiry-time", *ogExpiryTime,
+		"og-query-distinct", *ogQueryDistinct,
 	)
 
 	go func() {

@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +33,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
+	"golang.org/x/net/html"
 )
 
 var (
@@ -71,6 +73,10 @@ type Options struct {
 	CookieDomain      string
 	CookieName        string
 	CookiePartitioned bool
+
+	OGPassthrough   bool
+	OGExpiryTime    time.Duration
+	OGQueryDistinct string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -114,6 +120,7 @@ func New(opts Options) (*Server, error) {
 		policy:     opts.Policy,
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
+		OGCache:    decaymap.New[string, map[string]string](),
 	}
 
 	mux := http.NewServeMux()
@@ -152,6 +159,7 @@ type Server struct {
 	policy     *policy.ParsedConfig
 	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
+	OGCache    *decaymap.Impl[string, map[string]string]
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -213,6 +221,17 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 			lg.Info("DNSBL hit", "status", resp.String())
 			templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip))), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
 			return
+		}
+	}
+
+	if s.opts.OGPassthrough {
+		ogTags, err := s.getOGTags(r.URL.String())
+		if err != nil {
+			lg.Error("failed to get OG tags", "err", err)
+		} else {
+			for key, value := range ogTags {
+				r.Header.Add(key, value)
+			}
 		}
 	}
 
@@ -326,6 +345,53 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("all checks passed")
 	r.Header.Add("X-Anubis-Status", "PASS-FULL")
 	s.next.ServeHTTP(w, r)
+}
+
+func (s *Server) getOGTags(url string) (map[string]string, error) {
+	if cachedTags, ok := s.OGCache.Get(url); ok {
+		return cachedTags, nil
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch URL: %s", url)
+	}
+
+	doc, err := html.Parse(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	ogTags := make(map[string]string)
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "meta" {
+			var property, content string
+			for _, attr := range n.Attr {
+				if attr.Key == "property" && strings.HasPrefix(attr.Val, "og:") {
+					property = attr.Val
+				}
+				if attr.Key == "content" {
+					content = attr.Val
+				}
+			}
+			if property != "" && content != "" {
+				ogTags[property] = content
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+
+	s.OGCache.Set(url, ogTags, s.opts.OGExpiryTime)
+	return ogTags, nil
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
@@ -541,4 +607,5 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 
 func (s *Server) CleanupDecayMap() {
 	s.DNSBLCache.Cleanup()
+	s.OGCache.Cleanup()
 }
