@@ -1,8 +1,9 @@
-package lib
+package ogtags
 
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -28,10 +29,16 @@ func TestGetOGTags(t *testing.T) {
 	defer ts.Close()
 
 	// Create an instance of OGTagCache with a short TTL for testing
-	cache := NewOGTagCache(1 * time.Minute)
+	cache := NewOGTagCache(ts.URL, true, 1*time.Minute, true)
+
+	// Parse the test server URL
+	parsedURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatalf("failed to parse test server URL: %v", err)
+	}
 
 	// Test fetching OG tags from the test server
-	ogTags, err := cache.GetOGTags(ts.URL)
+	ogTags, err := cache.GetOGTags(parsedURL)
 	if err != nil {
 		t.Fatalf("failed to get OG tags: %v", err)
 	}
@@ -50,7 +57,7 @@ func TestGetOGTags(t *testing.T) {
 	}
 
 	// Test fetching OG tags from the cache
-	ogTags, err = cache.GetOGTags(ts.URL)
+	ogTags, err = cache.GetOGTags(parsedURL)
 	if err != nil {
 		t.Fatalf("failed to get OG tags from cache: %v", err)
 	}

@@ -107,7 +107,7 @@ templ index(ogTags map[string]string) {
 		</noscript>
 		<div id="testarea"></div>
 	</div>
-	@for key, value := range ogTags {
+	for key, value := range ogTags {
 		<meta property={ key } content={ value }/>
 	}
 }
@@ -116,6 +116,7 @@ templ errorPage(message string) {
 	<div class="centered-div">
 		<img
 			id="image"
+			alt="Sad Anubis"
 			style="width:100%;max-width:256px;"
 			src={ "/.within.website/x/cmd/anubis/static/img/sad.webp?cacheBuster=" + anubis.Version }
 		/>

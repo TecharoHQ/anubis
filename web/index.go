@@ -1,13 +1,17 @@
 package web
 
-import "github.com/a-h/templ"
+import (
+	"fmt"
+	"github.com/a-h/templ"
+)
 
 func Base(title string, body templ.Component) templ.Component {
 	return base(title, body)
 }
 
-func Index() templ.Component {
-	return index()
+func Index(ogTags map[string]string) templ.Component {
+	fmt.Println("ogTags", ogTags)
+	return index(ogTags)
 }
 
 func ErrorPage(msg string) templ.Component {

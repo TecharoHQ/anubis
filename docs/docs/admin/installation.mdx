@@ -59,7 +59,7 @@ Anubis uses these environment variables for configuration:
 | `USE_REMOTE_ADDRESS`           | unset                   | If set to `true`, Anubis will take the client's IP from the network socket. For production deployments, it is expected that a reverse proxy is used in front of Anubis, which pass the IP using headers, instead.                                                                        |
 | `OG_PASSTHROUGH`               | `false`                 | If set to `true`, Anubis will enable Open Graph tag passthrough.                                                                                                                                                                                                                         |
 | `OG_EXPIRY_TIME`               | `24h`                   | The expiration time for the Open Graph tag cache.                                                                                                                                                                                                                                        |
-| `OG_QUERY_DISTINCT`            | unset                   | A regex pattern to determine distinct cache keys for Open Graph tags. For example, `.*` will treat all URLs with different query parameters as distinct cache keys.                                                                                                                      |
+| `OG_QUERY_DISTINCT`            | `false`                 | A boolean to determine distinct cache keys for Open Graph tags.                                                                                                                                                                                                                          |
 
 For more detailed information on configuring Open Graph tags, please refer to the [Open Graph Configuration](./configuration/open-graph.mdx) page.
 
@@ -92,7 +92,7 @@ services:
       POLICY_FNAME: "/data/cfg/botPolicy.json"
       OG_PASSTHROUGH: "true"
       OG_EXPIRY_TIME: "24h"
-      OG_QUERY_DISTINCT: ".*"
+      OG_QUERY_DISTINCT: "false"
     ports:
       - 8080:8080
     volumes:
@@ -134,7 +134,7 @@ containers:
       - name: "OG_EXPIRY_TIME"
         value: "24h"
       - name: "OG_QUERY_DISTINCT"
-        value: ".*"
+        value: "false"
     resources:
       limits:
         cpu: 500m
