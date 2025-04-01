@@ -19,6 +19,7 @@ jobs:
         with:
           fetch-tags: true
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
@@ -62,4 +63,6 @@ jobs:
 
       - run: |
           echo "Test this with:"
-          echo "docker pull ${{ steps.build.outputs.docker_image }}"
+          echo "docker pull ${DOCKER_IMAGE}"
+        env:
+          DOCKER_IMAGE: ${{ steps.build.outputs.docker_image }}
