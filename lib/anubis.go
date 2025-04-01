@@ -14,7 +14,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -98,9 +97,9 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 
 	defer fin.Close()
 
-	policy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
 
-	return policy, err
+	return anubisPolicy, err
 }
 
 func New(opts Options) (*Server, error) {
