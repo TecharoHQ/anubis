@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed most `zizmor` findings
 - Enabled Dependabot
 - Added an `--extract-resources` flag to extract static resources to a local folder.
+- Hash pinned all GitHub Actions
 
 ## v1.15.1
 
