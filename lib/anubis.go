@@ -344,7 +344,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	handler := internal.NoStoreCache(
 		templ.Handler(
-			web.Base("Making sure you're not a bot!", web.Index(ogTags)),
+			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(), ogTags),
 		),
 	)
 	handler.ServeHTTP(w, r)

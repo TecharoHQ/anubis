@@ -1,7 +1,6 @@
 package ogtags
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -67,7 +66,6 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 	f = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "meta" {
 			var property, content string
-			fmt.Println(n.Attr)
 			for _, attr := range n.Attr {
 				if (attr.Key == "property" || attr.Key == "name") && strings.HasPrefix(attr.Val, "og:") {
 					property = attr.Val

@@ -5,9 +5,9 @@ import (
 	"github.com/TecharoHQ/anubis/xess"
 )
 
-templ base(title string, body templ.Component) {
+templ base(title string, body templ.Component, ogTags map[string]string) {
 	<!DOCTYPE html>
-	<html>
+	<html lang="en">
 		<head>
 			<title>{ title }</title>
 			<link rel="stylesheet" href={ xess.URL }/>
@@ -52,6 +52,9 @@ templ base(title string, body templ.Component) {
     }
       </style>
 			@templ.JSONScript("anubis_version", anubis.Version)
+			for key, value := range ogTags {
+            		<meta property={ key } content={ value }/>
+            	}
 		</head>
 		<body id="top">
 			<main>
@@ -73,7 +76,7 @@ templ base(title string, body templ.Component) {
 	</html>
 }
 
-templ index(ogTags map[string]string) {
+templ index() {
 	<div class="centered-div">
 		<img
 			id="image"
@@ -107,9 +110,6 @@ templ index(ogTags map[string]string) {
 		</noscript>
 		<div id="testarea"></div>
 	</div>
-	for key, value := range ogTags {
-		<meta property={ key } content={ value }/>
-	}
 }
 
 templ errorPage(message string) {
