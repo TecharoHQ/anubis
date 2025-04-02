@@ -45,8 +45,7 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 	}
 	slog.Info("GetOGTags", "cache", "miss", "url", urlStr)
 
-	resp, err := http.Get(urlStr)
-	slog.Info(resp.Status)
+	resp, err := http.Get(urlStr) // todo: remove useless logs, refactor this method and add a timeout to the request
 	if err != nil {
 		return nil, err
 	}
