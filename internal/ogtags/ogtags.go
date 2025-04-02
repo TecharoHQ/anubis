@@ -11,6 +11,14 @@ import (
 	"golang.org/x/net/html"
 )
 
+var client *http.Client
+
+func init() {
+	client = &http.Client{
+		Timeout: 10 * time.Second, /*todo: make this configurable*/
+	}
+}
+
 type OGTagCache struct {
 	cache           *decaymap.Impl[string, map[string]string]
 	target          string
@@ -20,6 +28,10 @@ type OGTagCache struct {
 }
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogQueryDistinct bool) *OGTagCache {
+	if target == "" {
+		slog.Error("NewOGTagCache: target is empty. OpenGraph support is disabled.")
+		return nil
+	}
 	return &OGTagCache{
 		cache:           decaymap.New[string, map[string]string](),
 		target:          target,
@@ -45,7 +57,7 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 	}
 	slog.Info("GetOGTags", "cache", "miss", "url", urlStr)
 
-	resp, err := http.Get(urlStr) // todo: remove useless logs, refactor this method and add a timeout to the request
+	resp, err := client.Get(urlStr) // todo: remove useless logs, refactor this method
 	if err != nil {
 		return nil, err
 	}
