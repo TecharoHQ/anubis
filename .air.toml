@@ -1,0 +1,12 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/main ./cmd/anubis"
+bin = "./tmp/main"
+args = ["--use-remote-address"]
+exclude_dir = ["tmp", "vendor", "docs", "node_modules"]
+
+[logger]
+time = true
+# to add flags at runtime, prepend with -- e.g. $ air -- --target http://localhost:3000 --difficulty 20
