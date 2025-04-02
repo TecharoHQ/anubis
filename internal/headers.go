@@ -13,6 +13,7 @@ import (
 // UnchangingCache sets the Cache-Control header to cache a response for 1 year if
 // and only if the application is compiled in "release" mode by Docker.
 func UnchangingCache(next http.Handler) http.Handler {
+	//goland:noinspection GoBoolExpressions
 	if anubis.Version == "devel" {
 		return next
 	}
