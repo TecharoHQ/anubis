@@ -14,7 +14,7 @@ func (c *OGTagCache) extractOGTags(doc *html.Node) map[string]string {
 	traverseNodes = func(n *html.Node) {
 		if isOGMetaTag(n) {
 			property, content := extractMetaTagInfo(n)
-			if property != "" && content != "" {
+			if property != "" {
 				ogTags[property] = content
 			}
 		}

@@ -122,17 +122,20 @@ func TestIsOGMetaTag(t *testing.T) {
 
 			// Find the first element node (should be our test node)
 			var node *html.Node
-			var findNode func(*html.Node)
-			findNode = func(n *html.Node) {
-				if n.Type == html.ElementNode {
+			var findMetaNode func(*html.Node)
+			findMetaNode = func(n *html.Node) {
+				if n.Type == html.ElementNode && n.Data == "meta" {
 					node = n
 					return
 				}
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					findNode(c)
+					findMetaNode(c)
+					if node != nil {
+						return
+					}
 				}
 			}
-			findNode(doc)
+			findMetaNode(doc)
 
 			result := isOGMetaTag(node)
 			if result != tt.expected {
@@ -184,17 +187,20 @@ func TestExtractMetaTagInfo(t *testing.T) {
 
 			// Find the first element node (should be our test node)
 			var node *html.Node
-			var findNode func(*html.Node)
-			findNode = func(n *html.Node) {
-				if n.Type == html.ElementNode {
+			var findMetaNode func(*html.Node)
+			findMetaNode = func(n *html.Node) {
+				if n.Type == html.ElementNode && n.Data == "meta" {
 					node = n
 					return
 				}
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					findNode(c)
+					findMetaNode(c)
+					if node != nil {
+						return
+					}
 				}
 			}
-			findNode(doc)
+			findMetaNode(doc)
 
 			property, content := extractMetaTagInfo(node)
 
