@@ -17,24 +17,29 @@ func init() {
 }
 
 type OGTagCache struct {
-	cache           *decaymap.Impl[string, map[string]string]
-	target          string
-	ogPassthrough   bool
-	ogTimeToLive    time.Duration
-	ogQueryDistinct bool
+	cache            *decaymap.Impl[string, map[string]string]
+	target           string
+	ogPassthrough    bool
+	ogTimeToLive     time.Duration
+	ogQueryDistinct  bool
+	approvedTags     []string // Add this
+	approvedPrefixes []string // Add this
 }
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogQueryDistinct bool) *OGTagCache {
-	//if target == "" {
-	// slog.Error("NewOGTagCache: target is empty. OpenGraph support is disabled.")
-	// return nil
-	//}
+	// Predefined approved tags and prefixes
+	// In the future, these could come from configuration
+	defaultApprovedTags := []string{"description"}
+	defaultApprovedPrefixes := []string{"og:"}
+
 	return &OGTagCache{
-		cache:           decaymap.New[string, map[string]string](),
-		target:          target,
-		ogPassthrough:   ogPassthrough,
-		ogTimeToLive:    ogTimeToLive,
-		ogQueryDistinct: ogQueryDistinct,
+		cache:            decaymap.New[string, map[string]string](),
+		target:           target,
+		ogPassthrough:    ogPassthrough,
+		ogTimeToLive:     ogTimeToLive,
+		ogQueryDistinct:  ogQueryDistinct,
+		approvedTags:     defaultApprovedTags,
+		approvedPrefixes: defaultApprovedPrefixes,
 	}
 }
 
