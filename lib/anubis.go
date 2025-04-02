@@ -174,14 +174,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 }
 
 func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With(
-		"user_agent", r.UserAgent(),
-		"accept_language", r.Header.Get("Accept-Language"),
-		"priority", r.Header.Get("Priority"),
-		"x-forwarded-for",
-		r.Header.Get("X-Forwarded-For"),
-		"x-real-ip", r.Header.Get("X-Real-Ip"),
-	)
+	lg := slog.With("user_agent", r.UserAgent())
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -344,7 +337,7 @@ func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
+	lg := slog.With("user_agent", r.UserAgent())
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -372,13 +365,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With(
-		"user_agent", r.UserAgent(),
-		"accept_language", r.Header.Get("Accept-Language"),
-		"priority", r.Header.Get("Priority"),
-		"x-forwarded-for", r.Header.Get("X-Forwarded-For"),
-		"x-real-ip", r.Header.Get("X-Real-Ip"),
-	)
+	lg := slog.With("user_agent", r.UserAgent())
 
 	cr, rule, err := s.check(r)
 	if err != nil {
