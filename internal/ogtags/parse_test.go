@@ -92,50 +92,59 @@ func TestExtractOGTags(t *testing.T) {
 
 func TestIsOGMetaTag(t *testing.T) {
 	tests := []struct {
-		name     string
-		nodeHTML string
-		expected bool
+		name       string
+		nodeHTML   string
+		targetNode string
+		expected   bool
 	}{
 		{
-			name:     "Meta OG tag",
-			nodeHTML: `<meta property="og:title" content="Test">`,
-			expected: true,
+			name:       "Meta OG tag",
+			nodeHTML:   `<meta property="og:title" content="Test">`,
+			targetNode: "meta",
+			expected:   true,
 		},
 		{
-			name:     "Regular meta tag",
-			nodeHTML: `<meta name="description" content="Test">`,
-			expected: true, // This is still a meta tag, extractMetaTagInfo will filter
+			name:       "Regular meta tag",
+			nodeHTML:   `<meta name="description" content="Test">`,
+			targetNode: "meta",
+			expected:   true,
 		},
 		{
-			name:     "Not a meta tag",
-			nodeHTML: `<div>Test</div>`,
-			expected: false,
+			name:       "Not a meta tag",
+			nodeHTML:   `<div>Test</div>`,
+			targetNode: "div",
+			expected:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doc, err := html.Parse(strings.NewReader(tt.nodeHTML))
+			fullHTML := "<html><head>" + tt.nodeHTML + "</head><body></body></html>"
+			doc, err := html.Parse(strings.NewReader(fullHTML))
 			if err != nil {
 				t.Fatalf("failed to parse HTML: %v", err)
 			}
 
-			// Find the first element node (should be our test node)
+			// Find the target element node
 			var node *html.Node
-			var findMetaNode func(*html.Node)
-			findMetaNode = func(n *html.Node) {
-				if n.Type == html.ElementNode && n.Data == "meta" {
+			var findNode func(*html.Node)
+			findNode = func(n *html.Node) {
+				if n.Type == html.ElementNode && n.Data == tt.targetNode { // Use targetNode here
 					node = n
 					return
 				}
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					findMetaNode(c)
+					findNode(c)
 					if node != nil {
 						return
 					}
 				}
 			}
-			findMetaNode(doc)
+			findNode(doc)
+
+			if node == nil {
+				t.Fatalf("Could not find target node '%s' in test HTML", tt.targetNode)
+			}
 
 			result := isOGMetaTag(node)
 			if result != tt.expected {

@@ -30,6 +30,9 @@ func (c *OGTagCache) extractOGTags(doc *html.Node) map[string]string {
 
 // isOGMetaTag checks if a node is an Open Graph meta tag
 func isOGMetaTag(n *html.Node) bool {
+	if n == nil {
+		return false
+	}
 	return n.Type == html.ElementNode && n.Data == "meta"
 }
 
