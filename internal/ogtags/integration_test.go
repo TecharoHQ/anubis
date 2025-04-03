@@ -9,7 +9,6 @@ import (
 )
 
 func TestIntegrationGetOGTags(t *testing.T) {
-	// Create a test server with different responses based on path
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 
