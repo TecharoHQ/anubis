@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/invopop/ctxi18n"
 	"github.com/sebest/xff"
 )
 
@@ -68,10 +69,9 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 func NoStoreCache(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
-	  next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r)
 	})
 }
-
 
 // Do not allow browsing directory listings in paths that end with /
 func NoBrowsing(next http.Handler) http.Handler {
@@ -81,5 +81,18 @@ func NoBrowsing(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+func SetFixedLocale(locale string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, err := ctxi18n.WithLocale(r.Context(), "en")
+		if err != nil {
+			slog.Debug("ctxi18n error", "err", err)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
