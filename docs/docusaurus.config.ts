@@ -76,7 +76,7 @@ const config: Config = {
       title: 'Anubis',
       logo: {
         alt: 'A happy jackal woman with brown hair and red eyes',
-        src: 'img/happy.webp',
+        src: 'img/favicon.webp',
       },
       items: [
         {
