@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Allow iMessage's link preview fetcher through Anubis by default.
 - Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
 - Added a no-store Cache-Control header to the challenge page
 - Hide the directory listings for Anubis' internal static content
@@ -30,8 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabled running integration tests on Windows hosts due to it's reliance on posix features (see [#133](https://github.com/TecharoHQ/anubis/pull/133#issuecomment-2764732309)).
 - Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`.
 - Fixed minor typos
+- Added a Makefile to enable comfortable workflows for downstream packagers.
 - Added `zizmor` for GitHub Actions static analysis
 - Fixed most `zizmor` findings
+- Enabled Dependabot
 
 ## v1.15.1
 

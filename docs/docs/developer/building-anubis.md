@@ -22,20 +22,23 @@ In order to build a production-ready binary of Anubis, you need the following pa
 ## Install dependencies
 
 ```text
-go mod download
-npm ci
+make deps
 ```
+
+This will download Go and NPM dependencies.
 
 ## Building static assets
 
 ```text
-npm run assets
+make assets
 ```
+
+This will build all static assets (CSS, JavaScript) for distribution.
 
 ## Building Anubis to the `./var` folder
 
 ```text
-go build -o ./var/anubis ./cmd/anubis
+make build
 ```
 
 From this point it is up to you to make sure that `./var/anubis` ends up in the right place. You may want to consult the `./run` folder for useful files such as a systemd unit and `anubis.env.default` file.

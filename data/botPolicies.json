@@ -344,6 +344,12 @@
       ]
     },
     {
+      "_comment": "This has been reverse-engineered through making iMessage's preview function hit a URL that prints the user-agent in the server logs.",
+      "name": "iMessage preview",
+      "user_agent_regex": ".*facebookexternalhit/1\\.1 Facebot Twitterbot/1\\.0$",
+      "action": "ALLOW"
+    },
+    {
       "name": "us-artificial-intelligence-scraper",
       "user_agent_regex": "\\+https\\://github\\.com/US-Artificial-Intelligence/scraper",
       "action": "DENY"

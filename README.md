@@ -29,3 +29,7 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date)](https://www.star-history.com/#TecharoHQ/anubis&Date)
+
+## Packaging Status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/anubis-anti-crawler.svg)](https://repology.org/project/anubis-anti-crawler/versions)
