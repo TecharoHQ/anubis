@@ -12,6 +12,9 @@ templ base(title string, body templ.Component, ogTags map[string]string) {
 			<title>{ title }</title>
 			<link rel="stylesheet" href={ xess.URL }/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			for key, value := range ogTags {
+                  <meta property={ key } content={ value }/>
+           	}
 			<style>
     body,
     html {
@@ -52,9 +55,7 @@ templ base(title string, body templ.Component, ogTags map[string]string) {
     }
       </style>
 			@templ.JSONScript("anubis_version", anubis.Version)
-			for key, value := range ogTags {
-            		<meta property={ key } content={ value }/>
-            	}
+
 		</head>
 		<body id="top">
 			<main>

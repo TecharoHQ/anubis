@@ -9,4 +9,4 @@ exclude_dir = ["tmp", "vendor", "docs", "node_modules"]
 
 [logger]
 time = true
-# to add flags at runtime, prepend with -- e.g. $ air -- --target http://localhost:3000 --difficulty 20
+# to change flags at runtime, prepend with -- e.g. $ air -- --target http://localhost:3000 --difficulty 20 --use-remote-address
