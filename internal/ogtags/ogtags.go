@@ -28,7 +28,7 @@ type OGTagCache struct {
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogQueryDistinct bool) *OGTagCache {
 	// Predefined approved tags and prefixes
-	// In the future, these could come from configuration
+	// In the future, these could come from configuration (todo: Wait on viper?)
 	defaultApprovedTags := []string{"description"}
 	defaultApprovedPrefixes := []string{"og:"}
 
@@ -45,8 +45,8 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 
 func (c *OGTagCache) getTarget(url *url.URL) string {
 	// fixme: nil pointer here
-	if c.ogQueryDistinct && url.RawQuery != "" {
-		return c.target + url.Path + "?" + url.RawQuery
+	if c.ogQueryDistinct && url.Query().Encode() != "" {
+		return c.target + url.Path + "?" + url.Query().Encode()
 	}
 	return c.target + url.Path
 }
