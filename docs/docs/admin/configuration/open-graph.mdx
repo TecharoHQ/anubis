@@ -9,30 +9,19 @@ This page provides detailed information on how to configure [OpenGraph tag](http
 
 ## Configuration Options
 
-### OG_PASSTHROUGH
-
-- **Description**: Enables or disables the Open Graph tag passthrough system.
-- **Type**: Boolean
-- **Default**: `false`
-- **Example**: `OG_PASSTHROUGH=true`
-
-### OG_EXPIRY_TIME
-
-- **Description**: Configurable cache expiration time for Open Graph tags.
-- **Type**: Duration (e.g., `1h`, `30m`)
-- **Default**: `24h`
-- **Example**: `OG_EXPIRY_TIME=1h`
+| Name             | Description                                               | Type     | Default | Example                 |
+|------------------|-----------------------------------------------------------|----------|---------|-------------------------|
+| `OG_PASSTHROUGH` | Enables or disables the Open Graph tag passthrough system | Boolean  | `false` | `OG_PASSTHROUGH=true`   |
+| `OG_EXPIRY_TIME` | Configurable cache expiration time for Open Graph tags    | Duration | `24h`   | `OG_EXPIRY_TIME=1h`     |
 
 ## Usage
 
-To configure Open Graph tags, you can set the following environment variables or flags in your Anubis configuration:
+To configure Open Graph tags, you can set the following environment variables, environment file or as flags in your Anubis configuration:
 
 ```sh
 export OG_PASSTHROUGH=true
 export OG_EXPIRY_TIME=1h
 ```
-
-Alternatively, you can set these options in your environment file.
 
 ## Implementation Details
 
