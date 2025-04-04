@@ -112,7 +112,7 @@ func TestGetOGTags(t *testing.T) {
 			t.Errorf("expected %s: %s, got: %s", key, expectedValue, value)
 		}
 
-		initialValue, _ := ogTags[key]
+		initialValue := ogTags[key]
 		cachedValue, ok := newOgTags[key]
 		if !ok || initialValue != cachedValue {
 			t.Errorf("Cache does not line up: expected %s: %s, got: %s", key, initialValue, cachedValue)
