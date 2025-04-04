@@ -396,7 +396,7 @@
     },
     {
       "name": "generic-browser",
-      "user_agent_regex": "Mozilla",
+      "user_agent_regex": "Mozilla|Opera",
       "action": "CHALLENGE"
     }
   ],
