@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -15,6 +16,9 @@ var ErrNotFound = errors.New("page not found") /*todo: refactor into common erro
 // fetchHTMLDocument fetches and parses the HTML document
 func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
 	resp, err := c.client.Get(urlStr)
+	if os.IsTimeout(err) {
+		c.cache.Set(urlStr, nil, c.ogTimeToLive/2) // Cache empty result for half the TTL to not spam the server
+	}
 	if err != nil {
 		return nil, err
 	}
