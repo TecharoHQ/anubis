@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enabled Dependabot
 - Added an air config for autoreload support in development ([#195](https://github.com/TecharoHQ/anubis/pull/195))
 - Added support for OG tags in the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
+- Added an `--extract-resources` flag to extract static resources to a local folder.
 
 ## v1.15.1
 

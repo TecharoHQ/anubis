@@ -5,10 +5,12 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"embed"
 	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"log/slog"
 	"net"
@@ -17,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -29,6 +32,7 @@ import (
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -54,6 +58,7 @@ var (
 	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
 	ogQueryDistinct          = flag.Bool("og-query-distinct", false, "treat URLs with different query parameters as distinct cache keys")
+	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -173,6 +178,14 @@ func main() {
 		if err := doHealthCheck(); err != nil {
 			log.Fatal(err)
 		}
+		return
+	}
+
+	if *extractResources != "" {
+		if err := extractEmbedFS(web.Static, "static", *extractResources); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Extracted embedded static files to %s\n", *extractResources)
 		return
 	}
 
@@ -324,4 +337,30 @@ func metricsServer(ctx context.Context, done func()) {
 	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
+}
+
+func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
+	return fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+
+		destPath := filepath.Join(destDir, relPath)
+
+		if d.IsDir() {
+			return os.MkdirAll(destPath, 0o700)
+		}
+
+		data, err := fs.ReadFile(fsys, path)
+		if err != nil {
+			return err
+		}
+
+		return os.WriteFile(destPath, data, 0o644)
+	})
 }
