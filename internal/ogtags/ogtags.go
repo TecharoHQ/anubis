@@ -37,8 +37,8 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 	}
 }
 
-func (c *OGTagCache) getTarget(url *url.URL) string {
-	return c.target + url.Path
+func (c *OGTagCache) getTarget(u *url.URL) string {
+	return c.target + u.Path
 }
 
 func (c *OGTagCache) Cleanup() {
