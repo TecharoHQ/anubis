@@ -1,11 +1,11 @@
 root = "."
-tmp_dir = "tmp"
+tmp_dir = "var"
 
 [build]
-cmd = "go build -o ./tmp/main ./cmd/anubis"
-bin = "./tmp/main"
+cmd = "go build -o ./var/main ./cmd/anubis"
+bin = "./var/main"
 args = ["--use-remote-address"]
-exclude_dir = ["tmp", "vendor", "docs", "node_modules"]
+exclude_dir = ["var", "vendor", "docs", "node_modules"]
 
 [logger]
 time = true
