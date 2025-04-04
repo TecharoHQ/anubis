@@ -1,12 +1,16 @@
 package ogtags
 
 import (
+	"errors"
 	"log/slog"
 	"net/url"
 )
 
 // GetOGTags is the main function that retrieves Open Graph tags for a URL
 func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
+	if url == nil {
+		return nil, errors.New("nil URL provided, cannot fetch OG tags")
+	}
 	urlStr := c.getTarget(url)
 	// Check cache first
 	if cachedTags := c.checkCache(urlStr); cachedTags != nil {
