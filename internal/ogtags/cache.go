@@ -34,6 +34,6 @@ func (c *OGTagCache) checkCache(urlStr string) map[string]string {
 		slog.Debug("GetOGTags", "cache", "hit", "tags", cachedTags)
 		return cachedTags
 	}
-	slog.Debug("GetOGTags", "cache", "miss", "url", urlStr)
+	slog.Debug("cache miss", "url", urlStr)
 	return nil
 }
