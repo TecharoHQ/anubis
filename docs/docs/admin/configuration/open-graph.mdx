@@ -23,13 +23,6 @@ This page provides detailed information on how to configure Open Graph tags in A
 - **Default**: `24h`
 - **Example**: `OG_EXPIRY_TIME=1h`
 
-### OG_QUERY_DISTINCT
-
-- **Description**: Determines whether Anubis should treat the same page with different query parameters as distinct cache keys.
-- **Type**: Boolean
-- **Default**: `false`
-- **Example**: `OG_QUERY_DISTINCT=true`
-
 ## Usage
 
 To configure Open Graph tags, you can set the following environment variables or flags in your Anubis configuration:
@@ -37,7 +30,6 @@ To configure Open Graph tags, you can set the following environment variables or
 ```sh
 export OG_PASSTHROUGH=true
 export OG_EXPIRY_TIME=1h
-export OG_QUERY_DISTINCT=true
 ```
 
 Alternatively, you can set these options in your configuration file if you are using Viper for configuration management.
@@ -50,7 +42,7 @@ When `OG_PASSTHROUGH` is enabled, Anubis will:
 2. If a cached entry exists and is still valid, return the cached tags.
 3. If the cached entry is stale or not found, fetch the URL, parse the Open Graph tags, update the cache, and return the new tags.
 
-The cache expiration time is controlled by `OG_EXPIRY_TIME`, and the distinct cache keys for URLs with different query parameters are controlled by `OG_QUERY_DISTINCT`.
+The cache expiration time is controlled by `OG_EXPIRY_TIME`.
 
 ## Example
 
@@ -59,9 +51,8 @@ Here is an example of how to configure Open Graph tags in your Anubis setup:
 ```sh
 export OG_PASSTHROUGH=true
 export OG_EXPIRY_TIME=1h
-export OG_QUERY_DISTINCT=true
 ```
 
-With these settings, Anubis will cache Open Graph tags for 1 hour and treat URLs with different query parameters as distinct cache keys.
+With these settings, Anubis will cache Open Graph tags for 1 hour and pass them through to the challenge page.
 
 For more information, refer to the [installation guide](../installation).
