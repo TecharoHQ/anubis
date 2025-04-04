@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/url"
+	"syscall"
 )
 
 // GetOGTags is the main function that retrieves Open Graph tags for a URL
@@ -19,6 +20,13 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 
 	// Fetch HTML content
 	doc, err := c.fetchHTMLDocument(urlStr)
+	if errors.Is(err, syscall.ECONNREFUSED) {
+		slog.Debug("Connection refused, returning empty tags")
+		return nil, nil
+	} else if errors.Is(err, ErrNotFound) {
+		// not even worth a debug log...
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

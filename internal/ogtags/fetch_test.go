@@ -1,19 +1,24 @@
 package ogtags
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
 
 func TestFetchHTMLDocument(t *testing.T) {
 	tests := []struct {
-		name        string
-		htmlContent string
-		statusCode  int
-		expectError bool
+		name          string
+		htmlContent   string
+		contentType   string
+		statusCode    int
+		contentLength int64
+		expectError   bool
 	}{
 		{
 			name: "Valid HTML",
@@ -22,29 +27,54 @@ func TestFetchHTMLDocument(t *testing.T) {
 				<head><title>Test</title></head>
 				<body><p>Test content</p></body>
 				</html>`,
+			contentType: "text/html",
 			statusCode:  http.StatusOK,
 			expectError: false,
 		},
 		{
 			name:        "Empty HTML",
 			htmlContent: "",
+			contentType: "text/html",
 			statusCode:  http.StatusOK,
 			expectError: false,
 		},
 		{
 			name:        "Not found error",
-			htmlContent: "Not Found",
+			htmlContent: "",
+			contentType: "text/html",
 			statusCode:  http.StatusNotFound,
 			expectError: true,
+		},
+		{
+			name:        "Unsupported Content-Type",
+			htmlContent: "*Insert rick roll here*",
+			contentType: "video/mp4",
+			statusCode:  http.StatusOK,
+			expectError: true,
+		},
+		{
+			name:          "Too large content",
+			contentType:   "text/html",
+			statusCode:    http.StatusOK,
+			expectError:   true,
+			contentLength: 5 * 1024 * 1024, // 5MB (over 2MB limit)
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a test server
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.htmlContent))
+				if tt.contentType != "" {
+					w.Header().Set("Content-Type", tt.contentType)
+				}
+				if tt.contentLength > 0 {
+					// Simulate content length but avoid sending too much actual data
+					w.Header().Set("Content-Length", fmt.Sprintf("%d", tt.contentLength))
+					io.CopyN(w, strings.NewReader("X"), tt.contentLength)
+				} else {
+					w.WriteHeader(tt.statusCode)
+					w.Write([]byte(tt.htmlContent))
+				}
 			}))
 			defer ts.Close()
 
@@ -77,7 +107,6 @@ func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
 
 	cache := NewOGTagCache("", true, time.Minute)
 
-	// Test with invalid URL
 	doc, err := cache.fetchHTMLDocument("http://invalid.url.that.doesnt.exist.example")
 
 	if err == nil {

@@ -16,16 +16,20 @@ type OGTagCache struct {
 	approvedTags     []string
 	approvedPrefixes []string
 	client           *http.Client
+	maxContentLength int64
 }
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration) *OGTagCache {
 	// Predefined approved tags and prefixes
 	// In the future, these could come from configuration
-	defaultApprovedTags := []string{"description"}
+	defaultApprovedTags := []string{"description", "keywords", "author"}
 	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
 	client := &http.Client{
-		Timeout: 10 * time.Second, /*todo: make this configurable*/
+		Timeout: 5 * time.Second, /*make this configurable?*/
 	}
+
+	const maxContentLength = 16 << 20 // 16 MiB in bytes
+
 	return &OGTagCache{
 		cache:            decaymap.New[string, map[string]string](),
 		target:           target,
@@ -34,6 +38,7 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 		approvedTags:     defaultApprovedTags,
 		approvedPrefixes: defaultApprovedPrefixes,
 		client:           client,
+		maxContentLength: maxContentLength,
 	}
 }
 
