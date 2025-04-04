@@ -32,6 +32,7 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 	defaultApprovedTags := []string{"description"}
 	defaultApprovedPrefixes := []string{"og:", "twitter:"}
 
+	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
 	return &OGTagCache{
 		cache:            decaymap.New[string, map[string]string](),
 		target:           target,
