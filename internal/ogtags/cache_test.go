@@ -41,8 +41,14 @@ func TestCheckCache(t *testing.T) {
 }
 
 func TestGetOGTags(t *testing.T) {
+	var loadCount int // Counter to track how many times the test route is loaded
+
 	// Create a test server to serve a sample HTML page with OG tags
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		loadCount++
+		if loadCount > 1 {
+			t.Fatalf("Test route loaded more than once, cache failed")
+		}
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`
 			<!DOCTYPE html>
@@ -94,10 +100,23 @@ func TestGetOGTags(t *testing.T) {
 		t.Fatalf("failed to get OG tags from cache: %v", err)
 	}
 
+	// Test fetching OG tags from the cache (3rd time)
+	newOgTags, err := cache.GetOGTags(parsedURL)
+	if err != nil {
+		t.Fatalf("failed to get OG tags from cache: %v", err)
+	}
+
 	// Verify the cached OG tags
 	for key, expectedValue := range expectedTags {
 		if value, ok := ogTags[key]; !ok || value != expectedValue {
 			t.Errorf("expected %s: %s, got: %s", key, expectedValue, value)
 		}
+
+		initialValue, ok := ogTags[key]
+		cachedValue, ok := newOgTags[key]
+		if !ok || initialValue != cachedValue {
+			t.Errorf("Cache does not line up: expected %s: %s, got: %s", key, initialValue, cachedValue)
+		}
+
 	}
 }
