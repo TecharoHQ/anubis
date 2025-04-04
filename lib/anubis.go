@@ -336,10 +336,14 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
-	ogTags, err := s.OGTags.GetOGTags(r.URL)
-	if err != nil {
-		slog.Error("failed to get OG tags", "err", err)
-		ogTags = nil
+	var ogTags map[string]string = nil
+	if s.opts.OGPassthrough {
+		var err error
+		ogTags, err = s.OGTags.GetOGTags(r.URL)
+		if err != nil {
+			slog.Error("failed to get OG tags", "err", err)
+			ogTags = nil
+		}
 	}
 	handler := internal.NoStoreCache(
 		templ.Handler(
