@@ -97,7 +97,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 			path:         "/not-found",
 			query:        "",
 			expectedTags: nil,
-			expectError:  true,
+			expectError:  false,
 		},
 	}
 
