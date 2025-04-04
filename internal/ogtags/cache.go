@@ -31,7 +31,7 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 // checkCache checks if we have the tags cached and returns them if so
 func (c *OGTagCache) checkCache(urlStr string) map[string]string {
 	if cachedTags, ok := c.cache.Get(urlStr); ok {
-		slog.Debug("GetOGTags", "cache", "hit", "tags", cachedTags)
+		slog.Debug("cache hit", "tags", cachedTags)
 		return cachedTags
 	}
 	slog.Debug("cache miss", "url", urlStr)
