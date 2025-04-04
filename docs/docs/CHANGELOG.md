@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social).
-- Allow iMessage's link preview fetcher through Anubis by default.
 - Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
 - Added a no-store Cache-Control header to the challenge page
 - Hide the directory listings for Anubis' internal static content
@@ -34,10 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed minor typos
 - Added a Makefile to enable comfortable workflows for downstream packagers.
 - Added `zizmor` for GitHub Actions static analysis
-- Fixed most `zizmor` findings 
+- Fixed most `zizmor` findings
 - Enabled Dependabot
 - Added an air config for autoreload support in development ([#195](https://github.com/TecharoHQ/anubis/pull/195))
-- Added support for [OpenGraph tag](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
+- Added support for [OpenGraph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
 - Added an `--extract-resources` flag to extract static resources to a local folder.
 
 ## v1.15.1
