@@ -8,47 +8,36 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 )
 
-var client *http.Client
-
-func init() {
-	client = &http.Client{
-		Timeout: 10 * time.Second, /*todo: make this configurable*/
-	}
-}
-
 type OGTagCache struct {
 	cache            *decaymap.Impl[string, map[string]string]
 	target           string
 	ogPassthrough    bool
 	ogTimeToLive     time.Duration
-	ogQueryDistinct  bool
-	approvedTags     []string // Add this
-	approvedPrefixes []string // Add this
+	approvedTags     []string
+	approvedPrefixes []string
+	client           *http.Client
 }
 
-func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogQueryDistinct bool) *OGTagCache {
+func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration) *OGTagCache {
 	// Predefined approved tags and prefixes
-	// In the future, these could come from configuration (todo: Wait on viper?)
+	// In the future, these could come from configuration
 	defaultApprovedTags := []string{"description"}
-	defaultApprovedPrefixes := []string{"og:", "twitter:"}
-
 	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
+	client := &http.Client{
+		Timeout: 10 * time.Second, /*todo: make this configurable*/
+	}
 	return &OGTagCache{
 		cache:            decaymap.New[string, map[string]string](),
 		target:           target,
 		ogPassthrough:    ogPassthrough,
 		ogTimeToLive:     ogTimeToLive,
-		ogQueryDistinct:  ogQueryDistinct,
 		approvedTags:     defaultApprovedTags,
 		approvedPrefixes: defaultApprovedPrefixes,
+		client:           client,
 	}
 }
 
 func (c *OGTagCache) getTarget(url *url.URL) string {
-	// fixme: nil pointer here
-	if c.ogQueryDistinct && url.Query().Encode() != "" {
-		return c.target + url.Path + "?" + url.Query().Encode()
-	}
 	return c.target + url.Path
 }
 

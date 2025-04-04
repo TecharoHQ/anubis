@@ -73,10 +73,9 @@ type Options struct {
 	CookieName        string
 	CookiePartitioned bool
 
-	OGPassthrough   bool
-	OGTimeToLive    time.Duration
-	OGQueryDistinct bool
-	Target          string
+	OGPassthrough bool
+	OGTimeToLive  time.Duration
+	Target        string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -120,7 +119,7 @@ func New(opts Options) (*Server, error) {
 		policy:     opts.Policy,
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
-		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive, opts.OGQueryDistinct),
+		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive),
 	}
 
 	mux := http.NewServeMux()

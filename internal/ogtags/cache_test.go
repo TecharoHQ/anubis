@@ -9,7 +9,7 @@ import (
 )
 
 func TestCheckCache(t *testing.T) {
-	cache := NewOGTagCache("http://example.com", true, time.Minute, false)
+	cache := NewOGTagCache("http://example.com", true, time.Minute)
 
 	// Set up test data
 	urlStr := "http://example.com/page"
@@ -61,7 +61,7 @@ func TestGetOGTags(t *testing.T) {
 	defer ts.Close()
 
 	// Create an instance of OGTagCache with a short TTL for testing
-	cache := NewOGTagCache(ts.URL, true, 1*time.Minute, true)
+	cache := NewOGTagCache(ts.URL, true, 1*time.Minute)
 
 	// Parse the test server URL
 	parsedURL, err := url.Parse(ts.URL)

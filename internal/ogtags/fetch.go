@@ -9,7 +9,7 @@ import (
 
 // fetchHTMLDocument fetches and parses the HTML document
 func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
-	resp, err := client.Get(urlStr)
+	resp, err := c.client.Get(urlStr)
 	if err != nil {
 		return nil, err
 	}

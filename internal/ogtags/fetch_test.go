@@ -47,7 +47,7 @@ func TestFetchHTMLDocument(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			cache := NewOGTagCache("", true, time.Minute, false)
+			cache := NewOGTagCache("", true, time.Minute)
 			doc, err := cache.fetchHTMLDocument(ts.URL)
 
 			if tt.expectError {
@@ -70,7 +70,7 @@ func TestFetchHTMLDocument(t *testing.T) {
 }
 
 func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
-	cache := NewOGTagCache("", true, time.Minute, false)
+	cache := NewOGTagCache("", true, time.Minute)
 
 	// Test with invalid URL
 	doc, err := cache.fetchHTMLDocument("http://invalid.url.that.doesnt.exist.example")

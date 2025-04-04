@@ -8,31 +8,28 @@ import (
 
 func TestNewOGTagCache(t *testing.T) {
 	tests := []struct {
-		name            string
-		target          string
-		ogPassthrough   bool
-		ogTimeToLive    time.Duration
-		ogQueryDistinct bool
+		name          string
+		target        string
+		ogPassthrough bool
+		ogTimeToLive  time.Duration
 	}{
 		{
-			name:            "Basic initialization",
-			target:          "http://example.com",
-			ogPassthrough:   true,
-			ogTimeToLive:    5 * time.Minute,
-			ogQueryDistinct: true,
+			name:          "Basic initialization",
+			target:        "http://example.com",
+			ogPassthrough: true,
+			ogTimeToLive:  5 * time.Minute,
 		},
 		{
-			name:            "Empty target",
-			target:          "",
-			ogPassthrough:   false,
-			ogTimeToLive:    10 * time.Minute,
-			ogQueryDistinct: false,
+			name:          "Empty target",
+			target:        "",
+			ogPassthrough: false,
+			ogTimeToLive:  10 * time.Minute,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache := NewOGTagCache(tt.target, tt.ogPassthrough, tt.ogTimeToLive, tt.ogQueryDistinct)
+			cache := NewOGTagCache(tt.target, tt.ogPassthrough, tt.ogTimeToLive)
 
 			if cache == nil {
 				t.Fatal("expected non-nil cache, got nil")
@@ -49,52 +46,44 @@ func TestNewOGTagCache(t *testing.T) {
 			if cache.ogTimeToLive != tt.ogTimeToLive {
 				t.Errorf("expected ogTimeToLive %v, got %v", tt.ogTimeToLive, cache.ogTimeToLive)
 			}
-
-			if cache.ogQueryDistinct != tt.ogQueryDistinct {
-				t.Errorf("expected ogQueryDistinct %v, got %v", tt.ogQueryDistinct, cache.ogQueryDistinct)
-			}
 		})
 	}
 }
 
 func TestGetTarget(t *testing.T) {
 	tests := []struct {
-		name            string
-		target          string
-		path            string
-		query           string
-		ogQueryDistinct bool
-		expected        string
+		name     string
+		target   string
+		path     string
+		query    string
+		expected string
 	}{
 		{
-			name:            "No query, query distinct false",
-			target:          "http://example.com",
-			path:            "/page",
-			query:           "",
-			ogQueryDistinct: false,
-			expected:        "http://example.com/page",
+			name:     "No path or query",
+			target:   "http://example.com",
+			path:     "",
+			query:    "",
+			expected: "http://example.com",
 		},
 		{
-			name:            "With query, query distinct true",
-			target:          "http://example.com",
-			path:            "/page",
-			query:           "id=123",
-			ogQueryDistinct: true,
-			expected:        "http://example.com/page?id=123",
+			name:     "With complex path",
+			target:   "http://example.com",
+			path:     "/pag(#*((#@)ΓΓΓΓe/Γ",
+			query:    "id=123",
+			expected: "http://example.com/pag(#*((#@)ΓΓΓΓe/Γ",
 		},
 		{
-			name:            "With query, query distinct false",
-			target:          "http://example.com",
-			path:            "/page",
-			query:           "id=123",
-			ogQueryDistinct: false,
-			expected:        "http://example.com/page",
+			name:     "With query and path",
+			target:   "http://example.com",
+			path:     "/page",
+			query:    "id=123",
+			expected: "http://example.com/page",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache := NewOGTagCache(tt.target, false, time.Minute, tt.ogQueryDistinct)
+			cache := NewOGTagCache(tt.target, false, time.Minute)
 
 			u := &url.URL{
 				Path:     tt.path,

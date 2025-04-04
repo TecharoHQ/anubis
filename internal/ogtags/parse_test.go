@@ -12,10 +12,10 @@ import (
 // TestExtractOGTags updated with correct expectations based on filtering logic
 func TestExtractOGTags(t *testing.T) {
 	// Use a cache instance that reflects the default approved lists
-	testCache := NewOGTagCache("", false, time.Minute, false)
+	testCache := NewOGTagCache("", false, time.Minute)
 	// Manually set approved tags/prefixes based on the user request for clarity
-	testCache.approvedTags = []string{"description"} // As requested
-	testCache.approvedPrefixes = []string{"og:"}     // As requested
+	testCache.approvedTags = []string{"description"}
+	testCache.approvedPrefixes = []string{"og:"}
 
 	tests := []struct {
 		name     string
@@ -189,9 +189,9 @@ func TestIsOGMetaTag(t *testing.T) {
 
 func TestExtractMetaTagInfo(t *testing.T) {
 	// Use a cache instance that reflects the default approved lists
-	testCache := NewOGTagCache("", false, time.Minute, false)
-	testCache.approvedTags = []string{"description"} // As requested
-	testCache.approvedPrefixes = []string{"og:"}     // As requested
+	testCache := NewOGTagCache("", false, time.Minute)
+	testCache.approvedTags = []string{"description"}
+	testCache.approvedPrefixes = []string{"og:"}
 
 	tests := []struct {
 		name             string

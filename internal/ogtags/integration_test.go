@@ -56,18 +56,16 @@ func TestIntegrationGetOGTags(t *testing.T) {
 
 	// Test with different configurations
 	testCases := []struct {
-		name            string
-		path            string
-		ogQueryDistinct bool
-		query           string
-		expectedTags    map[string]string
-		expectError     bool
+		name         string
+		path         string
+		query        string
+		expectedTags map[string]string
+		expectError  bool
 	}{
 		{
-			name:            "Simple page",
-			path:            "/simple",
-			ogQueryDistinct: false,
-			query:           "",
+			name:  "Simple page",
+			path:  "/simple",
+			query: "",
 			expectedTags: map[string]string{
 				"og:title": "Simple Page",
 				"og:type":  "website",
@@ -75,10 +73,9 @@ func TestIntegrationGetOGTags(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:            "Complete page",
-			path:            "/complete",
-			ogQueryDistinct: true,
-			query:           "ref=test",
+			name:  "Complete page",
+			path:  "/complete",
+			query: "ref=test",
 			expectedTags: map[string]string{
 				"og:title":       "Complete Page",
 				"og:description": "A page with many OG tags",
@@ -89,27 +86,25 @@ func TestIntegrationGetOGTags(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:            "Page with no OG tags",
-			path:            "/no-og",
-			ogQueryDistinct: false,
-			query:           "",
-			expectedTags:    map[string]string{},
-			expectError:     false,
+			name:         "Page with no OG tags",
+			path:         "/no-og",
+			query:        "",
+			expectedTags: map[string]string{},
+			expectError:  false,
 		},
 		{
-			name:            "Non-existent page",
-			path:            "/not-found",
-			ogQueryDistinct: false,
-			query:           "",
-			expectedTags:    nil,
-			expectError:     true,
+			name:         "Non-existent page",
+			path:         "/not-found",
+			query:        "",
+			expectedTags: nil,
+			expectError:  true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create cache instance
-			cache := NewOGTagCache(ts.URL, true, 1*time.Minute, tc.ogQueryDistinct)
+			cache := NewOGTagCache(ts.URL, true, 1*time.Minute)
 
 			// Create URL for test
 			testURL, _ := url.Parse(ts.URL)

@@ -57,7 +57,6 @@ var (
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
 	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
-	ogQueryDistinct          = flag.Bool("og-query-distinct", false, "treat URLs with different query parameters as distinct cache keys")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 )
 
@@ -260,7 +259,6 @@ func main() {
 		CookiePartitioned: *cookiePartitioned,
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
-		OGQueryDistinct:   *ogQueryDistinct,
 		Target:            *target,
 	})
 	if err != nil {
@@ -297,7 +295,6 @@ func main() {
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
-		"og-query-distinct", *ogQueryDistinct,
 	)
 
 	go func() {
