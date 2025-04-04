@@ -3,6 +3,7 @@ package ogtags
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 )
@@ -70,6 +71,10 @@ func TestFetchHTMLDocument(t *testing.T) {
 }
 
 func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
+	if os.Getenv("DONT_USE_NETWORK") != "" {
+		t.Skip("test requires theoretical network egress")
+	}
+
 	cache := NewOGTagCache("", true, time.Minute)
 
 	// Test with invalid URL
