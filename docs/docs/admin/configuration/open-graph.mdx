@@ -1,0 +1,47 @@
+---
+id: open-graph
+title: Open Graph Configuration
+---
+
+# Open Graph Configuration
+
+This page provides detailed information on how to configure [OpenGraph tag](https://ogp.me/) passthrough in Anubis. This enables social previews of resources protected by Anubis without having to exempt each scraper individually.
+
+## Configuration Options
+
+| Name             | Description                                               | Type     | Default | Example                 |
+|------------------|-----------------------------------------------------------|----------|---------|-------------------------|
+| `OG_PASSTHROUGH` | Enables or disables the Open Graph tag passthrough system | Boolean  | `false` | `OG_PASSTHROUGH=true`   |
+| `OG_EXPIRY_TIME` | Configurable cache expiration time for Open Graph tags    | Duration | `24h`   | `OG_EXPIRY_TIME=1h`     |
+
+## Usage
+
+To configure Open Graph tags, you can set the following environment variables, environment file or as flags in your Anubis configuration:
+
+```sh
+export OG_PASSTHROUGH=true
+export OG_EXPIRY_TIME=1h
+```
+
+## Implementation Details
+
+When `OG_PASSTHROUGH` is enabled, Anubis will:
+
+1. Check a local cache for the requested URL's Open Graph tags.
+2. If a cached entry exists and is still valid, return the cached tags.
+3. If the cached entry is stale or not found, fetch the URL, parse the Open Graph tags, update the cache, and return the new tags.
+
+The cache expiration time is controlled by `OG_EXPIRY_TIME`.
+
+## Example
+
+Here is an example of how to configure Open Graph tags in your Anubis setup:
+
+```sh
+export OG_PASSTHROUGH=true
+export OG_EXPIRY_TIME=1h
+```
+
+With these settings, Anubis will cache Open Graph tags for 1 hour and pass them through to the challenge page.
+
+For more information, refer to the [installation guide](../installation).

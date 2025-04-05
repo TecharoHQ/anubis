@@ -178,6 +178,10 @@ func TestCookieSettings(t *testing.T) {
 			break
 		}
 	}
+	if ckie == nil {
+		t.Errorf("Cookie %q not found", anubis.CookieName)
+		return
+	}
 
 	if ckie.Domain != "local.cetacean.club" {
 		t.Errorf("cookie domain is wrong, wanted local.cetacean.club, got: %s", ckie.Domain)
@@ -185,10 +189,6 @@ func TestCookieSettings(t *testing.T) {
 
 	if ckie.Partitioned != srv.opts.CookiePartitioned {
 		t.Errorf("wanted partitioned flag %v, got: %v", srv.opts.CookiePartitioned, ckie.Partitioned)
-	}
-
-	if ckie == nil {
-		t.Errorf("Cookie %q not found", anubis.CookieName)
 	}
 }
 
@@ -199,14 +199,14 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 	for i := 1; i < 10; i++ {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			policy, err := LoadPoliciesOrDefault("", i)
+			anubisPolicy, err := LoadPoliciesOrDefault("", i)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			s, err := New(Options{
 				Next:           h,
-				Policy:         policy,
+				Policy:         anubisPolicy,
 				ServeRobotsTXT: true,
 			})
 			if err != nil {

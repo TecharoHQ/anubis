@@ -13,6 +13,7 @@ import (
 // UnchangingCache sets the Cache-Control header to cache a response for 1 year if
 // and only if the application is compiled in "release" mode by Docker.
 func UnchangingCache(next http.Handler) http.Handler {
+	//goland:noinspection GoBoolExpressions
 	if anubis.Version == "devel" {
 		return next
 	}
@@ -68,10 +69,9 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 func NoStoreCache(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
-	  next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r)
 	})
 }
-
 
 // Do not allow browsing directory listings in paths that end with /
 func NoBrowsing(next http.Handler) http.Handler {

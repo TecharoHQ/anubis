@@ -1,9 +1,15 @@
 package web
 
-import "github.com/a-h/templ"
+import (
+	"github.com/a-h/templ"
+)
 
 func Base(title string, body templ.Component) templ.Component {
-	return base(title, body)
+	return base(title, body, nil)
+}
+
+func BaseWithOGTags(title string, body templ.Component, ogTags map[string]string) templ.Component {
+	return base(title, body, ogTags)
 }
 
 func Index() templ.Component {

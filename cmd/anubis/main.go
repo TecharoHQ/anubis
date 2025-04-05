@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"embed"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -54,8 +55,9 @@ var (
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
-
-	extractResources = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
+	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
+	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
+	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -124,7 +126,7 @@ func setupListener(network string, address string) (net.Listener, string) {
 }
 
 func makeReverseProxy(target string) (http.Handler, error) {
-	u, err := url.Parse(target)
+	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
 	}
@@ -132,10 +134,10 @@ func makeReverseProxy(target string) (http.Handler, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
-	if u.Scheme == "unix" {
+	if targetUri.Scheme == "unix" {
 		// clean path up so we don't use the socket path in proxied requests
-		addr := u.Path
-		u.Path = ""
+		addr := targetUri.Path
+		targetUri.Path = ""
 		// tell transport how to dial unix sockets
 		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
 			dialer := net.Dialer{}
@@ -145,7 +147,7 @@ func makeReverseProxy(target string) (http.Handler, error) {
 		transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
 	}
 
-	rp := httputil.NewSingleHostReverseProxy(u)
+	rp := httputil.NewSingleHostReverseProxy(targetUri)
 	rp.Transport = transport
 
 	return rp, nil
@@ -255,6 +257,9 @@ func main() {
 		PrivateKey:        priv,
 		CookieDomain:      *cookieDomain,
 		CookiePartitioned: *cookiePartitioned,
+		OGPassthrough:     *ogPassthrough,
+		OGTimeToLive:      *ogTimeToLive,
+		Target:            *target,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -288,6 +293,8 @@ func main() {
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
 		"debug-benchmark-js", *debugBenchmarkJS,
+		"og-passthrough", *ogPassthrough,
+		"og-expiry-time", *ogTimeToLive,
 	)
 
 	go func() {
@@ -299,7 +306,7 @@ func main() {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 	wg.Wait()
@@ -312,8 +319,8 @@ func metricsServer(ctx context.Context, done func()) {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := http.Server{Handler: mux}
-	listener, url := setupListener(*metricsBindNetwork, *metricsBind)
-	slog.Debug("listening for metrics", "url", url)
+	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
+	slog.Debug("listening for metrics", "url", metricsUrl)
 
 	go func() {
 		<-ctx.Done()
@@ -324,7 +331,7 @@ func metricsServer(ctx context.Context, done func()) {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 }

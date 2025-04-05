@@ -28,6 +28,7 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
+	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
@@ -71,6 +72,10 @@ type Options struct {
 	CookieDomain      string
 	CookieName        string
 	CookiePartitioned bool
+
+	OGPassthrough bool
+	OGTimeToLive  time.Duration
+	Target        string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -92,9 +97,9 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 
 	defer fin.Close()
 
-	policy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
 
-	return policy, err
+	return anubisPolicy, err
 }
 
 func New(opts Options) (*Server, error) {
@@ -114,6 +119,7 @@ func New(opts Options) (*Server, error) {
 		policy:     opts.Policy,
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
+		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive),
 	}
 
 	mux := http.NewServeMux()
@@ -152,6 +158,7 @@ type Server struct {
 	policy     *policy.ParsedConfig
 	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
+	OGTags     *ogtags.OGTagCache
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -329,9 +336,18 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
+	var ogTags map[string]string = nil
+	if s.opts.OGPassthrough {
+		var err error
+		ogTags, err = s.OGTags.GetOGTags(r.URL)
+		if err != nil {
+			slog.Error("failed to get OG tags", "err", err)
+			ogTags = nil
+		}
+	}
 	handler := internal.NoStoreCache(
 		templ.Handler(
-			web.Base("Making sure you're not a bot!", web.Index()),
+			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(), ogTags),
 		),
 	)
 	handler.ServeHTTP(w, r)
@@ -541,4 +557,5 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 
 func (s *Server) CleanupDecayMap() {
 	s.DNSBLCache.Cleanup()
+	s.OGTags.Cleanup()
 }
