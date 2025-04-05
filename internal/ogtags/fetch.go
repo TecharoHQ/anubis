@@ -11,20 +11,24 @@ import (
 	"strconv"
 )
 
-var ErrNotFound = errors.New("page not found") /*todo: refactor into common errors lib? */
+var (
+	ErrNotFound = errors.New("page not found") /*todo: refactor into common errors lib? */
+	emptyMap    = map[string]string{}          // used to indicate an empty result in the cache. Can't use nil as it would be a cache miss.
+)
 
 // fetchHTMLDocument fetches and parses the HTML document
 func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
 	resp, err := c.client.Get(urlStr)
-	if os.IsTimeout(err) {
-		c.cache.Set(urlStr, nil, c.ogTimeToLive/2) // Cache empty result for half the TTL to not spam the server
-	}
 	if err != nil {
+		if os.IsTimeout(err) {
+			c.cache.Set(urlStr, emptyMap, c.ogTimeToLive/2) // Cache empty result for half the TTL to not spam the server
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		c.cache.Set(urlStr, emptyMap, c.ogTimeToLive) // Cache empty result to not spam the server
 		return nil, ErrNotFound
 	}
 

@@ -319,8 +319,8 @@ func metricsServer(ctx context.Context, done func()) {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := http.Server{Handler: mux}
-	listener, url := setupListener(*metricsBindNetwork, *metricsBind)
-	slog.Debug("listening for metrics", "url", url)
+	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
+	slog.Debug("listening for metrics", "url", metricsUrl)
 
 	go func() {
 		<-ctx.Done()
