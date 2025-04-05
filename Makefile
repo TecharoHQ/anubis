@@ -1,21 +1,19 @@
-NODE_MODULES = node_modules
+all: build
 
 .PHONY: build assets deps lint test
 
-$(NODE_MODULES):
+node_modules: package.json package-lock.json
+	npm ci
+
+assets: node_modules
 	npm run assets
 
-assets: $(NODE_MODULES)
-
 deps: assets
-	npm ci
 	go mod download
 
 build: deps
 	npm run build
 	@echo "Anubis is now built to ./var/anubis"
-
-all: build
 
 lint:
 	go vet ./...
