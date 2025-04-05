@@ -1,0 +1,81 @@
+name: Package builds (stable)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  package_builds:
+    #runs-on: alrest-techarohq
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+        fetch-tags: true
+        fetch-depth: 0
+
+    - name: build essential
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential
+
+    - name: Set up Homebrew
+      uses: Homebrew/actions/setup-homebrew@master
+
+    - name: Setup Homebrew cellar cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          /home/linuxbrew/.linuxbrew/Cellar
+          /home/linuxbrew/.linuxbrew/bin
+          /home/linuxbrew/.linuxbrew/etc
+          /home/linuxbrew/.linuxbrew/include
+          /home/linuxbrew/.linuxbrew/lib
+          /home/linuxbrew/.linuxbrew/opt
+          /home/linuxbrew/.linuxbrew/sbin
+          /home/linuxbrew/.linuxbrew/share
+          /home/linuxbrew/.linuxbrew/var
+        key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-homebrew-cellar-
+
+    - name: Install Brew dependencies
+      run: |
+        brew bundle
+
+    - name: Setup Golang caches
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-golang-
+
+    - name: install node deps
+      run: |
+        npm ci
+
+    - name: Build Packages
+      run: |
+        wget https://github.com/Xe/x/releases/download/v1.13.3/yeet_1.13.3_amd64.deb -O var/yeet.deb
+        sudo apt -y install -f ./var/yeet.deb
+        yeet
+
+    - name: Upload released artifacts
+      env:
+        GITHUB_TOKEN: ${{ github.TOKEN }}
+        RELEASE_VERSION: ${{github.event.release.tag_name}}
+      shell: bash
+      run: |
+        RELEASE="${RELEASE_VERSION}"
+        cd var
+        for file in *; do
+          gh release upload $RELEASE $file
+        done

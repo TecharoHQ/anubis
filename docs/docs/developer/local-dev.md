@@ -55,3 +55,32 @@ This builds a prod-ready container image with [ko](https://ko.build). If you wan
 ```text
 DOCKER_REPO=registry.host/org/repo DOCKER_METADATA_OUTPUT_TAGS=registry.host/org/repo:latest npm run container
 ```
+
+## Building packages
+
+For more information, see [Building native packages is complicated](https://xeiaso.net/blog/2025/anubis-packaging/) and [#156: Debian, RPM, and binary tarball packages](https://github.com/TecharoHQ/anubis/issues/156).
+
+Install `yeet`:
+
+:::note
+
+`yeet` will soon be moved to a dedicated TecharoHQ repository. This is currently done in a hacky way in order to get this ready for user feedback.
+
+:::
+
+```text
+go install within.website/x/cmd/yeet@v1.13.3
+```
+
+Install the dependencies for Anubis:
+
+```text
+npm ci
+go mod download
+```
+
+Build the packages into `./var`:
+
+```text
+yeet
+```

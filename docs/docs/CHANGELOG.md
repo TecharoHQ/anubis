@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added support for native Debian, Red Hat, and tarball packaging strategies including installation and use directions.
 - The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social).
 - Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
 - Added a no-store Cache-Control header to the challenge page

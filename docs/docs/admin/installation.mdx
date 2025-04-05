@@ -24,6 +24,8 @@ TLS terminator)
 
 </center>
 
+## Docker image conventions
+
 Anubis is shipped in the Docker repo [`ghcr.io/techarohq/anubis`](https://github.com/TecharoHQ/anubis/pkgs/container/anubis). The following tags exist for your convenience:
 
 | Tag                 | Meaning                                                                                                                            |
@@ -31,13 +33,12 @@ Anubis is shipped in the Docker repo [`ghcr.io/techarohq/anubis`](https://github
 | `latest`            | The latest [tagged release](https://github.com/TecharoHQ/anubis/releases), if you are in doubt, start here.                        |
 | `v<version number>` | The Anubis image for [any given tagged release](https://github.com/TecharoHQ/anubis/tags)                                          |
 | `main`              | The current build on the `main` branch. Only use this if you need the latest and greatest features as they are merged into `main`. |
-| `pr-<number>`       | The build associated with PR `#<number>`. Only use this for debugging issues fixed by a PR.                                        |
-
-Other methods to install Anubis may exist, but the Docker image is currently the only supported method.
 
 The Docker image runs Anubis as user ID 1000 and group ID 1000. If you are mounting external volumes into Anubis' container, please be sure they are owned by or writable to this user/group.
 
 Anubis has very minimal system requirements. I suspect that 128Mi of ram may be sufficient for a large number of concurrent clients. Anubis may be a poor fit for apps that use WebSockets and maintain open connections, but I don't have enough real-world experience to know one way or another.
+
+## Environment variables
 
 Anubis uses these environment variables for configuration:
 
