@@ -10,6 +10,7 @@ deps:
 	$(NPM) ci
 	$(GO) mod download
 
+assets: PATH:=$(PWD)/node_modules/.bin:$(PATH)
 assets: deps
 	$(GO) generate ./...
 	./web/build.sh

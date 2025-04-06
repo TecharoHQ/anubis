@@ -3,4 +3,4 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-npx postcss ./xess.css -o xess.min.css
+postcss ./xess.css -o xess.min.css
