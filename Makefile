@@ -2,12 +2,10 @@ NODE_MODULES = node_modules
 
 .PHONY: build assets deps lint test
 
-$(NODE_MODULES):
+assets:
 	npm run assets
 
-assets: $(NODE_MODULES)
-
-deps: assets
+deps:
 	npm ci
 	go mod download
 
@@ -19,7 +17,7 @@ all: build
 
 lint:
 	go vet ./...
-	staticcheck ./...
+	go tool staticcheck ./...
 
 test:
 	npm run test

@@ -77,7 +77,7 @@ jobs:
         npm run assets
 
     - name: Build
-      run: go build ./...
+      run: npm run build
 
     - name: Test
       run: npm run test
