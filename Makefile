@@ -1,6 +1,7 @@
 NODE_MODULES = node_modules
+VERSION := $(shell cat ./VERSION)
 
-.PHONY: build assets deps lint test
+.PHONY: build assets deps lint prebaked-build test
 
 assets:
 	npm run assets
@@ -18,6 +19,9 @@ all: build
 lint:
 	go vet ./...
 	go tool staticcheck ./...
+
+prebaked-build:
+	go build -o ./var/anubis -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/anubis
 
 test:
 	npm run test

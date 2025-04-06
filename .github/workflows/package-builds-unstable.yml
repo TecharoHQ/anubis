@@ -66,7 +66,7 @@ jobs:
 
     - name: Build Packages
       run: |
-        wget https://github.com/Xe/x/releases/download/v1.13.3/yeet_1.13.3_amd64.deb -O var/yeet.deb
+        wget https://github.com/Xe/x/releases/download/v1.13.4/yeet_1.13.4_amd64.deb -O var/yeet.deb
         sudo apt -y install -f ./var/yeet.deb
         yeet
 
