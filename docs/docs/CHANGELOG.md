@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Improvements to build scripts to make them less independent of the build host
+
 ## v1.16.0
 
 Fordola rem Lupis
