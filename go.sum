@@ -318,6 +318,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/natefinch/atomic v1.0.1 h1:ZPYKxkqQOx3KZ+RsbnP/YsgvxWQPGxjC0oBt2AhwV0A=
 github.com/natefinch/atomic v1.0.1/go.mod h1:N/D/ELrljoqDyT3rZrsUmtsuzvHkeB/wWjHV22AZRbM=
+github.com/negasus/haproxy-spoe-go v1.0.6 h1:uJ5coC6n0p4tI0MbVPna4ztFTpW1P3pzswvjuKAF8X4=
+github.com/negasus/haproxy-spoe-go v1.0.6/go.mod h1:ZrBizxtx2EeLN37Jkg9w9g32a1AFCJizA8vg46PaAp4=
 github.com/nicksnyder/go-i18n/v2 v2.6.0 h1:C/m2NNWNiTB6SK4Ao8df5EWm3JETSTIGNXBpMJTxzxQ=
 github.com/nicksnyder/go-i18n/v2 v2.6.0/go.mod h1:88sRqr0C6OPyJn0/KRNaEz1uWorjxIKP7rUUcvycecE=
 github.com/nikandfor/spintax v0.0.0-20181023094358-fc346b245bb3 h1:foZ9X1bz2KmW7b8Yx5V0LAQKhTazdllv5rnGUe6iGTY=
