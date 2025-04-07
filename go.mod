@@ -7,6 +7,7 @@ require (
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/cel-go v0.25.0
+	github.com/negasus/haproxy-spoe-go v1.0.6
 	github.com/playwright-community/playwright-go v0.5101.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a

@@ -66,6 +66,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/natefinch/atomic v1.0.1 h1:ZPYKxkqQOx3KZ+RsbnP/YsgvxWQPGxjC0oBt2AhwV0A=
 github.com/natefinch/atomic v1.0.1/go.mod h1:N/D/ELrljoqDyT3rZrsUmtsuzvHkeB/wWjHV22AZRbM=
+github.com/negasus/haproxy-spoe-go v1.0.6 h1:uJ5coC6n0p4tI0MbVPna4ztFTpW1P3pzswvjuKAF8X4=
+github.com/negasus/haproxy-spoe-go v1.0.6/go.mod h1:ZrBizxtx2EeLN37Jkg9w9g32a1AFCJizA8vg46PaAp4=
 github.com/playwright-community/playwright-go v0.5101.0 h1:gVCMZThDO76LJ/aCI27lpB8hEAWhZszeS0YB+oTxJp0=
 github.com/playwright-community/playwright-go v0.5101.0/go.mod h1:kBNWs/w2aJ2ZUp1wEOOFLXgOqvppFngM5OS+qyhl+ZM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

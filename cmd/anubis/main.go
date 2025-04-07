@@ -35,6 +35,9 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/negasus/haproxy-spoe-go/agent"
+	"github.com/negasus/haproxy-spoe-go/logger"
 )
 
 var (
@@ -63,6 +66,8 @@ var (
 	ogCacheConsiderHost      = flag.Bool("og-cache-consider-host", false, "enable or disable the use of the host in the Open Graph tag cache")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+	spoeBind                 = flag.String("spoe-ind", ":9000", "")
+	spoeBindNetwork          = flag.String("spoe-bind-network", "tcp", "")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -301,6 +306,11 @@ func main() {
 		wg.Add(1)
 		go metricsServer(ctx, wg.Done)
 	}
+
+	if *spoeBind != "" {
+		go spoeServer(s.Pub, ctx, wg.Done)
+	}
+
 	go startDecayMapCleanup(ctx, s)
 
 	var h http.Handler
@@ -370,6 +380,20 @@ func metricsServer(ctx context.Context, done func()) {
 	}()
 
 	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+}
+
+func spoeServer(pub ed25519.PublicKey, ctx context.Context, done func()) {
+	defer done()
+
+	spoe := &libanubis.SpoeOptions{Pub: pub}
+
+	a := agent.New(spoe.SpoeHandler, logger.NewDefaultLog())
+	listener, spoeUrl := setupListener(*spoeBindNetwork, *spoeBind)
+	slog.Debug("listening for spop data", "url", spoeUrl)
+
+	if err := a.Serve(listener); err != nil {
 		log.Fatal(err)
 	}
 }

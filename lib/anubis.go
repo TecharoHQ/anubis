@@ -61,7 +61,7 @@ type Server struct {
 	mux        *http.ServeMux
 	next       http.Handler
 	priv       ed25519.PrivateKey
-	pub        ed25519.PublicKey
+	Pub        ed25519.PublicKey
 	policy     *policy.ParsedConfig
 	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
@@ -124,26 +124,8 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	if err := ckie.Valid(); err != nil {
-		lg.Debug("cookie is invalid", "err", err)
-		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule, httpStatusOnly)
-		return
-	}
-
-	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
-		lg.Debug("cookie expired", "path", r.URL.Path)
-		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule, httpStatusOnly)
-		return
-	}
-
-	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return s.pub, nil
-	}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
-
-	if err != nil || !token.Valid {
-		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
+	valid, _ := ValidateCookie(ckie, lg, s.Pub, r.URL.Path)
+	if !valid {
 		s.ClearCookie(w)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
@@ -151,6 +133,35 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	r.Header.Add("X-Anubis-Status", "PASS")
 	s.ServeHTTPNext(w, r)
+}
+
+func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, pub ed25519.PublicKey, path string) (bool, jwt.MapClaims) {
+	if err := ckie.Valid(); err != nil {
+		lg.Debug("cookie is invalid", "err", err)
+		return false, nil
+	}
+
+	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
+		lg.Debug("cookie expired", "path", path)
+		return false, nil
+	}
+
+	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return pub, nil
+	}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
+
+	if err != nil || !token.Valid {
+		lg.Debug("invalid token", "path", path, "err", err)
+		return false, nil
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		lg.Debug("invalid token claims type", "path", path)
+		return false, nil
+	}
+
+	return true, claims
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
