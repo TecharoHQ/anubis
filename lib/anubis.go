@@ -238,54 +238,8 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	if err := ckie.Valid(); err != nil {
-		lg.Debug("cookie is invalid", "err", err)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
-		lg.Debug("cookie expired", "path", r.URL.Path)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
-
-	if err != nil || !token.Valid {
-		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		lg.Debug("invalid token claims type", "path", r.URL.Path)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	policyRule, ok := claims["policyRule"].(string)
-	if !ok {
-		lg.Debug("policyRule claim is not a string")
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	if policyRule != rule.Hash() {
-		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader)) {
-		lg.Debug("JWT restriction header is invalid")
+	valid, _ := ValidateCookie(ckie, lg, s, rule, r.URL.Path, r.Header)
+	if !valid {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
@@ -293,6 +247,49 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	r.Header.Add("X-Anubis-Status", "PASS")
 	s.ServeHTTPNext(w, r)
+}
+
+func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, s *Server, rule *policy.Bot, path string, header http.Header) (bool, jwt.MapClaims) {
+	if err := ckie.Valid(); err != nil {
+		lg.Debug("cookie is invalid", "err", err)
+		return false, jwt.MapClaims{}
+	}
+
+	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
+		lg.Debug("cookie expired", "path", path)
+		return false, jwt.MapClaims{}
+	}
+
+	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
+
+	if err != nil || !token.Valid {
+		lg.Debug("invalid token", "path", path, "err", err)
+		return false, jwt.MapClaims{}
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		lg.Debug("invalid token claims type", "path", path)
+		return false, jwt.MapClaims{}
+	}
+
+	policyRule, ok := claims["policyRule"].(string)
+	if !ok {
+		lg.Debug("policyRule claim is not a string")
+		return false, jwt.MapClaims{}
+	}
+
+	if policyRule != rule.Hash() {
+		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
+		return false, jwt.MapClaims{}
+	}
+
+	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(header.Get(s.opts.JWTRestrictionHeader)) {
+		lg.Debug("JWT restriction header is invalid")
+		return false, jwt.MapClaims{}
+	}
+
+	return true, claims
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {

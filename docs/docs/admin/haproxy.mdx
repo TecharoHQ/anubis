@@ -1,0 +1,53 @@
+---
+title: Integration with HAProxy via SPOP
+---
+
+To avoid proxying of already validated requests through Anubis, HAProxy can be connected using the SPOP protocol.
+
+Example setup:
+
+Client --> HAProxy frontend :443 --> backend Anubis :8923 --> backend App :3923
+Client --> HAProxy frontend :443 --> backend App :3923
+
+On any incoming request to the frontend, HAProxy will query Anubis with the cookie contained in the request, asking whether it is valid.
+
+If Anubis returns yes, the client has a valid Anubis cookie, its request will be routed directly to the App backend.
+If Anubis returns no, the client does NOT have a valid Anubis cookie, its request will be routed to the Anubis backend, which in return enables the challenge process.
+
+Example HAProxy configuration:
+
+```
+frontend http
+  bind :::443 v6only tfo alpn h2,http/1.1 ssl crt /etc/ssl/crtkey
+  filter spoe engine anubis config /etc/haproxy/spoe.cfg
+  use_backend web if { var(req.anubis.valid) -m bool }
+  default_backend anubis
+
+backend anubis
+  option forwardfor
+  server anubis1 2a02:1748:f7df:9c80::b:8923
+
+backend web
+  server web1 2a02:1748:f7df:9c80::b:3923
+```
+
+
+Example HAProxy SPOE configuration:
+
+```
+[anubis]
+spoe-agent anubis
+  messages check-client-cookie
+  option var-prefix anubis
+  timeout hello 2s
+  timeout idle 5s
+  timeout processing 1s
+  use-backend agents
+  log global
+
+spoe-message check-client-cookie
+  args cookie=req.cook(within.website-x-cmd-anubis-auth)
+  event on-frontend-http-request
+```
+
+If HAProxy and Anubis are hosted on the same machine, it is recommended to use a UNIX domain instead of a TCP/IP socket for SPOP communication.
