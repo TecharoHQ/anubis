@@ -58,6 +58,7 @@ var (
 	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
+	webmasterEmail		 = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -260,6 +261,7 @@ func main() {
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
 		Target:            *target,
+		WebmasterEmail:     *webmasterEmail,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)

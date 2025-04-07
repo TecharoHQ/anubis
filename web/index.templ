@@ -129,7 +129,7 @@ templ index() {
 </div>
 }
 
-templ errorPage(message string) {
+templ errorPage(message string, mail string) {
 <div class="centered-div">
     <img
             id="image"
@@ -139,7 +139,13 @@ templ errorPage(message string) {
     />
     <p>{ message }.</p>
     <button onClick="window.location.reload();">Try again</button>
-    <p><a href="/">Go home</a></p>
+    if mail != "" {
+	    <p><a href="/">Go home</a> or if you believe you should not be blocked, please contact the webmaster at <a href={"mailto:" + templ.SafeURL(mail) }>
+	  { mail }</a>
+	   </p>
+    } else {
+	    <p><a href="/">Go home</a></p>
+   }
 </div>
 }
 
