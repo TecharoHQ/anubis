@@ -37,6 +37,8 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/negasus/haproxy-spoe-go/agent"
+	"github.com/negasus/haproxy-spoe-go/logger"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -88,6 +90,8 @@ var (
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
 	thothToken           = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
 	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
+	spoeBind             = flag.String("spoe-ind", ":9000", "")
+	spoeBindNetwork      = flag.String("spoe-bind-network", "tcp", "")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -414,6 +418,10 @@ func main() {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
+	if *spoeBind != "" {
+		go spoeServer(s, *socketMode, ctx, wg.Done)
+	}
+
 	var h http.Handler
 	h = s
 	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
@@ -460,6 +468,23 @@ func main() {
 		log.Fatal(err)
 	}
 	wg.Wait()
+}
+
+func spoeServer(pub ed25519.PublicKey, socketMode string, ctx context.Context, done func()) {
+	defer done()
+
+	spoe := &libanubis.SpoeOptions{Pub: pub}
+
+	a := agent.New(spoe.SpoeHandler, logger.NewDefaultLog())
+	listener, spoeUrl, err := internal.SetupListener(*spoeBindNetwork, *spoeBind, socketMode)
+	if err != nil {
+		log.Fatal(err)
+	}
+	slog.Debug("listening for spop data", "url", spoeUrl)
+
+	if err := a.Serve(listener); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
