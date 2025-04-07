@@ -1,4 +1,4 @@
-name: Go
+name: Package builds (unstable)
 
 on:
   push:
@@ -11,13 +11,15 @@ permissions:
   actions: write
 
 jobs:
-  go_tests:
+  package_builds:
     #runs-on: alrest-techarohq
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/checkout@v4
       with:
         persist-credentials: false
+        fetch-tags: true
+        fetch-depth: 0
 
     - name: build essential
       run: |
@@ -28,7 +30,7 @@ jobs:
       uses: Homebrew/actions/setup-homebrew@master
 
     - name: Setup Homebrew cellar cache
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      uses: actions/cache@v4
       with:
         path: |
           /home/linuxbrew/.linuxbrew/Cellar
@@ -49,7 +51,7 @@ jobs:
         brew bundle
 
     - name: Setup Golang caches
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cache/go-build
@@ -58,30 +60,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-golang-
 
-    - name: Cache playwright binaries
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-      id: playwright-cache
-      with:
-        path: |
-          ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-${{ hashFiles('**/go.sum') }}
-
-    - name: install playwright browsers
-      run: |
-        npx --yes playwright@1.50.1 install --with-deps
-        npx --yes playwright@1.50.1 run-server --port 9001 &
-
     - name: install node deps
       run: |
         npm ci
-        npm run assets
 
-    - name: Build
-      run: npm run build
+    - name: Build Packages
+      run: |
+        wget https://github.com/Xe/x/releases/download/v1.13.4/yeet_1.13.4_amd64.deb -O var/yeet.deb
+        sudo apt -y install -f ./var/yeet.deb
+        yeet
 
-    - name: Test
-      run: npm run test
-
-    - uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6 # v1.3.1
+    - uses: actions/upload-artifact@v4
       with:
-        version: "latest"
+        name: packages
+        path: var/*
