@@ -1,0 +1,4 @@
+[toolchain]
+channel = "stable"
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

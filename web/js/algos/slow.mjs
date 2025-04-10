@@ -7,7 +7,6 @@ export default function process(
   progressCallback = null,
   _threads = 1,
 ) {
-  console.debug("slow algo");
   return new Promise((resolve, reject) => {
     let webWorkerURL = URL.createObjectURL(new Blob([
       '(', processTask(), ')()'

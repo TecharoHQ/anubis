@@ -5,7 +5,6 @@ export default function process(
   progressCallback = null,
   threads = (navigator.hardwareConcurrency || 1),
 ) {
-  console.debug("fast algo");
   return new Promise((resolve, reject) => {
     let webWorkerURL = URL.createObjectURL(new Blob([
       '(', processTask(), ')()'
@@ -99,7 +98,6 @@ function processTask() {
 
         if (valid) {
           hash = uint8ArrayToHexString(thisHash);
-          console.log(hash);
           break;
         }
 

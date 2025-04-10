@@ -1,17 +1,13 @@
-import processFast from "./proof-of-work.mjs";
-import processSlow from "./proof-of-work-slow.mjs";
+import fast from "./algos/fast.mjs";
+import slow from "./algos/slow.mjs";
+import sha256 from "./algos/sha256.mjs";
 import { testVideo } from "./video.mjs";
+import { u } from "./xeact.mjs";
 
 const algorithms = {
-  "fast": processFast,
-  "slow": processSlow,
-};
-
-// from Xeact
-const u = (url = "", params = {}) => {
-  let result = new URL(url, window.location.href);
-  Object.entries(params).forEach(([k, v]) => result.searchParams.set(k, v));
-  return result.toString();
+  "fast": fast,
+  "slow": slow,
+  "sha256": sha256,
 };
 
 const imageURL = (mood, cacheBuster) =>
@@ -27,6 +23,11 @@ const dependencies = [
     name: "Web Workers",
     msg: "Your browser doesn't support web workers (Anubis uses this to avoid freezing your browser). Do you have a plugin like JShelter installed?",
     value: window.Worker,
+  },
+  {
+    name: "WebAssembly",
+    msg: "Your browser doesn't have WebAssembly support. If you are running a big endian system, I'm sorry but this is something we can't work around with a polyfill.",
+    value: window.WebAssembly,
   },
 ];
 

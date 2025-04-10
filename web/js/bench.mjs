@@ -1,10 +1,12 @@
-import processFast from "./proof-of-work.mjs";
-import processSlow from "./proof-of-work-slow.mjs";
+import fast from "./algos/fast.mjs";
+import slow from "./algos/slow.mjs";
+import sha256 from "./algos/sha256.mjs";
 
-const defaultDifficulty = 4;
+const defaultDifficulty = 16;
 const algorithms = {
-  fast: processFast,
-  slow: processSlow,
+  sha256: sha256,
+  fast: fast,
+  slow: slow,
 };
 
 const status = document.getElementById("status");
@@ -41,10 +43,13 @@ const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
     .map((c) => c.toString(16).padStart(2, "0"))
     .join("");
 
+  if (algorithm != "sha256") {
+    difficulty = Math.round(difficulty / 4);
+  }
+
   const t0 = performance.now();
   const { hash, nonce } = await process(challenge, Number(difficulty), signal);
   const t1 = performance.now();
-  console.log({ hash, nonce });
 
   stats.time += t1 - t0;
   stats.iters += nonce;
