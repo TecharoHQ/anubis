@@ -53,6 +53,24 @@ var (
 			userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.28 Safari/537.36",
 		},
 		{
+			name:      "Amazonbot",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.2.5 (KHTML, like Gecko) Version/8.0.2 Safari/600.2.5 (Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)",
+		},
+		{
+			name:      "Amazonbot",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.2.5 (KHTML, like Gecko) Version/8.0.2 Safari/600.2.5 (Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)",
+		},
+		{
+			name:      "PerplexityAI",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
+		},
+		{
 			name:      "kagiBadIP",
 			action:    actionChallenge,
 			isHard:    true,

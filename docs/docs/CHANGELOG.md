@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add more IA user agent based on [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt) project
+
 ## v1.16.0
 
 Fordola rem Lupis
