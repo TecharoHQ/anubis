@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Updated challenge generation to use the Accept-Encoding header in place of the User-Agent header to allow Chromium browser-switching addons to function.
+
 ## v1.16.0
 
 Fordola rem Lupis

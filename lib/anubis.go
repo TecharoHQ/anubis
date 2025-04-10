@@ -171,10 +171,10 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.priv.Seed())
 
 	challengeData := fmt.Sprintf(
-		"Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
+		"Accept-Language=%s,Accept-Encoding=%s,X-Real-IP=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
 		r.Header.Get("Accept-Language"),
+		r.Header.Get("Accept-Encoding"),
 		r.Header.Get("X-Real-Ip"),
-		r.UserAgent(),
 		time.Now().UTC().Round(24*7*time.Hour).Format(time.RFC3339),
 		fp,
 		difficulty,
@@ -186,6 +186,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
+		"accept_encoding", r.Header.Get("Accept-Encoding"),
 		"priority", r.Header.Get("Priority"),
 		"x-forwarded-for",
 		r.Header.Get("X-Forwarded-For"),
@@ -362,7 +363,7 @@ func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
+	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "accept_encoding", r.Header.Get("Accept-Encoding"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -393,6 +394,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
+		"accept_encoding", r.Header.Get("Accept-Encoding"),
 		"priority", r.Header.Get("Priority"),
 		"x-forwarded-for", r.Header.Get("X-Forwarded-For"),
 		"x-real-ip", r.Header.Get("X-Real-Ip"),
