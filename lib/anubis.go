@@ -13,6 +13,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -142,8 +143,9 @@ func New(opts Options) (*Server, error) {
 	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
 
 	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/make-challenge", result.MakeChallenge)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
+	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
 	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/test-error", result.TestError)
+	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/index", result.RenderIndex)
 
 	mux.HandleFunc("/", result.MaybeReverseProxy)
 
@@ -263,21 +265,21 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 
@@ -288,7 +290,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 
@@ -303,7 +305,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
@@ -311,7 +313,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 
@@ -328,7 +330,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RedirectToIndex(w, r)
 		return
 	}
 
@@ -337,11 +339,29 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	s.next.ServeHTTP(w, r)
 }
 
+func (s *Server) RedirectToIndex(w http.ResponseWriter, r *http.Request) {
+	redir := r.URL.RequestURI()
+	indexUrl := "/.within.website/x/cmd/anubis/api/index?r=" + url.QueryEscape(redir)
+	http.Redirect(w, r, indexUrl, http.StatusSeeOther)
+}
+
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
+	redir := r.URL.Query().Get("r")
+	if redir == "" {
+		redir = "/"
+	}
+	redirUrl, err := url.Parse(redir)
+	if err != nil {
+		redirUrl, _ = url.Parse("/")
+	}
+	if redirUrl.Host != "" {
+		redirUrl.Host = ""
+	}
+
 	var ogTags map[string]string = nil
 	if s.opts.OGPassthrough {
 		var err error
-		ogTags, err = s.OGTags.GetOGTags(r.URL)
+		ogTags, err = s.OGTags.GetOGTags(redirUrl)
 		if err != nil {
 			slog.Error("failed to get OG tags", "err", err)
 			ogTags = nil
@@ -349,7 +369,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	handler := internal.NoStoreCache(
 		templ.Handler(
-			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(), ogTags),
+			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(redir), ogTags),
 		),
 	)
 	handler.ServeHTTP(w, r)
@@ -435,6 +455,17 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	response := r.FormValue("response")
 	redir := r.FormValue("redir")
+
+	redirUrl, err := url.ParseRequestURI(redir)
+	if err != nil {
+		lg.Warn("tried to redirect to invalid URL", "redir", redir, "err", err)
+		redir = "/"
+	}
+
+	if redirUrl.Host != "" {
+		lg.Warn("tried to redirect to external URL", "redir", redir)
+		redir = "/"
+	}
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 

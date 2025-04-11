@@ -81,6 +81,7 @@ function showContinueBar(hash, nonce, t0, t1) {
   const title = document.getElementById('title');
   const progress = document.getElementById('progress');
   const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
+  const form = document.getElementById("pass_form");
   const details = document.querySelector('details');
   let userReadDetails = false;
 
@@ -233,15 +234,10 @@ function showContinueBar(hash, nonce, t0, t1) {
       container.innerHTML = "I've finished reading, continue →";
 
       function onDetailsExpand() {
-        const redir = window.location.href;
-        window.location.replace(
-          u("/.within.website/x/cmd/anubis/api/pass-challenge", {
-            response: hash,
-            nonce,
-            redir,
-            elapsedTime: t1 - t0
-          }),
-        );
+        form.response.value = hash;
+        form.nonce.value = nonce;
+        form.elapsedTime.value = t1 - t0;
+        form.submit();
       }
 
       container.onclick = onDetailsExpand;
@@ -249,18 +245,12 @@ function showContinueBar(hash, nonce, t0, t1) {
 
     } else {
       setTimeout(() => {
-        const redir = window.location.href;
-        window.location.replace(
-          u("/.within.website/x/cmd/anubis/api/pass-challenge", {
-            response: hash,
-            nonce,
-            redir,
-            elapsedTime: t1 - t0
-          }),
-        );
+        form.response.value = hash;
+        form.nonce.value = nonce;
+        form.elapsedTime.value = t1 - t0;
+        form.submit();
       }, 250);
     }
-
   } catch (err) {
     ohNoes({
       titleMsg: "Calculation error!",
