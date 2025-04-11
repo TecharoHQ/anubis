@@ -1,27 +1,31 @@
-NODE_MODULES = node_modules
-VERSION := $(shell cat ./VERSION)
+VERSION= $(shell cat ./VERSION)
+GO?= go
+NPM?= npm
 
 .PHONY: build assets deps lint prebaked-build test
 
-assets:
-	npm run assets
-
-deps:
-	npm ci
-	go mod download
-
-build: deps
-	npm run build
-	@echo "Anubis is now built to ./var/anubis"
-
 all: build
 
-lint:
-	go vet ./...
-	go tool staticcheck ./...
+deps:
+	$(NPM) ci
+	$(GO) mod download
+
+assets: PATH:=$(PWD)/node_modules/.bin:$(PATH)
+assets: deps
+	$(GO) generate ./...
+	./web/build.sh
+	./xess/build.sh
+
+build: assets
+	$(GO) build -o ./var/anubis ./cmd/anubis
+	@echo "Anubis is now built to ./var/anubis"
+
+lint: assets
+	$(GO) vet ./...
+	$(GO) tool staticcheck ./...
 
 prebaked-build:
-	go build -o ./var/anubis -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/anubis
+	$(GO) build -o ./var/anubis -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/anubis
 
-test:
-	npm run test
+test: assets
+	$(GO) test ./...
