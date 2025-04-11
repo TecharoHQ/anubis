@@ -3,12 +3,13 @@ package ogtags
 import (
 	"errors"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"syscall"
 )
 
 // GetOGTags is the main function that retrieves Open Graph tags for a URL
-func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
+func (c *OGTagCache) GetOGTags(headers http.Header, url *url.URL) (map[string]string, error) {
 	if url == nil {
 		return nil, errors.New("nil URL provided, cannot fetch OG tags")
 	}
@@ -19,7 +20,7 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 	}
 
 	// Fetch HTML content
-	doc, err := c.fetchHTMLDocument(urlStr)
+	doc, err := c.fetchHTMLDocument(headers, urlStr)
 	if errors.Is(err, syscall.ECONNREFUSED) {
 		slog.Debug("Connection refused, returning empty tags")
 		return nil, nil

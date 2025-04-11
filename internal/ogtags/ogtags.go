@@ -26,6 +26,7 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
 	client := &http.Client{
 		Timeout: 5 * time.Second, /*make this configurable?*/
+		Transport: http.DefaultTransport,
 	}
 
 	const maxContentLength = 16 << 20 // 16 MiB in bytes

@@ -3,11 +3,12 @@ package ogtags
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/net/html"
 	"log/slog"
 	"mime"
 	"net"
 	"net/http"
+
+	"golang.org/x/net/html"
 )
 
 var (
@@ -15,8 +16,16 @@ var (
 	emptyMap    = map[string]string{}          // used to indicate an empty result in the cache. Can't use nil as it would be a cache miss.
 )
 
-func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
-	resp, err := c.client.Get(urlStr)
+func (c *OGTagCache) fetchHTMLDocument(headers http.Header, urlStr string) (*html.Node, error) {
+	req, err := http.NewRequest(http.MethodGet, urlStr, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("og: failed to create request: %w", err)
+	}
+	if headers != nil {
+		req.Header = headers
+	}
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {
