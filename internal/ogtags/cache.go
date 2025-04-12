@@ -23,7 +23,7 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 	if errors.Is(err, syscall.ECONNREFUSED) {
 		slog.Debug("Connection refused, returning empty tags")
 		return nil, nil
-	} else if errors.Is(err, OgHandledError) {
+	} else if errors.Is(err, ErrOgHandled) {
 		// Error was handled in fetchHTMLDocument, return empty tags
 		return nil, nil
 	}
