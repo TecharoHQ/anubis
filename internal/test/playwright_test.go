@@ -101,6 +101,9 @@ func doesNPXExist(t *testing.T) {
 }
 
 func run(t *testing.T, command string) string {
+	if testing.Short() {
+		t.Skip("skipping integration smoke testing in short mode")
+	}
 	t.Helper()
 
 	shPath, err := exec.LookPath("sh")
