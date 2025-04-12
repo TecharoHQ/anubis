@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add more IA user agent based on [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt) project
+- Add more AI user agents based on [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt) project
+- Whitelisted [DuckDuckBot](https://duckduckgo.com/duckduckgo-help-pages/results/duckduckbot/) in botPolicies
+- Improvements to build scripts to make them less independent of the build host
 
 ## v1.16.0
 
