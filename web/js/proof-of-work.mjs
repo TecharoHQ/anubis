@@ -106,7 +106,7 @@ function processTask() {
         const oldNonce = nonce;
         nonce += threads;
 
-        // send a progess update every 1024 iterations. since each thread checks
+        // send a progress update every 1024 iterations. since each thread checks
         // separate values, one simple way to do this is by bit masking the
         // nonce for multiples of 1024. unfortunately, if the number of threads
         // is not prime, only some of the threads will be sending the status

@@ -91,7 +91,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       }
     });
   }
-  
+
   const ohNoes = ({ titleMsg, statusMsg, imageSrc }) => {
     title.innerHTML = titleMsg;
     status.innerHTML = statusMsg;
@@ -103,7 +103,7 @@ function showContinueBar(hash, nonce, t0, t1) {
     ohNoes({
       titleMsg: "Your context is not secure!",
       statusMsg: `Try connecting over HTTPS or let the admin know to set up HTTPS. For more information, see <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure">MDN</a>.`,
-      imageSrc: imageURL("sad", anubisVersion),
+      imageSrc: imageURL("reject", anubisVersion),
     });
     return;
   }
@@ -116,7 +116,7 @@ function showContinueBar(hash, nonce, t0, t1) {
   // if (!videoWorks) {
   //   title.innerHTML = "Oh no!";
   //   status.innerHTML = "Checks failed. Please check your browser's settings and try again.";
-  //   image.src = imageURL("sad");
+  //   image.src = imageURL("reject");
   //   progress.style.display = "none";
   //   return;
   // }
@@ -128,7 +128,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       ohNoes({
         titleMsg: `Missing feature ${name}`,
         statusMsg: msg,
-        imageSrc: imageURL("sad", anubisVersion),
+        imageSrc: imageURL("reject", anubisVersion),
       });
     }
   }
@@ -142,7 +142,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       ohNoes({
         titleMsg: "Internal error!",
         statusMsg: `Failed to fetch challenge config: ${err.message}`,
-        imageSrc: imageURL("sad", anubisVersion),
+        imageSrc: imageURL("reject", anubisVersion),
       });
       throw err;
     });
@@ -152,14 +152,14 @@ function showContinueBar(hash, nonce, t0, t1) {
     ohNoes({
       titleMsg: "Challenge error!",
       statusMsg: `Failed to resolve check algorithm. You may want to reload the page.`,
-      imageSrc: imageURL("sad", anubisVersion),
+      imageSrc: imageURL("reject", anubisVersion),
     });
     return;
   }
 
   status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}, `;
   progress.style.display = "inline-block";
-  
+
   // the whole text, including "Speed:", as a single node, because some browsers
   // (Firefox mobile) present screen readers with each node as a separate piece
   // of text.
@@ -188,7 +188,7 @@ function showContinueBar(hash, nonce, t0, t1) {
         // apply a polynomial ease-out function to move faster in the beginning
         // and then slow down as things get increasingly unlikely. quadratic felt
         // the best in testing, but this may need adjustment in the future.
-        
+
         const probability = Math.pow(1 - likelihood, iters);
         const distance = (1 - Math.pow(probability, 2)) * 100;
         progress["aria-valuenow"] = distance;
@@ -215,7 +215,7 @@ function showContinueBar(hash, nonce, t0, t1) {
 
     if (userReadDetails) {
       const container = document.getElementById("progress");
-    
+
       // Style progress bar as a continue button
       container.style.display = "flex";
       container.style.alignItems = "center";
@@ -231,7 +231,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       container.style.width = "min(20rem, 90%)";
       container.style.margin = "1rem auto 2rem";
       container.innerHTML = "I've finished reading, continue →";
-    
+
       function onDetailsExpand() {
         const redir = window.location.href;
         window.location.replace(
@@ -243,10 +243,10 @@ function showContinueBar(hash, nonce, t0, t1) {
           }),
         );
       }
-    
+
       container.onclick = onDetailsExpand;
       setTimeout(onDetailsExpand, 30000);
-    
+
     } else {
       setTimeout(() => {
         const redir = window.location.href;
@@ -260,12 +260,12 @@ function showContinueBar(hash, nonce, t0, t1) {
         );
       }, 250);
     }
-    
+
   } catch (err) {
     ohNoes({
       titleMsg: "Calculation error!",
       statusMsg: `Failed to calculate challenge: ${err.message}`,
-      imageSrc: imageURL("sad", anubisVersion),
+      imageSrc: imageURL("reject", anubisVersion),
     });
   }
 })();

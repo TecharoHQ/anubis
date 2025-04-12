@@ -1,0 +1,131 @@
+---
+title: Installing Anubis with a native package
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+Install the Anubis package using your package manager of choice:
+
+<Tabs>
+  <TabItem value="deb" label="Debian-based (apt)" default>
+  
+Install Anubis with `apt`:
+
+```text
+sudo apt install ./anubis-$VERSION-$ARCH.deb
+```
+
+  </TabItem>
+  <TabItem value="tarball" label="Tarball">
+  
+Extract the tarball to a folder:
+
+```text
+tar zxf ./anubis-$VERSION-$OS-$ARCH.tar.gz
+cd anubis-$VERSION-$OS-$ARCH
+```
+
+Install the binary to your system:
+
+```text
+sudo install -D ./bin/anubis /usr/local/bin
+```
+
+Edit the systemd unit to point to `/usr/local/bin/anubis` instead of `/usr/bin/anubis`:
+
+```text
+perl -pi -e 's$/usr/bin/anubis$/usr/local/bin/anubis$g' ./run/anubis@.service
+```
+
+Install the systemd unit to your system:
+
+```text
+sudo install -D ./run/anubis@.service /etc/systemd/system
+```
+
+Install the default configuration file to your system:
+
+```text
+sudo install -D ./run/default.env /etc/anubis
+```
+
+  </TabItem>
+  <TabItem value="rpm" label="Red Hat-based (rpm)">
+  
+Install Anubis with `dnf`:
+
+```text
+sudo dnf -y install ./anubis-$VERSION.$ARCH.rpm
+```
+
+OR
+
+Install Anubis with `yum`:
+
+```text
+sudo yum -y install ./anubis-$VERSION.$ARCH.rpm
+```
+
+OR
+
+Install Anubis with `rpm`:
+
+```
+sudo rpm -ivh ./anubis-$VERSION.$ARCH.rpm
+```
+
+  </TabItem>
+</Tabs>
+
+Once it's installed, make a copy of the default configuration file `/etc/anubis/default.env` based on which service you want to protect. For example, to protect a `gitea` server:
+
+```text
+sudo cp /etc/anubis/default.env /etc/anubis/gitea.env
+```
+
+Copy the default bot policies file to `/etc/anubis/gitea.botPolicies.json`:
+
+<Tabs>
+<TabItem value="debrpm" label="Debian or Red Hat" default>
+
+```text
+sudo cp /usr/share/doc/anubis/botPolicies.json /etc/anubis/gitea.botPolicies.json
+```
+
+</TabItem>
+<TabItem value="tarball" label="Tarball">
+
+```text
+sudo cp ./doc/botPolicies.json /etc/anubis/gitea.botPolicies.json
+```
+
+</TabItem>
+
+</Tabs>
+
+Then open `gitea.env` in your favorite text editor and customize [the environment variables](./installation.mdx#environment-variables) as needed. Here's an example configuration for a Gitea server:
+
+```sh
+BIND=[::1]:8239
+BIND_NETWORK=tcp
+DIFFICULTY=4
+METRICS_BIND=[::1]:8240
+METRICS_BIND_NETWORK=tcp
+POLICY_FNAME=/etc/anubis/gitea.botPolicies.json
+TARGET=http://localhost:3000
+```
+
+Then start Anubis with `systemctl enable --now`:
+
+```text
+sudo systemctl enable --now anubis@gitea.service
+```
+
+Test to make sure it's running with `curl`:
+
+```text
+curl http://localhost:8240/metrics
+```
+
+Then set up your reverse proxy (Nginx, Caddy, etc.) to point to the Anubis port. Anubis will then reverse proxy all requests that meet the policies in `/etc/anubis/gitea.botPolicies.json` to the target service.

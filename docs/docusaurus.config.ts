@@ -45,7 +45,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/TecharoHQ/anubis/tree/main/docs/',
         },
         // blog: {
         //   showReadingTime: true,
@@ -76,7 +76,7 @@ const config: Config = {
       title: 'Anubis',
       logo: {
         alt: 'A happy jackal woman with brown hair and red eyes',
-        src: 'img/happy.webp',
+        src: 'img/favicon.webp',
       },
       items: [
         {

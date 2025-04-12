@@ -28,6 +28,7 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
+	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
@@ -71,6 +72,12 @@ type Options struct {
 	CookieDomain      string
 	CookieName        string
 	CookiePartitioned bool
+
+	OGPassthrough bool
+	OGTimeToLive  time.Duration
+	Target        string
+
+	WebmasterEmail string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -92,9 +99,9 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 
 	defer fin.Close()
 
-	policy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
 
-	return policy, err
+	return anubisPolicy, err
 }
 
 func New(opts Options) (*Server, error) {
@@ -114,6 +121,7 @@ func New(opts Options) (*Server, error) {
 		policy:     opts.Policy,
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
+		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive),
 	}
 
 	mux := http.NewServeMux()
@@ -145,14 +153,14 @@ func New(opts Options) (*Server, error) {
 }
 
 type Server struct {
-	mux                 *http.ServeMux
-	next                http.Handler
-	priv                ed25519.PrivateKey
-	pub                 ed25519.PublicKey
-	policy              *policy.ParsedConfig
-	opts                Options
-	DNSBLCache          *decaymap.Impl[string, dnsbl.DroneBLResponse]
-	ChallengeDifficulty int
+	mux        *http.ServeMux
+	next       http.Handler
+	priv       ed25519.PrivateKey
+	pub        ed25519.PublicKey
+	policy     *policy.ParsedConfig
+	opts       Options
+	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
+	OGTags     *ogtags.OGTagCache
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +195,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -212,7 +220,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 		if resp != dnsbl.AllGood {
 			lg.Info("DNSBL hit", "status", resp.String())
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip))), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
 			return
 		}
 	}
@@ -227,17 +235,17 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
 		hash, err := rule.Hash()
 		if err != nil {
 			lg.Error("can't calculate checksum of rule", "err", err)
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
 		lg.Debug("rule hash", "hash", hash)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("Access Denied: error code %s", hash))), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("Access Denied: error code %s", hash), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
 		return
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
@@ -247,7 +255,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		s.ClearCookie(w)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -330,9 +338,18 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
+	var ogTags map[string]string = nil
+	if s.opts.OGPassthrough {
+		var err error
+		ogTags, err = s.OGTags.GetOGTags(r.URL)
+		if err != nil {
+			slog.Error("failed to get OG tags", "err", err)
+			ogTags = nil
+		}
+	}
 	handler := internal.NoStoreCache(
 		templ.Handler(
-			web.Base("Making sure you're not a bot!", web.Index()),
+			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(), ogTags),
 		),
 	)
 	handler.ServeHTTP(w, r)
@@ -384,7 +401,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 	lg = lg.With("check_result", cr)
@@ -393,7 +410,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if nonceStr == "" {
 		s.ClearCookie(w)
 		lg.Debug("no nonce")
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing nonce")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing nonce", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -401,7 +418,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if elapsedTimeStr == "" {
 		s.ClearCookie(w)
 		lg.Debug("no elapsedTime")
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing elapsedTime")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing elapsedTime", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -409,7 +426,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.ClearCookie(w)
 		lg.Debug("elapsedTime doesn't parse", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid elapsedTime")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid elapsedTime", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -425,7 +442,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.ClearCookie(w)
 		lg.Debug("nonce doesn't parse", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid nonce")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid nonce", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -435,16 +452,16 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
 		s.ClearCookie(w)
 		lg.Debug("hash does not match", "got", response, "want", calculated)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
 		return
 	}
 
 	// compare the leading zeroes
-	if !strings.HasPrefix(response, strings.Repeat("0", s.ChallengeDifficulty)) {
+	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
 		s.ClearCookie(w)
-		lg.Debug("difficulty check failed", "response", response, "difficulty", s.ChallengeDifficulty)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response")), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
+		lg.Debug("difficulty check failed", "response", response, "difficulty", rule.Challenge.Difficulty)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
 		failedValidations.Inc()
 		return
 	}
@@ -462,7 +479,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("failed to sign JWT")), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("failed to sign JWT", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
 
@@ -483,7 +500,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 	err := r.FormValue("err")
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(err)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+	templ.Handler(web.Base("Oh noes!", web.ErrorPage(err, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 }
 
 // Check evaluates the list of rules, and returns the result
@@ -542,4 +559,5 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 
 func (s *Server) CleanupDecayMap() {
 	s.DNSBLCache.Cleanup()
+	s.OGTags.Cleanup()
 }
