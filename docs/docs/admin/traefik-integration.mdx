@@ -8,7 +8,7 @@ To integrate Anubis with Traefik, you need to define a new entry point in Traefi
 --entrypoints.anubis.address=:3923
 ```
 
-Then, configure Anubis with the following `docker-compose.yml`. This config takes in all requests if there is no rule on port 443, and then sends the request back to Traefik this time on port 3923. Anubis preserves the `Host` header and Traefik routes again this time going to the final target webservice.
+Then, configure Anubis with the following `compose.yml`. This config takes in all requests if there is no rule on port 443, and then sends the request back to Traefik this time on port 3923. Anubis preserves the `Host` header and Traefik routes again this time going to the final target webservice.
 
 ```yml
 services:
