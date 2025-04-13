@@ -5,15 +5,15 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
   package_builds:
     #runs-on: alrest-techarohq
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         persist-credentials: false
         fetch-tags: true
@@ -28,7 +28,7 @@ jobs:
       uses: Homebrew/actions/setup-homebrew@master
 
     - name: Setup Homebrew cellar cache
-      uses: actions/cache@v4
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: |
           /home/linuxbrew/.linuxbrew/Cellar
@@ -49,7 +49,7 @@ jobs:
         brew bundle
 
     - name: Setup Golang caches
-      uses: actions/cache@v4
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: |
           ~/.cache/go-build
@@ -64,7 +64,7 @@ jobs:
 
     - name: Build Packages
       run: |
-        wget https://github.com/Xe/x/releases/download/v1.13.3/yeet_1.13.3_amd64.deb -O var/yeet.deb
+        wget https://github.com/Xe/x/releases/download/v1.13.4/yeet_1.13.4_amd64.deb -O var/yeet.deb
         sudo apt -y install -f ./var/yeet.deb
         yeet
 

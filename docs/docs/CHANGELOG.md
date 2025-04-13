@@ -11,9 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Whitelisted [DuckDuckBot](https://duckduckgo.com/duckduckgo-help-pages/results/duckduckbot/) in botPolicies
+- Improvements to build scripts to make them less independent of the build host
+- Improved the OpenGraph error logging
+- Added `Opera` to the `generic-browser` bot policy rule
+
+## v1.16.0
+
+Fordola rem Lupis
+
+> I want to make them pay! All of them! Everyone who ever mocked or looked down on me -- I want the power to make them pay!
+
+The following features are the "big ticket" items:
+
 - Added support for native Debian, Red Hat, and tarball packaging strategies including installation and use directions.
+- A prebaked tarball has been added, allowing distros to build Anubis like they could in v1.15.x.
 - The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social).
-- Allow iMessage's link preview fetcher through Anubis by default.
+- Verification page now shows hash rate and a progress bar for completion probability.
+- Added support for [OpenGraph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
+- Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`.
+
+The other small fixes have been made:
+
 - Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
 - Added a no-store Cache-Control header to the challenge page
 - Hide the directory listings for Anubis' internal static content
@@ -23,7 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Dockerfile has been removed as it is no longer in use
 - Developer documentation has been added to the docs site
 - Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
-- Verification page now shows hash rate and a progress bar for completion probability.
 - Added the `--debug-benchmark-js` flag for testing proof-of-work performance during development.
 - Use `TrimSuffix` instead of `TrimRight` on containerbuild
 - Fix the startup logs to correctly show the address and port the server is listening on
@@ -31,14 +49,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a wait with button continue + 30 second auto continue after 30s if you click "Why am I seeing this?"
 - Fixed a typo in the challenge page title.
 - Disabled running integration tests on Windows hosts due to it's reliance on posix features (see [#133](https://github.com/TecharoHQ/anubis/pull/133#issuecomment-2764732309)).
-- Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`.
 - Fixed minor typos
 - Added a Makefile to enable comfortable workflows for downstream packagers.
 - Added `zizmor` for GitHub Actions static analysis
 - Fixed most `zizmor` findings
 - Enabled Dependabot
+- Added an air config for autoreload support in development ([#195](https://github.com/TecharoHQ/anubis/pull/195))
 - Added an `--extract-resources` flag to extract static resources to a local folder.
-- Added `Opera` to the `generic-browser` bot policy rule
+- Add noindex flag to all Anubis pages ([#227](https://github.com/TecharoHQ/anubis/issues/227)).
+- Added `WEBMASTER_EMAIL` variable, if it is present then display that email address on error pages ([#235](https://github.com/TecharoHQ/anubis/pull/235), [#115](https://github.com/TecharoHQ/anubis/issues/115))
+- Hash pinned all GitHub Actions
 
 ## v1.15.1
 

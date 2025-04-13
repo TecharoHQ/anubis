@@ -18,11 +18,13 @@ package test
 import (
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"testing"
 	"time"
 
@@ -64,12 +66,6 @@ var (
 			userAgent: "Mozilla/5.0 (compatible; Kagibot/1.0; +https://kagi.com/bot)",
 		},
 		{
-			name:      "iMessageScraper",
-			action:    actionAllow,
-			realIP:    placeholderIP,
-			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0",
-		},
-		{
 			name:      "unknownAgent",
 			action:    actionAllow,
 			realIP:    placeholderIP,
@@ -105,6 +101,9 @@ func doesNPXExist(t *testing.T) {
 }
 
 func run(t *testing.T, command string) string {
+	if testing.Short() {
+		t.Skip("skipping integration smoke testing in short mode")
+	}
 	t.Helper()
 
 	shPath, err := exec.LookPath("sh")
@@ -426,16 +425,30 @@ func spawnAnubis(t *testing.T) string {
 		t.Fatal(err)
 	}
 
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("can't listen on random port: %v", err)
+	}
+
+	addr := listener.Addr().(*net.TCPAddr)
+	host := "localhost"
+	port := strconv.Itoa(addr.Port)
+
 	s, err := libanubis.New(libanubis.Options{
 		Next:           h,
 		Policy:         policy,
 		ServeRobotsTXT: true,
+		Target:         "http://" + host + ":" + port,
 	})
 	if err != nil {
 		t.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
-	ts := httptest.NewServer(s)
+	ts := &httptest.Server{
+		Listener: listener,
+		Config:   &http.Server{Handler: s},
+	}
+	ts.Start()
 	t.Log(ts.URL)
 
 	t.Cleanup(func() {
