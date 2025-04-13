@@ -63,15 +63,10 @@ function showContinueBar(hash, nonce, t0, t1) {
   });
 
   barContainer.onclick = () => {
-    const redir = window.location.href;
-    window.location.replace(
-      u("/.within.website/x/cmd/anubis/api/pass-challenge", {
-        response: hash,
-        nonce,
-        redir,
-        elapsedTime: t1 - t0
-      })
-    );
+    form.response.value = hash;
+    form.nonce.value = nonce;
+    form.elapsedTime.value = t1 - t0;
+    form.submit();
   };
 }
 
