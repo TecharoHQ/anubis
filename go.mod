@@ -9,6 +9,7 @@ require (
 	github.com/playwright-community/playwright-go v0.5001.0
 	github.com/prometheus/client_golang v1.21.1
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
+	github.com/tetratelabs/wazero v1.9.0
 	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/net v0.38.0
 )

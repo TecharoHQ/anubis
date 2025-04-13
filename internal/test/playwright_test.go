@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -381,7 +382,7 @@ func saveScreenshot(t *testing.T, page playwright.Page) {
 		return
 	}
 
-	f, err := os.CreateTemp("", "anubis-test-fail-*.png")
+	f, err := os.CreateTemp("./var", "anubis-test-fail-"+strings.ReplaceAll(t.Name(), "/", "--")+"-*.png")
 	if err != nil {
 		t.Logf("could not create temporary file: %v", err)
 		return
