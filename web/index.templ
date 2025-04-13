@@ -23,7 +23,7 @@ func unshit(s string) string {
 
 templ base(title string, body templ.Component, ogTags map[string]string) {
 <!DOCTYPE html>
-<html lang="en">
+<html lang={ i18n.GetLocale(ctx).Code().String() }>
 <head>
     <title>{ title }</title>
     <link rel="stylesheet" href={ xess.URL }/>
