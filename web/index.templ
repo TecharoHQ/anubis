@@ -113,10 +113,7 @@ templ index() {
     </div>
     <details>
         <summary>Why am I seeing this?</summary>
-        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation1")))</p>
-        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation2")))</p>
-        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation3")))</p>
-        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation4")))</p>
+        @templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation")))
     </details>
     <noscript>
         <p>{ i18n.T(ctx, "pages.index.noscript") }</p>
