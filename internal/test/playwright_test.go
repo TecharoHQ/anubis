@@ -18,11 +18,13 @@ package test
 import (
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"testing"
 	"time"
 
@@ -222,17 +224,17 @@ func TestPlaywrightBrowser(t *testing.T) {
 					t.Skip("skipping hard challenge with deadline")
 				}
 
-				var perfomedAction action
+				var performedAction action
 				var err error
 				for i := 0; i < 5; i++ {
-					perfomedAction, err = executeTestCase(t, tc, typ, anubisURL)
-					if perfomedAction == tc.action {
+					performedAction, err = executeTestCase(t, tc, typ, anubisURL)
+					if performedAction == tc.action {
 						break
 					}
 					time.Sleep(time.Duration(i+1) * 250 * time.Millisecond)
 				}
-				if perfomedAction != tc.action {
-					t.Errorf("unexpected test result, expected %s, got %s", tc.action, perfomedAction)
+				if performedAction != tc.action {
+					t.Errorf("unexpected test result, expected %s, got %s", tc.action, performedAction)
 				}
 				if err != nil {
 					t.Fatalf("test error: %v", err)
@@ -420,16 +422,30 @@ func spawnAnubis(t *testing.T) string {
 		t.Fatal(err)
 	}
 
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("can't listen on random port: %v", err)
+	}
+
+	addr := listener.Addr().(*net.TCPAddr)
+	host := "localhost"
+	port := strconv.Itoa(addr.Port)
+
 	s, err := libanubis.New(libanubis.Options{
 		Next:           h,
 		Policy:         policy,
 		ServeRobotsTXT: true,
+		Target:         "http://" + host + ":" + port,
 	})
 	if err != nil {
 		t.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
-	ts := httptest.NewServer(s)
+	ts := &httptest.Server{
+		Listener: listener,
+		Config:   &http.Server{Handler: s},
+	}
+	ts.Start()
 	t.Log(ts.URL)
 
 	t.Cleanup(func() {

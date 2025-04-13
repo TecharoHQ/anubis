@@ -5,8 +5,14 @@ Description="Anubis HTTP defense proxy (instance %i)"
 ExecStart=/usr/bin/anubis
 Restart=always
 RestartSec=30s
-EnvironmentFile=/etc/anubis/anubis-%i.env
+EnvironmentFile=/etc/anubis/%i.env
 LimitNOFILE=infinity
+DynamicUser=yes
+CacheDirectory=anubis/%i
+CacheDirectoryMode=0755
+StateDirectory=anubis/%i
+StateDirectoryMode=0755
+ReadWritePaths=/run
 
 [Install]
 WantedBy=multi-user.target

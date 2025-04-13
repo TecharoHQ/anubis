@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"embed"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"log/slog"
 	"net"
@@ -15,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,27 +32,33 @@ import (
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
-	bind                 = flag.String("bind", ":8923", "network address to bind HTTP to")
-	bindNetwork          = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
-	challengeDifficulty  = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
-	cookieDomain         = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
-	cookiePartitioned    = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
-	ed25519PrivateKeyHex = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
-	metricsBind          = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
-	metricsBindNetwork   = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
-	socketMode           = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
-	robotsTxt            = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
-	policyFname          = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
-	slogLevel            = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	target               = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
-	healthcheck          = flag.Bool("healthcheck", false, "run a health check against Anubis")
-	useRemoteAddress     = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
-	debugBenchmarkJS     = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
+	bind                     = flag.String("bind", ":8923", "network address to bind HTTP to")
+	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
+	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
+	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
+	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
+	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
+	metricsBindNetwork       = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
+	socketMode               = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
+	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
+	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
+	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
+	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
+	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
+	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
+	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
+	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
+	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
+	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
+	webmasterEmail		 = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -116,7 +127,7 @@ func setupListener(network string, address string) (net.Listener, string) {
 }
 
 func makeReverseProxy(target string) (http.Handler, error) {
-	u, err := url.Parse(target)
+	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
 	}
@@ -124,10 +135,10 @@ func makeReverseProxy(target string) (http.Handler, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
-	if u.Scheme == "unix" {
+	if targetUri.Scheme == "unix" {
 		// clean path up so we don't use the socket path in proxied requests
-		addr := u.Path
-		u.Path = ""
+		addr := targetUri.Path
+		targetUri.Path = ""
 		// tell transport how to dial unix sockets
 		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
 			dialer := net.Dialer{}
@@ -137,7 +148,7 @@ func makeReverseProxy(target string) (http.Handler, error) {
 		transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
 	}
 
-	rp := httputil.NewSingleHostReverseProxy(u)
+	rp := httputil.NewSingleHostReverseProxy(targetUri)
 	rp.Transport = transport
 
 	return rp, nil
@@ -167,6 +178,14 @@ func main() {
 		if err := doHealthCheck(); err != nil {
 			log.Fatal(err)
 		}
+		return
+	}
+
+	if *extractResources != "" {
+		if err := extractEmbedFS(web.Static, "static", *extractResources); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Extracted embedded static files to %s\n", *extractResources)
 		return
 	}
 
@@ -206,18 +225,30 @@ func main() {
 	}
 
 	var priv ed25519.PrivateKey
-	if *ed25519PrivateKeyHex == "" {
+	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
+		log.Fatal("do not specify both ED25519_PRIVATE_KEY_HEX and ED25519_PRIVATE_KEY_HEX_FILE")
+	} else if *ed25519PrivateKeyHex != "" {
+		priv, err = keyFromHex(*ed25519PrivateKeyHex)
+		if err != nil {
+			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
+		}
+	} else if *ed25519PrivateKeyHexFile != "" {
+		hex, err := os.ReadFile(*ed25519PrivateKeyHexFile)
+		if err != nil {
+			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
+		}
+
+		priv, err = keyFromHex(string(bytes.TrimSpace(hex)))
+		if err != nil {
+			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
+		}
+	} else {
 		_, priv, err = ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
 
 		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
-	} else {
-		priv, err = keyFromHex(*ed25519PrivateKeyHex)
-		if err != nil {
-			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
-		}
 	}
 
 	s, err := libanubis.New(libanubis.Options{
@@ -227,6 +258,10 @@ func main() {
 		PrivateKey:        priv,
 		CookieDomain:      *cookieDomain,
 		CookiePartitioned: *cookiePartitioned,
+		OGPassthrough:     *ogPassthrough,
+		OGTimeToLive:      *ogTimeToLive,
+		Target:            *target,
+		WebmasterEmail:     *webmasterEmail,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -260,6 +295,8 @@ func main() {
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
 		"debug-benchmark-js", *debugBenchmarkJS,
+		"og-passthrough", *ogPassthrough,
+		"og-expiry-time", *ogTimeToLive,
 	)
 
 	go func() {
@@ -271,7 +308,7 @@ func main() {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 	wg.Wait()
@@ -284,8 +321,8 @@ func metricsServer(ctx context.Context, done func()) {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := http.Server{Handler: mux}
-	listener, url := setupListener(*metricsBindNetwork, *metricsBind)
-	slog.Debug("listening for metrics", "url", url)
+	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
+	slog.Debug("listening for metrics", "url", metricsUrl)
 
 	go func() {
 		<-ctx.Done()
@@ -296,7 +333,33 @@ func metricsServer(ctx context.Context, done func()) {
 		}
 	}()
 
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
+}
+
+func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
+	return fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+
+		destPath := filepath.Join(destDir, relPath)
+
+		if d.IsDir() {
+			return os.MkdirAll(destPath, 0o700)
+		}
+
+		data, err := fs.ReadFile(fsys, path)
+		if err != nil {
+			return err
+		}
+
+		return os.WriteFile(destPath, data, 0o644)
+	})
 }

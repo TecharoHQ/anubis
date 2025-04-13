@@ -1,186 +1,196 @@
 package web
 
 import (
-	"github.com/TecharoHQ/anubis"
-	"github.com/TecharoHQ/anubis/xess"
-	"github.com/invopop/ctxi18n/i18n"
-	"strings"
+    "github.com/TecharoHQ/anubis"
+    "github.com/TecharoHQ/anubis/xess"
+    "github.com/invopop/ctxi18n/i18n"
+    "strings"
 )
 
 // garbage hack for cleaning up the shitty YAML parser's output
 func unshit(s string) string {
-	r:= map[string]string {
-		"\\u003c": "<",
-		"\\u003e": ">",
-		"\\n": "\n",
-		"\\\"": "\"",
-	}
-	for k, v := range r {
-		s = strings.ReplaceAll(s, k, v)
-	}
-	return s
+    r:= map[string]string {
+        "\\u003c": "<",
+        "\\u003e": ">",
+        "\\n": "\n",
+        "\\\"": "\"",
+    }
+    for k, v := range r {
+        s = strings.ReplaceAll(s, k, v)
+    }
+    return s
 }
 
-templ base(title string, body templ.Component) {
-	<!DOCTYPE html>
-	<html>
-		<head>
-			<title>{ title }</title>
-			<link rel="stylesheet" href={ xess.URL }/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<style>
-    body,
-    html {
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: auto;
-      margin-right: auto;
+templ base(title string, body templ.Component, ogTags map[string]string) {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{ title }</title>
+    <link rel="stylesheet" href={ xess.URL }/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="robots" content="noindex,nofollow"/>
+    for key, value := range ogTags {
+    <meta property={ key } content={ value }/>
     }
+    <style>
+        body,
+        html {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-    .centered-div {
-      text-align: center;
-    }
+        .centered-div {
+            text-align: center;
+        }
 
-    #status {
-      font-variant-numeric: tabular-nums;
-    }
+        #status {
+            font-variant-numeric: tabular-nums;
+        }
 
-    #progress {
-      display: none;
-      width: min(20rem, 90%);
-      height: 2rem;
-      border-radius: 1rem;
-      overflow: hidden;
-      margin: 1rem 0 2rem;
-      outline-color: #b16286;
-      outline-offset: 2px;
-      outline-style: solid;
-      outline-width: 4px;
-    }
+        #progress {
+            display: none;
+            width: min(20rem, 90%);
+            height: 2rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 1rem 0 2rem;
+            outline-color: #b16286;
+            outline-offset: 2px;
+            outline-style: solid;
+            outline-width: 4px;
+        }
 
-    .bar-inner {
-      background-color: #b16286;
-      height: 100%;
-      width: 0;
-      transition: width 0.25s ease-in;
-    }
-      </style>
-			@templ.JSONScript("anubis_version", anubis.Version)
-		</head>
-		<body id="top">
-			<main>
-				<center>
-					<h1 id="title" class=".centered-div">{ title }</h1>
-				</center>
-				@body
-				<footer>
-					<center>
-						<p>
-							@templ.Raw(unshit(i18n.T(ctx, "pages.base.tagline")))
-						</p>
-					</center>
-				</footer>
-			</main>
-		</body>
-	</html>
+        .bar-inner {
+            background-color: #b16286;
+            height: 100%;
+            width: 0;
+            transition: width 0.25s ease-in;
+        }
+    </style>
+    @templ.JSONScript("anubis_version", anubis.Version)
+
+</head>
+<body id="top">
+<main>
+    <center>
+        <h1 id="title" class=".centered-div">{ title }</h1>
+    </center>
+    @body
+    <footer>
+        <center>
+            <p>@templ.Raw(unshit(i18n.T(ctx, "pages.base.tagline")))</p>
+            <p>@templ.Raw(unshit(i18n.T(ctx, "pages.base.made-by")))</p>
+        </center>
+    </footer>
+</main>
+</body>
+</html>
 }
 
 templ index() {
-	<div class="centered-div">
-		<img
-			id="image"
-			style="width:100%;max-width:256px;"
-			src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
+<div class="centered-div">
+    <img
+            id="image"
+            style="width:100%;max-width:256px;"
+            src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
     anubis.Version }
-		/>
-		<img
-			style="display:none;"
-			style="width:100%;max-width:256px;"
-			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
+    />
+    <img
+            style="display:none;"
+            style="width:100%;max-width:256px;"
+            src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
     anubis.Version }
-		/>
-		<p id="status">{ i18n.T(ctx, "pages.index.loading") }</p>
-		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
-		<div id="progress" role="progressbar" aria-labelledby="status">
-			<div class="bar-inner"></div>
-		</div>
-		<details>
-			<summary>{ i18n.T(ctx, "pages.index.question") }</summary>
-			<p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation1")))</p>
-			<p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation2")))</p>
-			<p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation3")))</p>
-			<p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation4")))</p>
-		</details>
-		<noscript>
-			<p>{ i18n.T(ctx, "pages.index.noscript") }</p>
-		</noscript>
-		<div id="testarea"></div>
-	</div>
+    />
+    <p id="status">{ i18n.T(ctx, "pages.index.loading") }</p>
+    <script async type="module" src={
+    "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
+    <div id="progress" role="progressbar" aria-labelledby="status">
+        <div class="bar-inner"></div>
+    </div>
+    <details>
+        <summary>Why am I seeing this?</summary>
+        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation1")))</p>
+        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation2")))</p>
+        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation3")))</p>
+        <p>@templ.Raw(unshit(i18n.T(ctx, "pages.index.explanation4")))</p>
+    </details>
+    <noscript>
+        <p>{ i18n.T(ctx, "pages.index.noscript") }</p>
+    </noscript>
+    <div id="testarea"></div>
+</div>
 }
 
-templ errorPage(message string) {
-	<div class="centered-div">
-		<img
-			id="image"
-			style="width:100%;max-width:256px;"
-			src={ "/.within.website/x/cmd/anubis/static/img/sad.webp?cacheBuster=" + anubis.Version }
-		/>
-		<p>{ message }.</p>
-		<p></p>
-		<button onClick="window.location.reload();">{ i18n.T(ctx, "pages.error.try-again") }</button>
-		<p><a href="/">{ i18n.T(ctx, "pages.error.go-home") }</a></p>
-	</div>
+templ errorPage(message string, mail string) {
+<div class="centered-div">
+    <img
+            id="image"
+            alt="Sad Anubis"
+            style="width:100%;max-width:256px;"
+            src={ "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }
+    />
+    <p>{ message }.</p>
+    <button onClick="window.location.reload();">{ i18n.T(ctx, "pages.error.try-again") }</button>
+    if mail != "" {
+	    <p>@templ.Raw(unshit(i18n.T(ctx, "pages.error.go-home", i18n.M{"mail": templ.SafeURL(mail)})))</p>
+    } else {
+	    <p><a href="/">Go home</a></p>
+   }
+</div>
 }
 
 templ bench() {
-	<div style="height:20rem;display:flex">
-		<table style="margin-top:1rem;display:grid;grid-template:auto 1fr/auto auto;gap:0 0.5rem">
-			<thead style="border-bottom:1px solid black;padding:0.25rem 0;display:grid;grid-template:1fr/subgrid;grid-column:1/-1">
-				<tr id="table-header" style="display:contents">
-					<th style="width:4.5rem">Time</th>
-					<th style="width:4rem">Iters</th>
-				</tr>
-				<tr id="table-header-compare" style="display:none">
-					<th style="width:4.5rem">Time A</th>
-					<th style="width:4rem">Iters A</th>
-					<th style="width:4.5rem">Time B</th>
-					<th style="width:4rem">Iters B</th>
-				</tr>
-			</thead>
-			<tbody id="results" style="padding-top:0.25rem;display:grid;grid-template-columns:subgrid;grid-auto-rows:min-content;grid-column:1/-1;row-gap:0.25rem;overflow-y:auto;font-variant-numeric:tabular-nums">
-			</tbody>
-		</table>
-		<div class="centered-div">
-			<img
-				id="image"
-				style="width:100%;max-width:256px;"
-				src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-	    anubis.Version }
-			/>
-			<p id="status" style="max-width:256px">Loading...</p>
-			<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
-			<div id="sparkline"></div>
-			<noscript>
-				<p>Running the benchmark tool requires JavaScript to be enabled.</p>
-			</noscript>
-		</div>
-	</div>
-	<form id="controls" style="position:fixed;top:0.5rem;right:0.5rem">
-		<div style="display:flex;justify-content:end">
-			<label for="difficulty-input" style="margin-right:0.5rem">Difficulty:</label>
-			<input id="difficulty-input" type="number" name="difficulty" style="width:3rem"/>
-		</div>
-		<div style="margin-top:0.25rem;display:flex;justify-content:end">
-			<label for="algorithm-select" style="margin-right:0.5rem">Algorithm:</label>
-			<select id="algorithm-select" name="algorithm"></select>
-		</div>
-		<div style="margin-top:0.25rem;display:flex;justify-content:end">
-			<label for="compare-select" style="margin-right:0.5rem">Compare:</label>
-			<select id="compare-select" name="compare">
-			  <option value="NONE">-</option>
-			</select>
-		</div>
-	</form>
+<div style="height:20rem;display:flex">
+    <table style="margin-top:1rem;display:grid;grid-template:auto 1fr/auto auto;gap:0 0.5rem">
+        <thead style="border-bottom:1px solid black;padding:0.25rem 0;display:grid;grid-template:1fr/subgrid;grid-column:1/-1">
+        <tr id="table-header" style="display:contents">
+            <th style="width:4.5rem">Time</th>
+            <th style="width:4rem">Iters</th>
+        </tr>
+        <tr id="table-header-compare" style="display:none">
+            <th style="width:4.5rem">Time A</th>
+            <th style="width:4rem">Iters A</th>
+            <th style="width:4.5rem">Time B</th>
+            <th style="width:4rem">Iters B</th>
+        </tr>
+        </thead>
+        <tbody id="results"
+               style="padding-top:0.25rem;display:grid;grid-template-columns:subgrid;grid-auto-rows:min-content;grid-column:1/-1;row-gap:0.25rem;overflow-y:auto;font-variant-numeric:tabular-nums"></tbody>
+    </table>
+    <div class="centered-div">
+        <img
+                id="image"
+                style="width:100%;max-width:256px;"
+                src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
+        anubis.Version }
+        />
+        <p id="status" style="max-width:256px">Loading...</p>
+        <script async type="module" src={
+        "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
+        <div id="sparkline"></div>
+        <noscript>
+            <p>Running the benchmark tool requires JavaScript to be enabled.</p>
+        </noscript>
+    </div>
+</div>
+<form id="controls" style="position:fixed;top:0.5rem;right:0.5rem">
+    <div style="display:flex;justify-content:end">
+        <label for="difficulty-input" style="margin-right:0.5rem">Difficulty:</label>
+        <input id="difficulty-input" type="number" name="difficulty" style="width:3rem"/>
+    </div>
+    <div style="margin-top:0.25rem;display:flex;justify-content:end">
+        <label for="algorithm-select" style="margin-right:0.5rem">Algorithm:</label>
+        <select id="algorithm-select" name="algorithm"></select>
+    </div>
+    <div style="margin-top:0.25rem;display:flex;justify-content:end">
+        <label for="compare-select" style="margin-right:0.5rem">Compare:</label>
+        <select id="compare-select" name="compare">
+            <option value="NONE">-</option>
+        </select>
+    </div>
+</form>
 }
