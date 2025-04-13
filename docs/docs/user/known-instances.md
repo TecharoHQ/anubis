@@ -12,7 +12,6 @@ This page contains a non-exhaustive list with all websites using Anubis.
   </details>
 * https://gitlab.gnome.org/
 * https://scioly.org/
-* https://scioly.org/
 * https://bugs.winehq.org/
 * https://svnweb.freebsd.org/
 * https://trac.ffmpeg.org/
