@@ -13,7 +13,9 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -64,10 +66,11 @@ var (
 )
 
 type Options struct {
-	Next           http.Handler
-	Policy         *policy.ParsedConfig
-	ServeRobotsTXT bool
-	PrivateKey     ed25519.PrivateKey
+	Next            http.Handler
+	Policy          *policy.ParsedConfig
+	RedirectDomains []string
+	ServeRobotsTXT  bool
+	PrivateKey      ed25519.PrivateKey
 
 	CookieDomain      string
 	CookieName        string
@@ -171,6 +174,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
 		redir := r.FormValue("redir")
+		urlParsed, err := url.Parse(redir)
+		if err != nil {
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			return
+		}
+
+		if len(urlParsed.Host) > 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("This Redirect domain is not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			return
+		}
+
 		if redir != "" {
 			http.Redirect(w, r, redir, http.StatusFound)
 			return
@@ -466,6 +480,16 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	response := r.FormValue("response")
 	redir := r.FormValue("redir")
+	urlParsed, err := url.Parse(redir)
+	if err != nil {
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+
+	if len(urlParsed.Host) > 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("This Redirect domain is not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
