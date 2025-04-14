@@ -51,14 +51,14 @@ var (
 	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
 	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
+	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to empty string to disable proxying")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
 	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
-	webmasterEmail		 = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -189,9 +189,13 @@ func main() {
 		return
 	}
 
-	rp, err := makeReverseProxy(*target)
-	if err != nil {
-		log.Fatalf("can't make reverse proxy: %v", err)
+	var rp http.Handler
+	if strings.TrimSpace(*target) != "" {
+		var err error
+		rp, err = makeReverseProxy(*target)
+		if err != nil {
+			log.Fatalf("can't make reverse proxy: %v", err)
+		}
 	}
 
 	policy, err := libanubis.LoadPoliciesOrDefault(*policyFname, *challengeDifficulty)
@@ -261,7 +265,7 @@ func main() {
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
 		Target:            *target,
-		WebmasterEmail:     *webmasterEmail,
+		WebmasterEmail:    *webmasterEmail,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
