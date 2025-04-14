@@ -148,9 +148,10 @@ func New(opts Options) (*Server, error) {
 
 	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/make-challenge", result.MakeChallenge)
 	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
+	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/check", result.maybeReverseProxyHttpStatusOnly)
 	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/test-error", result.TestError)
 
-	mux.HandleFunc("/", result.MaybeReverseProxy)
+	mux.HandleFunc("/", result.maybeReverseProxyOrPage)
 
 	result.mux = mux
 
@@ -172,6 +173,22 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
+func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
+	if s.next == nil {
+		redir := r.FormValue("redir")
+		if redir != "" {
+			http.Redirect(w, r, redir, http.StatusFound)
+			return
+		}
+
+		templ.Handler(
+			web.Base("You are not a bot!", web.StaticHappy()),
+		).ServeHTTP(w, r)
+	} else {
+		s.next.ServeHTTP(w, r)
+	}
+}
+
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.priv.Seed())
 
@@ -187,7 +204,15 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	return internal.SHA256sum(challengeData)
 }
 
-func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
+func (s *Server) maybeReverseProxyHttpStatusOnly(w http.ResponseWriter, r *http.Request) {
+	s.maybeReverseProxy(w, r, true)
+}
+
+func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request) {
+	s.maybeReverseProxy(w, r, false)
+}
+
+func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
@@ -233,7 +258,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
-		s.next.ServeHTTP(w, r)
+		s.ServeHTTPNext(w, r)
 		return
 	case config.RuleDeny:
 		s.ClearCookie(w)
@@ -264,21 +289,21 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
@@ -289,14 +314,14 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if randomJitter() {
 		r.Header.Add("X-Anubis-Status", "PASS-BRIEF")
 		lg.Debug("cookie is not enrolled into secondary screening")
-		s.next.ServeHTTP(w, r)
+		s.ServeHTTPNext(w, r)
 		return
 	}
 
@@ -304,7 +329,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
@@ -312,7 +337,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
@@ -329,16 +354,22 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, rule)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	slog.Debug("all checks passed")
 	r.Header.Add("X-Anubis-Status", "PASS-FULL")
-	s.next.ServeHTTP(w, r)
+	s.ServeHTTPNext(w, r)
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
+	if returnHTTPStatusOnly {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Authorization required"))
+		return
+	}
+
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),

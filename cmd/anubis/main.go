@@ -51,7 +51,7 @@ var (
 	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
 	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
+	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to empty string to disable proxying")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
@@ -195,9 +195,13 @@ func main() {
 		return
 	}
 
-	rp, err := makeReverseProxy(*target)
-	if err != nil {
-		log.Fatalf("can't make reverse proxy: %v", err)
+	var rp http.Handler
+	if strings.TrimSpace(*target) != "" {
+		var err error
+		rp, err = makeReverseProxy(*target)
+		if err != nil {
+			log.Fatalf("can't make reverse proxy: %v", err)
+		}
 	}
 
 	policy, err := libanubis.LoadPoliciesOrDefault(*policyFname, *challengeDifficulty)
