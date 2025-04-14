@@ -50,8 +50,9 @@ var (
 	socketMode               = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
 	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
 	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
+	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to empty string to disable proxying")
+	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
@@ -196,6 +197,7 @@ func main() {
 	}
 
 	var rp http.Handler
+	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
 		var err error
 		rp, err = makeReverseProxy(*target)
@@ -256,6 +258,16 @@ func main() {
 		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
 	}
 
+	var redirectDomainsList []string
+	domains := strings.Split(*redirectDomains, ",")
+	for _, domain := range domains {
+		_, err = url.Parse(domain)
+		if err != nil {
+			log.Fatalf("cannot parse redirect-domain %q: %s", domain, err.Error())
+		}
+		redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
+	}
+
 	s, err := libanubis.New(libanubis.Options{
 		Next:              rp,
 		Policy:            policy,
@@ -265,6 +277,7 @@ func main() {
 		CookiePartitioned: *cookiePartitioned,
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
+		RedirectDomains:   redirectDomainsList,
 		Target:            *target,
 		WebmasterEmail:    *webmasterEmail,
 	})
