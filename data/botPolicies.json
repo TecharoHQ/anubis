@@ -589,7 +589,7 @@
       ]
     },
     {
-      "name": "Internet Archive",
+      "name": "internet-archive",
       "action": "ALLOW",
       "remote_addresses": [
         "207.241.224.0/20",
