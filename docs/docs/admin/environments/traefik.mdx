@@ -80,11 +80,11 @@ This is an example of the needed labels to configure Traefik on the Anubis Conta
 
 ```yml
 labels:
-  - traefik.enable=true # Enabeling Traefik
+  - traefik.enable=true # Enabling Traefik
   - traefik.docker.network=traefik # Telling Traefik which network to use
   - traefik.http.routers.anubis.priority=1 # Setting Anubis to the lowest priority, so it only takes the slack
-  - traefik.http.routers.anubis.rule=PathRegexp(`.*`) # wildcard match anything
-  - traefik.http.routers.anubis.entrypoints=websecure # Liste on HTTPS
+  - traefik.http.routers.anubis.rule=PathRegexp(`.*`) # Wildcard match every path
+  - traefik.http.routers.anubis.entrypoints=websecure # Listen on HTTPS
   - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik to which port it should route requests
   - traefik.http.routers.anubis.service=anubis # Telling Traefik to use the above specified port
   - traefik.http.routers.anubis.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
@@ -125,7 +125,7 @@ services:
       # Enable Traefik
       - traefik.enable=true
       - traefik.docker.network=traefik
-      # Redirect anny HTTP to HTTPS
+      # Redirect any HTTP to HTTPS
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.web.rule=PathPrefix(`/`)
       - traefik.http.routers.web.entrypoints=web
@@ -137,7 +137,7 @@ services:
     environment:
       # Telling Anubis, where to listen for Traefik
       - BIND=:8080
-      # Telling Anubis to redirect to the internal Docker Network to Traefik
+      # Telling Anubis to point to Traefik via the Docker network
       - TARGET=http://traefik:3923
     networks:
       - traefik
