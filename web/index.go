@@ -12,8 +12,8 @@ func BaseWithOGTags(title string, body templ.Component, ogTags map[string]string
 	return base(title, body, ogTags)
 }
 
-func Index() templ.Component {
-	return index()
+func Index(redir string) templ.Component {
+	return index(redir)
 }
 
 func ErrorPage(msg string, mail string) templ.Component {

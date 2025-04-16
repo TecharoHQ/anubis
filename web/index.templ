@@ -79,7 +79,7 @@ templ base(title string, body templ.Component, ogTags map[string]string) {
 </html>
 }
 
-templ index() {
+templ index(redir string) {
 <div class="centered-div">
     <img
             id="image"
@@ -93,6 +93,12 @@ templ index() {
             src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
     anubis.Version }
     />
+    <form id="pass_form" method="post" action="/.within.website/x/cmd/anubis/api/pass-challenge">
+        <input type="hidden" name="response" />
+        <input type="hidden" name="nonce" />
+        <input type="hidden" name="redir" value={redir} />
+        <input type="hidden" name="elapsedTime" />
+    </form>
     <p id="status">Loading...</p>
     <script async type="module" src={
     "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
