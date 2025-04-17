@@ -186,3 +186,92 @@ Then point your Ingress to the Anubis port:
               # diff-add
               name: anubis
 ```
+
+## Nginx
+
+The below is a very minimal Nginx config example to demonstrate how to
+insert Anubis in the middle of a standard nginx configuration.
+Do not forget to add `access_log`, `server_tokens`, etc. as usual.
+Also one does have to correct the paths, eg for SSL keys/certs.
+
+First we define `conf-anubis.inc` where we include standard Anubis configuration:
+```
+# Serve Anubis images directly instead of having it pass through to the service
+# Place `happy.webp`, `pensive.webp` and `reject.webp` in the directory.
+location /.within.website/x/cmd/anubis/static/img/
+{
+        alias /www/anubis/www/img/;
+}
+
+# Forward to anubis
+location /
+{
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass http://anubis;
+}
+```
+
+Then we define a Anubis backend as `server-anubis.conf`, which should
+be loaded from /etc/nginx/nginx.conf with a `include server-*.conf`.
+```
+upstream anubis
+{
+        # Try anubis first over a UNIX socket
+        server unix:/run/anubis/nginx.sock;
+	# Use the HTTP variant if you have the BIND on TCP:
+	# server http://127.0.0.1:8923;
+
+        # Fall back to avoid anubis when it is unavailable
+        # Especially useful when the socket is down
+        # as the service did not start or has other issues
+        server unix:/run/nginx.sock backup;
+}
+```
+
+In your normal server definition construct it like, per vhost eg
+for `server-example.com.conf` we could have:
+```
+# HTTP - Redirect all HTTP to HTTPS
+server {
+	listen 80;
+	listen [::]:80;
+
+	server_name example.com www.example.com;
+
+	location / {
+		return 301 https://$host$request_uri;
+	}
+}
+
+# HTTPS - Anubis listener (port 443)
+server {
+	# Listen on 443 with SSL
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+
+	# Include the above Anubis configuration to proxy requests to Anubis
+	include "conf-anubis.inc";
+
+	server_name example.com www.example.com;
+	root "/www/example.com/www/";
+
+	ssl_certificate		example.com.crt;
+	ssl_certificate_key	example.com.key;
+}
+
+# HTTPS - real site (unix socket)
+# This is where the requests passing validly through Anubis end up
+# Previously instead of the unix listener one would have the 443 listen
+server {
+	listen unix:/run/nginx.sock;
+
+	server_name example.com www.example.com;
+	root "/www/example.com/www/";
+	index index.html;
+
+	# Your normal configuration can go here
+	# location .php { fastcgi...} etc.
+}
+```
+
