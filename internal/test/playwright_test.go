@@ -98,7 +98,7 @@ const (
 	actionChallenge action = "CHALLENGE"
 
 	placeholderIP     = "fd11:5ee:bad:c0de::"
-	playwrightVersion = "1.50.1"
+	playwrightVersion = "1.51.1"
 )
 
 type action string
@@ -119,6 +119,9 @@ func doesNPXExist(t *testing.T) {
 }
 
 func run(t *testing.T, command string) string {
+	if testing.Short() {
+		t.Skip("skipping integration smoke testing in short mode")
+	}
 	t.Helper()
 
 	shPath, err := exec.LookPath("sh")
