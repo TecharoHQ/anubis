@@ -589,6 +589,15 @@
       ]
     },
     {
+      "name": "internet-archive",
+      "action": "ALLOW",
+      "remote_addresses": [
+        "207.241.224.0/20",
+        "208.70.24.0/21",
+        "2620:0:9c0::/48"
+      ]
+    },
+    {
       "name": "kagibot",
       "user_agent_regex": "\\+https\\://kagi\\.com/bot",
       "action": "ALLOW",
