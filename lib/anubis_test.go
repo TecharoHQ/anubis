@@ -15,12 +15,12 @@ import (
 func loadPolicies(t *testing.T, fname string) *policy.ParsedConfig {
 	t.Helper()
 
-	policy, err := LoadPoliciesOrDefault("", anubis.DefaultDifficulty)
+	anubisPolicy, err := LoadPoliciesOrDefault("", anubis.DefaultDifficulty)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return policy
+	return anubisPolicy
 }
 
 func spawnAnubis(t *testing.T, opts Options) *Server {

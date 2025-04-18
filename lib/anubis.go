@@ -263,21 +263,21 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 
@@ -288,7 +288,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 
@@ -303,7 +303,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
@@ -311,7 +311,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 
@@ -328,7 +328,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, cr, rule)
 		return
 	}
 
@@ -337,21 +337,36 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	s.next.ServeHTTP(w, r)
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr CheckResult, rule *policy.Bot) {
+	lg := slog.With(
+		"user_agent", r.UserAgent(),
+		"accept_language", r.Header.Get("Accept-Language"),
+		"priority", r.Header.Get("Priority"),
+		"x-forwarded-for",
+		r.Header.Get("X-Forwarded-For"),
+		"x-real-ip", r.Header.Get("X-Real-Ip"),
+	)
+
+	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+
 	var ogTags map[string]string = nil
 	if s.opts.OGPassthrough {
 		var err error
 		ogTags, err = s.OGTags.GetOGTags(r.URL)
 		if err != nil {
-			slog.Error("failed to get OG tags", "err", err)
+			lg.Error("failed to get OG tags", "err", err)
 			ogTags = nil
 		}
 	}
-	handler := internal.NoStoreCache(
-		templ.Handler(
-			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(), ogTags),
-		),
-	)
+
+	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
+	if err != nil {
+		lg.Error("render failed", "err", err)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+
+	handler := internal.NoStoreCache(templ.Handler(component))
 	handler.ServeHTTP(w, r)
 }
 

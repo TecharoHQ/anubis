@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# PROVIDE: anubis
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name=anubis
+rcvar=anubis_enable
+
+load_rc_config ${name}
+
+: ${anubis_enable="NO"}
+: ${anubis_user="anubis"}
+: ${anubis_bin="/usr/local/bin/anubis"}
+: ${anubis_environment_file="/etc/anubis.env"}
+
+command=/usr/sbin/daemon
+procname=${anubis_bin}
+pidfile=/var/run/anubis.pid
+logfile=/var/log/anubis.log
+command_args="-c -f -p ${pidfile} -o ${logfile} ${procname}"
+start_precmd=anubis_precmd
+
+anubis_precmd () {
+        export $(xargs < ${anubis_environment_file})
+        if [ ! -f ${logfile} ]; then
+                install -o anubis /dev/null ${logfile}
+        fi
+        install -o anubis /dev/null ${pidfile}
+}
+
+run_rc_command "$1"

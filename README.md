@@ -33,3 +33,11 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 ## Packaging Status
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/anubis-anti-crawler.svg)](https://repology.org/project/anubis-anti-crawler/versions)
+
+## Contributors
+
+<a href="https://github.com/TecharoHQ/anubis/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=TecharoHQ/anubis" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).

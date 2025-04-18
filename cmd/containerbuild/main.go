@@ -123,10 +123,10 @@ func parseImageList(imageList string) ([]image, error) {
 		// reg.xeiaso.net/techaro/anubis:latest
 		// repository: reg.xeiaso.net/techaro/anubis
 		// tag:        latest
-		parts := strings.SplitN(img, ":", 2)
+		index := strings.LastIndex(img, ":")
 		result = append(result, image{
-			repository: parts[0],
-			tag:        parts[1],
+			repository: img[:index],
+			tag:        img[index+1:],
 		})
 	}
 

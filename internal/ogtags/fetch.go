@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("page not found") /*todo: refactor into common errors lib? */
-	emptyMap    = map[string]string{}          // used to indicate an empty result in the cache. Can't use nil as it would be a cache miss.
+	ErrOgHandled = errors.New("og: handled error") // used to indicate that the error was handled and should not be logged
+	emptyMap     = map[string]string{}             // used to indicate an empty result in the cache. Can't use nil as it would be a cache miss.
 )
 
 func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
@@ -31,7 +31,7 @@ func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
 	if resp.StatusCode != http.StatusOK {
 		slog.Debug("og: received non-OK status code", "url", urlStr, "status", resp.StatusCode)
 		c.cache.Set(urlStr, emptyMap, c.ogTimeToLive) // Cache empty result for non-successful status codes
-		return nil, ErrNotFound
+		return nil, fmt.Errorf("%w: page not found", ErrOgHandled)
 	}
 
 	// Check content type
@@ -43,11 +43,13 @@ func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
 		mediaType, _, err := mime.ParseMediaType(ct)
 		if err != nil {
 			// Malformed Content-Type header
-			return nil, fmt.Errorf("invalid Content-Type '%s': %w", ct, err)
+			slog.Debug("og: malformed Content-Type header", "url", urlStr, "contentType", ct)
+			return nil, fmt.Errorf("%w malformed Content-Type header: %w", ErrOgHandled, err)
 		}
 
 		if mediaType != "text/html" && mediaType != "application/xhtml+xml" {
-			return nil, fmt.Errorf("unsupported Content-Type: %s", mediaType)
+			slog.Debug("og: unsupported Content-Type", "url", urlStr, "contentType", mediaType)
+			return nil, fmt.Errorf("%w unsupported Content-Type: %s", ErrOgHandled, mediaType)
 		}
 	}
 
