@@ -5,7 +5,7 @@ import (
 "github.com/TecharoHQ/anubis/xess"
 )
 
-templ base(title string, body templ.Component, ogTags map[string]string) {
+templ base(title string, body templ.Component, challenge any, ogTags map[string]string) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,6 +56,9 @@ templ base(title string, body templ.Component, ogTags map[string]string) {
         }
     </style>
     @templ.JSONScript("anubis_version", anubis.Version)
+    if challenge != nil {
+        @templ.JSONScript("anubis_challenge", challenge)
+    }
 
 </head>
 <body id="top">
