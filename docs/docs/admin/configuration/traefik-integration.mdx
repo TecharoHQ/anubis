@@ -36,7 +36,7 @@ traefik[Traefik]
 anubis[Anubis]
 target[Target]
 
-user-->|:443 - Requestiong Service|traefik
+user-->|:443 - Requesting Service|traefik
 traefik-->|:8080 - Passing to Anubis|anubis
 anubis-->|:3923 - Passing back to Traefik|traefik
 traefik-->|:80 - Passing to the target|target
