@@ -33,5 +33,6 @@ func init() {
 }
 
 func Mount(mux *http.ServeMux) {
-	mux.Handle("/.within.website/x/xess/", internal.UnchangingCache(http.StripPrefix("/.within.website/x/xess/", http.FileServerFS(Static))))
+	prefix := anubis.BasePrefix + "/.within.website/x/xess/"
+	mux.Handle(prefix, internal.UnchangingCache(http.StripPrefix(prefix, http.FileServerFS(Static))))
 }
