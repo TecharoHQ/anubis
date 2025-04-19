@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Embedded challenge data in initial HTML response to improve performance
 - Whitelisted [DuckDuckBot](https://duckduckgo.com/duckduckgo-help-pages/results/duckduckbot/) in botPolicies
 - Improvements to build scripts to make them less independent of the build host
+- Added documentation on how to use Anubis with Traefik in Docker
 - Improved the OpenGraph error logging
 - Added `Opera` to the `generic-browser` bot policy rule
 - Added FreeBSD rc.d script so can be run as a FreeBSD daemon.
