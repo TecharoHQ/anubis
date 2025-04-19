@@ -5,7 +5,6 @@ package xess
 
 import (
 	"embed"
-	"fmt"
 	"github.com/TecharoHQ/anubis/internal"
 	"net/http"
 	"path/filepath"
@@ -35,6 +34,5 @@ func init() {
 // Mount registers the xess static file handlers on the given mux
 func Mount(mux *http.ServeMux) {
 	prefix := anubis.BasePrefix + "/.within.website/x/xess/"
-	fmt.Println(anubis.BasePrefix)
 	mux.Handle(prefix, internal.UnchangingCache(http.StripPrefix(prefix, http.FileServerFS(Static))))
 }
