@@ -32,7 +32,9 @@ func init() {
 	URL = URL + "?cachebuster=" + anubis.Version
 }
 
+// Mount registers the xess static file handlers on the given mux
 func Mount(mux *http.ServeMux) {
 	prefix := anubis.BasePrefix + "/.within.website/x/xess/"
+
 	mux.Handle(prefix, internal.UnchangingCache(http.StripPrefix(prefix, http.FileServerFS(Static))))
 }

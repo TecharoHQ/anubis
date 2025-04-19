@@ -80,6 +80,7 @@ type Options struct {
 	Target        string
 
 	WebmasterEmail string
+	BasePrefix     string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -121,6 +122,8 @@ func New(opts Options) (*Server, error) {
 		opts.PrivateKey = priv
 	}
 
+	anubis.BasePrefix = opts.BasePrefix
+
 	result := &Server{
 		next:       opts.Next,
 		priv:       opts.PrivateKey,
@@ -134,26 +137,42 @@ func New(opts Options) (*Server, error) {
 	mux := http.NewServeMux()
 	xess.Mount(mux)
 
-	mux.Handle(anubis.StaticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(anubis.StaticPath, http.FileServerFS(web.Static)))))
+	// Helper to add global prefix
+	registerWithPrefix := func(pattern string, handler http.Handler, method string) {
+		if method != "" {
+			method = method + " " // methods must end with a space to register with them
+		}
 
-	if opts.ServeRobotsTXT {
-		mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
-		})
+		// Ensure there's no double slash when concatenating BasePrefix and pattern
+		basePrefix := strings.TrimSuffix(anubis.BasePrefix, "/")
+		prefix := method + basePrefix
 
-		mux.HandleFunc("/.well-known/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
-		})
+		// If pattern doesn't start with a slash, add one
+		if !strings.HasPrefix(pattern, "/") {
+			pattern = "/" + pattern
+		}
+
+		mux.Handle(prefix+pattern, handler)
 	}
 
-	// mux.HandleFunc("GET /.within.website/x/cmd/anubis/static/js/main.mjs", serveMainJSWithBestEncoding)
+	// Ensure there's no double slash when concatenating BasePrefix and StaticPath
+	stripPrefix := strings.TrimSuffix(anubis.BasePrefix, "/") + anubis.StaticPath
+	registerWithPrefix(anubis.StaticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(stripPrefix, http.FileServerFS(web.Static)))), "")
 
-	mux.HandleFunc("POST /.within.website/x/cmd/anubis/api/make-challenge", result.MakeChallenge)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/pass-challenge", result.PassChallenge)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/check", result.maybeReverseProxyHttpStatusOnly)
-	mux.HandleFunc("GET /.within.website/x/cmd/anubis/api/test-error", result.TestError)
+	if opts.ServeRobotsTXT {
+		registerWithPrefix("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
+		}), "GET")
+		registerWithPrefix("/.well-known/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
+		}), "GET")
+	}
 
-	mux.HandleFunc("/", result.maybeReverseProxyOrPage)
+	registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
+	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
+	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
+	registerWithPrefix(anubis.APIPrefix+"test-error", http.HandlerFunc(result.TestError), "GET")
+	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
 	result.mux = mux
 
@@ -561,6 +580,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Adjust cookie path if base prefix is not empty
+	cookiePath := "/"
+	if anubis.BasePrefix != "" {
+		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
+	}
 	// generate JWT cookie
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
 		"challenge": challenge,
@@ -585,7 +609,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		SameSite:    http.SameSiteLaxMode,
 		Domain:      s.opts.CookieDomain,
 		Partitioned: s.opts.CookiePartitioned,
-		Path:        "/",
+		Path:        cookiePath,
 	})
 
 	challengesValidated.Inc()

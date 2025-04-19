@@ -38,6 +38,7 @@ import (
 )
 
 var (
+	basePrefix               = flag.String("base-prefix", "", "base prefix (root URL) the application is served under e.g. /myapp")
 	bind                     = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
@@ -76,7 +77,7 @@ func keyFromHex(value string) (ed25519.PrivateKey, error) {
 }
 
 func doHealthCheck() error {
-	resp, err := http.Get("http://localhost" + *metricsBind + "/metrics")
+	resp, err := http.Get("http://localhost" + *metricsBind + anubis.BasePrefix + "/metrics")
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
@@ -178,13 +179,6 @@ func main() {
 
 	internal.InitSlog(*slogLevel)
 
-	if *healthcheck {
-		if err := doHealthCheck(); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-
 	if *extractResources != "" {
 		if err := extractEmbedFS(data.BotPolicies, ".", *extractResources); err != nil {
 			log.Fatal(err)
@@ -230,6 +224,11 @@ func main() {
 			Action: config.RuleBenchmark,
 		}}
 	}
+	if *basePrefix != "" && !strings.HasPrefix(*basePrefix, "/") {
+		log.Fatalf("[misconfiguration] base-prefix must start with a slash, eg: /%s", *basePrefix)
+	} else if strings.HasSuffix(*basePrefix, "/") {
+		log.Fatalf("[misconfiguration] base-prefix must not end with a slash")
+	}
 
 	var priv ed25519.PrivateKey
 	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
@@ -273,6 +272,7 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
+		BasePrefix:        *basePrefix,
 		Next:              rp,
 		Policy:            policy,
 		ServeRobotsTXT:    *robotsTxt,
@@ -298,7 +298,6 @@ func main() {
 		wg.Add(1)
 		go metricsServer(ctx, wg.Done)
 	}
-
 	go startDecayMapCleanup(ctx, s)
 
 	var h http.Handler
@@ -320,6 +319,7 @@ func main() {
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
+		"base-prefix", *basePrefix,
 	)
 
 	go func() {
@@ -341,11 +341,19 @@ func metricsServer(ctx context.Context, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle(anubis.BasePrefix+"/metrics", promhttp.Handler())
 
 	srv := http.Server{Handler: mux}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
+
+	if *healthcheck {
+		log.Println("running healthcheck")
+		if err := doHealthCheck(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	go func() {
 		<-ctx.Done()

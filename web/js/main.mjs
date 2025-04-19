@@ -14,8 +14,8 @@ const u = (url = "", params = {}) => {
   return result.toString();
 };
 
-const imageURL = (mood, cacheBuster) =>
-  u(`/.within.website/x/cmd/anubis/static/img/${mood}.webp`, { cacheBuster });
+const imageURL = (mood, cacheBuster, basePrefix) =>
+  u(`${basePrefix}/.within.website/x/cmd/anubis/static/img/${mood}.webp`, { cacheBuster });
 
 const dependencies = [
   {
@@ -81,6 +81,7 @@ function showContinueBar(hash, nonce, t0, t1) {
   const title = document.getElementById('title');
   const progress = document.getElementById('progress');
   const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
+  const basePrefix = JSON.parse(document.getElementById('anubis_base_prefix').textContent);
   const details = document.querySelector('details');
   let userReadDetails = false;
 
@@ -103,7 +104,7 @@ function showContinueBar(hash, nonce, t0, t1) {
     ohNoes({
       titleMsg: "Your context is not secure!",
       statusMsg: `Try connecting over HTTPS or let the admin know to set up HTTPS. For more information, see <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure">MDN</a>.`,
-      imageSrc: imageURL("reject", anubisVersion),
+      imageSrc: imageURL("reject", anubisVersion, basePrefix),
     });
     return;
   }
@@ -128,7 +129,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       ohNoes({
         titleMsg: `Missing feature ${name}`,
         statusMsg: msg,
-        imageSrc: imageURL("reject", anubisVersion),
+        imageSrc: imageURL("reject", anubisVersion, basePrefix),
       });
     }
   }
@@ -140,7 +141,7 @@ function showContinueBar(hash, nonce, t0, t1) {
     ohNoes({
       titleMsg: "Challenge error!",
       statusMsg: `Failed to resolve check algorithm. You may want to reload the page.`,
-      imageSrc: imageURL("reject", anubisVersion),
+      imageSrc: imageURL("reject", anubisVersion, basePrefix),
     });
     return;
   }
@@ -198,7 +199,7 @@ function showContinueBar(hash, nonce, t0, t1) {
 
     title.innerHTML = "Success!";
     status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
-    image.src = imageURL("happy", anubisVersion);
+    image.src = imageURL("happy", anubisVersion, basePrefix);
     progress.style.display = "none";
 
     if (userReadDetails) {
@@ -223,7 +224,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       function onDetailsExpand() {
         const redir = window.location.href;
         window.location.replace(
-          u("/.within.website/x/cmd/anubis/api/pass-challenge", {
+          u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
             response: hash,
             nonce,
             redir,
@@ -239,7 +240,7 @@ function showContinueBar(hash, nonce, t0, t1) {
       setTimeout(() => {
         const redir = window.location.href;
         window.location.replace(
-          u("/.within.website/x/cmd/anubis/api/pass-challenge", {
+          u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
             response: hash,
             nonce,
             redir,
@@ -253,7 +254,7 @@ function showContinueBar(hash, nonce, t0, t1) {
     ohNoes({
       titleMsg: "Calculation error!",
       statusMsg: `Failed to calculate challenge: ${err.message}`,
-      imageSrc: imageURL("reject", anubisVersion),
+      imageSrc: imageURL("reject", anubisVersion, basePrefix),
     });
   }
 })();

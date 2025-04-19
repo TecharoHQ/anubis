@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
@@ -250,6 +251,144 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 			if bot.Challenge.ReportAs != i {
 				t.Errorf("Challenge.ReportAs is wrong, wanted %d, got: %d", i, bot.Challenge.ReportAs)
+			}
+		})
+	}
+}
+
+func TestBasePrefix(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "OK")
+	})
+
+	testCases := []struct {
+		name       string
+		basePrefix string
+		path       string
+		expected   string
+	}{
+		{
+			name:       "no prefix",
+			basePrefix: "",
+			path:       "/.within.website/x/cmd/anubis/api/make-challenge",
+			expected:   "/.within.website/x/cmd/anubis/api/make-challenge",
+		},
+		{
+			name:       "with prefix",
+			basePrefix: "/myapp",
+			path:       "/myapp/.within.website/x/cmd/anubis/api/make-challenge",
+			expected:   "/myapp/.within.website/x/cmd/anubis/api/make-challenge",
+		},
+		{
+			name:       "with prefix and trailing slash",
+			basePrefix: "/myapp/",
+			path:       "/myapp/.within.website/x/cmd/anubis/api/make-challenge",
+			expected:   "/myapp/.within.website/x/cmd/anubis/api/make-challenge",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Reset the global BasePrefix before each test
+			anubis.BasePrefix = ""
+
+			pol := loadPolicies(t, "")
+			pol.DefaultDifficulty = 4
+
+			srv := spawnAnubis(t, Options{
+				Next:       h,
+				Policy:     pol,
+				BasePrefix: tc.basePrefix,
+			})
+
+			ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+			defer ts.Close()
+
+			// Test API endpoint with prefix
+			resp, err := ts.Client().Post(ts.URL+tc.path, "", nil)
+			if err != nil {
+				t.Fatalf("can't request challenge: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("expected status code %d, got: %d", http.StatusOK, resp.StatusCode)
+			}
+
+			var chall challenge
+			if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
+				t.Fatalf("can't read challenge response body: %v", err)
+			}
+
+			if chall.Challenge == "" {
+				t.Errorf("expected non-empty challenge")
+			}
+
+			// Test cookie path when passing challenge
+			// Find a nonce that produces a hash with the required number of leading zeros
+			nonce := 0
+			var calculated string
+			for {
+				calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
+				calculated = internal.SHA256sum(calcString)
+				if strings.HasPrefix(calculated, strings.Repeat("0", pol.DefaultDifficulty)) {
+					break
+				}
+				nonce++
+			}
+			elapsedTime := 420
+			redir := "/"
+
+			cli := ts.Client()
+			cli.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			}
+
+			// Construct the correct path for pass-challenge
+			passChallengePath := tc.path
+			passChallengePath = passChallengePath[:strings.LastIndex(passChallengePath, "/")+1] + "pass-challenge"
+
+			req, err := http.NewRequest(http.MethodGet, ts.URL+passChallengePath, nil)
+			if err != nil {
+				t.Fatalf("can't make request: %v", err)
+			}
+
+			q := req.URL.Query()
+			q.Set("response", calculated)
+			q.Set("nonce", fmt.Sprint(nonce))
+			q.Set("redir", redir)
+			q.Set("elapsedTime", fmt.Sprint(elapsedTime))
+			req.URL.RawQuery = q.Encode()
+
+			resp, err = cli.Do(req)
+			if err != nil {
+				t.Fatalf("can't do challenge passing: %v", err)
+			}
+
+			if resp.StatusCode != http.StatusFound {
+				t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
+			}
+
+			// Check cookie path
+			var ckie *http.Cookie
+			for _, cookie := range resp.Cookies() {
+				if cookie.Name == anubis.CookieName {
+					ckie = cookie
+					break
+				}
+			}
+			if ckie == nil {
+				t.Errorf("Cookie %q not found", anubis.CookieName)
+				return
+			}
+
+			expectedPath := "/"
+			if tc.basePrefix != "" {
+				expectedPath = strings.TrimSuffix(tc.basePrefix, "/") + "/"
+			}
+
+			if ckie.Path != expectedPath {
+				t.Errorf("cookie path is wrong, wanted %s, got: %s", expectedPath, ckie.Path)
 			}
 		})
 	}

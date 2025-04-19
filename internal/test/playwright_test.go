@@ -265,6 +265,130 @@ func TestPlaywrightBrowser(t *testing.T) {
 	}
 }
 
+func TestPlaywrightWithBasePrefix(t *testing.T) {
+	if os.Getenv("DONT_USE_NETWORK") != "" {
+		t.Skip("test requires network egress")
+		return
+	}
+
+	doesNPXExist(t)
+	startPlaywright(t)
+
+	pw := setupPlaywright(t)
+	basePrefix := "/myapp"
+	anubisURL := spawnAnubisWithOptions(t, basePrefix)
+
+	// Reset BasePrefix after test
+	t.Cleanup(func() {
+		anubis.BasePrefix = ""
+	})
+
+	browsers := []playwright.BrowserType{pw.Chromium}
+
+	for _, typ := range browsers {
+		t.Run(typ.Name()+"/basePrefix", func(t *testing.T) {
+			browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
+				ExposeNetwork: playwright.String("<loopback>"),
+			})
+			if err != nil {
+				t.Fatalf("could not connect to remote browser: %v", err)
+			}
+			defer browser.Close()
+
+			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
+				AcceptDownloads: playwright.Bool(false),
+				ExtraHttpHeaders: map[string]string{
+					"X-Real-Ip": "127.0.0.1",
+				},
+				UserAgent: playwright.String("Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0"),
+			})
+			if err != nil {
+				t.Fatalf("could not create context: %v", err)
+			}
+			defer ctx.Close()
+
+			page, err := ctx.NewPage()
+			if err != nil {
+				t.Fatalf("could not create page: %v", err)
+			}
+			defer page.Close()
+
+			// Test accessing the base URL with prefix
+			_, err = page.Goto(anubisURL+basePrefix, playwright.PageGotoOptions{
+				Timeout: pwTimeout(testCases[0], time.Now().Add(5*time.Second)),
+			})
+			if err != nil {
+				pwFail(t, page, "could not navigate to test server with base prefix: %v", err)
+			}
+
+			// Check if challenge page is displayed
+			image := page.Locator("#image[src*=pensive], #image[src*=happy]")
+			err = image.WaitFor(playwright.LocatorWaitForOptions{
+				Timeout: pwTimeout(testCases[0], time.Now().Add(5*time.Second)),
+			})
+			if err != nil {
+				pwFail(t, page, "could not wait for challenge image: %v", err)
+			}
+
+			isVisible, err := image.IsVisible()
+			if err != nil {
+				pwFail(t, page, "could not check if challenge image is visible: %v", err)
+			}
+			if !isVisible {
+				pwFail(t, page, "challenge image not visible")
+			}
+
+			// Complete the challenge
+			// Wait for the challenge to be solved
+			anubisTest := page.Locator("#anubis-test")
+			err = anubisTest.WaitFor(playwright.LocatorWaitForOptions{
+				Timeout: pwTimeout(testCases[0], time.Now().Add(30*time.Second)),
+			})
+			if err != nil {
+				pwFail(t, page, "could not wait for challenge to be solved: %v", err)
+			}
+
+			// Verify the challenge was solved
+			content, err := anubisTest.TextContent(playwright.LocatorTextContentOptions{})
+			if err != nil {
+				pwFail(t, page, "could not get text content: %v", err)
+			}
+
+			var tm int64
+			if _, err := fmt.Sscanf(content, "%d", &tm); err != nil {
+				pwFail(t, page, "unexpected output: %s", content)
+			}
+
+			// Check if the timestamp is reasonable
+			now := time.Now().Unix()
+			if tm < now-60 || tm > now+60 {
+				pwFail(t, page, "unexpected timestamp in output: %d not in range %d±60", tm, now)
+			}
+
+			// Check if cookie has the correct path
+			cookies, err := ctx.Cookies()
+			if err != nil {
+				pwFail(t, page, "could not get cookies: %v", err)
+			}
+
+			var found bool
+			for _, cookie := range cookies {
+				if cookie.Name == anubis.CookieName {
+					found = true
+					if cookie.Path != basePrefix+"/" {
+						t.Errorf("cookie path is wrong, wanted %s, got: %s", basePrefix+"/", cookie.Path)
+					}
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("Cookie %q not found", anubis.CookieName)
+			}
+		})
+	}
+}
+
 func buildBrowserConnect(name string) string {
 	u, _ := url.Parse(*playwrightServer)
 
@@ -431,6 +555,10 @@ func setupPlaywright(t *testing.T) *playwright.Playwright {
 }
 
 func spawnAnubis(t *testing.T) string {
+	return spawnAnubisWithOptions(t, "")
+}
+
+func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 	t.Helper()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -457,6 +585,7 @@ func spawnAnubis(t *testing.T) string {
 		Policy:         policy,
 		ServeRobotsTXT: true,
 		Target:         "http://" + host + ":" + port,
+		BasePrefix:     basePrefix,
 	})
 	if err != nil {
 		t.Fatalf("can't construct libanubis.Server: %v", err)

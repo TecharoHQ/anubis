@@ -51,6 +51,7 @@ Anubis uses these environment variables for configuration:
 
 | Environment Variable           | Default value           | Explanation                                                                                                                                                                                                                                                                                                          |
 | :----------------------------- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BASE_PREFIX`                  | unset                   | If set, adds a global prefix to all Anubis endpoints. For example, setting this to `/myapp` would make Anubis accessible at `/myapp/` instead of `/`. This is useful when running Anubis behind a reverse proxy that routes based on path prefixes.                                                                  |
 | `BIND`                         | `:8923`                 | The network address that Anubis listens on. For `unix`, set this to a path: `/run/anubis/instance.sock`                                                                                                                                                                                                              |
 | `BIND_NETWORK`                 | `tcp`                   | The address family that Anubis listens on. Accepts `tcp`, `unix` and anything Go's [`net.Listen`](https://pkg.go.dev/net#Listen) supports.                                                                                                                                                                           |
 | `COOKIE_DOMAIN`                | unset                   | The domain the Anubis challenge pass cookie should be set to. This should be set to the domain you bought from your registrar (EG: `techaro.lol` if your webapp is running on `anubis.techaro.lol`). See [here](https://stackoverflow.com/a/1063760) for more information.                                           |
@@ -71,6 +72,42 @@ Anubis uses these environment variables for configuration:
 | `WEBMASTER_EMAIL`              | unset                   | If set, shows a contact email address when rendering error pages. This email address will be how users can get in contact with administrators.                                                                                                                                                                       |
 
 For more detailed information on configuring Open Graph tags, please refer to the [Open Graph Configuration](./configuration/open-graph.mdx) page.
+
+### Using Base Prefix
+
+The `BASE_PREFIX` environment variable allows you to run Anubis behind a path prefix. This is useful when:
+
+- You want to host multiple services on the same domain
+- You're using a reverse proxy that routes based on path prefixes
+- You need to integrate Anubis with an existing application structure
+
+For example, if you set `BASE_PREFIX=/myapp`, Anubis will:
+
+- Serve its challenge page at `/myapp/` instead of `/`
+- Serve its API endpoints at `/myapp/.within.website/x/cmd/anubis/api/` instead of `/.within.website/x/cmd/anubis/api/`
+- Serve its static assets at `/myapp/.within.website/x/cmd/anubis/` instead of `/.within.website/x/cmd/anubis/`
+
+When using this feature with a reverse proxy:
+
+1. Configure your reverse proxy to route requests for the specified path prefix to Anubis
+2. Set the `BASE_PREFIX` environment variable to match the path prefix in your reverse proxy configuration
+3. Ensure that your reverse proxy preserves the path when forwarding requests to Anubis
+
+Example with Nginx:
+
+```nginx
+location /myapp/ {
+    proxy_pass http://anubis:8923/myapp;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+```
+
+With corresponding Anubis configuration:
+
+```
+BASE_PREFIX=/myapp
+```
 
 ### Key generation
 

@@ -10,16 +10,56 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
 	<html lang="en">
 		<head>
 			<title>{ title }</title>
-			<link rel="stylesheet" href={ xess.URL }/>
+			<link rel="stylesheet" href={ anubis.BasePrefix + xess.URL }/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<meta name="robots" content="noindex,nofollow"/>
 			for key, value := range ogTags {
 				<meta property={ key } content={ value }/>
 			}
+			<style>
+        body,
+        html {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .centered-div {
+            text-align: center;
+        }
+
+        #status {
+            font-variant-numeric: tabular-nums;
+        }
+
+        #progress {
+            display: none;
+            width: min(20rem, 90%);
+            height: 2rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 1rem 0 2rem;
+            outline-color: #b16286;
+            outline-offset: 2px;
+            outline-style: solid;
+            outline-width: 4px;
+        }
+
+        .bar-inner {
+            background-color: #b16286;
+            height: 100%;
+            width: 0;
+            transition: width 0.25s ease-in;
+        }
+    </style>
 			@templ.JSONScript("anubis_version", anubis.Version)
 			if challenge != nil {
 				@templ.JSONScript("anubis_challenge", challenge)
 			}
+			@templ.JSONScript("anubis_base_prefix", anubis.BasePrefix)
 		</head>
 		<body id="top">
 			<main>
@@ -44,20 +84,10 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
 
 templ index() {
 	<div class="centered-div">
-		<img
-			id="image"
-			style="width:100%;max-width:256px;"
-			src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-    anubis.Version }
-		/>
-		<img
-			style="display:none;"
-			style="width:100%;max-width:256px;"
-			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
-    anubis.Version }
-		/>
+		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
+		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
 		<p id="status">Loading...</p>
-		<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
+		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
 		<div id="progress" role="progressbar" aria-labelledby="status">
 			<div class="bar-inner"></div>
 		</div>
@@ -74,7 +104,9 @@ templ index() {
 				resources inaccessible for everyone.
 			</p>
 			<p>
-				Anubis is a compromise. Anubis uses a <a href="https://anubis.techaro.lol/docs/design/why-proof-of-work">Proof-of-Work</a>
+				Anubis is a compromise. Anubis uses a <a
+	href="https://anubis.techaro.lol/docs/design/why-proof-of-work"
+>Proof-of-Work</a>
 				scheme in the vein of <a href="https://en.wikipedia.org/wiki/Hashcash">Hashcash</a>, a proposed
 				proof-of-work scheme for reducing email spam. The idea is that at individual scales the additional load is
 				ignorable, but at mass scraper levels it adds up and makes scraping much more expensive.
@@ -105,17 +137,12 @@ templ index() {
 
 templ errorPage(message string, mail string) {
 	<div class="centered-div">
-		<img
-			id="image"
-			alt="Sad Anubis"
-			style="width:100%;max-width:256px;"
-			src={ "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }
-		/>
+		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
 		<button onClick="window.location.reload();">Try again</button>
 		if mail != "" {
 			<p>
-				<a href="/">Go home</a> or if you believe you should not be blocked, please contact the webmaster at 
+				<a href="/">Go home</a> or if you believe you should not be blocked, please contact the webmaster at
 				<a href={ "mailto:" + templ.SafeURL(mail) }>
 					{ mail }
 				</a>
@@ -141,7 +168,9 @@ templ StaticHappy() {
 templ bench() {
 	<div style="height:20rem;display:flex">
 		<table style="margin-top:1rem;display:grid;grid-template:auto 1fr/auto auto;gap:0 0.5rem">
-			<thead style="border-bottom:1px solid black;padding:0.25rem 0;display:grid;grid-template:1fr/subgrid;grid-column:1/-1">
+			<thead
+				style="border-bottom:1px solid black;padding:0.25rem 0;display:grid;grid-template:1fr/subgrid;grid-column:1/-1"
+			>
 				<tr id="table-header" style="display:contents">
 					<th style="width:4.5rem">Time</th>
 					<th style="width:4rem">Iters</th>
@@ -159,14 +188,9 @@ templ bench() {
 			></tbody>
 		</table>
 		<div class="centered-div">
-			<img
-				id="image"
-				style="width:100%;max-width:256px;"
-				src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-        anubis.Version }
-			/>
+			<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
 			<p id="status" style="max-width:256px">Loading...</p>
-			<script async type="module" src={ "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
+			<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
 			<div id="sparkline"></div>
 			<noscript>
 				<p>Running the benchmark tool requires JavaScript to be enabled.</p>

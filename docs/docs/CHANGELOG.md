@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added example nginx configuration to documentation
 - Added example Apache configuration to the documentation [#277](https://github.com/TecharoHQ/anubis/issues/277)
 - Move per-environment configuration details into their own pages
+- Added support for running anubis behind a prefix (e.g. `/myapp`)
 - Added headers support to bot policy rules
 - Moved configuration file from JSON to YAML by default
 - Added documentation on how to use Anubis with Traefik in Docker
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved all CSS inline to the Xess package, changed colors to be CSS variables
 - Set or append to `X-Forwarded-For` header unless the remote connects over a loopback address [#328](https://github.com/TecharoHQ/anubis/issues/328)
 - Fixed mojeekbot user agent regex
+- Added support for running anubis behind a base path (e.g. `/myapp`)
 
 ## v1.16.0
 
