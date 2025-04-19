@@ -59,7 +59,7 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
     if challenge != nil {
         @templ.JSONScript("anubis_challenge", challenge)
     }
-    @templ.JSONScript("anubis_base_path", anubis.BasePrefix)
+    @templ.JSONScript("anubis_base_prefix", anubis.BasePrefix)
 
 </head>
 <body id="top">

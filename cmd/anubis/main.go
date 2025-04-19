@@ -38,6 +38,7 @@ import (
 )
 
 var (
+	basePrefix               = flag.String("base-prefix", "", "base prefix (root URL) the application is served under e.g. /myapp")
 	bind                     = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
@@ -59,7 +60,6 @@ var (
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
-	basePath                 = flag.String("base-path", "/", "base path (root URL) the application is served under")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -175,13 +175,6 @@ func main() {
 
 	internal.InitSlog(*slogLevel)
 
-	if *healthcheck {
-		if err := doHealthCheck(); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-
 	if *extractResources != "" {
 		if err := extractEmbedFS(web.Static, "static", *extractResources); err != nil {
 			log.Fatal(err)
@@ -224,9 +217,10 @@ func main() {
 			Action:    config.RuleBenchmark,
 		}}
 	}
-
-	if !strings.HasPrefix(*basePath, "/") {
-		log.Fatalf("base-path must start with a slash") // could do a silent fix, but this is more transparent
+	if *basePrefix != "" && !strings.HasPrefix(*basePrefix, "/") {
+		log.Fatalf("base-prefix must start with a slash") // could do a silent fix, but this is more transparent
+	} else if strings.HasSuffix(*basePrefix, "/") {
+		log.Fatalf("base-prefix must not end with a slash")
 	}
 
 	var priv ed25519.PrivateKey
@@ -267,7 +261,7 @@ func main() {
 		OGTimeToLive:      *ogTimeToLive,
 		Target:            *target,
 		WebmasterEmail:    *webmasterEmail,
-		BasePath:          *basePath,
+		BasePrefix:        *basePrefix,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -282,7 +276,6 @@ func main() {
 		wg.Add(1)
 		go metricsServer(ctx, wg.Done)
 	}
-
 	go startDecayMapCleanup(ctx, s)
 
 	var h http.Handler
@@ -303,7 +296,7 @@ func main() {
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
-		"base-path", *basePath,
+		"base-prefix", *basePrefix,
 	)
 
 	go func() {
@@ -330,6 +323,14 @@ func metricsServer(ctx context.Context, done func()) {
 	srv := http.Server{Handler: mux}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
+
+	if *healthcheck {
+		log.Println("running healthcheck")
+		if err := doHealthCheck(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	go func() {
 		<-ctx.Done()

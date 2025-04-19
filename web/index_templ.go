@@ -110,7 +110,7 @@ func base(title string, body templ.Component, challenge any, ogTags map[string]s
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.JSONScript("anubis_base_path", anubis.BasePrefix).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templ.JSONScript("anubis_base_prefix", anubis.BasePrefix).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
