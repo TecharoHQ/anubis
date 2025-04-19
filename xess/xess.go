@@ -24,6 +24,7 @@ var (
 func init() {
 	Mount(http.DefaultServeMux)
 
+	//goland:noinspection GoBoolExpressions
 	if anubis.Version != "devel" {
 		URL = filepath.Join(filepath.Dir(URL), "xess.min.css")
 	}
