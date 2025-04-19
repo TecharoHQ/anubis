@@ -352,7 +352,10 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr CheckRes
 	var ogTags map[string]string = nil
 	if s.opts.OGPassthrough {
 		var err error
-		ogTags, err = s.OGTags.GetOGTags(r.URL)
+		ogTags, err = s.OGTags.GetOGTags(http.Header{
+			http.CanonicalHeaderKey("Host"):              r.Header.Values("Host"),
+			http.CanonicalHeaderKey("X-Forwarded-Proto"): r.Header.Values("X-Forwarded-Proto"),
+		}, r.URL)
 		if err != nil {
 			lg.Error("failed to get OG tags", "err", err)
 			ogTags = nil

@@ -112,7 +112,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 			testURL.RawQuery = tc.query
 
 			// Get OG tags
-			ogTags, err := cache.GetOGTags(testURL)
+			ogTags, err := cache.GetOGTags(nil, testURL)
 
 			// Check error expectation
 			if tc.expectError {
@@ -139,7 +139,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 			}
 
 			// Test cache retrieval
-			cachedOGTags, err := cache.GetOGTags(testURL)
+			cachedOGTags, err := cache.GetOGTags(nil, testURL)
 			if err != nil {
 				t.Fatalf("failed to get OG tags from cache: %v", err)
 			}
