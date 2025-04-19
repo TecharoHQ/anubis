@@ -10,7 +10,7 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
 <html lang="en">
 <head>
     <title>{ title }</title>
-    <link rel="stylesheet" href={ xess.URL }/>
+    <link rel="stylesheet" href={ anubis.BasePrefix + xess.URL }/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="robots" content="noindex,nofollow"/>
     for key, value := range ogTags {
@@ -57,6 +57,7 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
     if challenge != nil {
         @templ.JSONScript("anubis_challenge", challenge)
     }
+    @templ.JSONScript("anubis_base_prefix", anubis.BasePrefix)
 
 </head>
 <body id="top">
@@ -85,18 +86,15 @@ templ index() {
     <img
             id="image"
             style="width:100%;max-width:256px;"
-            src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-    anubis.Version }
+            src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +  anubis.Version }
     />
     <img
             style="display:none;"
             style="width:100%;max-width:256px;"
-            src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
-    anubis.Version }
+            src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }
     />
     <p id="status">Loading...</p>
-    <script async type="module" src={
-    "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
+    <script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
     <div id="progress" role="progressbar" aria-labelledby="status">
         <div class="bar-inner"></div>
     </div>
@@ -136,7 +134,7 @@ templ errorPage(message string, mail string) {
             id="image"
             alt="Sad Anubis"
             style="width:100%;max-width:256px;"
-            src={ "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }
+            src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }
     />
     <p>{ message }.</p>
     <button onClick="window.location.reload();">Try again</button>
@@ -172,12 +170,10 @@ templ bench() {
         <img
                 id="image"
                 style="width:100%;max-width:256px;"
-                src={ "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-        anubis.Version }
+                src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }
         />
         <p id="status" style="max-width:256px">Loading...</p>
-        <script async type="module" src={
-        "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
+        <script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
         <div id="sparkline"></div>
         <noscript>
             <p>Running the benchmark tool requires JavaScript to be enabled.</p>

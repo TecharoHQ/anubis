@@ -38,6 +38,7 @@ import (
 )
 
 var (
+	basePrefix               = flag.String("base-prefix", "", "base prefix (root URL) the application is served under e.g. /myapp")
 	bind                     = flag.String("bind", ":8923", "network address to bind HTTP to")
 	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
@@ -58,7 +59,7 @@ var (
 	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
-	webmasterEmail		 = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -75,7 +76,7 @@ func keyFromHex(value string) (ed25519.PrivateKey, error) {
 }
 
 func doHealthCheck() error {
-	resp, err := http.Get("http://localhost" + *metricsBind + "/metrics")
+	resp, err := http.Get("http://localhost" + *metricsBind + anubis.BasePrefix + "/metrics")
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
@@ -174,13 +175,6 @@ func main() {
 
 	internal.InitSlog(*slogLevel)
 
-	if *healthcheck {
-		if err := doHealthCheck(); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-
 	if *extractResources != "" {
 		if err := extractEmbedFS(web.Static, "static", *extractResources); err != nil {
 			log.Fatal(err)
@@ -223,6 +217,11 @@ func main() {
 			Action:    config.RuleBenchmark,
 		}}
 	}
+	if *basePrefix != "" && !strings.HasPrefix(*basePrefix, "/") {
+		log.Fatalf("base-prefix must start with a slash") // could do a silent fix, but this is more transparent
+	} else if strings.HasSuffix(*basePrefix, "/") {
+		log.Fatalf("base-prefix must not end with a slash")
+	}
 
 	var priv ed25519.PrivateKey
 	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
@@ -233,12 +232,12 @@ func main() {
 			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
 		}
 	} else if *ed25519PrivateKeyHexFile != "" {
-		hex, err := os.ReadFile(*ed25519PrivateKeyHexFile)
+		hexFile, err := os.ReadFile(*ed25519PrivateKeyHexFile)
 		if err != nil {
 			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
 		}
 
-		priv, err = keyFromHex(string(bytes.TrimSpace(hex)))
+		priv, err = keyFromHex(string(bytes.TrimSpace(hexFile)))
 		if err != nil {
 			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
 		}
@@ -261,7 +260,8 @@ func main() {
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
 		Target:            *target,
-		WebmasterEmail:     *webmasterEmail,
+		WebmasterEmail:    *webmasterEmail,
+		BasePrefix:        *basePrefix,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -276,7 +276,6 @@ func main() {
 		wg.Add(1)
 		go metricsServer(ctx, wg.Done)
 	}
-
 	go startDecayMapCleanup(ctx, s)
 
 	var h http.Handler
@@ -297,6 +296,7 @@ func main() {
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
+		"base-prefix", *basePrefix,
 	)
 
 	go func() {
@@ -318,11 +318,19 @@ func metricsServer(ctx context.Context, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle(anubis.BasePrefix+"/metrics", promhttp.Handler())
 
 	srv := http.Server{Handler: mux}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
+
+	if *healthcheck {
+		log.Println("running healthcheck")
+		if err := doHealthCheck(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	go func() {
 		<-ctx.Done()

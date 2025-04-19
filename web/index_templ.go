@@ -52,9 +52,9 @@ func base(title string, body templ.Component, challenge any, ogTags map[string]s
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(xess.URL)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + xess.URL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 13, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 13, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -110,6 +110,10 @@ func base(title string, body templ.Component, challenge any, ogTags map[string]s
 				return templ_7745c5c3_Err
 			}
 		}
+		templ_7745c5c3_Err = templ.JSONScript("anubis_base_prefix", anubis.BasePrefix).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</head><body id=\"top\"><main><center><h1 id=\"title\" class=\".centered-div\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -117,7 +121,7 @@ func base(title string, body templ.Component, challenge any, ogTags map[string]s
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 67, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 68, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -165,10 +169,9 @@ func index() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs("/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-			anubis.Version)
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 91, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 91, Col: 124}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -179,10 +182,9 @@ func index() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs("/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
-			anubis.Version)
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 97, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 96, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -193,10 +195,9 @@ func index() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(
-			"/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version)
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 101, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 99, Col: 138}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -236,9 +237,9 @@ func errorPage(message string, mail string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version)
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 141, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 139, Col: 122}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -251,7 +252,7 @@ func errorPage(message string, mail string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 143, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 141, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -278,7 +279,7 @@ func errorPage(message string, mail string) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(mail)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 147, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 145, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -328,10 +329,9 @@ func bench() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" +
-			anubis.Version)
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 178, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 175, Col: 127}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -342,10 +342,9 @@ func bench() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(
-			"/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version)
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 182, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `index.templ`, Line: 178, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
