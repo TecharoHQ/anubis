@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added example nginx configuration to documentation
 - Added example Apache configuration to the documentation [#277](https://github.com/TecharoHQ/anubis/issues/277)
 - Move per-environment configuration details into their own pages
+- Added git.lupancham.net to list of known instances of use.
 
 ## v1.16.0
 
