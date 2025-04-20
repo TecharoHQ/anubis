@@ -2,7 +2,7 @@
   "bots": [
     {
       "name": "Cloudflare Workers",
-      "headers": {
+      "headers_regex": {
         "CF-Worker": ".*"
       },
       "action": "DENY"
