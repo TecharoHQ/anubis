@@ -15,6 +15,7 @@ var (
 	ErrUnknownAction                     = errors.New("config.Bot: unknown action")
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
 	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
+	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
 	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
 )
 
@@ -37,12 +38,13 @@ const (
 )
 
 type BotConfig struct {
-	Name           string          `json:"name"`
-	UserAgentRegex *string         `json:"user_agent_regex"`
-	PathRegex      *string         `json:"path_regex"`
-	Action         Rule            `json:"action"`
-	RemoteAddr     []string        `json:"remote_addresses"`
-	Challenge      *ChallengeRules `json:"challenge,omitempty"`
+	Name           string            `json:"name"`
+	UserAgentRegex *string           `json:"user_agent_regex"`
+	PathRegex      *string           `json:"path_regex"`
+	HeadersRegex   map[string]string `json:"headers_regex"`
+	Action         Rule              `json:"action"`
+	RemoteAddr     []string          `json:"remote_addresses"`
+	Challenge      *ChallengeRules   `json:"challenge,omitempty"`
 }
 
 func (b BotConfig) Valid() error {
@@ -69,6 +71,18 @@ func (b BotConfig) Valid() error {
 	if b.PathRegex != nil {
 		if _, err := regexp.Compile(*b.PathRegex); err != nil {
 			errs = append(errs, ErrInvalidPathRegex, err)
+		}
+	}
+
+	if len(b.HeadersRegex) > 0 {
+		for name, expr := range b.HeadersRegex {
+			if name == "" {
+				continue
+			}
+
+			if _, err := regexp.Compile(expr); err != nil {
+				errs = append(errs, ErrInvalidHeadersRegex, err)
+			}
 		}
 	}
 

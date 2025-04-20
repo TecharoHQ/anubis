@@ -88,6 +88,18 @@ func TestBotValid(t *testing.T) {
 			err: ErrInvalidPathRegex,
 		},
 		{
+			name: "invalid headers regex",
+			bot: BotConfig{
+				Name:   "mozilla-ua",
+				Action: RuleChallenge,
+				HeadersRegex: map[string]string{
+					"Content-Type": "a(b",
+				},
+				PathRegex: p("a(b"),
+			},
+			err: ErrInvalidHeadersRegex,
+		},
+		{
 			name: "challenge difficulty too low",
 			bot: BotConfig{
 				Name:      "mozilla-ua",

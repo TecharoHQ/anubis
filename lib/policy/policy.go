@@ -58,8 +58,9 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		}
 
 		parsedBot := Bot{
-			Name:   b.Name,
-			Action: b.Action,
+			Name:    b.Name,
+			Action:  b.Action,
+			Headers: map[string]*regexp.Regexp{},
 		}
 
 		if len(b.RemoteAddr) > 0 {
@@ -92,6 +93,22 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 				continue
 			} else {
 				parsedBot.Path = path
+			}
+		}
+
+		if len(b.HeadersRegex) > 0 {
+			for name, expr := range b.HeadersRegex {
+				if name == "" {
+					continue
+				}
+
+				header, err := regexp.Compile(expr)
+				if err != nil {
+					validationErrs = append(validationErrs, fmt.Errorf("while compiling header regexp: %w", err))
+					continue
+				} else {
+					parsedBot.Headers[name] = header
+				}
 			}
 		}
 

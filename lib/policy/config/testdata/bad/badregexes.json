@@ -9,6 +9,13 @@
       "name": "user-agent-bad",
       "user_agent_regex": "a(b",
       "action": "DENY"
+    },
+    {
+      "name": "headers-bad",
+      "headers": {
+        "Accept-Encoding": "a(b"
+      },
+      "action": "DENY"
     }
   ]
 }

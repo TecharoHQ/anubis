@@ -548,6 +548,12 @@ func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 				return cr("bot/"+b.Name, b.Action), &b, nil
 			}
 		}
+
+		if len(b.Headers) > 0 {
+			if s.checkHeaders(b, r.Header) {
+				return cr("bot/"+b.Name, b.Action), &b, nil
+			}
+		}
 	}
 
 	return cr("default/allow", config.RuleAllow), &policy.Bot{
@@ -570,6 +576,27 @@ func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
 	}
 
 	return ok
+}
+
+func (s *Server) checkHeaders(b policy.Bot, header http.Header) bool {
+	if len(b.Headers) == 0 {
+		return true
+	}
+
+	for name, expr := range b.Headers {
+		values := header.Values(name)
+		if values == nil {
+			return false
+		}
+
+		for _, value := range values {
+			if !expr.MatchString(value) {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (s *Server) CleanupDecayMap() {
