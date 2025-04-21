@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improvements to build scripts to make them less independent of the build host
 - Improved the OpenGraph error logging
 - Added `Opera` to the `generic-browser` bot policy rule
-- Added FreeBSD rc.d script so can be run as a FreeBSD daemon.
+- Added FreeBSD rc.d script so can be run as a FreeBSD daemon
 - Allow requests from the Internet Archive
 - Added example nginx configuration to documentation
 - Added example Apache configuration to the documentation [#277](https://github.com/TecharoHQ/anubis/issues/277)
@@ -34,39 +34,39 @@ Fordola rem Lupis
 
 The following features are the "big ticket" items:
 
-- Added support for native Debian, Red Hat, and tarball packaging strategies including installation and use directions.
-- A prebaked tarball has been added, allowing distros to build Anubis like they could in v1.15.x.
-- The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social).
-- Verification page now shows hash rate and a progress bar for completion probability.
+- Added support for native Debian, Red Hat, and tarball packaging strategies including installation and use directions
+- A prebaked tarball has been added, allowing distros to build Anubis like they could in v1.15.x
+- The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social)
+- Verification page now shows hash rate and a progress bar for completion probability
 - Added support for [OpenGraph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
-- Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`.
+- Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`
 
 The other small fixes have been made:
 
-- Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned.
+- Added a periodic cleanup routine for the decaymap that removes expired entries, ensuring stale data is properly pruned
 - Added a no-store Cache-Control header to the challenge page
 - Hide the directory listings for Anubis' internal static content
-- Changed `--debug-x-real-ip-default` to `--use-remote-address`, getting the IP address from the request's socket address instead.
+- Changed `--debug-x-real-ip-default` to `--use-remote-address`, getting the IP address from the request's socket address instead
 - DroneBL lookups have been disabled by default
 - Static asset builds are now done on demand instead of the results being committed to source control
 - The Dockerfile has been removed as it is no longer in use
 - Developer documentation has been added to the docs site
 - Show more errors when some predictable challenge page errors happen ([#150](https://github.com/TecharoHQ/anubis/issues/150))
-- Added the `--debug-benchmark-js` flag for testing proof-of-work performance during development.
+- Added the `--debug-benchmark-js` flag for testing proof-of-work performance during development
 - Use `TrimSuffix` instead of `TrimRight` on containerbuild
 - Fix the startup logs to correctly show the address and port the server is listening on
 - Add [LibreJS](https://www.gnu.org/software/librejs/) banner to Anubis JavaScript to allow LibreJS users to run the challenge
 - Added a wait with button continue + 30 second auto continue after 30s if you click "Why am I seeing this?"
-- Fixed a typo in the challenge page title.
-- Disabled running integration tests on Windows hosts due to it's reliance on posix features (see [#133](https://github.com/TecharoHQ/anubis/pull/133#issuecomment-2764732309)).
+- Fixed a typo in the challenge page title
+- Disabled running integration tests on Windows hosts due to it's reliance on posix features (see [#133](https://github.com/TecharoHQ/anubis/pull/133#issuecomment-2764732309))
 - Fixed minor typos
-- Added a Makefile to enable comfortable workflows for downstream packagers.
+- Added a Makefile to enable comfortable workflows for downstream packagers
 - Added `zizmor` for GitHub Actions static analysis
 - Fixed most `zizmor` findings
 - Enabled Dependabot
 - Added an air config for autoreload support in development ([#195](https://github.com/TecharoHQ/anubis/pull/195))
-- Added an `--extract-resources` flag to extract static resources to a local folder.
-- Add noindex flag to all Anubis pages ([#227](https://github.com/TecharoHQ/anubis/issues/227)).
+- Added an `--extract-resources` flag to extract static resources to a local folder
+- Add noindex flag to all Anubis pages ([#227](https://github.com/TecharoHQ/anubis/issues/227))
 - Added `WEBMASTER_EMAIL` variable, if it is present then display that email address on error pages ([#235](https://github.com/TecharoHQ/anubis/pull/235), [#115](https://github.com/TecharoHQ/anubis/issues/115))
 - Hash pinned all GitHub Actions
 
@@ -151,7 +151,7 @@ Livia sas Junius
   [#21](https://github.com/TecharoHQ/anubis/pull/21)
 - Don't overflow the image when browser windows are small (eg. on phones)
   [#27](https://github.com/TecharoHQ/anubis/pull/27)
-- Lower the default difficulty to 4 from 5
+- Lower the default difficulty to 5 from 4
 - Don't duplicate work across multiple threads [#36](https://github.com/TecharoHQ/anubis/pull/36)
 - Documentation has been moved to https://anubis.techaro.lol/ with sources in docs/
 - Removed several visible AI artifacts (e.g., 6 fingers) [#37](https://github.com/TecharoHQ/anubis/pull/37)
@@ -194,4 +194,4 @@ Livia sas Junius
   ([fd6903a](https://github.com/TecharoHQ/anubis/commit/fd6903aeed315b8fddee32890d7458a9271e4798)).
 - Footer links on the check page now point to Techaro's brand
   ([4ebccb1](https://github.com/TecharoHQ/anubis/commit/4ebccb197ec20d024328d7f92cad39bbbe4d6359))
-- Anubis was imported from [Xe/x](https://github.com/Xe/x).
+- Anubis was imported from [Xe/x](https://github.com/Xe/x)
