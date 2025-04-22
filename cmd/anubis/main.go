@@ -277,6 +277,7 @@ func main() {
 	h = s
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
+	h = internal.XForwardedForUpdate(h)
 
 	srv := http.Server{Handler: h}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)

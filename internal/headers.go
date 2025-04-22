@@ -65,6 +65,40 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	})
 }
 
+// XForwardedForUpdate sets or updates the X-Forwarded-For header, adding
+// the known remote address to an existing chain if present
+func XForwardedForUpdate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer next.ServeHTTP(w, r)
+
+		remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
+
+		if err != nil {
+			slog.Warn("The default format of request.RemoteAddr should be IP:Port", "remoteAddr", r.RemoteAddr)
+			return
+		}
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			forwardedList := strings.Split(",", xff)
+			forwardedList = append(forwardedList, remoteIP)
+			// this behavior is equivalent to
+			// ingress-nginx "compute-full-forwarded-for"
+			// https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#compute-full-forwarded-for
+			//
+			// this would be the correct place to strip and/or flatten this list
+			//
+			// strip - iterate backwards and eliminate configured trusted IPs
+			// flatten - only return the last element to avoid spoofing confusion
+			//
+			// many applications handle this in different ways, but
+			// generally they'd be expected to do these two things on
+			// their own end to find the first non-spoofed IP
+			r.Header.Set("X-Forwarded-For", strings.Join(forwardedList, ","))
+		} else {
+			r.Header.Set("X-Forwarded-For", remoteIP)
+		}
+	})
+}
+
 // NoStoreCache sets the Cache-Control header to no-store for the response.
 func NoStoreCache(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
