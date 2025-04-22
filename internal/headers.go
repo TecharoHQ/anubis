@@ -73,6 +73,12 @@ func XForwardedForUpdate(next http.Handler) http.Handler {
 
 		remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
 
+		if parsedRemoteIP := net.ParseIP(remoteIP); parsedRemoteIP != nil && parsedRemoteIP.IsLoopback() {
+			// anubis is likely deployed behind a local reverse proxy
+			// pass header as-is to not break existing applications
+			return
+		}
+
 		if err != nil {
 			slog.Warn("The default format of request.RemoteAddr should be IP:Port", "remoteAddr", r.RemoteAddr)
 			return
