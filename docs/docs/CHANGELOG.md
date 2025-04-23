@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added headers support to bot policy rules
 - Moved configuration file from JSON to YAML by default
 - Added documentation on how to use Anubis with Traefik in Docker
+- Improved error handling in some edge cases
 - Disable `generic-bot-catchall` rule because of its high false positive rate in real-world scenarios
 
 ## v1.16.0
