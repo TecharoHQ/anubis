@@ -12,6 +12,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -423,6 +424,16 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		"x-real-ip", r.Header.Get("X-Real-Ip"),
 	)
 
+	redir := r.FormValue("redir")
+	redirURL, err := url.ParseRequestURI(redir)
+	if err != nil {
+		lg.Error("invalid redirect", "err", err)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid redirect", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+	// used by the path checker rule
+	r.URL = redirURL
+
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
@@ -459,7 +470,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	timeTaken.Observe(elapsedTime)
 
 	response := r.FormValue("response")
-	redir := r.FormValue("redir")
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
