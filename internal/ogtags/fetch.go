@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/net/html"
+	"io"
 	"log/slog"
 	"mime"
 	"net"
@@ -26,7 +27,12 @@ func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
 		return nil, fmt.Errorf("http get failed: %w", err)
 	}
 	// this defer will call MaxBytesReader's Close, which closes the original body.
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			slog.Debug("og: error closing response body", "url", urlStr, "error", err)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		slog.Debug("og: received non-OK status code", "url", urlStr, "status", resp.StatusCode)

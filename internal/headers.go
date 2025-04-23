@@ -73,7 +73,7 @@ func NoStoreCache(next http.Handler) http.Handler {
 	})
 }
 
-// Do not allow browsing directory listings in paths that end with /
+// NoBrowsing prevents directory browsing by returning a 404 for any request that ends with a "/".
 func NoBrowsing(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") {

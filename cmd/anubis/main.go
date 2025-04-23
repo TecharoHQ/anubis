@@ -117,7 +117,10 @@ func setupListener(network string, address string) (net.Listener, string) {
 
 		err = os.Chmod(address, os.FileMode(mode))
 		if err != nil {
-			listener.Close()
+			err := listener.Close()
+			if err != nil {
+				log.Printf("failed to close listener: %v", err)
+			}
 			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
 		}
 	}
@@ -227,12 +230,12 @@ func main() {
 			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
 		}
 	} else if *ed25519PrivateKeyHexFile != "" {
-		hex, err := os.ReadFile(*ed25519PrivateKeyHexFile)
+		hexData, err := os.ReadFile(*ed25519PrivateKeyHexFile)
 		if err != nil {
 			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
 		}
 
-		priv, err = keyFromHex(string(bytes.TrimSpace(hex)))
+		priv, err = keyFromHex(string(bytes.TrimSpace(hexData)))
 		if err != nil {
 			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
 		}

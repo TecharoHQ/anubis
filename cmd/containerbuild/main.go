@@ -131,7 +131,7 @@ func parseImageList(imageList string) ([]image, error) {
 	}
 
 	if len(result) == 0 {
-		return nil, fmt.Errorf("no images provided, bad flags??")
+		return nil, fmt.Errorf("no images provided, bad flags")
 	}
 
 	return result, nil

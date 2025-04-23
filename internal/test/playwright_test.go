@@ -378,14 +378,14 @@ func pwFail(t *testing.T, page playwright.Page, format string, args ...any) erro
 }
 
 func pwTimeout(tc testCase, deadline time.Time) *float64 {
-	max := *playwrightMaxTime
+	maxTime := *playwrightMaxTime
 	if tc.isHard {
-		max = *playwrightMaxHardTime
+		maxTime = *playwrightMaxHardTime
 	}
 
 	d := time.Until(deadline)
-	if d <= 0 || d > max {
-		return playwright.Float(float64(max.Milliseconds()))
+	if d <= 0 || d > maxTime {
+		return playwright.Float(float64(maxTime.Milliseconds()))
 	}
 	return playwright.Float(float64(d.Milliseconds()))
 }

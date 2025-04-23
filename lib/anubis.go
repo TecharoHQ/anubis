@@ -201,7 +201,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	r.Header.Add("X-Anubis-Rule", cr.Name)
 	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg = lg.With("check_result", cr)
-	policy.PolicyApplications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
+	policy.Applications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
 
 	ip := r.Header.Get("X-Real-Ip")
 
@@ -258,21 +258,21 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 
@@ -283,7 +283,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 
@@ -298,7 +298,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
@@ -306,7 +306,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 
@@ -323,7 +323,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
 		s.ClearCookie(w)
-		s.RenderIndex(w, r, cr, rule)
+		s.RenderIndex(w, r, rule)
 		return
 	}
 
@@ -332,7 +332,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	s.next.ServeHTTP(w, r)
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, rule *policy.Bot) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot) {
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),

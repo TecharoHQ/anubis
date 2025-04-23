@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	PolicyApplications = promauto.NewCounterVec(prometheus.CounterOpts{
+	Applications = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_policy_results",
 		Help: "The results of each policy rule",
 	}, []string{"rule", "action"})
