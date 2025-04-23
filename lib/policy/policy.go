@@ -4,12 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
-	"regexp"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/yl2chen/cidranger"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -58,57 +55,45 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		}
 
 		parsedBot := Bot{
-			Name:    b.Name,
-			Action:  b.Action,
-			Headers: map[string]*regexp.Regexp{},
+			Name:   b.Name,
+			Action: b.Action,
 		}
 
+		cl := CheckerList{}
+
 		if len(b.RemoteAddr) > 0 {
-			parsedBot.Ranger = cidranger.NewPCTrieRanger()
-
-			for _, cidr := range b.RemoteAddr {
-				_, rng, err := net.ParseCIDR(cidr)
-				if err != nil {
-					return nil, fmt.Errorf("[unexpected] range %s not parsing: %w", cidr, err)
-				}
-
-				parsedBot.Ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
+			c, err := NewRemoteAddrChecker(b.RemoteAddr)
+			if err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s remote addr set: %w", b.Name, err))
+			} else {
+				cl = append(cl, c)
 			}
 		}
 
 		if b.UserAgentRegex != nil {
-			userAgent, err := regexp.Compile(*b.UserAgentRegex)
+			c, err := NewUserAgentChecker(*b.UserAgentRegex)
 			if err != nil {
-				validationErrs = append(validationErrs, fmt.Errorf("while compiling user agent regexp: %w", err))
-				continue
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s user agent regex: %w", b.Name, err))
 			} else {
-				parsedBot.UserAgent = userAgent
+				cl = append(cl, c)
 			}
 		}
 
 		if b.PathRegex != nil {
-			path, err := regexp.Compile(*b.PathRegex)
+			c, err := NewPathChecker(*b.PathRegex)
 			if err != nil {
-				validationErrs = append(validationErrs, fmt.Errorf("while compiling path regexp: %w", err))
-				continue
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s path regex: %w", b.Name, err))
 			} else {
-				parsedBot.Path = path
+				cl = append(cl, c)
 			}
 		}
 
 		if len(b.HeadersRegex) > 0 {
-			for name, expr := range b.HeadersRegex {
-				if name == "" {
-					continue
-				}
-
-				header, err := regexp.Compile(expr)
-				if err != nil {
-					validationErrs = append(validationErrs, fmt.Errorf("while compiling header regexp: %w", err))
-					continue
-				} else {
-					parsedBot.Headers[name] = header
-				}
+			c, err := NewHeadersChecker(b.HeadersRegex)
+			if err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s headers regex map: %w", b.Name, err))
+			} else {
+				cl = append(cl, c)
 			}
 		}
 
@@ -124,6 +109,8 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 				parsedBot.Challenge.Algorithm = config.AlgorithmFast
 			}
 		}
+
+		parsedBot.Rules = cl
 
 		result.Bots = append(result.Bots, parsedBot)
 	}

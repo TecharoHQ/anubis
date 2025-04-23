@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,7 +57,7 @@ var (
 	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
-	webmasterEmail		 = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -205,22 +204,17 @@ func main() {
 			continue
 		}
 
-		hash, err := rule.Hash()
-		if err != nil {
-			log.Fatalf("can't calculate checksum of rule %s: %v", rule.Name, err)
-		}
-
+		hash := rule.Hash()
 		fmt.Printf("* %s: %s\n", rule.Name, hash)
 	}
 	fmt.Println()
 
 	// replace the bot policy rules with a single rule that always benchmarks
 	if *debugBenchmarkJS {
-		userAgent := regexp.MustCompile(".")
 		policy.Bots = []botPolicy.Bot{{
-			Name:      "",
-			UserAgent: userAgent,
-			Action:    config.RuleBenchmark,
+			Name:   "",
+			Rules:  botPolicy.NewHeaderExistsChecker("User-Agent"),
+			Action: config.RuleBenchmark,
 		}}
 	}
 
@@ -261,7 +255,7 @@ func main() {
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
 		Target:            *target,
-		WebmasterEmail:     *webmasterEmail,
+		WebmasterEmail:    *webmasterEmail,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)

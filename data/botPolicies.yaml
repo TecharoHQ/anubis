@@ -645,14 +645,14 @@ bots:
   path_regex: ^/robots.txt$
   action: ALLOW
 
-# Punish any bot with "bot" in the user-agent string
-- name: generic-bot-catchall
-  user_agent_regex: (?i:bot|crawler)
-  action: CHALLENGE
-  challenge:
-    difficulty: 16  # impossible
-    report_as: 4    # lie to the operator
-    algorithm: slow # intentionally waste CPU cycles and time
+# # Punish any bot with "bot" in the user-agent string
+# - name: generic-bot-catchall
+#   user_agent_regex: (?i:bot|crawler)
+#   action: CHALLENGE
+#   challenge:
+#     difficulty: 16  # impossible
+#     report_as: 4    # lie to the operator
+#     algorithm: slow # intentionally waste CPU cycles and time
 
 - name: generic-browser
   user_agent_regex: >

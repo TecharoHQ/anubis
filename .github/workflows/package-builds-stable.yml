@@ -64,8 +64,9 @@ jobs:
 
     - name: Build Packages
       run: |
-        wget https://github.com/Xe/x/releases/download/v1.13.4/yeet_1.13.4_amd64.deb -O var/yeet.deb
+        wget https://github.com/TecharoHQ/yeet/releases/download/v0.1.1/yeet_0.1.1_amd64.deb -O var/yeet.deb
         sudo apt -y install -f ./var/yeet.deb
+        rm ./var/yeet.deb
         yeet
 
     - name: Upload released artifacts

@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"math"
 	"net"
@@ -243,12 +242,8 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
-		hash, err := rule.Hash()
-		if err != nil {
-			lg.Error("can't calculate checksum of rule", "err", err)
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-			return
-		}
+		hash := rule.Hash()
+
 		lg.Debug("rule hash", "hash", hash)
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("Access Denied: error code %s", hash), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
 		return
@@ -342,7 +337,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	s.next.ServeHTTP(w, r)
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr CheckResult, rule *policy.Bot) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, rule *policy.Bot) {
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
@@ -533,41 +528,33 @@ func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(web.Base("Oh noes!", web.ErrorPage(err, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 }
 
+func cr(name string, rule config.Rule) policy.CheckResult {
+	return policy.CheckResult{
+		Name: name,
+		Rule: rule,
+	}
+}
+
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
+func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
-		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
 	}
 
 	addr := net.ParseIP(host)
 	if addr == nil {
-		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
+		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
 	for _, b := range s.policy.Bots {
-		if b.UserAgent != nil {
-			if b.UserAgent.MatchString(r.UserAgent()) && s.checkRemoteAddress(b, addr) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
+		match, err := b.Rules.Check(r)
+		if err != nil {
+			return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("can't run check %s: %w", b.Name, err)
 		}
 
-		if b.Path != nil {
-			if b.Path.MatchString(r.URL.Path) && s.checkRemoteAddress(b, addr) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
-		}
-
-		if b.Ranger != nil {
-			if s.checkRemoteAddress(b, addr) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
-		}
-
-		if len(b.Headers) > 0 {
-			if s.checkHeaders(b, r.Header) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
+		if match {
+			return cr("bot/"+b.Name, b.Action), &b, nil
 		}
 	}
 
@@ -578,40 +565,6 @@ func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 			Algorithm:  config.AlgorithmFast,
 		},
 	}, nil
-}
-
-func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
-	if b.Ranger == nil {
-		return true
-	}
-
-	ok, err := b.Ranger.Contains(addr)
-	if err != nil {
-		log.Panicf("[unexpected] something very funky is going on, %q does not have a calculable network number: %v", addr.String(), err)
-	}
-
-	return ok
-}
-
-func (s *Server) checkHeaders(b policy.Bot, header http.Header) bool {
-	if len(b.Headers) == 0 {
-		return true
-	}
-
-	for name, expr := range b.Headers {
-		values := header.Values(name)
-		if values == nil {
-			return false
-		}
-
-		for _, value := range values {
-			if !expr.MatchString(value) {
-				return false
-			}
-		}
-	}
-
-	return true
 }
 
 func (s *Server) CleanupDecayMap() {
