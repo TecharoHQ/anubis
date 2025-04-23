@@ -1,0 +1,10 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+configMapGenerator:
+  - name: nginx-cfg
+    behavior: create
+    files:
+    - ./conf.d/default.conf
