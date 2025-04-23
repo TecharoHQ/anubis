@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improvements to build scripts to make them less independent of the build host
 - Improved the OpenGraph error logging
 - Added `Opera` to the `generic-browser` bot policy rule
-- Added FreeBSD rc.d script so can be run as a FreeBSD daemon.
+- Added FreeBSD rc.d script so can be run as a FreeBSD daemon
 - Allow requests from the Internet Archive
 - Added example nginx configuration to documentation
 - Added example Apache configuration to the documentation [#277](https://github.com/TecharoHQ/anubis/issues/277)
@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added headers support to bot policy rules
 - Moved configuration file from JSON to YAML by default
 - Added documentation on how to use Anubis with Traefik in Docker
+- Improved error handling in some edge cases
 
 ## v1.16.0
 
