@@ -1,0 +1,92 @@
+---
+title: Default allow behavior
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# Default allow behavior
+
+Anubis is designed to be as unintrusive as possible to your existing infrastructure.
+
+By default, it allows all traffic unless a request matches a rule that explicitly denies or challenges it.
+
+Only requests matching a DENY or CHALLENGE rule are blocked or challenged. All other requests are allowed. This is called "the implicit rule".
+
+## Example: Minimal policy
+
+If your policy only blocks a specific bot, all other requests will be allowed:
+
+<Tabs>
+<TabItem value="json" label="JSON" default>
+
+```json
+{
+  "bots": [
+    {
+      "name": "block-amazonbot",
+      "user_agent_regex": "Amazonbot",
+      "action": "DENY"
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```yaml
+- name: block-amazonbot
+  user_agent_regex: Amazonbot
+  action: DENY
+```
+
+</TabItem>
+</Tabs>
+
+## How to deny by default
+
+If you want to deny all traffic except what you explicitly allow, add a catch-all deny rule at the end of your policy list. Make sure to add ALLOW rules for any traffic you want to permit before this rule.
+
+<Tabs>
+<TabItem value="json" label="JSON" default>
+
+```json
+{
+  "bots": [
+    {
+      "name": "allow-goodbot",
+      "user_agent_regex": "GoodBot",
+      "action": "ALLOW"
+    },
+    {
+      "name": "catch-all-deny",
+      "path_regex": ".*",
+      "action": "DENY"
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```yaml
+- name: allow-goodbot
+  user_agent_regex: GoodBot
+  action: ALLOW
+- name: catch-all-deny
+  path_regex: .*
+  action: DENY
+```
+
+</TabItem>
+</Tabs>
+
+## Final remarks
+
+- Rules are evaluated in order; the first match wins.
+- The implicit allow rule is always last and cannot be removed.
+- Use your logs to monitor what traffic is being allowed by default.
+
+See [Policy Definitions](./policies) for more details on writing rules.
