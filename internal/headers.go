@@ -158,9 +158,6 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		if pref.StripLoopback && segmentIP.IsLoopback() {
 			continue
 		}
-		if pref.StripLLU && segmentIP.IsGlobalUnicast() {
-			continue
-		}
 		if pref.StripLLU && segmentIP.IsLinkLocalUnicast() {
 			continue
 		}
