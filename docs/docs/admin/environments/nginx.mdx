@@ -41,45 +41,45 @@ Assuming that we are protecting `anubistest.techaro.lol`, here's what the server
 
 # HTTP - Redirect all HTTP traffic to HTTPS
 server {
-	listen 80;
-	listen [::]:80;
+  listen 80;
+  listen [::]:80;
 
-	server_name anubistest.techaro.lol;
+  server_name anubistest.techaro.lol;
 
-	location / {
-		return 301 https://$host$request_uri;
-	}
+  location / {
+    return 301 https://$host$request_uri;
+  }
 }
 
 # TLS termination server, this will listen over TLS (https) and then
 # proxy all traffic to the target via Anubis.
 server {
-	# Listen on TCP port 443 with TLS (https) and HTTP/2
-	listen 443 ssl http2;
-	listen [::]:443 ssl http2;
+  # Listen on TCP port 443 with TLS (https) and HTTP/2
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
 
-	location / {
+  location / {
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_pass http://anubis;
   }
 
-	server_name anubistest.techaro.lol;
+  server_name anubistest.techaro.lol;
 
-	ssl_certificate      /path/to/your/certs/anubistest.techaro.lol.crt;
-	ssl_certificate_key	 /path/to/your/certs/anubistest.techaro.lol.key;
+  ssl_certificate     /path/to/your/certs/anubistest.techaro.lol.crt;
+  ssl_certificate_key /path/to/your/certs/anubistest.techaro.lol.key;
 }
 
 # Backend server, this is where your webapp should actually live.
 server {
-	listen unix:/run/nginx/nginx.sock;
+  listen unix:/run/nginx/nginx.sock;
 
-	server_name anubistest.techaro.lol;
-	root "/srv/http/anubistest.techaro.lol";
-	index index.html;
+  server_name anubistest.techaro.lol;
+  root "/srv/http/anubistest.techaro.lol";
+  index index.html;
 
-	# Your normal configuration can go here
-	# location .php { fastcgi...} etc.
+  # Your normal configuration can go here
+  # location .php { fastcgi...} etc.
 }
 ```
 
@@ -107,28 +107,28 @@ Then in a server block:
 # /etc/nginx/conf.d/server-mimi-techaro-lol.conf
 
 server {
-	# Listen on 443 with SSL
-	listen 443 ssl http2;
-	listen [::]:443 ssl http2;
+  # Listen on 443 with SSL
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
 
-	# Slipstream via Anubis
-	include "conf-anubis.inc";
+  # Slipstream via Anubis
+  include "conf-anubis.inc";
 
-	server_name mimi.techaro.lol;
+  server_name mimi.techaro.lol;
 
-	ssl_certificate		   /path/to/your/certs/mimi.techaro.lol.crt;
-	ssl_certificate_key	 /path/to/your/certs/mimi.techaro.lol.key;
+  ssl_certificate     /path/to/your/certs/mimi.techaro.lol.crt;
+  ssl_certificate_key /path/to/your/certs/mimi.techaro.lol.key;
 }
 
 server {
-	listen unix:/run/nginx/nginx.sock;
+  listen unix:/run/nginx/nginx.sock;
 
-	server_name mimi.techaro.lol;
-	root "/srv/http/mimi.techaro.lol";
-	index index.html;
+  server_name mimi.techaro.lol;
+  root "/srv/http/mimi.techaro.lol";
+  index index.html;
 
-	# Your normal configuration can go here
-	# location .php { fastcgi...} etc.
+  # Your normal configuration can go here
+  # location .php { fastcgi...} etc.
 }
 ```
 
