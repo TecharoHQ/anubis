@@ -1,14 +1,27 @@
 package internal
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/sebest/xff"
 )
+
+// TODO: move into config
+type XFFComputePreferences struct {
+	StripPrivate  bool
+	StripLoopback bool
+	StripCGNAT    bool
+	StripLLU      bool
+	Flatten       bool
+}
+
+var CGNat = netip.MustParsePrefix("100.64.0.0/10")
 
 // UnchangingCache sets the Cache-Control header to cache a response for 1 year if
 // and only if the application is compiled in "release" mode by Docker.
@@ -71,38 +84,97 @@ func XForwardedForUpdate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer next.ServeHTTP(w, r)
 
-		remoteIP, _, err := net.SplitHostPort(r.RemoteAddr)
+		pref := XFFComputePreferences{
+			StripPrivate:  true,
+			StripLoopback: true,
+			StripCGNAT:    true,
+			Flatten:       true,
+		}
 
-		if parsedRemoteIP := net.ParseIP(remoteIP); parsedRemoteIP != nil && parsedRemoteIP.IsLoopback() {
-			// anubis is likely deployed behind a local reverse proxy
-			// pass header as-is to not break existing applications
+		remoteAddr := r.RemoteAddr
+		origXFFHeader := r.Header.Get("X-Forwarded-For")
+
+		if remoteAddr == "@" {
+			// remote is a unix socket
+			// do not touch chain
 			return
 		}
 
+		xffHeaderString, err := computeXFFHeader(remoteAddr, origXFFHeader, pref)
 		if err != nil {
-			slog.Warn("The default format of request.RemoteAddr should be IP:Port", "remoteAddr", r.RemoteAddr)
+			slog.Warn("Computing XFF header failed.", "err", err)
 			return
 		}
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			forwardedList := strings.Split(",", xff)
-			forwardedList = append(forwardedList, remoteIP)
-			// this behavior is equivalent to
-			// ingress-nginx "compute-full-forwarded-for"
-			// https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#compute-full-forwarded-for
-			//
-			// this would be the correct place to strip and/or flatten this list
-			//
-			// strip - iterate backwards and eliminate configured trusted IPs
-			// flatten - only return the last element to avoid spoofing confusion
-			//
-			// many applications handle this in different ways, but
-			// generally they'd be expected to do these two things on
-			// their own end to find the first non-spoofed IP
-			r.Header.Set("X-Forwarded-For", strings.Join(forwardedList, ","))
+
+		if len(xffHeaderString) == 0 {
+			r.Header.Del("X-Forwarded-For")
 		} else {
-			r.Header.Set("X-Forwarded-For", remoteIP)
+			r.Header.Set("X-Forwarded-For", xffHeaderString)
 		}
 	})
+}
+
+func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePreferences) (string, error) {
+	remoteIP, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		return "", fmt.Errorf("unable to net.SplitHostParse: %w", err)
+	}
+	parsedRemoteIP, err := netip.ParseAddr(remoteIP)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse remote IP: %w", err)
+	}
+
+	origForwardedList := make([]string, 0, 4)
+	if origXFFHeader != "" {
+		origForwardedList = strings.Split(",", origXFFHeader)
+	}
+	origForwardedList = append(origForwardedList, parsedRemoteIP.String())
+	forwardedList := make([]string, 0, len(origForwardedList))
+	// this behavior is equivalent to
+	// ingress-nginx "compute-full-forwarded-for"
+	// https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#compute-full-forwarded-for
+	//
+	// this would be the correct place to strip and/or flatten this list
+	//
+	// strip - iterate backwards and eliminate configured trusted IPs
+	// flatten - only return the last element to avoid spoofing confusion
+	//
+	// many applications handle this in different ways, but
+	// generally they'd be expected to do these two things on
+	// their own end to find the first non-spoofed IP
+	for i := len(origForwardedList) - 1; i >= 0; i-- {
+		segmentIP, err := netip.ParseAddr(origForwardedList[i])
+		if err != nil {
+			// can't assess this element, so the remainder of the chain
+			// can't be trusted. not a fatal error, since anyone can
+			// spoof an XFF header
+			slog.Warn("failed to parse XFF segment", "err", err)
+			break
+		}
+		if segmentIP.IsPrivate() && pref.StripPrivate {
+			continue
+		}
+		if segmentIP.IsLoopback() && pref.StripLoopback {
+			continue
+		}
+		if segmentIP.IsGlobalUnicast() && pref.StripLLU {
+			continue
+		}
+		if CGNat.Contains(segmentIP) && pref.StripCGNAT {
+			continue
+		}
+		forwardedList = append([]string{segmentIP.String()}, forwardedList...)
+	}
+	var xffHeaderString string
+	if len(forwardedList) == 0 {
+		xffHeaderString = ""
+	}
+	if pref.Flatten {
+		xffHeaderString = forwardedList[len(forwardedList)-1]
+	} else {
+		xffHeaderString = strings.Join(forwardedList, ",")
+	}
+	return xffHeaderString, nil
 }
 
 // NoStoreCache sets the Cache-Control header to no-store for the response.
