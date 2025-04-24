@@ -89,6 +89,7 @@ func XForwardedForUpdate(next http.Handler) http.Handler {
 			StripLoopback: true,
 			StripCGNAT:    true,
 			Flatten:       true,
+			StripLLU:      true,
 		}
 
 		remoteAddr := r.RemoteAddr
@@ -158,6 +159,9 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 			continue
 		}
 		if pref.StripLLU && segmentIP.IsGlobalUnicast() {
+			continue
+		}
+		if pref.StripLLU && segmentIP.IsLinkLocalUnicast() {
 			continue
 		}
 		if pref.StripCGNAT && CGNat.Contains(segmentIP) {
