@@ -162,7 +162,7 @@ services:
       - traefik.http.routers.target.rule=Host(`example.com`) # Only Matching Requests for example.com
       - traefik.http.routers.target.entrypoints=anubis # Listening on the exclusive Anubis Network
       - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik where to receive requests
-      - traefik.http.routers.target.service=target # Telling Traegik to use the above specified port
+      - traefik.http.routers.target.service=target # Telling Traefik to use the above specified port
 
   # Not Protected by Anubis
   target2:
@@ -175,7 +175,7 @@ services:
       - traefik.http.routers.target2.rule=Host(`another.com`) # Only Matching Requests for example.com
       - traefik.http.routers.target2.entrypoints=websecure # Listening on the exclusive Anubis Network
       - traefik.http.services.target2.loadbalancer.server.port=80 # Telling Traefik where to receive requests
-      - traefik.http.routers.target2.service=target2 # Telling Traegik to use the above specified port
+      - traefik.http.routers.target2.service=target2 # Telling Traefik to use the above specified port
       - traefik.http.routers.target2.tls.certresolver=le # Telling Traefik to resolve a Cert for this Target
 
 networks:
