@@ -32,7 +32,7 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 
 ## Packaging Status
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/anubis-anti-crawler.svg)](https://repology.org/project/anubis-anti-crawler/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/anubis-anti-crawler.svg?columns=3)](https://repology.org/project/anubis-anti-crawler/versions)
 
 ## Contributors
 
