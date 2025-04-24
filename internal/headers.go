@@ -151,16 +151,16 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 			slog.Warn("failed to parse XFF segment", "err", err)
 			break
 		}
-		if segmentIP.IsPrivate() && pref.StripPrivate {
+		if pref.StripPrivate && segmentIP.IsPrivate() {
 			continue
 		}
-		if segmentIP.IsLoopback() && pref.StripLoopback {
+		if pref.StripLoopback && segmentIP.IsLoopback() {
 			continue
 		}
-		if segmentIP.IsGlobalUnicast() && pref.StripLLU {
+		if pref.StripLLU && segmentIP.IsGlobalUnicast() {
 			continue
 		}
-		if CGNat.Contains(segmentIP) && pref.StripCGNAT {
+		if pref.StripCGNAT && CGNat.Contains(segmentIP) {
 			continue
 		}
 		forwardedList = append([]string{segmentIP.String()}, forwardedList...)
