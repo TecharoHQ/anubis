@@ -1,6 +1,7 @@
 package ogtags
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"golang.org/x/net/html"
@@ -16,8 +17,23 @@ var (
 	emptyMap     = map[string]string{}             // used to indicate an empty result in the cache. Can't use nil as it would be a cache miss.
 )
 
-func (c *OGTagCache) fetchHTMLDocument(urlStr string) (*html.Node, error) {
-	resp, err := c.client.Get(urlStr)
+// fetchHTMLDocument fetches the HTML document from the given URL string,
+// preserving the original host header.
+func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*html.Node, error) {
+	req, err := http.NewRequestWithContext(context.Background(), "GET", urlStr, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+
+	// Set the Host header to the original host from the incoming request
+	// This is crucial for target applications that rely on the Host header
+	// for routing or configuration (e.g., virtual hosts).
+	if originalHost != "" {
+		req.Host = originalHost
+	}
+	// If originalHost is empty, let the http client use the host from urlStr
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {

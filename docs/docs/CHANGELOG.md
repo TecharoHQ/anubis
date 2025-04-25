@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for running anubis behind a base path (e.g. `/myapp`)
 - Reduce Anubis' paranoia with user cookies ([#365](https://github.com/TecharoHQ/anubis/pull/365))
 - Added support for Opengraph passthrough while using unix sockets
+- The opengraph subsystem now passes the HTTP `HOST` header through to the origin
 
 ## v1.16.0
 

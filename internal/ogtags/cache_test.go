@@ -76,7 +76,8 @@ func TestGetOGTags(t *testing.T) {
 	}
 
 	// Test fetching OG tags from the test server
-	ogTags, err := cache.GetOGTags(parsedURL)
+	// Pass the host from the parsed test server URL
+	ogTags, err := cache.GetOGTags(parsedURL, parsedURL.Host)
 	if err != nil {
 		t.Fatalf("failed to get OG tags: %v", err)
 	}
@@ -95,13 +96,15 @@ func TestGetOGTags(t *testing.T) {
 	}
 
 	// Test fetching OG tags from the cache
-	ogTags, err = cache.GetOGTags(parsedURL)
+	// Pass the host from the parsed test server URL
+	ogTags, err = cache.GetOGTags(parsedURL, parsedURL.Host)
 	if err != nil {
 		t.Fatalf("failed to get OG tags from cache: %v", err)
 	}
 
 	// Test fetching OG tags from the cache (3rd time)
-	newOgTags, err := cache.GetOGTags(parsedURL)
+	// Pass the host from the parsed test server URL
+	newOgTags, err := cache.GetOGTags(parsedURL, parsedURL.Host)
 	if err != nil {
 		t.Fatalf("failed to get OG tags from cache: %v", err)
 	}

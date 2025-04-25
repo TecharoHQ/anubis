@@ -228,7 +228,8 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 	testReqURL, _ := url.Parse("/some/page?query=1")
 
 	// Get OG tags
-	ogTags, err := cache.GetOGTags(testReqURL)
+	// Pass an empty string for host, as it's irrelevant for unix sockets
+	ogTags, err := cache.GetOGTags(testReqURL, "")
 
 	if err != nil {
 		t.Fatalf("GetOGTags failed for unix socket: %v", err)
@@ -243,7 +244,8 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 	}
 
 	// Test cache retrieval (should hit cache)
-	cachedTags, err := cache.GetOGTags(testReqURL)
+	// Pass an empty string for host
+	cachedTags, err := cache.GetOGTags(testReqURL, "")
 	if err != nil {
 		t.Fatalf("GetOGTags (cache hit) failed for unix socket: %v", err)
 	}

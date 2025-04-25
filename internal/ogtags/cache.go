@@ -8,7 +8,7 @@ import (
 )
 
 // GetOGTags is the main function that retrieves Open Graph tags for a URL
-func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
+func (c *OGTagCache) GetOGTags(url *url.URL, originalHost string) (map[string]string, error) {
 	if url == nil {
 		return nil, errors.New("nil URL provided, cannot fetch OG tags")
 	}
@@ -18,8 +18,8 @@ func (c *OGTagCache) GetOGTags(url *url.URL) (map[string]string, error) {
 		return cachedTags, nil
 	}
 
-	// Fetch HTML content
-	doc, err := c.fetchHTMLDocument(urlStr)
+	// Fetch HTML content, passing the original host
+	doc, err := c.fetchHTMLDocument(urlStr, originalHost)
 	if errors.Is(err, syscall.ECONNREFUSED) {
 		slog.Debug("Connection refused, returning empty tags")
 		return nil, nil
