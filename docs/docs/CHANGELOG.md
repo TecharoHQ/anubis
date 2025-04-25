@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added SearXNG instance tracker whitelist policy
 - Added Qualys SSL Labs whitelist policy
 - Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
+- Added support to use Traefik forwardAuth middleware
 
 ## v1.18.0: Varis zos Galvus
 
