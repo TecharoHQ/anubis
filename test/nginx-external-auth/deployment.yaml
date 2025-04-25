@@ -32,7 +32,7 @@ spec:
           mountPath: /etc/nginx/conf.d
           readOnly: true
       - name: anubis
-        image: registry.int.xeserv.us/techaro/anubis:external-auth
+        image: ttl.sh/techaro/anubis-external-auth:latest
         imagePullPolicy: Always
         resources:
           limits:
@@ -41,11 +41,9 @@ spec:
           requests:
             cpu: 250m
             memory: 128Mi
-        args:
-        - --target=
         env:
         - name: TARGET
-          value: ""
+          value: " "
         - name: REDIRECT_DOMAINS
           value: nginx.local.cetacean.club
 
