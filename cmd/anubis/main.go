@@ -268,6 +268,8 @@ func main() {
 			}
 			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
+	} else {
+		slog.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
 	s, err := libanubis.New(libanubis.Options{
