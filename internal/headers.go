@@ -153,7 +153,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 	// generally they'd be expected to do these two things on
 	// their own end to find the first non-spoofed IP
 	for i := len(origForwardedList) - 1; i >= 0; i-- {
-		segmentIP, err := netip.ParseAddr(origForwardedList[i])
+		segmentIP, err := netip.ParseAddr(strings.TrimSpace(origForwardedList[i]))
 		if err != nil {
 			// can't assess this element, so the remainder of the chain
 			// can't be trusted. not a fatal error, since anyone can
