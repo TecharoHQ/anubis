@@ -271,6 +271,8 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 		return
 	}
 
+	t.Skip("NOTE(Xe)\\ these tests require HTTPS support in #364")
+
 	doesNPXExist(t)
 	startPlaywright(t)
 
