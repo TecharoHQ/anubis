@@ -12,7 +12,14 @@ func (c *OGTagCache) GetOGTags(url *url.URL, originalHost string) (map[string]st
 	if url == nil {
 		return nil, errors.New("nil URL provided, cannot fetch OG tags")
 	}
-	urlStr := c.getTarget(url)
+
+	var urlStr string
+	if c.ogCacheConsiderHost {
+		urlStr = c.getTarget(url) + "|" + originalHost
+	} else {
+		urlStr = c.getTarget(url)
+	}
+
 	// Check cache first
 	if cachedTags := c.checkCache(urlStr); cachedTags != nil {
 		return cachedTags, nil

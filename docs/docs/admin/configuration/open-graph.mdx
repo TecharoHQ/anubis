@@ -9,10 +9,11 @@ This page provides detailed information on how to configure [OpenGraph tag](http
 
 ## Configuration Options
 
-| Name             | Description                                               | Type     | Default | Example                 |
-|------------------|-----------------------------------------------------------|----------|---------|-------------------------|
-| `OG_PASSTHROUGH` | Enables or disables the Open Graph tag passthrough system | Boolean  | `false` | `OG_PASSTHROUGH=true`   |
-| `OG_EXPIRY_TIME` | Configurable cache expiration time for Open Graph tags    | Duration | `24h`   | `OG_EXPIRY_TIME=1h`     |
+| Name                     | Description                                               | Type     | Default | Example                         |
+|--------------------------|-----------------------------------------------------------|----------|---------|---------------------------------|
+| `OG_PASSTHROUGH`         | Enables or disables the Open Graph tag passthrough system | Boolean  | `false` | `OG_PASSTHROUGH=true`           |
+| `OG_EXPIRY_TIME`         | Configurable cache expiration time for Open Graph tags    | Duration | `24h`   | `OG_EXPIRY_TIME=1h`             |
+| `OG_CACHE_CONSIDER_HOST` | Enables or disables the use of the host in the cache key  | Boolean  | `false` | `OG_CACHE_CONSIDER_HOST=true`   |
 
 ## Usage
 
@@ -21,6 +22,7 @@ To configure Open Graph tags, you can set the following environment variables, e
 ```sh
 export OG_PASSTHROUGH=true
 export OG_EXPIRY_TIME=1h
+export OG_CACHE_CONSIDER_HOST=false
 ```
 
 ## Implementation Details
@@ -33,6 +35,8 @@ When `OG_PASSTHROUGH` is enabled, Anubis will:
 
 The cache expiration time is controlled by `OG_EXPIRY_TIME`.
 
+When `OG_CACHE_CONSIDER_HOST` is enabled, Anubis will include the host in the cache key for Open Graph tags. This ensures that tags are cached separately for different hosts.
+
 ## Example
 
 Here is an example of how to configure Open Graph tags in your Anubis setup:
@@ -40,8 +44,19 @@ Here is an example of how to configure Open Graph tags in your Anubis setup:
 ```sh
 export OG_PASSTHROUGH=true
 export OG_EXPIRY_TIME=1h
+export OG_CACHE_CONSIDER_HOST=false
 ```
 
-With these settings, Anubis will cache Open Graph tags for 1 hour and pass them through to the challenge page.
+With these settings, Anubis will cache Open Graph tags for 1 hour and pass them through to the challenge page, not considering the host in the cache key.
+
+## When to Enable `OG_CACHE_CONSIDER_HOST`
+
+In most cases, you would want to keep `OG_CACHE_CONSIDER_HOST` set to `false` to avoid unnecessary cache fragmentation. However, there are some scenarios where enabling this option can be beneficial:
+
+1. **Multi-Tenant Applications**: If you are running a multi-tenant application where different tenants are hosted on different subdomains, enabling `OG_CACHE_CONSIDER_HOST` ensures that the Open Graph tags are cached separately for each tenant. This prevents one tenant's Open Graph tags from being served to another tenant's users.
+
+2. **Different Content for Different Hosts**: If your application serves different content based on the host, enabling `OG_CACHE_CONSIDER_HOST` ensures that the correct Open Graph tags are cached and served for each host. This is useful for applications that have different branding or content for different domains or subdomains.
+
+3. **Security and Privacy Concerns**: In some cases, you may want to ensure that Open Graph tags are not shared between different hosts for security or privacy reasons. Enabling `OG_CACHE_CONSIDER_HOST` ensures that the tags are cached separately for each host, preventing any potential leakage of information between hosts.
 
 For more information, refer to the [installation guide](../installation).
