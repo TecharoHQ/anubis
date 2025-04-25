@@ -177,7 +177,9 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		xffHeaderString = ""
 	}
 	if pref.Flatten {
-		xffHeaderString = forwardedList[len(forwardedList)-1]
+		if len(forwardedList) != 0 {
+			xffHeaderString = forwardedList[len(forwardedList)-1]
+		}
 	} else {
 		xffHeaderString = strings.Join(forwardedList, ",")
 	}

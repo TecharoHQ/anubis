@@ -140,6 +140,17 @@ func TestComputeXFFHeader(t *testing.T) {
 			remoteAddr: "anubis:80",
 			err:        ErrCantParseRemoteIP,
 		},
+		{
+			name:       "no-xff-dont-panic",
+			remoteAddr: "127.0.0.1:80",
+			pref: XFFComputePreferences{
+				StripPrivate:  true,
+				StripLoopback: true,
+				StripCGNAT:    true,
+				StripLLU:      true,
+				Flatten:       true,
+			},
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := computeXFFHeader(tt.remoteAddr, tt.origXFFHeader, tt.pref)
