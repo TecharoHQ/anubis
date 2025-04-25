@@ -1,0 +1,9 @@
+- name: lightpanda
+  user_agent_regex: ^LightPanda/.*$
+  action: DENY
+- name: headless-chrome
+  user_agent_regex: HeadlessChrome
+  action: DENY
+- name: headless-chromium
+  user_agent_regex: HeadlessChromium
+  action: DENY

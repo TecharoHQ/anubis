@@ -1,0 +1,7 @@
+# By Aibrew: https://github.com/TecharoHQ/anubis/discussions/261#discussioncomment-12821065
+- name: gitea-feed-atom
+  action: ALLOW
+  path_regex: ^/[.A-Za-z0-9_-]{1,256}?[./A-Za-z0-9_-]*\.atom$
+- name: gitea-feed-rss
+  action: ALLOW
+  path_regex: ^/[.A-Za-z0-9_-]{1,256}?[./A-Za-z0-9_-]*\.rss$

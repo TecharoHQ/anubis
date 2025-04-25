@@ -1,0 +1,4 @@
+bots:
+- name: generic-browser
+  user_agent_regex: Mozilla
+  action: CHALLENGE

@@ -1,0 +1,11 @@
+- name: marginalia
+  user_agent_regex: search\.marginalia\.nu
+  action: ALLOW
+  # Received directly over email
+  remote_addresses: [
+    "193.183.0.162/31",
+    "193.183.0.164/30",
+    "193.183.0.168/30",
+    "193.183.0.172/31",
+    "193.183.0.174/32"
+  ]

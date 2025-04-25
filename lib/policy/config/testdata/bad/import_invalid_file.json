@@ -1,0 +1,7 @@
+{
+  "bots": [
+    {
+      "import": "(data)/does-not-exist-fake-file.yaml"
+    }
+  ]
+}

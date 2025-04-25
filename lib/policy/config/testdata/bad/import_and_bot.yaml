@@ -1,0 +1,6 @@
+bots:
+- import: (data)/bots/ai-robots-txt.yaml
+  name: generic-browser
+  user_agent_regex: >
+    Mozilla|Opera
+  action: CHALLENGE

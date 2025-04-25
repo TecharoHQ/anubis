@@ -53,6 +53,24 @@ var (
 			userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.28 Safari/537.36",
 		},
 		{
+			name:      "Amazonbot",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.2.5 (KHTML, like Gecko) Version/8.0.2 Safari/600.2.5 (Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)",
+		},
+		{
+			name:      "Amazonbot",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.2.5 (KHTML, like Gecko) Version/8.0.2 Safari/600.2.5 (Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)",
+		},
+		{
+			name:      "PerplexityAI",
+			action:    actionDeny,
+			realIP:    placeholderIP,
+			userAgent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
+		},
+		{
 			name:      "kagiBadIP",
 			action:    actionChallenge,
 			isHard:    true,
@@ -80,7 +98,7 @@ const (
 	actionChallenge action = "CHALLENGE"
 
 	placeholderIP     = "fd11:5ee:bad:c0de::"
-	playwrightVersion = "1.50.1"
+	playwrightVersion = "1.51.1"
 )
 
 type action string
@@ -101,6 +119,9 @@ func doesNPXExist(t *testing.T) {
 }
 
 func run(t *testing.T, command string) string {
+	if testing.Short() {
+		t.Skip("skipping integration smoke testing in short mode")
+	}
 	t.Helper()
 
 	shPath, err := exec.LookPath("sh")
@@ -357,14 +378,14 @@ func pwFail(t *testing.T, page playwright.Page, format string, args ...any) erro
 }
 
 func pwTimeout(tc testCase, deadline time.Time) *float64 {
-	max := *playwrightMaxTime
+	maxTime := *playwrightMaxTime
 	if tc.isHard {
-		max = *playwrightMaxHardTime
+		maxTime = *playwrightMaxHardTime
 	}
 
 	d := time.Until(deadline)
-	if d <= 0 || d > max {
-		return playwright.Float(float64(max.Milliseconds()))
+	if d <= 0 || d > maxTime {
+		return playwright.Float(float64(maxTime.Milliseconds()))
 	}
 	return playwright.Float(float64(d.Milliseconds()))
 }

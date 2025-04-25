@@ -1,0 +1,147 @@
+# Importing configuration rules
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+Anubis has the ability to let you import snippets of configuration into the main configuration file. This allows you to break up your config into smaller parts that get logically assembled into one big file.
+
+EG:
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```json
+{
+  "bots": [
+    {
+      "import": "(data)/bots/ai-robots-txt.yaml"
+    },
+    {
+      "import": "(data)/bots/cloudflare-workers.yaml"
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML" default>
+
+```yaml
+bots:
+  # Pathological bots to deny
+  - # This correlates to data/bots/ai-robots-txt.yaml in the source tree
+    import: (data)/bots/ai-robots-txt.yaml
+  - import: (data)/bots/cloudflare-workers.yaml
+```
+
+</TabItem>
+</Tabs>
+
+Of note, a bot rule can either have inline bot configuration or import a bot config snippet. You cannot do both in a single bot rule.
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```json
+{
+  "bots": [
+    {
+      "import": "(data)/bots/ai-robots-txt.yaml",
+      "name": "generic-browser",
+      "user_agent_regex": "Mozilla|Opera\n",
+      "action": "CHALLENGE"
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML" default>
+
+```yaml
+bots:
+  - import: (data)/bots/ai-robots-txt.yaml
+    name: generic-browser
+    user_agent_regex: >
+      Mozilla|Opera
+    action: CHALLENGE
+```
+
+</TabItem>
+</Tabs>
+
+This will return an error like this:
+
+```text
+config is not valid:
+config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both
+```
+
+Paths can either be prefixed with `(data)` to import from the [the data folder in the Anubis source tree](https://github.com/TecharoHQ/anubis/tree/main/data) or anywhere on the filesystem. If you don't have access to the Anubis source tree, check /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
+
+## Writing snippets
+
+Snippets can be written in either JSON or YAML, with a preference for YAML. When writing a snippet, write the bot rules you want directly at the top level of the file in a list.
+
+Here is an example snippet that allows [IPv6 Unique Local Addresses](https://en.wikipedia.org/wiki/Unique_local_address) through Anubis:
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```json
+[
+  {
+    "name": "ipv6-ula",
+    "action": "ALLOW",
+    "remote_addresses": ["fc00::/7"]
+  }
+]
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML" default>
+
+```yaml
+- name: ipv6-ula
+  action: ALLOW
+  remote_addresses:
+    - fc00::/7
+```
+
+</TabItem>
+</Tabs>
+
+## Extracting Anubis' embedded filesystem
+
+You can always extract the list of rules embedded into the Anubis binary with this command:
+
+```text
+anubis --extract-resources=static
+```
+
+This will dump the contents of Anubis' embedded data to a new folder named `static`:
+
+```text
+static
+├── apps
+│   └── gitea-rss-feeds.yaml
+├── botPolicies.json
+├── botPolicies.yaml
+├── bots
+│   ├── ai-robots-txt.yaml
+│   ├── cloudflare-workers.yaml
+│   ├── headless-browsers.yaml
+│   └── us-ai-scraper.yaml
+├── common
+│   ├── allow-private-addresses.yaml
+│   └── keep-internet-working.yaml
+└── crawlers
+    ├── bingbot.yaml
+    ├── duckduckbot.yaml
+    ├── googlebot.yaml
+    ├── internet-archive.yaml
+    ├── kagibot.yaml
+    ├── marginalia.yaml
+    ├── mojeekbot.yaml
+    └── qwantbot.yaml
+```

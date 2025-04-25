@@ -1,0 +1,4 @@
+bots:
+- name: everything
+  user_agent_regex: .*
+  action: DENY

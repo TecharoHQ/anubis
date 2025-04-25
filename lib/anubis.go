@@ -8,12 +8,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"math"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -66,10 +67,11 @@ var (
 )
 
 type Options struct {
-	Next           http.Handler
-	Policy         *policy.ParsedConfig
-	ServeRobotsTXT bool
-	PrivateKey     ed25519.PrivateKey
+	Next            http.Handler
+	Policy          *policy.ParsedConfig
+	RedirectDomains []string
+	ServeRobotsTXT  bool
+	PrivateKey      ed25519.PrivateKey
 
 	CookieDomain      string
 	CookieName        string
@@ -92,14 +94,19 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 			return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
 		}
 	} else {
-		fname = "(data)/botPolicies.json"
-		fin, err = data.BotPolicies.Open("botPolicies.json")
+		fname = "(data)/botPolicies.yaml"
+		fin, err = data.BotPolicies.Open("botPolicies.yaml")
 		if err != nil {
 			return nil, fmt.Errorf("[unexpected] can't parse builtin policy file %s: %w", fname, err)
 		}
 	}
 
-	defer fin.Close()
+	defer func(fin io.ReadCloser) {
+		err := fin.Close()
+		if err != nil {
+			slog.Error("failed to close policy file", "file", fname, "err", err)
+		}
+	}(fin)
 
 	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
 
@@ -153,9 +160,10 @@ func New(opts Options) (*Server, error) {
 
 	mux.Handle("POST /.within.website/x/cmd/anubis/api/make-challenge", internal.SetFixedLocale("en", http.HandlerFunc(result.MakeChallenge)))
 	mux.Handle("GET /.within.website/x/cmd/anubis/api/pass-challenge", internal.SetFixedLocale("en", http.HandlerFunc(result.PassChallenge)))
+	mux.Handle("GET /.within.website/x/cmd/anubis/api/check", internal.SetFixedLocale("en", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly)))
 	mux.Handle("GET /.within.website/x/cmd/anubis/api/test-error", internal.SetFixedLocale("en", http.HandlerFunc(result.TestError)))
 
-	mux.Handle("/", internal.SetFixedLocale("en", http.HandlerFunc(result.MaybeReverseProxy)))
+	mux.Handle("/", internal.SetFixedLocale("en", http.HandlerFunc(result.maybeReverseProxyOrPage)))
 
 	result.mux = mux
 
@@ -177,6 +185,36 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
+func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
+	if s.next == nil {
+		redir := r.FormValue("redir")
+		urlParsed, err := r.URL.Parse(redir)
+		if err != nil {
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			return
+		}
+
+		if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			return
+		} else if urlParsed.Host != r.URL.Host {
+			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			return
+		}
+
+		if redir != "" {
+			http.Redirect(w, r, redir, http.StatusFound)
+			return
+		}
+
+		templ.Handler(
+			web.Base("You are not a bot!", web.StaticHappy()),
+		).ServeHTTP(w, r)
+	} else {
+		s.next.ServeHTTP(w, r)
+	}
+}
+
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.priv.Seed())
 
@@ -192,7 +230,15 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	return internal.SHA256sum(challengeData)
 }
 
-func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
+func (s *Server) maybeReverseProxyHttpStatusOnly(w http.ResponseWriter, r *http.Request) {
+	s.maybeReverseProxy(w, r, true)
+}
+
+func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request) {
+	s.maybeReverseProxy(w, r, false)
+}
+
+func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg := slog.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
@@ -214,7 +260,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	r.Header.Add("X-Anubis-Rule", cr.Name)
 	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg = lg.With("check_result", cr)
-	policy.PolicyApplications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
+	policy.Applications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
 
 	ip := r.Header.Get("X-Real-Ip")
 
@@ -240,7 +286,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
-		s.next.ServeHTTP(w, r)
+		s.ServeHTTPNext(w, r)
 		return
 	case config.RuleDeny:
 		s.ClearCookie(w)
@@ -250,12 +296,8 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(web.Base(l.T("errors.oh-noes"), web.ErrorPage(l.T("errors.other"), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
-		hash, err := rule.Hash()
-		if err != nil {
-			lg.Error("can't calculate checksum of rule", "err", err)
-			templ.Handler(web.Base(l.T("errors.oh-noes"), web.ErrorPage(l.T("errors.other"), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-			return
-		}
+		hash := rule.Hash()
+
 		lg.Debug("rule hash", "hash", hash)
 		templ.Handler(web.Base(l.T("errors.oh-noes"), web.ErrorPage(l.T("errors.access-denied", i18n.M{"code": hash}), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
 		return
@@ -275,21 +317,21 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
@@ -300,14 +342,14 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if randomJitter() {
 		r.Header.Add("X-Anubis-Status", "PASS-BRIEF")
 		lg.Debug("cookie is not enrolled into secondary screening")
-		s.next.ServeHTTP(w, r)
+		s.ServeHTTPNext(w, r)
 		return
 	}
 
@@ -315,7 +357,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
@@ -323,7 +365,7 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 	if claims["challenge"] != challenge {
 		lg.Debug("invalid challenge", "path", r.URL.Path)
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
@@ -340,30 +382,51 @@ func (s *Server) MaybeReverseProxy(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("invalid response", "path", r.URL.Path)
 		failedValidations.Inc()
 		s.ClearCookie(w)
-		s.RenderIndex(w, r)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	slog.Debug("all checks passed")
 	r.Header.Add("X-Anubis-Status", "PASS-FULL")
-	s.next.ServeHTTP(w, r)
+	s.ServeHTTPNext(w, r)
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
+	if returnHTTPStatusOnly {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Authorization required"))
+		return
+	}
+
+	lg := slog.With(
+		"user_agent", r.UserAgent(),
+		"accept_language", r.Header.Get("Accept-Language"),
+		"priority", r.Header.Get("Priority"),
+		"x-forwarded-for",
+		r.Header.Get("X-Forwarded-For"),
+		"x-real-ip", r.Header.Get("X-Real-Ip"),
+	)
+
+	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+
 	var ogTags map[string]string = nil
 	if s.opts.OGPassthrough {
 		var err error
 		ogTags, err = s.OGTags.GetOGTags(r.URL)
 		if err != nil {
-			slog.Error("failed to get OG tags", "err", err)
+			lg.Error("failed to get OG tags", "err", err)
 			ogTags = nil
 		}
 	}
-	handler := internal.NoStoreCache(
-		templ.Handler(
-			web.BaseWithOGTags("Making sure you're not a bot!", web.Index(), ogTags),
-		),
-	)
+
+	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
+	if err != nil {
+		lg.Error("render failed", "err", err)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+
+	handler := internal.NoStoreCache(templ.Handler(component))
 	handler.ServeHTTP(w, r)
 }
 
@@ -377,27 +440,37 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
 	l := ctxi18n.Locale(r.Context())
 
+	encoder := json.NewEncoder(w)
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(struct {
+		err := encoder.Encode(struct {
 			Error string `json:"error"`
 		}{
 			Error: l.T("errors.misconfigured", i18n.M{"function": "makeChallenge"}),
 		})
+		if err != nil {
+			lg.Error("failed to encode error response", "err", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 	lg = lg.With("check_result", cr)
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
-	json.NewEncoder(w).Encode(struct {
+	err = encoder.Encode(struct {
 		Challenge string                 `json:"challenge"`
 		Rules     *config.ChallengeRules `json:"rules"`
 	}{
 		Challenge: challenge,
 		Rules:     rule.Challenge,
 	})
+	if err != nil {
+		lg.Error("failed to encode challenge", "err", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	lg.Debug("made challenge", "challenge", challenge, "rules", rule.Challenge, "cr", cr)
 	challengesIssued.Inc()
 }
@@ -412,6 +485,16 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	)
 
 	l := ctxi18n.Locale(r.Context())
+
+	redir := r.FormValue("redir")
+	redirURL, err := url.ParseRequestURI(redir)
+	if err != nil {
+		lg.Error("invalid redirect", "err", err)
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid redirect", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+	// used by the path checker rule
+	r.URL = redirURL
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -449,7 +532,19 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	timeTaken.Observe(elapsedTime)
 
 	response := r.FormValue("response")
-	redir := r.FormValue("redir")
+	urlParsed, err := r.URL.Parse(redir)
+	if err != nil {
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
+
+	if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	} else if urlParsed.Host != r.URL.Host {
+		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		return
+	}
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
@@ -519,35 +614,33 @@ func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(web.Base(l.T("errors.oh-noes"), web.ErrorPage(err, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 }
 
+func cr(name string, rule config.Rule) policy.CheckResult {
+	return policy.CheckResult{
+		Name: name,
+		Rule: rule,
+	}
+}
+
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
+func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
-		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
 	}
 
 	addr := net.ParseIP(host)
 	if addr == nil {
-		return decaymap.Zilch[CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
+		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
 	for _, b := range s.policy.Bots {
-		if b.UserAgent != nil {
-			if b.UserAgent.MatchString(r.UserAgent()) && s.checkRemoteAddress(b, addr) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
+		match, err := b.Rules.Check(r)
+		if err != nil {
+			return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("can't run check %s: %w", b.Name, err)
 		}
 
-		if b.Path != nil {
-			if b.Path.MatchString(r.URL.Path) && s.checkRemoteAddress(b, addr) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
-		}
-
-		if b.Ranger != nil {
-			if s.checkRemoteAddress(b, addr) {
-				return cr("bot/"+b.Name, b.Action), &b, nil
-			}
+		if match {
+			return cr("bot/"+b.Name, b.Action), &b, nil
 		}
 	}
 
@@ -558,19 +651,6 @@ func (s *Server) check(r *http.Request) (CheckResult, *policy.Bot, error) {
 			Algorithm:  config.AlgorithmFast,
 		},
 	}, nil
-}
-
-func (s *Server) checkRemoteAddress(b policy.Bot, addr net.IP) bool {
-	if b.Ranger == nil {
-		return true
-	}
-
-	ok, err := b.Ranger.Contains(addr)
-	if err != nil {
-		log.Panicf("[unexpected] something very funky is going on, %q does not have a calculable network number: %v", addr.String(), err)
-	}
-
-	return ok
 }
 
 func (s *Server) CleanupDecayMap() {

@@ -1,0 +1,139 @@
+---
+title: Subrequest Authentication
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+Anubis can act in one of two modes:
+
+1. Reverse proxy (the default): Anubis sits in the middle of all traffic and then will reverse proxy it to its destination. This is the moral equivalent of a middleware in your favorite web framework.
+2. Subrequest authentication mode: Anubis listens for requests and if they don't pass muster then they are forwarded to Anubis for challenge processing. This is the equivalent of Anubis being a sidecar service.
+
+## Nginx
+
+Anubis can perform [subrequest authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/) with the `auth_request` module in Nginx. In order to set this up, keep the following things in mind:
+
+The `TARGET` environment variable in Anubis must be set to a space, eg:
+
+<Tabs>
+  <TabItem value="env-file" label="Environment file" default>
+
+```shell
+# anubis.env
+
+TARGET=" "
+# ...
+```
+
+  </TabItem>
+  <TabItem value="docker-compose" label="Docker Compose">
+
+```yaml
+services:
+  anubis-nginx:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      TARGET: " "
+      # ...
+```
+
+  </TabItem>
+  <TabItem value="k8s" label="Kubernetes">
+
+Inside your Deployment, StatefulSet, or Pod:
+
+```yaml
+- name: anubis
+  image: ghcr.io/techarohq/anubis:latest
+  env:
+    - name: TARGET
+      value: " "
+    # ...
+```
+
+  </TabItem>
+</Tabs>
+
+In order to configure this, you need to add the following location blocks to each server pointing to the service you want to protect:
+
+```nginx
+location /.within.website/ {
+    # Assumption: Anubis is running in the same network namespace as
+    # nginx on localhost TCP port 8923
+    proxy_pass http://127.0.0.1:8923;
+    auth_request off;
+}
+
+location @redirectToAnubis {
+    return 307 /.within.website/?redir=$scheme://$host$request_uri;
+    auth_request off;
+}
+```
+
+This sets up `/.within.website` to point to Anubis. Any requests that Anubis rejects or throws a challenge to will be sent here. This also sets up a named location `@redirectToAnubis` that will redirect any requests to Anubis for advanced processing.
+
+Finally, add this to your root location block:
+
+```nginx
+location / {
+    # diff-add
+    auth_request /.within.website/x/cmd/anubis/api/check;
+    # diff-add
+    error_page 401 = @redirectToAnubis;
+}
+```
+
+This will check all requests that don't match other locations with Anubis to ensure the client is genuine.
+
+This will make every request get checked by Anubis before it hits your backend. If you have other locations that don't need Anubis to do validation, add the `auth_request off` directive to their blocks:
+
+```nginx
+location /secret {
+    # diff-add
+    auth_request off;
+
+    # ...
+}
+```
+
+Here is a complete example of an Nginx server listening over TLS and pointing to Anubis:
+
+<details>
+  <summary>Complete example</summary>
+
+```nginx
+# /etc/nginx/conf.d/nginx.local.cetacean.club.conf
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  server_name         nginx.local.cetacean.club;
+  ssl_certificate     /etc/techaro/pki/nginx.local.cetacean.club/tls.crt;
+  ssl_certificate_key /etc/techaro/pki/nginx.local.cetacean.club/tls.key;
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+  location /.within.website/ {
+    proxy_pass http://localhost:8923;
+    auth_request off;
+  }
+
+  location @redirectToAnubis {
+    return 307 /.within.website/?redir=$scheme://$host$request_uri;
+    auth_request off;
+  }
+
+  location / {
+    auth_request /.within.website/x/cmd/anubis/api/check;
+    error_page 401 = @redirectToAnubis;
+    root /usr/share/nginx/html;
+    index index.html index.htm;
+  }
+}
+```
+
+</details>

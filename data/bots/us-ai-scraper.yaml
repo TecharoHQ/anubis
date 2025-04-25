@@ -1,0 +1,3 @@
+- name: us-artificial-intelligence-scraper
+  user_agent_regex: \+https\://github\.com/US-Artificial-Intelligence/scraper
+  action: DENY

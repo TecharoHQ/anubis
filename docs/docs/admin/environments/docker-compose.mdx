@@ -1,0 +1,26 @@
+# Docker compose
+
+Docker compose is typically used in concert with other load balancers such as [Apache](./apache.mdx) or [Nginx](./nginx.mdx). Below is a minimal example showing you how to set up an instance of Anubis listening on host port 8080 that points to a static website containing data in `./www`:
+
+```yaml
+services:
+  anubis-nginx:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      BIND: ":8080"
+      DIFFICULTY: "4"
+      METRICS_BIND: ":9090"
+      SERVE_ROBOTS_TXT: "true"
+      TARGET: "http://nginx"
+      POLICY_FNAME: "/data/cfg/botPolicy.yaml"
+      OG_PASSTHROUGH: "true"
+      OG_EXPIRY_TIME: "24h"
+    ports:
+      - 8080:8080
+    volumes:
+      - "./botPolicy.yaml:/data/cfg/botPolicy.yaml:ro"
+  nginx:
+    image: nginx
+    volumes:
+      - "./www:/usr/share/nginx/html"
+```

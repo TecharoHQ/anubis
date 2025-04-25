@@ -1,0 +1,15 @@
+- name: ipv4-rfc-1918
+  action: ALLOW
+  remote_addresses:
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+  - 100.64.0.0/10
+- name: ipv6-ula
+  action: ALLOW
+  remote_addresses:
+  - fc00::/7
+- name: ipv6-link-local
+  action: ALLOW
+  remote_addresses:
+  - fe80::/10

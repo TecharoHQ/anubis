@@ -10,11 +10,19 @@
 ![language count](https://img.shields.io/github/languages/count/TecharoHQ/anubis)
 ![repo size](https://img.shields.io/github/repo-size/TecharoHQ/anubis)
 
-Anubis [weighs the soul of your connection](https://en.wikipedia.org/wiki/Weighing_of_souls) using a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.
+## Sponsors
 
-Installing and using this will likely result in your website not being indexed by some search engines. This is considered a feature of Anubis, not a bug.
+Anubis is brought to you by sponsors and donors like:
 
-This is a bit of a nuclear response, but AI scraper bots scraping so aggressively have forced my hand. I hate that I have to do this, but this is what we get for the modern Internet because bots don't conform to standards like robots.txt, even when they claim to.
+[![Distrust](./docs/static/img/sponsors/distrust-logo.webp)](https://distrust.co)
+
+## Overview
+
+Anubis [weighs the soul of your connection](https://en.wikipedia.org/wiki/Weighing_of_souls) using a proof-of-work challenge in order to protect upstream resources from scraper bots.
+
+This program is designed to help protect the small internet from the endless storm of requests that flood in from AI companies. Anubis is as lightweight as possible to ensure that everyone can afford to protect the communities closest to them.
+
+Anubis is a bit of a nuclear response. This will result in your website being blocked from smaller scrapers and may inhibit "good bots" like the Internet Archive. You can configure [bot policy definitions](./admin/policies.mdx) to explicitly allowlist them and we are working on a curated set of "known good" bots to allow for a compromise between discoverability and uptime.
 
 In most cases, you should not need this and can probably get by using Cloudflare to protect a given origin. However, for circumstances where you can't or won't use Cloudflare, Anubis is there for you.
 
@@ -28,8 +36,22 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date)](https://www.star-history.com/#TecharoHQ/anubis&Date)
+<a href="https://www.star-history.com/#TecharoHQ/anubis&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date" />
+ </picture>
+</a>
 
 ## Packaging Status
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/anubis-anti-crawler.svg)](https://repology.org/project/anubis-anti-crawler/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/anubis-anti-crawler.svg?columns=3)](https://repology.org/project/anubis-anti-crawler/versions)
+
+## Contributors
+
+<a href="https://github.com/TecharoHQ/anubis/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=TecharoHQ/anubis" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).

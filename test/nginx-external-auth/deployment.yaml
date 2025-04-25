@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-external-auth
+spec:
+  selector:
+    matchLabels:
+      app: nginx-external-auth
+  template:
+    metadata:
+      labels:
+        app: nginx-external-auth
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: nginx-cfg
+      containers:
+      - name: www
+        image: nginx:alpine
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+      - name: anubis
+        image: ttl.sh/techaro/anubis-external-auth:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 250m
+            memory: 128Mi
+        env:
+        - name: TARGET
+          value: " "
+        - name: REDIRECT_DOMAINS
+          value: nginx.local.cetacean.club
+
+

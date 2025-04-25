@@ -1,0 +1,4 @@
+- name: cloudflare-workers
+  headers_regex:
+    CF-Worker: .*
+  action: DENY

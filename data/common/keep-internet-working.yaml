@@ -1,0 +1,10 @@
+# Common "keeping the internet working" routes
+- name: well-known
+  path_regex: ^/.well-known/.*$
+  action: ALLOW
+- name: favicon
+  path_regex: ^/favicon.ico$
+  action: ALLOW
+- name: robots-txt
+  path_regex: ^/robots.txt$
+  action: ALLOW

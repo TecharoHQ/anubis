@@ -1,0 +1,8 @@
+{
+  "label": "Environments",
+  "position": 20,
+  "link": {
+    "type": "generated-index",
+    "description": "Detailed information about individual environments (such as HTTP servers, platforms, etc.) Anubis is known to work with."
+  }
+}

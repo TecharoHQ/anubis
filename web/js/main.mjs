@@ -133,19 +133,7 @@ function showContinueBar(hash, nonce, t0, t1) {
     }
   }
 
-  const { challenge, rules } = await fetch("/.within.website/x/cmd/anubis/api/make-challenge", { method: "POST" })
-    .then(r => {
-      if (!r.ok) throw new Error("Failed to fetch config");
-      return r.json();
-    })
-    .catch(err => {
-      ohNoes({
-        titleMsg: "Internal error!",
-        statusMsg: `Failed to fetch challenge config: ${err.message}`,
-        imageSrc: imageURL("reject", anubisVersion),
-      });
-      throw err;
-    });
+  const { challenge, rules } = JSON.parse(document.getElementById('anubis_challenge').textContent);
 
   const process = algorithms[rules.algorithm];
   if (!process) {

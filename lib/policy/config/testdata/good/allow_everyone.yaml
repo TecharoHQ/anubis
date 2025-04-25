@@ -1,0 +1,6 @@
+bots:
+- name: everyones-invited
+  remote_addresses:
+    - "0.0.0.0/0"
+    - "::/0"
+  action: ALLOW

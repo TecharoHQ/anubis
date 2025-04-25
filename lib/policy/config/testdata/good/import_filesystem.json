@@ -1,0 +1,7 @@
+{
+  "bots": [
+    {
+      "import": "./testdata/hack-test.json"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "bots": [
+    {
+      "name": "Cloudflare Workers",
+      "headers_regex": {
+        "CF-Worker": ".*"
+      },
+      "action": "DENY"
+    }
+  ],
+  "dnsbl": false
+}

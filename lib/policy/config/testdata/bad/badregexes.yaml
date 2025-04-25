@@ -1,0 +1,7 @@
+bots:
+- name: path-bad
+  path_regex: "a(b"
+  action: DENY
+- name: user-agent-bad
+  user_agent_regex: "a(b"
+  action: DENY

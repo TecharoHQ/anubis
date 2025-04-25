@@ -1,0 +1,10 @@
+- name: kagibot
+  user_agent_regex: \+https\://kagi\.com/bot
+  action: ALLOW
+  # https://kagi.com/bot
+  remote_addresses: [
+    "216.18.205.234/32",
+    "35.212.27.76/32",
+    "104.254.65.50/32",
+    "209.151.156.194/32"
+  ]

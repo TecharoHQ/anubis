@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +27,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
@@ -50,8 +50,9 @@ var (
 	socketMode               = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
 	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
 	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
+	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to")
+	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
@@ -118,7 +119,10 @@ func setupListener(network string, address string) (net.Listener, string) {
 
 		err = os.Chmod(address, os.FileMode(mode))
 		if err != nil {
-			listener.Close()
+			err := listener.Close()
+			if err != nil {
+				log.Printf("failed to close listener: %v", err)
+			}
 			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
 		}
 	}
@@ -182,6 +186,9 @@ func main() {
 	}
 
 	if *extractResources != "" {
+		if err := extractEmbedFS(data.BotPolicies, ".", *extractResources); err != nil {
+			log.Fatal(err)
+		}
 		if err := extractEmbedFS(web.Static, "static", *extractResources); err != nil {
 			log.Fatal(err)
 		}
@@ -189,9 +196,14 @@ func main() {
 		return
 	}
 
-	rp, err := makeReverseProxy(*target)
-	if err != nil {
-		log.Fatalf("can't make reverse proxy: %v", err)
+	var rp http.Handler
+	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
+	if strings.TrimSpace(*target) != "" {
+		var err error
+		rp, err = makeReverseProxy(*target)
+		if err != nil {
+			log.Fatalf("can't make reverse proxy: %v", err)
+		}
 	}
 
 	policy, err := libanubis.LoadPoliciesOrDefault(*policyFname, *challengeDifficulty)
@@ -205,22 +217,17 @@ func main() {
 			continue
 		}
 
-		hash, err := rule.Hash()
-		if err != nil {
-			log.Fatalf("can't calculate checksum of rule %s: %v", rule.Name, err)
-		}
-
+		hash := rule.Hash()
 		fmt.Printf("* %s: %s\n", rule.Name, hash)
 	}
 	fmt.Println()
 
 	// replace the bot policy rules with a single rule that always benchmarks
 	if *debugBenchmarkJS {
-		userAgent := regexp.MustCompile(".")
 		policy.Bots = []botPolicy.Bot{{
-			Name:      "",
-			UserAgent: userAgent,
-			Action:    config.RuleBenchmark,
+			Name:   "",
+			Rules:  botPolicy.NewHeaderExistsChecker("User-Agent"),
+			Action: config.RuleBenchmark,
 		}}
 	}
 
@@ -233,12 +240,12 @@ func main() {
 			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
 		}
 	} else if *ed25519PrivateKeyHexFile != "" {
-		hex, err := os.ReadFile(*ed25519PrivateKeyHexFile)
+		hexData, err := os.ReadFile(*ed25519PrivateKeyHexFile)
 		if err != nil {
 			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
 		}
 
-		priv, err = keyFromHex(string(bytes.TrimSpace(hex)))
+		priv, err = keyFromHex(string(bytes.TrimSpace(hexData)))
 		if err != nil {
 			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
 		}
@@ -251,6 +258,20 @@ func main() {
 		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
 	}
 
+	var redirectDomainsList []string
+	if *redirectDomains != "" {
+		domains := strings.Split(*redirectDomains, ",")
+		for _, domain := range domains {
+			_, err = url.Parse(domain)
+			if err != nil {
+				log.Fatalf("cannot parse redirect-domain %q: %s", domain, err.Error())
+			}
+			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
+		}
+	} else {
+		slog.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
+	}
+
 	s, err := libanubis.New(libanubis.Options{
 		Next:              rp,
 		Policy:            policy,
@@ -260,6 +281,7 @@ func main() {
 		CookiePartitioned: *cookiePartitioned,
 		OGPassthrough:     *ogPassthrough,
 		OGTimeToLive:      *ogTimeToLive,
+		RedirectDomains:   redirectDomainsList,
 		Target:            *target,
 		WebmasterEmail:    *webmasterEmail,
 	})
@@ -283,6 +305,7 @@ func main() {
 	h = s
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
+	h = internal.XForwardedForUpdate(h)
 
 	srv := http.Server{Handler: h}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
@@ -349,7 +372,7 @@ func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
 			return err
 		}
 
-		destPath := filepath.Join(destDir, relPath)
+		destPath := filepath.Join(destDir, root, relPath)
 
 		if d.IsDir() {
 			return os.MkdirAll(destPath, 0o700)

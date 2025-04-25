@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-external-auth
+  labels:
+    name: nginx-external-auth
+  annotations:
+    cert-manager.io/cluster-issuer: "selfsigned"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - nginx.local.cetacean.club
+    secretName: nginx-local-cetacean-club-public-tls
+  rules:
+  - host: nginx.local.cetacean.club
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: nginx-external-auth
+            port: 
+              name: http
