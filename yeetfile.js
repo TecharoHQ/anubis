@@ -12,7 +12,7 @@ $`npm run assets`;
             "./README.md": "README.md",
             "./LICENSE": "LICENSE",
             "./docs/docs/CHANGELOG.md": "CHANGELOG.md",
-            "./docs/docs/admin/policies.md": "policies.md",
+            "./docs/docs/admin/policies.mdx": "policies.md",
             "./docs/docs/admin/native-install.mdx": "native-install.mdx",
             "./data/botPolicies.json": "botPolicies.json",
         },
