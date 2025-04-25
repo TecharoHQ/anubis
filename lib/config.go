@@ -41,6 +41,7 @@ type Options struct {
 
 	WebmasterEmail string
 	BasePrefix     string
+	PublicUrl      string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
