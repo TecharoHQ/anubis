@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -103,7 +104,7 @@ func XForwardedForUpdate(next http.Handler) http.Handler {
 
 		xffHeaderString, err := computeXFFHeader(remoteAddr, origXFFHeader, pref)
 		if err != nil {
-			slog.Warn("Computing XFF header failed.", "err", err)
+			slog.Debug("computing X-Forwarded-For header failed", "err", err)
 			return
 		}
 
@@ -115,19 +116,24 @@ func XForwardedForUpdate(next http.Handler) http.Handler {
 	})
 }
 
+var (
+	ErrCantSplitHostParse = errors.New("internal: unable to net.SplitHostParse")
+	ErrCantParseRemoteIP  = errors.New("internal: unable to parse remote IP")
+)
+
 func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePreferences) (string, error) {
 	remoteIP, _, err := net.SplitHostPort(remoteAddr)
 	if err != nil {
-		return "", fmt.Errorf("unable to net.SplitHostParse: %w", err)
+		return "", fmt.Errorf("%w: %w", ErrCantSplitHostParse, err)
 	}
 	parsedRemoteIP, err := netip.ParseAddr(remoteIP)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse remote IP: %w", err)
+		return "", fmt.Errorf("%w: %w", ErrCantParseRemoteIP, err)
 	}
 
 	origForwardedList := make([]string, 0, 4)
 	if origXFFHeader != "" {
-		origForwardedList = strings.Split(",", origXFFHeader)
+		origForwardedList = strings.Split(origXFFHeader, ",")
 	}
 	origForwardedList = append(origForwardedList, parsedRemoteIP.String())
 	forwardedList := make([]string, 0, len(origForwardedList))
@@ -149,7 +155,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 			// can't assess this element, so the remainder of the chain
 			// can't be trusted. not a fatal error, since anyone can
 			// spoof an XFF header
-			slog.Warn("failed to parse XFF segment", "err", err)
+			slog.Debug("failed to parse XFF segment", "err", err)
 			break
 		}
 		if pref.StripPrivate && segmentIP.IsPrivate() {
