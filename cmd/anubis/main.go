@@ -259,13 +259,15 @@ func main() {
 	}
 
 	var redirectDomainsList []string
-	domains := strings.Split(*redirectDomains, ",")
-	for _, domain := range domains {
-		_, err = url.Parse(domain)
-		if err != nil {
-			log.Fatalf("cannot parse redirect-domain %q: %s", domain, err.Error())
+	if *redirectDomains != "" {
+		domains := strings.Split(*redirectDomains, ",")
+		for _, domain := range domains {
+			_, err = url.Parse(domain)
+			if err != nil {
+				log.Fatalf("cannot parse redirect-domain %q: %s", domain, err.Error())
+			}
+			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
-		redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 	}
 
 	s, err := libanubis.New(libanubis.Options{

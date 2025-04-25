@@ -184,7 +184,8 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if len(urlParsed.Host) > 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
+		slog.Debug("about", "redirectDomains", s.opts.RedirectDomains)
+		if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
 			templ.Handler(web.Base("Oh noes!", web.ErrorPage("This Redirect domain is not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
@@ -520,7 +521,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(urlParsed.Host) > 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
+	if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("This Redirect domain is not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}
