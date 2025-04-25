@@ -178,7 +178,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
 		redir := r.FormValue("redir")
-		urlParsed, err := url.Parse(redir)
+		urlParsed, err := r.URL.Parse(redir)
 		if err != nil {
 			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
@@ -187,7 +187,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
 			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
-		} else if urlParsed.Host != r.Host {
+		} else if urlParsed.Host != r.URL.Host {
 			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 			return
 		}
@@ -517,7 +517,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	timeTaken.Observe(elapsedTime)
 
 	response := r.FormValue("response")
-	urlParsed, err := url.Parse(redir)
+	urlParsed, err := r.URL.Parse(redir)
 	if err != nil {
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
@@ -526,7 +526,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
-	} else if urlParsed.Host != r.Host {
+	} else if urlParsed.Host != r.URL.Host {
 		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
 		return
 	}

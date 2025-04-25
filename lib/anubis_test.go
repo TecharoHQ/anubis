@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
@@ -184,6 +185,7 @@ func TestCookieSettings(t *testing.T) {
 	}
 
 	if resp.StatusCode != http.StatusFound {
+		resp.Write(os.Stderr)
 		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 	}
 
