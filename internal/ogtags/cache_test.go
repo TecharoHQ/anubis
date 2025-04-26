@@ -9,7 +9,7 @@ import (
 )
 
 func TestCheckCache(t *testing.T) {
-	cache := NewOGTagCache("http://example.com", true, time.Minute)
+	cache := NewOGTagCache("http://example.com", true, time.Minute, false)
 
 	// Set up test data
 	urlStr := "http://example.com/page"
@@ -17,18 +17,19 @@ func TestCheckCache(t *testing.T) {
 		"og:title":       "Test Title",
 		"og:description": "Test Description",
 	}
+	cacheKey := cache.generateCacheKey(urlStr, "example.com")
 
 	// Test cache miss
-	tags := cache.checkCache(urlStr)
+	tags := cache.checkCache(cacheKey)
 	if tags != nil {
 		t.Errorf("expected nil tags on cache miss, got %v", tags)
 	}
 
 	// Manually add to cache
-	cache.cache.Set(urlStr, expectedTags, time.Minute)
+	cache.cache.Set(cacheKey, expectedTags, time.Minute)
 
 	// Test cache hit
-	tags = cache.checkCache(urlStr)
+	tags = cache.checkCache(cacheKey)
 	if tags == nil {
 		t.Fatal("expected non-nil tags on cache hit, got nil")
 	}
@@ -67,7 +68,7 @@ func TestGetOGTags(t *testing.T) {
 	defer ts.Close()
 
 	// Create an instance of OGTagCache with a short TTL for testing
-	cache := NewOGTagCache(ts.URL, true, 1*time.Minute)
+	cache := NewOGTagCache(ts.URL, true, 1*time.Minute, false)
 
 	// Parse the test server URL
 	parsedURL, err := url.Parse(ts.URL)
@@ -126,7 +127,7 @@ func TestGetOGTags(t *testing.T) {
 
 func TestGetOGTagsWithHostConsideration(t *testing.T) {
 	var loadCount int // Counter to track how many times the test route is loaded
-
+	/*fixme: redo this test to include more cases where ogTagsConsiderHost is true/false and diff host configs */
 	// Create a test server to serve a sample HTML page with OG tags
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		loadCount++
@@ -148,7 +149,7 @@ func TestGetOGTagsWithHostConsideration(t *testing.T) {
 	defer ts.Close()
 
 	// Create an instance of OGTagCache with a short TTL for testing
-	cache := NewOGTagCache(ts.URL, true, 1*time.Minute)
+	cache := NewOGTagCache(ts.URL, true, 1*time.Minute, true)
 	cache.ogCacheConsiderHost = true
 
 	// Parse the test server URL

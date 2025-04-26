@@ -13,17 +13,18 @@ import (
 )
 
 type OGTagCache struct {
-	cache            *decaymap.Impl[string, map[string]string]
-	targetURL        *url.URL
-	ogPassthrough    bool
-	ogTimeToLive     time.Duration
-	approvedTags     []string
-	approvedPrefixes []string
-	client           *http.Client
-	maxContentLength int64
+	cache               *decaymap.Impl[string, map[string]string]
+	targetURL           *url.URL
+	ogCacheConsiderHost bool
+	ogPassthrough       bool
+	ogTimeToLive        time.Duration
+	approvedTags        []string
+	approvedPrefixes    []string
+	client              *http.Client
+	maxContentLength    int64
 }
 
-func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration) *OGTagCache {
+func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogTagsConsiderHost bool) *OGTagCache {
 	// Predefined approved tags and prefixes
 	// In the future, these could come from configuration
 	defaultApprovedTags := []string{"description", "keywords", "author"}
@@ -67,14 +68,15 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 	const maxContentLength = 16 << 20 // 16 MiB in bytes, if there is a reasonable reason that you need more than this...Why?
 
 	return &OGTagCache{
-		cache:            decaymap.New[string, map[string]string](),
-		targetURL:        parsedTargetURL, // Store the parsed URL
-		ogPassthrough:    ogPassthrough,
-		ogTimeToLive:     ogTimeToLive,
-		approvedTags:     defaultApprovedTags,
-		approvedPrefixes: defaultApprovedPrefixes,
-		client:           client,
-		maxContentLength: maxContentLength,
+		cache:               decaymap.New[string, map[string]string](),
+		targetURL:           parsedTargetURL, // Store the parsed URL
+		ogPassthrough:       ogPassthrough,
+		ogTimeToLive:        ogTimeToLive,
+		ogCacheConsiderHost: ogTagsConsiderHost, // todo: refactor to be a separate struct
+		approvedTags:        defaultApprovedTags,
+		approvedPrefixes:    defaultApprovedPrefixes,
+		client:              client,
+		maxContentLength:    maxContentLength,
 	}
 }
 

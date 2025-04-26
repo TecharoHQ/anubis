@@ -78,7 +78,7 @@ func TestFetchHTMLDocument(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			cache := NewOGTagCache("", true, time.Minute)
+			cache := NewOGTagCache("", true, time.Minute, false)
 			doc, err := cache.fetchHTMLDocument(ts.URL, "anything")
 
 			if tt.expectError {
@@ -105,7 +105,7 @@ func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
 		t.Skip("test requires theoretical network egress")
 	}
 
-	cache := NewOGTagCache("", true, time.Minute)
+	cache := NewOGTagCache("", true, time.Minute, false)
 
 	doc, err := cache.fetchHTMLDocument("http://invalid.url.that.doesnt.exist.example", "anything")
 

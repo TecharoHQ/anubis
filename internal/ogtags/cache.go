@@ -13,20 +13,16 @@ func (c *OGTagCache) GetOGTags(url *url.URL, originalHost string) (map[string]st
 		return nil, errors.New("nil URL provided, cannot fetch OG tags")
 	}
 
-	var urlStr string
-	if c.ogCacheConsiderHost {
-		urlStr = c.getTarget(url) + "|" + originalHost
-	} else {
-		urlStr = c.getTarget(url)
-	}
+	target := c.getTarget(url)
+	cacheKey := c.generateCacheKey(target, originalHost)
 
 	// Check cache first
-	if cachedTags := c.checkCache(urlStr); cachedTags != nil {
+	if cachedTags := c.checkCache(cacheKey); cachedTags != nil {
 		return cachedTags, nil
 	}
 
 	// Fetch HTML content, passing the original host
-	doc, err := c.fetchHTMLDocument(urlStr, originalHost)
+	doc, err := c.fetchHTMLDocumentWithCache(target, originalHost, cacheKey)
 	if errors.Is(err, syscall.ECONNREFUSED) {
 		slog.Debug("Connection refused, returning empty tags")
 		return nil, nil
@@ -42,17 +38,28 @@ func (c *OGTagCache) GetOGTags(url *url.URL, originalHost string) (map[string]st
 	ogTags := c.extractOGTags(doc)
 
 	// Store in cache
-	c.cache.Set(urlStr, ogTags, c.ogTimeToLive)
+	c.cache.Set(cacheKey, ogTags, c.ogTimeToLive)
 
 	return ogTags, nil
 }
 
+func (c *OGTagCache) generateCacheKey(target string, originalHost string) string {
+	var cacheKey string
+
+	if c.ogCacheConsiderHost {
+		cacheKey = target + "|" + originalHost
+	} else {
+		cacheKey = target
+	}
+	return cacheKey
+}
+
 // checkCache checks if we have the tags cached and returns them if so
-func (c *OGTagCache) checkCache(urlStr string) map[string]string {
-	if cachedTags, ok := c.cache.Get(urlStr); ok {
+func (c *OGTagCache) checkCache(cacheKey string) map[string]string {
+	if cachedTags, ok := c.cache.Get(cacheKey); ok {
 		slog.Debug("cache hit", "tags", cachedTags)
 		return cachedTags
 	}
-	slog.Debug("cache miss", "url", urlStr)
+	slog.Debug("cache miss", "url", cacheKey)
 	return nil
 }

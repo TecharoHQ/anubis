@@ -38,7 +38,7 @@ func TestNewOGTagCache(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache := NewOGTagCache(tt.target, tt.ogPassthrough, tt.ogTimeToLive)
+			cache := NewOGTagCache(tt.target, tt.ogPassthrough, tt.ogTimeToLive, false)
 
 			if cache == nil {
 				t.Fatal("expected non-nil cache, got nil")
@@ -74,7 +74,7 @@ func TestNewOGTagCache_UnixSocket(t *testing.T) {
 	socketPath := filepath.Join(tempDir, "test.sock")
 	target := "unix://" + socketPath
 
-	cache := NewOGTagCache(target, true, 5*time.Minute)
+	cache := NewOGTagCache(target, true, 5*time.Minute, false)
 
 	if cache == nil {
 		t.Fatal("expected non-nil cache, got nil")
@@ -155,7 +155,7 @@ func TestGetTarget(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache := NewOGTagCache(tt.target, false, time.Minute)
+			cache := NewOGTagCache(tt.target, false, time.Minute, false)
 
 			u := &url.URL{
 				Path:     tt.path,
@@ -222,7 +222,7 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 
 	// Create cache instance pointing to the Unix socket
 	targetURL := "unix://" + socketPath
-	cache := NewOGTagCache(targetURL, true, 1*time.Minute)
+	cache := NewOGTagCache(targetURL, true, 1*time.Minute, false)
 
 	// Create a dummy URL for the request (path and query matter)
 	testReqURL, _ := url.Parse("/some/page?query=1")

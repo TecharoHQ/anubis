@@ -17,9 +17,9 @@ var (
 	emptyMap     = map[string]string{}             // used to indicate an empty result in the cache. Can't use nil as it would be a cache miss.
 )
 
-// fetchHTMLDocument fetches the HTML document from the given URL string,
+// fetchHTMLDocumentWithCache fetches the HTML document from the given URL string,
 // preserving the original host header.
-func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*html.Node, error) {
+func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost string, cacheKey string) (*html.Node, error) {
 	req, err := http.NewRequestWithContext(context.Background(), "GET", urlStr, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
@@ -38,7 +38,7 @@ func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*htm
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {
 			slog.Debug("og: request timed out", "url", urlStr)
-			c.cache.Set(urlStr, emptyMap, c.ogTimeToLive/2) // Cache empty result for half the TTL to not spam the server
+			c.cache.Set(cacheKey, emptyMap, c.ogTimeToLive/2) // Cache empty result for half the TTL to not spam the server
 		}
 		return nil, fmt.Errorf("http get failed: %w", err)
 	}
@@ -52,7 +52,7 @@ func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*htm
 
 	if resp.StatusCode != http.StatusOK {
 		slog.Debug("og: received non-OK status code", "url", urlStr, "status", resp.StatusCode)
-		c.cache.Set(urlStr, emptyMap, c.ogTimeToLive) // Cache empty result for non-successful status codes
+		c.cache.Set(cacheKey, emptyMap, c.ogTimeToLive) // Cache empty result for non-successful status codes
 		return nil, fmt.Errorf("%w: page not found", ErrOgHandled)
 	}
 
@@ -90,4 +90,10 @@ func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*htm
 	}
 
 	return doc, nil
+}
+
+// fetchHTMLDocument allows you to call fetchHTMLDocumentWithCache without a duplicate generateCacheKey call
+func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*html.Node, error) {
+	cacheKey := c.generateCacheKey(urlStr, originalHost)
+	return c.fetchHTMLDocumentWithCache(urlStr, originalHost, cacheKey)
 }

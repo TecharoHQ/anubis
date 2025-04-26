@@ -273,19 +273,19 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		BasePrefix:          *basePrefix,
-		Next:                rp,
-		Policy:              policy,
-		ServeRobotsTXT:      *robotsTxt,
-		PrivateKey:          priv,
-		CookieDomain:        *cookieDomain,
-		CookiePartitioned:   *cookiePartitioned,
-		OGPassthrough:       *ogPassthrough,
-		OGTimeToLive:        *ogTimeToLive,
-		RedirectDomains:     redirectDomainsList,
-		Target:              *target,
-		WebmasterEmail:      *webmasterEmail,
-		OGCacheConsiderHost: *ogCacheConsiderHost,
+		BasePrefix:           *basePrefix,
+		Next:                 rp,
+		Policy:               policy,
+		ServeRobotsTXT:       *robotsTxt,
+		PrivateKey:           priv,
+		CookieDomain:         *cookieDomain,
+		CookiePartitioned:    *cookiePartitioned,
+		OGPassthrough:        *ogPassthrough,
+		OGTimeToLive:         *ogTimeToLive,
+		RedirectDomains:      redirectDomainsList,
+		Target:               *target,
+		WebmasterEmail:       *webmasterEmail,
+		OGCacheConsidersHost: *ogCacheConsiderHost,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
