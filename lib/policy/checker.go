@@ -110,11 +110,11 @@ func NewUserAgentChecker(rexStr string) (Checker, error) {
 }
 
 func NewHeaderMatchesChecker(header, rexStr string) (Checker, error) {
-	rex, err := regexp.Compile(rexStr)
+	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &HeaderMatchesChecker{header, rex, internal.SHA256sum(header + ": " + rexStr)}, nil
+	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.SHA256sum(header + ": " + rexStr)}, nil
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
@@ -135,7 +135,7 @@ type PathChecker struct {
 }
 
 func NewPathChecker(rexStr string) (Checker, error) {
-	rex, err := regexp.Compile(rexStr)
+	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
@@ -155,7 +155,7 @@ func (pc *PathChecker) Hash() string {
 }
 
 func NewHeaderExistsChecker(key string) Checker {
-	return headerExistsChecker{key}
+	return headerExistsChecker{strings.TrimSpace(key)}
 }
 
 type headerExistsChecker struct {
@@ -180,11 +180,11 @@ func NewHeadersChecker(headermap map[string]string) (Checker, error) {
 
 	for key, rexStr := range headermap {
 		if rexStr == ".*" {
-			result = append(result, headerExistsChecker{key})
+			result = append(result, headerExistsChecker{strings.TrimSpace(key)})
 			continue
 		}
 
-		rex, err := regexp.Compile(rexStr)
+		rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 		if err != nil {
 			errs = append(errs, fmt.Errorf("while compiling header %s regex %s: %w", key, rexStr, err))
 			continue

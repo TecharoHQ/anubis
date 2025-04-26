@@ -1,0 +1,17 @@
+bots:
+- name: user-agent-ends-newline
+  # Subtle bug: this ends with a newline
+  user_agent_regex: >
+    Mozilla
+  action: CHALLENGE
+- name: path-ends-newline
+  # Subtle bug: this ends with a newline
+  path_regex: >
+    ^/evil/.*$
+  action: CHALLENGE
+- name: headers-ends-newline
+  # Subtle bug: this ends with a newline
+  headers_regex:
+    CF-Worker: >
+      .*
+  action: CHALLENGE
