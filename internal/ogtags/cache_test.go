@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -125,12 +126,13 @@ func TestGetOGTags(t *testing.T) {
 	}
 }
 
+// TestGetOGTagsWithHostConsideration tests the behavior of the cache with and without host consideration and for multiple hosts in a theoretical setup.
 func TestGetOGTagsWithHostConsideration(t *testing.T) {
 	var loadCount int // Counter to track how many times the test route is loaded
-	/*fixme: redo this test to include more cases where ogTagsConsiderHost is true/false and diff host configs */
-	// Create a test server to serve a sample HTML page with OG tags
+
+	// Create a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		loadCount++
+		loadCount++ // Increment counter on each request to the server
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`
 			<!DOCTYPE html>
@@ -138,55 +140,101 @@ func TestGetOGTagsWithHostConsideration(t *testing.T) {
 			<head>
 				<meta property="og:title" content="Test Title" />
 				<meta property="og:description" content="Test Description" />
-				<meta property="og:image" content="http://example.com/image.jpg" />
 			</head>
-			<body>
-				<p>Hello, world!</p>
-			</body>
+			<body><p>Content</p></body>
 			</html>
 		`))
 	}))
 	defer ts.Close()
 
-	// Create an instance of OGTagCache with a short TTL for testing
-	cache := NewOGTagCache(ts.URL, true, 1*time.Minute, true)
-	cache.ogCacheConsiderHost = true
-
-	// Parse the test server URL
 	parsedURL, err := url.Parse(ts.URL)
 	if err != nil {
 		t.Fatalf("failed to parse test server URL: %v", err)
 	}
 
-	// Test fetching OG tags from the test server with host consideration
-	ogTags, err := cache.GetOGTags(parsedURL, "host1")
-	if err != nil {
-		t.Fatalf("failed to get OG tags: %v", err)
-	}
-
-	// Verify the fetched OG tags
 	expectedTags := map[string]string{
 		"og:title":       "Test Title",
 		"og:description": "Test Description",
-		"og:image":       "http://example.com/image.jpg",
 	}
 
-	for key, expectedValue := range expectedTags {
-		if value, ok := ogTags[key]; !ok || value != expectedValue {
-			t.Errorf("expected %s: %s, got: %s", key, expectedValue, value)
+	testCases := []struct {
+		name                string
+		ogCacheConsiderHost bool
+		requests            []struct {
+			host              string
+			expectedLoadCount int // Expected load count *after* this request
 		}
+	}{
+		{
+			name:                "Host Not Considered - Same Host",
+			ogCacheConsiderHost: false,
+			requests: []struct {
+				host              string
+				expectedLoadCount int
+			}{
+				{"host1", 1}, // First request, miss
+				{"host1", 1}, // Second request, same host, hit (host ignored)
+			},
+		},
+		{
+			name:                "Host Not Considered - Different Host",
+			ogCacheConsiderHost: false,
+			requests: []struct {
+				host              string
+				expectedLoadCount int
+			}{
+				{"host1", 1}, // First request, miss
+				{"host2", 1}, // Second request, different host, hit (host ignored)
+			},
+		},
+		{
+			name:                "Host Considered - Same Host",
+			ogCacheConsiderHost: true,
+			requests: []struct {
+				host              string
+				expectedLoadCount int
+			}{
+				{"host1", 1}, // First request, miss
+				{"host1", 1}, // Second request, same host, hit
+			},
+		},
+		{
+			name:                "Host Considered - Different Host",
+			ogCacheConsiderHost: true,
+			requests: []struct {
+				host              string
+				expectedLoadCount int
+			}{
+				{"host1", 1}, // First request, miss
+				{"host2", 2}, // Second request, different host, miss
+				{"host2", 2}, // Third request, same as second, hit
+				{"host1", 2}, // Fourth request, same as first, hit
+			},
+		},
 	}
 
-	// Test fetching OG tags from the cache with a different host
-	ogTags, err = cache.GetOGTags(parsedURL, "host2")
-	if err != nil {
-		t.Fatalf("failed to get OG tags from cache: %v", err)
-	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			loadCount = 0 // Reset load count for each test case
+			cache := NewOGTagCache(ts.URL, true, 1*time.Minute, tc.ogCacheConsiderHost)
 
-	// Verify the cached OG tags for the different host
-	for key, expectedValue := range expectedTags {
-		if value, ok := ogTags[key]; !ok || value != expectedValue {
-			t.Errorf("expected %s: %s, got: %s", key, expectedValue, value)
-		}
+			for i, req := range tc.requests {
+				ogTags, err := cache.GetOGTags(parsedURL, req.host)
+				if err != nil {
+					t.Errorf("Request %d (host: %s): unexpected error: %v", i+1, req.host, err)
+					continue // Skip further checks for this request if error occurred
+				}
+
+				// Verify tags are correct (should always be the same in this setup)
+				if !reflect.DeepEqual(ogTags, expectedTags) {
+					t.Errorf("Request %d (host: %s): expected tags %v, got %v", i+1, req.host, expectedTags, ogTags)
+				}
+
+				// Verify the load count to check cache hit/miss behavior
+				if loadCount != req.expectedLoadCount {
+					t.Errorf("Request %d (host: %s): expected load count %d, got %d (cache hit/miss mismatch)", i+1, req.host, req.expectedLoadCount, loadCount)
+				}
+			}
+		})
 	}
 }
