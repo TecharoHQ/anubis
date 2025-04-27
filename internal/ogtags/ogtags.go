@@ -12,6 +12,11 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 )
 
+const (
+	maxContentLength = 16 << 20        // 16 MiB in bytes, if there is a reasonable reason that you need more than this...Why?
+	httpTimeout      = 5 * time.Second /*todo: make this configurable?*/
+)
+
 type OGTagCache struct {
 	cache               *decaymap.Impl[string, map[string]string]
 	targetURL           *url.URL
@@ -38,6 +43,7 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 		parsedTargetURL, _ = url.Parse("http://localhost")
 	} else {
 		parsedTargetURL, err = url.Parse(target)
+		parsedTargetURL.Scheme = "http" // Ensure scheme is http for non-unix targets as anubis cannot fetch https (notls)
 		if err != nil {
 			slog.Debug("og: failed to parse target URL, treating as non-unix", "target", target, "error", err)
 			// If parsing fails, treat it as a non-unix target for backward compatibility or default behavior
@@ -46,13 +52,13 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 			parsedTargetURL = &url.URL{Scheme: "http", Host: target} // Assume http if scheme missing and host-like
 			if !strings.Contains(target, "://") && !strings.HasPrefix(target, "unix:") {
 				// If it looks like just a host/host:port (and not unix), prepend http:// (todo: is this bad...? Trace path to see if i can yell at user to do it right)
-				parsedTargetURL, _ = url.Parse("http://" + target)
+				parsedTargetURL, _ = url.Parse("http://" + target) // fetch cares about scheme but anubis doesn't
 			}
 		}
 	}
 
 	client := &http.Client{
-		Timeout: 5 * time.Second, /*todo: make this configurable?*/
+		Timeout: httpTimeout,
 	}
 
 	// Configure custom transport for Unix sockets
@@ -64,8 +70,6 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 			},
 		}
 	}
-
-	const maxContentLength = 16 << 20 // 16 MiB in bytes, if there is a reasonable reason that you need more than this...Why?
 
 	return &OGTagCache{
 		cache:               decaymap.New[string, map[string]string](),
