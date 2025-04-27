@@ -25,14 +25,16 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost stri
 		return nil, fmt.Errorf("failed to create http request: %w", err)
 	}
 
-	// Set the Host header to the original host from the incoming request
-	// This is crucial for target applications that rely on the Host header
-	// for routing or configuration (e.g., virtual hosts).
+	// Set the Host header to the original host
 	if originalHost != "" {
 		req.Host = originalHost
 	}
-	// If originalHost is empty, let the http client use the host from urlStr
 
+	// Add proxy headers
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("User-Agent", "Anubis-OGTag-Fetcher/1.0") // For tracking purposes
+
+	// Send the request
 	resp, err := c.client.Do(req)
 	if err != nil {
 		var netErr net.Error
@@ -42,7 +44,8 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost stri
 		}
 		return nil, fmt.Errorf("http get failed: %w", err)
 	}
-	// this defer will call MaxBytesReader's Close, which closes the original body.
+
+	// Ensure the response body is closed
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -59,12 +62,10 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost stri
 	// Check content type
 	ct := resp.Header.Get("Content-Type")
 	if ct == "" {
-		// assume non html body
 		return nil, fmt.Errorf("missing Content-Type header")
 	} else {
 		mediaType, _, err := mime.ParseMediaType(ct)
 		if err != nil {
-			// Malformed Content-Type header
 			slog.Debug("og: malformed Content-Type header", "url", urlStr, "contentType", ct)
 			return nil, fmt.Errorf("%w malformed Content-Type header: %w", ErrOgHandled, err)
 		}
@@ -85,7 +86,6 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost stri
 			slog.Debug("og: content exceeded max length", "url", urlStr, "limit", maxContentLength)
 			return nil, fmt.Errorf("content too large: exceeded %d bytes", maxContentLength)
 		}
-		// parsing error (e.g., malformed HTML)
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
 

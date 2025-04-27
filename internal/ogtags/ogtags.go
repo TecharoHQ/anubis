@@ -54,9 +54,6 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 			}
 		}
 	}
-	if parsedTargetURL.Scheme == "https" {
-		parsedTargetURL.Scheme = "http" // Ensure scheme is http for non-unix targets as anubis cannot fetch https (notls)
-	}
 
 	client := &http.Client{
 		Timeout: httpTimeout,
