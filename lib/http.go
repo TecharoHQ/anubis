@@ -77,7 +77,7 @@ func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message string) {
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(message, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+	s.respondWithStatus(w, r, message, http.StatusInternalServerError)
 }
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
