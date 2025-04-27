@@ -1,0 +1,79 @@
+{
+  "bots": [
+    {
+      "name": "amazonbot",
+      "user_agent_regex": "Amazonbot",
+      "action": "DENY"
+    },
+    {
+      "name": "googlebot",
+      "user_agent_regex": "\\+http\\:\\/\\/www\\.google\\.com/bot\\.html",
+      "action": "ALLOW"
+    },
+    {
+      "name": "bingbot",
+      "user_agent_regex": "\\+http\\:\\/\\/www\\.bing\\.com/bingbot\\.htm",
+      "action": "ALLOW"
+    },
+    {
+      "name": "qwantbot",
+      "user_agent_regex": "\\+https\\:\\/\\/help\\.qwant\\.com/bot/",
+      "action": "ALLOW"
+    },
+    {
+      "name": "discordbot",
+      "user_agent_regex": "Discordbot/2\\.0; \\+https\\:\\/\\/discordapp\\.com",
+      "action": "ALLOW"
+    },
+    {
+      "name": "blueskybot",
+      "user_agent_regex": "Bluesky Cardyb",
+      "action": "ALLOW"
+    },
+    {
+      "name": "us-artificial-intelligence-scraper",
+      "user_agent_regex": "\\+https\\:\\/\\/github\\.com\\/US-Artificial-Intelligence\\/scraper",
+      "action": "DENY"
+    },
+    {
+      "name": "well-known",
+      "path_regex": "^/.well-known/.*$",
+      "action": "ALLOW"
+    },
+    {
+      "name": "favicon",
+      "path_regex": "^/favicon.ico$",
+      "action": "ALLOW"
+    },
+    {
+      "name": "robots-txt",
+      "path_regex": "^/robots.txt$",
+      "action": "ALLOW"
+    },
+    {
+      "name": "rss-readers",
+      "path_regex": ".*\\.(rss|xml|atom|json)$",
+      "action": "ALLOW"
+    },
+    {
+      "name": "lightpanda",
+      "user_agent_regex": "^Lightpanda/.*$",
+      "action": "DENY"
+    },
+    {
+      "name": "headless-chrome",
+      "user_agent_regex": "HeadlessChrome",
+      "action": "DENY"
+    },
+    {
+      "name": "headless-chromium",
+      "user_agent_regex": "HeadlessChromium",
+      "action": "DENY"
+    },
+    {
+      "name": "generic-browser",
+      "user_agent_regex": "Mozilla",
+      "action": "CHALLENGE"
+    }
+  ]
+}
