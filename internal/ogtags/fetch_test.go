@@ -2,6 +2,7 @@ package ogtags
 
 import (
 	"fmt"
+	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -116,4 +117,10 @@ func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
 	if doc != nil {
 		t.Error("expected nil document for invalid URL, got non-nil")
 	}
+}
+
+// fetchHTMLDocument allows you to call fetchHTMLDocumentWithCache without a duplicate generateCacheKey call
+func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*html.Node, error) {
+	cacheKey := c.generateCacheKey(urlStr, originalHost)
+	return c.fetchHTMLDocumentWithCache(urlStr, originalHost, cacheKey)
 }

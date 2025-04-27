@@ -91,9 +91,3 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost stri
 
 	return doc, nil
 }
-
-// fetchHTMLDocument allows you to call fetchHTMLDocumentWithCache without a duplicate generateCacheKey call
-func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*html.Node, error) {
-	cacheKey := c.generateCacheKey(urlStr, originalHost)
-	return c.fetchHTMLDocumentWithCache(urlStr, originalHost, cacheKey)
-}
