@@ -199,15 +199,12 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		redir := r.FormValue("redir")
 		urlParsed, err := r.URL.Parse(redir)
 		if err != nil {
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			s.respondWithStatus(w, r, "Redirect URL not parseable", http.StatusBadRequest)
 			return
 		}
 
-		if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-			return
-		} else if urlParsed.Host != r.URL.Host {
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+			s.respondWithStatus(w, r, "Redirect domain not allowed", http.StatusBadRequest)
 			return
 		}
 
@@ -260,7 +257,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"")
 		return
 	}
 
@@ -285,7 +282,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 		if resp != dnsbl.AllGood {
 			lg.Info("DNSBL hit", "status", resp.String())
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
+			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), http.StatusOK)
 			return
 		}
 	}
@@ -300,13 +297,13 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
-			templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+			s.respondWithError(w, r, "Internal Server Error: Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.RuleDeny\"")
 			return
 		}
 		hash := rule.Hash()
 
 		lg.Debug("rule hash", "hash", hash)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage(fmt.Sprintf("Access Denied: error code %s", hash), s.opts.WebmasterEmail)), templ.WithStatus(http.StatusOK)).ServeHTTP(w, r)
+		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), http.StatusOK)
 		return
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
@@ -316,7 +313,8 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	default:
 		s.ClearCookie(w)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
+		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
 		return
 	}
 
@@ -381,14 +379,13 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		ogTags, err = s.OGTags.GetOGTags(r.URL)
 		if err != nil {
 			lg.Error("failed to get OG tags", "err", err)
-			ogTags = nil
 		}
 	}
 
 	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
 	if err != nil {
-		lg.Error("render failed", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Other internal server error (contact the admin)", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		lg.Error("render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
+		s.respondWithError(w, r, "Internal Server Error: please contact the administrator and ask them to look for the logs around \"RenderIndex\"")
 		return
 	}
 
@@ -453,7 +450,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	redirURL, err := url.ParseRequestURI(redir)
 	if err != nil {
 		lg.Error("invalid redirect", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid redirect", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "Invalid redirect")
 		return
 	}
 	// used by the path checker rule
@@ -462,7 +459,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".\"")
 		return
 	}
 	lg = lg.With("check_result", cr)
@@ -471,7 +468,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if nonceStr == "" {
 		s.ClearCookie(w)
 		lg.Debug("no nonce")
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing nonce", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "missing nonce")
 		return
 	}
 
@@ -479,7 +476,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if elapsedTimeStr == "" {
 		s.ClearCookie(w)
 		lg.Debug("no elapsedTime")
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("missing elapsedTime", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "missing elapsedTime")
 		return
 	}
 
@@ -487,7 +484,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.ClearCookie(w)
 		lg.Debug("elapsedTime doesn't parse", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid elapsedTime", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "invalid elapsedTime")
 		return
 	}
 
@@ -497,15 +494,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	response := r.FormValue("response")
 	urlParsed, err := r.URL.Parse(redir)
 	if err != nil {
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect URL not parseable", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "Redirect URL not parseable")
 		return
 	}
-
-	if len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host) {
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-		return
-	} else if urlParsed.Host != r.URL.Host {
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("Redirect domain not allowed", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		s.respondWithError(w, r, "Redirect domain not allowed")
 		return
 	}
 
@@ -515,7 +508,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.ClearCookie(w)
 		lg.Debug("nonce doesn't parse", "err", err)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid nonce", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "invalid nonce")
 		return
 	}
 
@@ -525,7 +518,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
 		s.ClearCookie(w)
 		lg.Debug("hash does not match", "got", response, "want", calculated)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
+		s.respondWithStatus(w, r, "invalid response", http.StatusForbidden)
 		failedValidations.Inc()
 		return
 	}
@@ -534,7 +527,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
 		s.ClearCookie(w)
 		lg.Debug("difficulty check failed", "response", response, "difficulty", rule.Challenge.Difficulty)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("invalid response", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusForbidden)).ServeHTTP(w, r)
+		s.respondWithStatus(w, r, "invalid response", http.StatusForbidden)
 		failedValidations.Inc()
 		return
 	}
@@ -557,7 +550,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w)
-		templ.Handler(web.Base("Oh noes!", web.ErrorPage("failed to sign JWT", s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+		s.respondWithError(w, r, "failed to sign JWT")
 		return
 	}
 
@@ -578,7 +571,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
 	err := r.FormValue("err")
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(err, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+	s.respondWithError(w, r, err)
 }
 
 func cr(name string, rule config.Rule) policy.CheckResult {
@@ -586,6 +579,13 @@ func cr(name string, rule config.Rule) policy.CheckResult {
 		Name: name,
 		Rule: rule,
 	}
+}
+func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message string) {
+	templ.Handler(web.Base("Oh noes!", web.ErrorPage(message, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
+}
+
+func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
+	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail)), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 // Check evaluates the list of rules, and returns the result
