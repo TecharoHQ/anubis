@@ -364,14 +364,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		return
 	}
 
-	lg := slog.With(
-		"user_agent", r.UserAgent(),
-		"accept_language", r.Header.Get("Accept-Language"),
-		"priority", r.Header.Get("Priority"),
-		"x-forwarded-for",
-		r.Header.Get("X-Forwarded-For"),
-		"x-real-ip", r.Header.Get("X-Real-Ip"),
-	)
+	lg := internal.GetLogger(r)
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
@@ -403,7 +396,7 @@ func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With("user_agent", r.UserAgent(), "accept_language", r.Header.Get("Accept-Language"), "priority", r.Header.Get("Priority"), "x-forwarded-for", r.Header.Get("X-Forwarded-For"), "x-real-ip", r.Header.Get("X-Real-Ip"))
+	lg := internal.GetLogger(r)
 
 	encoder := json.NewEncoder(w)
 	cr, rule, err := s.check(r)
@@ -441,13 +434,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := slog.With(
-		"user_agent", r.UserAgent(),
-		"accept_language", r.Header.Get("Accept-Language"),
-		"priority", r.Header.Get("Priority"),
-		"x-forwarded-for", r.Header.Get("X-Forwarded-For"),
-		"x-real-ip", r.Header.Get("X-Real-Ip"),
-	)
+	lg := internal.GetLogger(r)
 
 	redir := r.FormValue("redir")
 	redirURL, err := url.ParseRequestURI(redir)
