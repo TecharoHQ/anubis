@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 )
 
@@ -21,4 +22,15 @@ func InitSlog(level string) {
 		Level:     leveler,
 	})
 	slog.SetDefault(slog.New(h))
+}
+
+func GetRequestLogger(r *http.Request) *slog.Logger {
+	return slog.With(
+		"user_agent", r.UserAgent(),
+		"accept_language", r.Header.Get("Accept-Language"),
+		"priority", r.Header.Get("Priority"),
+		"x-forwarded-for",
+		r.Header.Get("X-Forwarded-For"),
+		"x-real-ip", r.Header.Get("X-Real-Ip"),
+	)
 }
