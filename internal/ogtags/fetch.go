@@ -75,15 +75,15 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(urlStr string, originalHost stri
 		}
 	}
 
-	resp.Body = http.MaxBytesReader(nil, resp.Body, c.maxContentLength)
+	resp.Body = http.MaxBytesReader(nil, resp.Body, maxContentLength)
 
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
 		// Check if the error is specifically because the limit was exceeded
 		var maxBytesErr *http.MaxBytesError
 		if errors.As(err, &maxBytesErr) {
-			slog.Debug("og: content exceeded max length", "url", urlStr, "limit", c.maxContentLength)
-			return nil, fmt.Errorf("content too large: exceeded %d bytes", c.maxContentLength)
+			slog.Debug("og: content exceeded max length", "url", urlStr, "limit", maxContentLength)
+			return nil, fmt.Errorf("content too large: exceeded %d bytes", maxContentLength)
 		}
 		// parsing error (e.g., malformed HTML)
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)

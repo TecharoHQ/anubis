@@ -26,7 +26,6 @@ type OGTagCache struct {
 	approvedTags        []string
 	approvedPrefixes    []string
 	client              *http.Client
-	maxContentLength    int64
 }
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogTagsConsiderHost bool) *OGTagCache {
@@ -43,7 +42,6 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 		parsedTargetURL, _ = url.Parse("http://localhost")
 	} else {
 		parsedTargetURL, err = url.Parse(target)
-		parsedTargetURL.Scheme = "http" // Ensure scheme is http for non-unix targets as anubis cannot fetch https (notls)
 		if err != nil {
 			slog.Debug("og: failed to parse target URL, treating as non-unix", "target", target, "error", err)
 			// If parsing fails, treat it as a non-unix target for backward compatibility or default behavior
@@ -55,6 +53,9 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 				parsedTargetURL, _ = url.Parse("http://" + target) // fetch cares about scheme but anubis doesn't
 			}
 		}
+	}
+	if parsedTargetURL.Scheme == "https" {
+		parsedTargetURL.Scheme = "http" // Ensure scheme is http for non-unix targets as anubis cannot fetch https (notls)
 	}
 
 	client := &http.Client{
@@ -80,7 +81,6 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 		approvedTags:        defaultApprovedTags,
 		approvedPrefixes:    defaultApprovedPrefixes,
 		client:              client,
-		maxContentLength:    maxContentLength,
 	}
 }
 
@@ -108,5 +108,7 @@ func (c *OGTagCache) getTarget(u *url.URL) string {
 }
 
 func (c *OGTagCache) Cleanup() {
-	c.cache.Cleanup()
+	if c.cache != nil {
+		c.cache.Cleanup()
+	}
 }
