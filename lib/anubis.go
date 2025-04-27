@@ -2,38 +2,31 @@ package lib
 
 import (
 	"crypto/ed25519"
-	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"math"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/TecharoHQ/anubis"
-	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
-	"github.com/TecharoHQ/anubis/web"
-	"github.com/TecharoHQ/anubis/xess"
 )
 
 var (
@@ -64,121 +57,6 @@ var (
 	})
 )
 
-type Options struct {
-	Next            http.Handler
-	Policy          *policy.ParsedConfig
-	RedirectDomains []string
-	ServeRobotsTXT  bool
-	PrivateKey      ed25519.PrivateKey
-
-	CookieDomain      string
-	CookieName        string
-	CookiePartitioned bool
-
-	OGPassthrough bool
-	OGTimeToLive  time.Duration
-	Target        string
-
-	WebmasterEmail string
-	BasePrefix     string
-}
-
-func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
-	var fin io.ReadCloser
-	var err error
-
-	if fname != "" {
-		fin, err = os.Open(fname)
-		if err != nil {
-			return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
-		}
-	} else {
-		fname = "(data)/botPolicies.yaml"
-		fin, err = data.BotPolicies.Open("botPolicies.yaml")
-		if err != nil {
-			return nil, fmt.Errorf("[unexpected] can't parse builtin policy file %s: %w", fname, err)
-		}
-	}
-
-	defer func(fin io.ReadCloser) {
-		err := fin.Close()
-		if err != nil {
-			slog.Error("failed to close policy file", "file", fname, "err", err)
-		}
-	}(fin)
-
-	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
-
-	return anubisPolicy, err
-}
-
-func New(opts Options) (*Server, error) {
-	if opts.PrivateKey == nil {
-		slog.Debug("opts.PrivateKey not set, generating a new one")
-		_, priv, err := ed25519.GenerateKey(rand.Reader)
-		if err != nil {
-			return nil, fmt.Errorf("lib: can't generate private key: %v", err)
-		}
-		opts.PrivateKey = priv
-	}
-
-	anubis.BasePrefix = opts.BasePrefix
-
-	result := &Server{
-		next:       opts.Next,
-		priv:       opts.PrivateKey,
-		pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
-		policy:     opts.Policy,
-		opts:       opts,
-		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
-		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive),
-	}
-
-	mux := http.NewServeMux()
-	xess.Mount(mux)
-
-	// Helper to add global prefix
-	registerWithPrefix := func(pattern string, handler http.Handler, method string) {
-		if method != "" {
-			method = method + " " // methods must end with a space to register with them
-		}
-
-		// Ensure there's no double slash when concatenating BasePrefix and pattern
-		basePrefix := strings.TrimSuffix(anubis.BasePrefix, "/")
-		prefix := method + basePrefix
-
-		// If pattern doesn't start with a slash, add one
-		if !strings.HasPrefix(pattern, "/") {
-			pattern = "/" + pattern
-		}
-
-		mux.Handle(prefix+pattern, handler)
-	}
-
-	// Ensure there's no double slash when concatenating BasePrefix and StaticPath
-	stripPrefix := strings.TrimSuffix(anubis.BasePrefix, "/") + anubis.StaticPath
-	registerWithPrefix(anubis.StaticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(stripPrefix, http.FileServerFS(web.Static)))), "")
-
-	if opts.ServeRobotsTXT {
-		registerWithPrefix("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
-		}), "GET")
-		registerWithPrefix("/.well-known/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
-		}), "GET")
-	}
-
-	registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
-	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
-	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
-	registerWithPrefix(anubis.APIPrefix+"test-error", http.HandlerFunc(result.TestError), "GET")
-	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
-
-	result.mux = mux
-
-	return result, nil
-}
-
 type Server struct {
 	mux        *http.ServeMux
 	next       http.Handler
@@ -188,37 +66,6 @@ type Server struct {
 	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
-}
-
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
-}
-
-func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
-	if s.next == nil {
-		redir := r.FormValue("redir")
-		urlParsed, err := r.URL.Parse(redir)
-		if err != nil {
-			s.respondWithStatus(w, r, "Redirect URL not parseable", http.StatusBadRequest)
-			return
-		}
-
-		if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
-			s.respondWithStatus(w, r, "Redirect domain not allowed", http.StatusBadRequest)
-			return
-		}
-
-		if redir != "" {
-			http.Redirect(w, r, redir, http.StatusFound)
-			return
-		}
-
-		templ.Handler(
-			web.Base("You are not a bot!", web.StaticHappy()),
-		).ServeHTTP(w, r)
-	} else {
-		s.next.ServeHTTP(w, r)
-	}
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -245,14 +92,7 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
-	lg := slog.With(
-		"user_agent", r.UserAgent(),
-		"accept_language", r.Header.Get("Accept-Language"),
-		"priority", r.Header.Get("Priority"),
-		"x-forwarded-for",
-		r.Header.Get("X-Forwarded-For"),
-		"x-real-ip", r.Header.Get("X-Real-Ip"),
-	)
+	lg := internal.GetRequestLogger(r)
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -268,53 +108,11 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	ip := r.Header.Get("X-Real-Ip")
 
-	if s.policy.DNSBL && ip != "" {
-		resp, ok := s.DNSBLCache.Get(ip)
-		if !ok {
-			lg.Debug("looking up ip in dnsbl")
-			resp, err := dnsbl.Lookup(ip)
-			if err != nil {
-				lg.Error("can't look up ip in dnsbl", "err", err)
-			}
-			s.DNSBLCache.Set(ip, resp, 24*time.Hour)
-			droneBLHits.WithLabelValues(resp.String()).Inc()
-		}
-
-		if resp != dnsbl.AllGood {
-			lg.Info("DNSBL hit", "status", resp.String())
-			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), http.StatusOK)
-			return
-		}
+	if s.handleDNSBL(w, r, ip, lg) {
+		return
 	}
 
-	switch cr.Rule {
-	case config.RuleAllow:
-		lg.Debug("allowing traffic to origin (explicit)")
-		s.ServeHTTPNext(w, r)
-		return
-	case config.RuleDeny:
-		s.ClearCookie(w)
-		lg.Info("explicit deny")
-		if rule == nil {
-			lg.Error("rule is nil, cannot calculate checksum")
-			s.respondWithError(w, r, "Internal Server Error: Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.RuleDeny\"")
-			return
-		}
-		hash := rule.Hash()
-
-		lg.Debug("rule hash", "hash", hash)
-		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), http.StatusOK)
-		return
-	case config.RuleChallenge:
-		lg.Debug("challenge requested")
-	case config.RuleBenchmark:
-		lg.Debug("serving benchmark page")
-		s.RenderBench(w, r)
-		return
-	default:
-		s.ClearCookie(w)
-		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
-		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
+	if s.checkRules(w, r, cr, lg, rule) {
 		return
 	}
 
@@ -355,41 +153,60 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	s.ServeHTTPNext(w, r)
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
-	if returnHTTPStatusOnly {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Authorization required"))
-		return
-	}
-
-	lg := internal.GetRequestLogger(r)
-
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
-
-	var ogTags map[string]string = nil
-	if s.opts.OGPassthrough {
-		var err error
-		ogTags, err = s.OGTags.GetOGTags(r.URL)
-		if err != nil {
-			lg.Error("failed to get OG tags", "err", err)
+func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
+	switch cr.Rule {
+	case config.RuleAllow:
+		lg.Debug("allowing traffic to origin (explicit)")
+		s.ServeHTTPNext(w, r)
+		return true
+	case config.RuleDeny:
+		s.ClearCookie(w)
+		lg.Info("explicit deny")
+		if rule == nil {
+			lg.Error("rule is nil, cannot calculate checksum")
+			s.respondWithError(w, r, "Internal Server Error: Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.RuleDeny\"")
+			return true
 		}
-	}
+		hash := rule.Hash()
 
-	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
-	if err != nil {
-		lg.Error("render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
-		s.respondWithError(w, r, "Internal Server Error: please contact the administrator and ask them to look for the logs around \"RenderIndex\"")
-		return
+		lg.Debug("rule hash", "hash", hash)
+		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), http.StatusOK)
+		return true
+	case config.RuleChallenge:
+		lg.Debug("challenge requested")
+	case config.RuleBenchmark:
+		lg.Debug("serving benchmark page")
+		s.RenderBench(w, r)
+		return true
+	default:
+		s.ClearCookie(w)
+		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
+		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
+		return true
 	}
-
-	handler := internal.NoStoreCache(templ.Handler(component))
-	handler.ServeHTTP(w, r)
+	return false
 }
 
-func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
-	templ.Handler(
-		web.Base("Benchmarking Anubis!", web.Bench()),
-	).ServeHTTP(w, r)
+func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger) bool {
+	if s.policy.DNSBL && ip != "" {
+		resp, ok := s.DNSBLCache.Get(ip)
+		if !ok {
+			lg.Debug("looking up ip in dnsbl")
+			resp, err := dnsbl.Lookup(ip)
+			if err != nil {
+				lg.Error("can't look up ip in dnsbl", "err", err)
+			}
+			s.DNSBLCache.Set(ip, resp, 24*time.Hour)
+			droneBLHits.WithLabelValues(resp.String()).Inc()
+		}
+
+		if resp != dnsbl.AllGood {
+			lg.Info("DNSBL hit", "status", resp.String())
+			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), http.StatusOK)
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
@@ -566,13 +383,6 @@ func cr(name string, rule config.Rule) policy.CheckResult {
 		Name: name,
 		Rule: rule,
 	}
-}
-func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message string) {
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(message, s.opts.WebmasterEmail)), templ.WithStatus(http.StatusInternalServerError)).ServeHTTP(w, r)
-}
-
-func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail)), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 // Check evaluates the list of rules, and returns the result
