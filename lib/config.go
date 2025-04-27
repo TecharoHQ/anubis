@@ -4,6 +4,13 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/decaymap"
@@ -13,12 +20,6 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
-	"io"
-	"log/slog"
-	"net/http"
-	"os"
-	"strings"
-	"time"
 )
 
 type Options struct {

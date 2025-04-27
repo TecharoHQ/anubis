@@ -1,13 +1,14 @@
 package lib
 
 import (
+	"net/http"
+	"slices"
+	"time"
+
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
-	"net/http"
-	"slices"
-	"time"
 
 	"github.com/TecharoHQ/anubis"
 )
