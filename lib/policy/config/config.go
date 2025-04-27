@@ -24,6 +24,7 @@ var (
 	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
 	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
 	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
+	ErrRegexEndsWithNewline              = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
 	ErrInvalidImportStatement            = errors.New("config.ImportStatement: invalid source file")
 	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
 	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
@@ -91,12 +92,20 @@ func (b BotConfig) Valid() error {
 	}
 
 	if b.UserAgentRegex != nil {
+		if strings.HasSuffix(*b.UserAgentRegex, "\n") {
+			errs = append(errs, fmt.Errorf("%w: user agent regex: %q", ErrRegexEndsWithNewline, *b.UserAgentRegex))
+		}
+
 		if _, err := regexp.Compile(*b.UserAgentRegex); err != nil {
 			errs = append(errs, ErrInvalidUserAgentRegex, err)
 		}
 	}
 
 	if b.PathRegex != nil {
+		if strings.HasSuffix(*b.PathRegex, "\n") {
+			errs = append(errs, fmt.Errorf("%w: path regex: %q", ErrRegexEndsWithNewline, *b.PathRegex))
+		}
+
 		if _, err := regexp.Compile(*b.PathRegex); err != nil {
 			errs = append(errs, ErrInvalidPathRegex, err)
 		}
@@ -106,6 +115,10 @@ func (b BotConfig) Valid() error {
 		for name, expr := range b.HeadersRegex {
 			if name == "" {
 				continue
+			}
+
+			if strings.HasSuffix(expr, "\n") {
+				errs = append(errs, fmt.Errorf("%w: header %s regex: %q", ErrRegexEndsWithNewline, name, expr))
 			}
 
 			if _, err := regexp.Compile(expr); err != nil {

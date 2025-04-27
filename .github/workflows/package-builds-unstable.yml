@@ -66,7 +66,7 @@ jobs:
 
     - name: Build Packages
       run: |
-        wget https://github.com/TecharoHQ/yeet/releases/download/v0.1.1/yeet_0.1.1_amd64.deb -O var/yeet.deb
+        wget https://github.com/TecharoHQ/yeet/releases/download/v0.2.1/yeet_0.2.1_amd64.deb -O var/yeet.deb
         sudo apt -y install -f ./var/yeet.deb
         rm ./var/yeet.deb
         yeet

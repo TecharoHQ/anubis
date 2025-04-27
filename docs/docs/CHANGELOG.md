@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Ensure regexes can't end in newlines ([#372](https://github.com/TecharoHQ/anubis/issues/372))
 - Add documentation for default allow behavior (implicit rule)
 - Enable [importing configuration snippets](./admin/configuration/import.mdx) ([#321](https://github.com/TecharoHQ/anubis/pull/321))
 - Refactor check logic to be more generic and work on a Checker type

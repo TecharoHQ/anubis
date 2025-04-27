@@ -1,0 +1,21 @@
+{
+  "bots": [
+    {
+      "name": "user-agent-ends-newline",
+      "user_agent_regex": "Mozilla\n",
+      "action": "CHALLENGE"
+    },
+    {
+      "name": "path-ends-newline",
+      "path_regex": "^/evil/.*$\n",
+      "action": "CHALLENGE"
+    },
+    {
+      "name": "headers-ends-newline",
+      "headers_regex": {
+        "CF-Worker": ".*\n"
+      },
+      "action": "CHALLENGE"
+    }
+  ]
+}
