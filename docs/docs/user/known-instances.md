@@ -29,9 +29,9 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://wiki.archlinux.org/
 - https://git.devuan.org/
 - https://hydra.nixos.org/
-
+- https://hydra.nixos.org/
+- https://codeberg.org/
 - <details>
   <summary>The United Nations</summary>
-
   - https://policytoolbox.iiep.unesco.org/
   </details>
