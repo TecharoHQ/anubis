@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added customization of authorization cookie expiration time with `--cookie-expiration-time` flag or envvar
 
 - Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing OpenGraph tags to be passed through by default
 - Added the ability to [customize Anubis' HTTP status codes](./admin/configuration/custom-status-codes.mdx) ([#355](https://github.com/TecharoHQ/anubis/issues/355))

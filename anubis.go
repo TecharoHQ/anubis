@@ -1,6 +1,8 @@
 // Package anubis contains the version number of Anubis.
 package anubis
 
+import "time"
+
 // Version is the current version of Anubis.
 //
 // This variable is set at build time using the -X linker flag. If not set,
@@ -10,6 +12,9 @@ var Version = "devel"
 // CookieName is the name of the cookie that Anubis uses in order to validate
 // access.
 const CookieName = "within.website-x-cmd-anubis-auth"
+
+// CookieDefaultExpirationTime is the amount of time before the cookie/JWT expires.
+const CookieDefaultExpirationTime = 7 * 24 * time.Hour
 
 // BasePrefix is a global prefix for all Anubis endpoints. Can be emptied to remove the prefix entirely.
 var BasePrefix = ""

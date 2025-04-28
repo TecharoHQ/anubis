@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
@@ -126,17 +127,18 @@ func TestCVE2025_24369(t *testing.T) {
 	}
 }
 
-func TestCookieSettings(t *testing.T) {
+func TestCookieCustomExpiration(t *testing.T) {
 	pol := loadPolicies(t, "")
 	pol.DefaultDifficulty = 0
+	ckieExpiration := 10 * time.Minute
 
 	srv := spawnAnubis(t, Options{
 		Next:   http.NewServeMux(),
 		Policy: pol,
 
-		CookieDomain:      "local.cetacean.club",
-		CookiePartitioned: true,
-		CookieName:        t.Name(),
+		CookieDomain:     "local.cetacean.club",
+		CookieName:       t.Name(),
+		CookieExpiration: ckieExpiration,
 	})
 
 	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
@@ -180,7 +182,99 @@ func TestCookieSettings(t *testing.T) {
 	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
 	req.URL.RawQuery = q.Encode()
 
+	requestRecieveLowerBound := time.Now()
 	resp, err = cli.Do(req)
+	requestRecieveUpperBound := time.Now()
+	if err != nil {
+		t.Fatalf("can't do challenge passing")
+	}
+
+	if resp.StatusCode != http.StatusFound {
+		resp.Write(os.Stderr)
+		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
+	}
+
+	var ckie *http.Cookie
+	for _, cookie := range resp.Cookies() {
+		t.Logf("%#v", cookie)
+		if cookie.Name == anubis.CookieName {
+			ckie = cookie
+			break
+		}
+	}
+	if ckie == nil {
+		t.Errorf("Cookie %q not found", anubis.CookieName)
+		return
+	}
+
+	expirationLowerBound := requestRecieveLowerBound.Add(ckieExpiration)
+	expirationUpperBound := requestRecieveUpperBound.Add(ckieExpiration)
+	// Since the cookie expiration precision is only to the second due to the Unix() call, we can
+	// lower the level of expected precision.
+	if ckie.Expires.Unix() < expirationLowerBound.Unix() || ckie.Expires.Unix() > expirationUpperBound.Unix() {
+		t.Errorf("cookie expiration is not within the expected range. expected between: %v and %v. got: %v", expirationLowerBound, expirationUpperBound, ckie.Expires)
+		return
+	}
+}
+
+func TestCookieSettings(t *testing.T) {
+	pol := loadPolicies(t, "")
+	pol.DefaultDifficulty = 0
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:      "local.cetacean.club",
+		CookiePartitioned: true,
+		CookieName:        t.Name(),
+		CookieExpiration:  anubis.CookieDefaultExpirationTime,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := cli.Post(ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", "", nil)
+	if err != nil {
+		t.Fatalf("can't request challenge: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var chall = struct {
+		Challenge string `json:"challenge"`
+	}{}
+	if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
+		t.Fatalf("can't read challenge response body: %v", err)
+	}
+
+	nonce := 0
+	elapsedTime := 420
+	redir := "/"
+	calculated := ""
+	calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
+	calculated = internal.SHA256sum(calcString)
+
+	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+
+	q := req.URL.Query()
+	q.Set("response", calculated)
+	q.Set("nonce", fmt.Sprint(nonce))
+	q.Set("redir", redir)
+	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
+	req.URL.RawQuery = q.Encode()
+
+	requestRecieveLowerBound := time.Now()
+	resp, err = cli.Do(req)
+	requestRecieveUpperBound := time.Now()
 	if err != nil {
 		t.Fatalf("can't do challenge passing")
 	}
@@ -205,6 +299,15 @@ func TestCookieSettings(t *testing.T) {
 
 	if ckie.Domain != "local.cetacean.club" {
 		t.Errorf("cookie domain is wrong, wanted local.cetacean.club, got: %s", ckie.Domain)
+	}
+
+	expirationLowerBound := requestRecieveLowerBound.Add(anubis.CookieDefaultExpirationTime)
+	expirationUpperBound := requestRecieveUpperBound.Add(anubis.CookieDefaultExpirationTime)
+	// Since the cookie expiration precision is only to the second due to the Unix() call, we can
+	// lower the level of expected precision.
+	if ckie.Expires.Unix() < expirationLowerBound.Unix() || ckie.Expires.Unix() > expirationUpperBound.Unix() {
+		t.Errorf("cookie expiration is not within the expected range. expected between: %v and %v. got: %v", expirationLowerBound, expirationUpperBound, ckie.Expires)
+		return
 	}
 
 	if ckie.Partitioned != srv.opts.CookiePartitioned {

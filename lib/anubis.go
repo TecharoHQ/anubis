@@ -348,7 +348,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		"response":  response,
 		"iat":       time.Now().Unix(),
 		"nbf":       time.Now().Add(-1 * time.Minute).Unix(),
-		"exp":       time.Now().Add(24 * 7 * time.Hour).Unix(),
+		"exp":       time.Now().Add(s.opts.CookieExpiration).Unix(),
 	})
 	tokenString, err := token.SignedString(s.priv)
 	if err != nil {
@@ -361,7 +361,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:        anubis.CookieName,
 		Value:       tokenString,
-		Expires:     time.Now().Add(24 * 7 * time.Hour),
+		Expires:     time.Now().Add(s.opts.CookieExpiration),
 		SameSite:    http.SameSiteLaxMode,
 		Domain:      s.opts.CookieDomain,
 		Partitioned: s.opts.CookiePartitioned,

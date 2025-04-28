@@ -43,6 +43,7 @@ var (
 	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
 	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
@@ -279,6 +280,7 @@ func main() {
 		ServeRobotsTXT:       *robotsTxt,
 		PrivateKey:           priv,
 		CookieDomain:         *cookieDomain,
+		CookieExpiration:     *cookieExpiration,
 		CookiePartitioned:    *cookiePartitioned,
 		OGPassthrough:        *ogPassthrough,
 		OGTimeToLive:         *ogTimeToLive,
@@ -322,6 +324,7 @@ func main() {
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
 		"base-prefix", *basePrefix,
+		"cookie-expiration-time", *cookieExpiration,
 	)
 
 	go func() {

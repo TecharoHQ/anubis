@@ -29,6 +29,7 @@ type Options struct {
 	ServeRobotsTXT  bool
 	PrivateKey      ed25519.PrivateKey
 
+	CookieExpiration  time.Duration
 	CookieDomain      string
 	CookieName        string
 	CookiePartitioned bool
