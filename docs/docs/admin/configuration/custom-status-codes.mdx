@@ -1,0 +1,19 @@
+# Custom status codes for Anubis errors
+
+Out of the box, Anubis will reply with `HTTP 200` for challenge and denial pages. This is intended to make AI scrapers have a hard time with your website because when they are faced with a non-200 response, they will hammer the page over and over until they get a 200 response. This behavior may not be desirable, as such Anubis lets you customize what HTTP status codes are returned when Anubis throws challenge and denial pages.
+
+This is configured in the `status_codes` block of your [bot policy file](../policies.mdx):
+
+```yaml
+status_codes:
+  CHALLENGE: 200
+  DENY: 200
+```
+
+To match CloudFlare's behavior, use a configuration like this:
+
+```yaml
+status_codes:
+  CHALLENGE: 403
+  DENY: 403
+```

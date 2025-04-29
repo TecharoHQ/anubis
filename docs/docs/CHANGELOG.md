@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing OpenGraph tags to be passed through by default
+- Added the ability to [customize Anubis' HTTP status codes](./admin/configuration/custom-status-codes.mdx) ([#355](https://github.com/TecharoHQ/anubis/issues/355))
 
 ## v1.17.0: Asahi sas Brutus
 

@@ -48,3 +48,11 @@ bots:
   action: CHALLENGE
 
 dnsbl: false
+
+# By default, send HTTP 200 back to clients that either get issued a challenge
+# or a denial. This seems weird, but this is load-bearing due to the fact that
+# the most aggressive scraper bots seem to really really want an HTTP 200 and
+# will stop sending requests once they get it.
+status_codes:
+  CHALLENGE: 200
+  DENY: 200 

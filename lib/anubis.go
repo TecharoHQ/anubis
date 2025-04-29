@@ -170,7 +170,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		hash := rule.Hash()
 
 		lg.Debug("rule hash", "hash", hash)
-		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), http.StatusOK)
+		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
 		return true
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
@@ -202,7 +202,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 
 		if resp != dnsbl.AllGood {
 			lg.Info("DNSBL hit", "status", resp.String())
-			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), http.StatusOK)
+			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), s.policy.StatusCodes.Deny)
 			return true
 		}
 	}

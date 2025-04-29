@@ -1,0 +1,13 @@
+{
+  "bots": [
+    {
+      "name": "everything",
+      "user_agent_regex": ".*",
+      "action": "DENY"
+    }
+  ],
+  "status_codes": {
+    "CHALLENGE": 0,
+    "DENY": 0
+  }
+}

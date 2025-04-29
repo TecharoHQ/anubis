@@ -24,11 +24,13 @@ type ParsedConfig struct {
 	Bots              []Bot
 	DNSBL             bool
 	DefaultDifficulty int
+	StatusCodes       config.StatusCodes
 }
 
 func NewParsedConfig(orig *config.Config) *ParsedConfig {
 	return &ParsedConfig{
-		orig: orig,
+		orig:        orig,
+		StatusCodes: orig.StatusCodes,
 	}
 }
 

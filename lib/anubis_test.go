@@ -393,3 +393,48 @@ func TestBasePrefix(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomStatusCodes(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Log(r.UserAgent())
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
+
+	statusMap := map[string]int{
+		"ALLOW":     200,
+		"CHALLENGE": 401,
+		"DENY":      403,
+	}
+
+	pol := loadPolicies(t, "./testdata/aggressive_403.yaml")
+	pol.DefaultDifficulty = 4
+
+	srv := spawnAnubis(t, Options{
+		Next:   h,
+		Policy: pol,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	for userAgent, statusCode := range statusMap {
+		t.Run(userAgent, func(t *testing.T) {
+			req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			req.Header.Set("User-Agent", userAgent)
+
+			resp, err := ts.Client().Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if resp.StatusCode != statusCode {
+				t.Errorf("wanted status code %d but got: %d", statusCode, resp.StatusCode)
+			}
+		})
+	}
+}

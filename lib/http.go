@@ -67,7 +67,10 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		return
 	}
 
-	handler := internal.NoStoreCache(templ.Handler(component))
+	handler := internal.NoStoreCache(templ.Handler(
+		component,
+		templ.WithStatus(s.opts.Policy.StatusCodes.Challenge),
+	))
 	handler.ServeHTTP(w, r)
 }
 
