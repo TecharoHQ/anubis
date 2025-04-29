@@ -93,7 +93,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 			expectError:  false,
 		},
 		{
-			name:         "Non-existent page",
+			name:         "Nonexistent page",
 			path:         "/not-found",
 			query:        "",
 			expectedTags: nil,
