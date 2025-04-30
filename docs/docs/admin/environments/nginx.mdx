@@ -147,7 +147,7 @@ upstream anubis {
 
   # Try anubis first over a UNIX socket
   server unix:/run/anubis/nginx.sock;
-  #server http://127.0.0.1:8923;
+  #server 127.0.0.1:8923;
 
   # Optional: fall back to serving the websites directly. This allows your
   # websites to be resilient against Anubis failing, at the risk of exposing
