@@ -31,6 +31,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://hydra.nixos.org/
 - https://codeberg.org/
 - https://www.cfaarchive.org/
+- https://forum.freecad.org/
 - <details>
   <summary>Sourceware</summary>
   - https://sourceware.org/cgit
