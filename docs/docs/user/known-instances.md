@@ -33,6 +33,11 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://www.cfaarchive.org/
 - https://forum.freecad.org/
 - <details>
+  <summary>ScummVM</summary>
+  - https://forums.scummvm.org/
+  - https://wiki.scummvm.org/
+  </details>
+- <details>
   <summary>Sourceware</summary>
   - https://sourceware.org/cgit
   - https://sourceware.org/glibc/wiki
