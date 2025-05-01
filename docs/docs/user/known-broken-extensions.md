@@ -3,12 +3,13 @@ title: List of known browser extensions that can break Anubis
 ---
 
 This page contains a list of all of the browser extensions that are known to break Anubis' functionality and their associated GitHub issues, along with instructions on how to work around the issue.
+
 ## [JShelter](https://jshelter.org/)
 
-| Extension    | JShelter                                      |
-| :----------- | :-------------------------------------------- |
-| Website      | [jshelter.org](https://jshelter.org/)         |
-| GitHub issue | https://github.com/TecharoHQ/anubis/issues/25 |
+| Extension    | JShelter                                                                                                                                           |
+| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Website      | [jshelter.org](https://jshelter.org/)                                                                                                              |
+| GitHub issue | https://github.com/TecharoHQ/anubis/issues/25                                                                                                      |
 | Be aware of  | [What are Web Workers, and what are the threats that I face?](https://jshelter.org/faq/#what-are-web-workers-and-what-are-the-threats-that-i-face) |
 
 ### Workaround steps (recommended):
@@ -27,7 +28,11 @@ This page contains a list of all of the browser extensions that are known to bre
 3. Choose "Turn JavaScript Shield off"
 4. Refresh the page, for example, by clicking on the `Refresh page` button at the top of the JShelter pop up window.
 
-   Note that this will remove all protections of JavaScript Shield for all pages at the visited web site. You might want to JavaScript shield settings once you go through the challenge.
+:::note
+
+Taking these actions will remove all protections of JavaScript Shield for all pages at the visited web site. You might want review and amend your JavaScript shield settings once you go through the challenge based on your operational security model.
+
+:::
 
 ### Workaround steps (alternative if you do not like JShelter's pop up):
 
@@ -37,4 +42,8 @@ This page contains a list of all of the browser extensions that are known to bre
 4. Choose "Turn JavaScript Shield off"
 5. Hit "Add to list"
 
-   Note that this will remove all protections of JavaScript Shield for all pages at the visited web site. You might want to JavaScript shield settings once you go through the challenge.
+:::note
+
+Taking these actions will remove all protections of JavaScript Shield for all pages at the visited web site. You might want review and amend your JavaScript shield settings once you go through the challenge based on your operational security model.
+
+:::
