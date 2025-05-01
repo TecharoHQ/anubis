@@ -33,7 +33,7 @@ for the JavaScript code in this page.
 */'
 
 esbuild js/main.mjs --sourcemap --bundle --minify --outfile=static/js/main.mjs "--banner:js=${LICENSE}"
-gzip -f -k static/js/main.mjs
+gzip -f -k -n static/js/main.mjs
 zstd -f -k --ultra -22 static/js/main.mjs
 brotli -fZk static/js/main.mjs
 
