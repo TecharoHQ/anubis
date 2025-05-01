@@ -207,16 +207,15 @@ func main() {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
 
-	fmt.Println("Rule error IDs:")
+	ruleErrorIDs := make(map[string]string)
 	for _, rule := range policy.Bots {
 		if rule.Action != config.RuleDeny {
 			continue
 		}
 
 		hash := rule.Hash()
-		fmt.Printf("* %s: %s\n", rule.Name, hash)
+		ruleErrorIDs[rule.Name] = hash
 	}
-	fmt.Println()
 
 	// replace the bot policy rules with a single rule that always benchmarks
 	if *debugBenchmarkJS {
@@ -325,6 +324,7 @@ func main() {
 		"og-expiry-time", *ogTimeToLive,
 		"base-prefix", *basePrefix,
 		"cookie-expiration-time", *cookieExpiration,
+		"rule-error-ids", ruleErrorIDs,
 	)
 
 	go func() {
