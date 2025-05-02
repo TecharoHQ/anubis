@@ -15,7 +15,7 @@
   --progress-bar-fill: #b16286;
 }
 @media (prefers-color-scheme: light) {
-  ::root {
+  :root {
     --background: #f9f5d7;
     --text: #1d2021;
     --text-selection: #d3869b;
