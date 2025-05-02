@@ -86,20 +86,20 @@ Once it's installed, make a copy of the default configuration file `/etc/anubis/
 sudo cp /etc/anubis/default.env /etc/anubis/gitea.env
 ```
 
-Copy the default bot policies file to `/etc/anubis/gitea.botPolicies.yaml`:
+Copy the default bot policies file to `/etc/anubis/gitea.botPolicies.json`:
 
 <Tabs>
 <TabItem value="debrpm" label="Debian or Red Hat" default>
 
 ```text
-sudo cp /usr/share/doc/anubis/botPolicies.yaml /etc/anubis/gitea.botPolicies.yaml
+sudo cp /usr/share/doc/anubis/botPolicies.json /etc/anubis/gitea.botPolicies.json
 ```
 
 </TabItem>
 <TabItem value="tarball" label="Tarball">
 
 ```text
-sudo cp ./doc/botPolicies.yaml /etc/anubis/gitea.botPolicies.yaml
+sudo cp ./doc/botPolicies.json /etc/anubis/gitea.botPolicies.json
 ```
 
 </TabItem>
@@ -114,7 +114,7 @@ BIND_NETWORK=tcp
 DIFFICULTY=4
 METRICS_BIND=[::1]:8240
 METRICS_BIND_NETWORK=tcp
-POLICY_FNAME=/etc/anubis/gitea.botPolicies.yaml
+POLICY_FNAME=/etc/anubis/gitea.botPolicies.json
 TARGET=http://localhost:3000
 ```
 
