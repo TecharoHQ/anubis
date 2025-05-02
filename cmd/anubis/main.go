@@ -33,11 +33,9 @@ import (
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
+	"github.com/dropmorepackets/haproxy-go/spop"
 	"github.com/facebookgo/flagenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/negasus/haproxy-spoe-go/agent"
-	"github.com/negasus/haproxy-spoe-go/logger"
 )
 
 var (
@@ -66,7 +64,7 @@ var (
 	ogCacheConsiderHost      = flag.Bool("og-cache-consider-host", false, "enable or disable the use of the host in the Open Graph tag cache")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
-	spoeBind                 = flag.String("spoe-ind", ":9000", "")
+	spoeBind                 = flag.String("spoe-bind", ":9000", "")
 	spoeBindNetwork          = flag.String("spoe-bind-network", "tcp", "")
 )
 
@@ -389,13 +387,14 @@ func spoeServer(pub ed25519.PublicKey, ctx context.Context, done func()) {
 
 	spoe := &libanubis.SpoeOptions{Pub: pub}
 
-	a := agent.New(spoe.SpoeHandler, logger.NewDefaultLog())
 	listener, spoeUrl := setupListener(*spoeBindNetwork, *spoeBind)
 	slog.Debug("listening for spop data", "url", spoeUrl)
 
-	if err := a.Serve(listener); err != nil {
-		log.Fatal(err)
+	agent := spop.Agent{
+		Handler: spop.HandlerFunc(spoe.SpoeHandler),
 	}
+
+	agent.Serve(listener)
 }
 
 func extractEmbedFS(fsys embed.FS, root string, destDir string) error {

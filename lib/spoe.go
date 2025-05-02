@@ -1,52 +1,63 @@
 package lib
 
 import (
+	"context"
 	"crypto/ed25519"
 	"fmt"
-	"github.com/TecharoHQ/anubis"
-	"github.com/negasus/haproxy-spoe-go/action"
-	"github.com/negasus/haproxy-spoe-go/request"
 	"log/slog"
 	"net/http"
+
+	"github.com/TecharoHQ/anubis"
+	"github.com/dropmorepackets/haproxy-go/pkg/encoding"
 )
 
 type SpoeOptions struct {
 	Pub ed25519.PublicKey
 }
 
-func (sopt *SpoeOptions) SpoeHandler(req *request.Request) {
-	lg := slog.With("handle request EngineID", req.EngineID, "StreamID", req.StreamID, "FrameID", req.FrameID, "messages", req.Messages.Len())
+func (sopt *SpoeOptions) SpoeHandler(_ context.Context, w *encoding.ActionWriter, m *encoding.Message) {
+	lg := slog.With("handle request")
 
 	messageName := "check-client-cookie"
+	actualMessageName := string(m.NameBytes())
 
-	mes, err := req.Messages.GetByName(messageName)
+	if actualMessageName != messageName {
+		lg.Warn("Unknown message %s", m.NameBytes())
+		return
+	}
+
+	lg.Debug(fmt.Sprintf("%+v", m))
+
+	k := encoding.AcquireKVEntry()
+	defer encoding.ReleaseKVEntry(k)
+
+	found := false
+	for m.KV.Next(k) {
+		if k.NameEquals("cookie") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		lg.Error("Mandatory value cookie not found")
+		return
+	}
+
+	value := string(k.ValueBytes())
+
+	cookie, err := http.ParseSetCookie(fmt.Sprintf("%s=%s", anubis.CookieName, value))
 	if err != nil {
-		lg.Info(fmt.Sprintf("message %s not found: %v", messageName, err))
+		lg.Error(fmt.Sprintf("Failed to parse cookie: %v", err))
 		return
 	}
-	slog.Debug(fmt.Sprintf("%+v", mes))
+	slog.Debug(fmt.Sprintf("%+v", cookie))
+	valid, _ := ValidateCookie(cookie, lg, sopt.Pub, "spop")
 
-	value, ok := mes.KV.Get("cookie")
-	if !ok {
-		lg.Info("var 'cookie' not found in message")
-		return
-	}
-	slog.Debug(fmt.Sprintf("%v", value))
-
-	if value != nil {
-		cookie, err := http.ParseSetCookie(fmt.Sprintf("%s=%s", anubis.CookieName, value))
-		if err != nil {
-			lg.Error(fmt.Sprintf("Failed to parse cookie: %v", err))
-			return
-		}
-		slog.Debug(fmt.Sprintf("%+v", cookie))
-		valid, _ := ValidateCookie(cookie, lg, sopt.Pub, "spop")
-
-		if valid {
-			lg.Debug("cookie is valid")
-			req.Actions.SetVar(action.ScopeRequest, "valid", true)
-		} else {
-			lg.Debug("cookie is NOT valid")
-		}
+	if valid {
+		lg.Debug("cookie is valid")
+		w.SetBool(encoding.VarScopeRequest, "valid", true)
+	} else {
+		lg.Debug("cookie is NOT valid")
 	}
 }

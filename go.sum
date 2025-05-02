@@ -24,6 +24,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/deckarep/golang-set/v2 v2.6.0 h1:XfcQbWM1LlMB8BsJ8N9vW5ehnnPVIw0je80NsVHagjM=
 github.com/deckarep/golang-set/v2 v2.6.0/go.mod h1:VAky9rY/yGXJOLEDv3OMci+7wtDpOF4IN+y82NBOac4=
+github.com/dropmorepackets/haproxy-go v0.0.5 h1:a6aT2UrdS9MvV60ZLZnXFgi19jxRvVg/lJFQCiFYDFA=
+github.com/dropmorepackets/haproxy-go v0.0.5/go.mod h1:4a2AmmVjvg2zPNdizGZrMN8ZSUpj90U43VlcdbOIBnU=
 github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 h1:0JZ+dUmQeA8IIVUMzysrX4/AKuQwWhV2dYQuPZdvdSQ=
 github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51/go.mod h1:Yg+htXGokKKdzcwhuNDwVvN+uBxDGXJ7G/VN1d8fa64=
 github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456 h1:CkmB2l68uhvRlwOTPrwnuitSxi/S3Cg4L5QYOcL9MBc=
