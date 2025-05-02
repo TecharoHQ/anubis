@@ -31,7 +31,11 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://hydra.nixos.org/
 - https://codeberg.org/
 - https://www.cfaarchive.org/
-- https://forum.freecad.org/
+- <details>
+  <summary>FreeCAD</summary>
+  - https://forum.freecad.org/
+  - https://wiki.freecad.org/
+  </details>
 - <details>
   <summary>ScummVM</summary>
   - https://forums.scummvm.org/
