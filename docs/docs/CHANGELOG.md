@@ -12,13 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed native packages not containing the stdlib and botPolicies.yaml
+- Change import syntax to allow multi-level imports
+- Changed the startup logging to use JSON formatting as all the other logs do.
 
 ## v1.17.1: Asahi sas Brutus: Echo 1
 
 - Added customization of authorization cookie expiration time with `--cookie-expiration-time` flag or envvar
 - Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing OpenGraph tags to be passed through by default
 - Added the ability to [customize Anubis' HTTP status codes](./admin/configuration/custom-status-codes.mdx) ([#355](https://github.com/TecharoHQ/anubis/issues/355))
-- Change import syntax to allow multi-level imports
 
 ## v1.17.0: Asahi sas Brutus
 
