@@ -119,7 +119,7 @@ Make sure to add a separate configuration file for the listener on port 3001:
 ```text
 # /etc/httpd/conf.d/listener-3001.conf
 
-Listen 3001
+Listen 127.0.0.1:3001
 ```
 
 This can be repeated for multiple sites. Anubis does not care about the HTTP `Host` header and will happily cope with multiple websites via the same instance.
