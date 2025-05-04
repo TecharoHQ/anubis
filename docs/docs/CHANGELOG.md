@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v1.17.1: Asahi sas Brutus: Echo 1
 
 - Added customization of authorization cookie expiration time with `--cookie-expiration-time` flag or envvar
-- Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing OpenGraph tags to be passed through by default
+- Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing Open Graph tags to be passed through by default
 - Added the ability to [customize Anubis' HTTP status codes](./admin/configuration/custom-status-codes.mdx) ([#355](https://github.com/TecharoHQ/anubis/issues/355))
 
 ## v1.17.0: Asahi sas Brutus
@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support to allow to restrict the allowed redirect domains
 - Whitelisted [DuckDuckBot](https://duckduckgo.com/duckduckgo-help-pages/results/duckduckbot/) in botPolicies
 - Improvements to build scripts to make them less independent of the build host
-- Improved the OpenGraph error logging
+- Improved the Open Graph error logging
 - Added `Opera` to the `generic-browser` bot policy rule
 - Added FreeBSD rc.d script so can be run as a FreeBSD daemon
 - Allow requests from the Internet Archive
@@ -53,9 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mojeekbot user agent regex
 - Added support for running anubis behind a base path (e.g. `/myapp`)
 - Reduce Anubis' paranoia with user cookies ([#365](https://github.com/TecharoHQ/anubis/pull/365))
-- Added support for Opengraph passthrough while using unix sockets
-- The opengraph subsystem now passes the HTTP `HOST` header through to the origin
-- Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing OpenGraph tags to be passed through by default
+- Added support for Open Graph passthrough while using unix sockets
+- The Open Graph subsystem now passes the HTTP `HOST` header through to the origin
+- Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing Open Graph tags to be passed through by default
 
 ## v1.16.0
 
@@ -69,7 +69,7 @@ The following features are the "big ticket" items:
 - A prebaked tarball has been added, allowing distros to build Anubis like they could in v1.15.x
 - The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social)
 - Verification page now shows hash rate and a progress bar for completion probability
-- Added support for [OpenGraph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
+- Added support for [Open Graph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
 - Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`
 
 The other small fixes have been made:
