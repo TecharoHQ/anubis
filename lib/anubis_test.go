@@ -183,9 +183,9 @@ func TestCookieCustomExpiration(t *testing.T) {
 	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
 	req.URL.RawQuery = q.Encode()
 
-	requestRecieveLowerBound := time.Now()
+	requestReceiveLowerBound := time.Now()
 	resp, err = cli.Do(req)
-	requestRecieveUpperBound := time.Now()
+	requestReceiveUpperBound := time.Now()
 	if err != nil {
 		t.Fatalf("can't do challenge passing")
 	}
@@ -208,8 +208,8 @@ func TestCookieCustomExpiration(t *testing.T) {
 		return
 	}
 
-	expirationLowerBound := requestRecieveLowerBound.Add(ckieExpiration)
-	expirationUpperBound := requestRecieveUpperBound.Add(ckieExpiration)
+	expirationLowerBound := requestReceiveLowerBound.Add(ckieExpiration)
+	expirationUpperBound := requestReceiveUpperBound.Add(ckieExpiration)
 	// Since the cookie expiration precision is only to the second due to the Unix() call, we can
 	// lower the level of expected precision.
 	if ckie.Expires.Unix() < expirationLowerBound.Unix() || ckie.Expires.Unix() > expirationUpperBound.Unix() {
@@ -273,9 +273,9 @@ func TestCookieSettings(t *testing.T) {
 	q.Set("elapsedTime", fmt.Sprint(elapsedTime))
 	req.URL.RawQuery = q.Encode()
 
-	requestRecieveLowerBound := time.Now()
+	requestReceiveLowerBound := time.Now()
 	resp, err = cli.Do(req)
-	requestRecieveUpperBound := time.Now()
+	requestReceiveUpperBound := time.Now()
 	if err != nil {
 		t.Fatalf("can't do challenge passing")
 	}
@@ -302,8 +302,8 @@ func TestCookieSettings(t *testing.T) {
 		t.Errorf("cookie domain is wrong, wanted local.cetacean.club, got: %s", ckie.Domain)
 	}
 
-	expirationLowerBound := requestRecieveLowerBound.Add(anubis.CookieDefaultExpirationTime)
-	expirationUpperBound := requestRecieveUpperBound.Add(anubis.CookieDefaultExpirationTime)
+	expirationLowerBound := requestReceiveLowerBound.Add(anubis.CookieDefaultExpirationTime)
+	expirationUpperBound := requestReceiveUpperBound.Add(anubis.CookieDefaultExpirationTime)
 	// Since the cookie expiration precision is only to the second due to the Unix() call, we can
 	// lower the level of expected precision.
 	if ckie.Expires.Unix() < expirationLowerBound.Unix() || ckie.Expires.Unix() > expirationUpperBound.Unix() {
