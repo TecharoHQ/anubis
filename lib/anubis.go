@@ -268,6 +268,14 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
+	_, ckieErr := r.Cookie(anubis.CookieName)
+	if ckieErr != nil {
+		lg.Debug("cookie not found on passchallenge")
+		s.ClearCookie(w)
+		s.respondWithError(w, r, "cookie not provided")
+		return
+	}
+
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		s.ClearCookie(w)
