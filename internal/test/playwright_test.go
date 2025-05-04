@@ -38,7 +38,7 @@ var (
 	playwrightServer      = flag.String("playwright", "ws://localhost:9001", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
 	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 5*time.Minute, "maximum time for hard Playwright requests")
-	playwrightRunner      = flag.String("playwright-runner", "npm", "how to start Playwright, can be: none,npx,docker,podman")
+	playwrightRunner      = flag.String("playwright-runner", "npx", "how to start Playwright, can be: none,npx,docker,podman")
 
 	testCases = []testCase{
 		{
