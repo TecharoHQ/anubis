@@ -1,9 +1,10 @@
 module github.com/TecharoHQ/anubis
 
 go 1.24
+toolchain go1.24.1
 
 require (
-	github.com/a-h/templ v0.3.857
+	github.com/a-h/templ v0.3.865
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/cel-go v0.25.0
@@ -12,7 +13,7 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/net v0.39.0
-	k8s.io/apimachinery v0.32.3
+	k8s.io/apimachinery v0.33.0
 )
 
 require (
