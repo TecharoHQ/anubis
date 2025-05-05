@@ -17,8 +17,8 @@ func (s *Server) ClearCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     anubis.CookieName,
 		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour),
-		MaxAge:   -1,
+		Expires:  time.Now().Add(1 * time.Hour),
+		MaxAge:   3600,
 		SameSite: http.SameSiteLaxMode,
 		Domain:   s.opts.CookieDomain,
 	})

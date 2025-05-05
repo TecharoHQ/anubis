@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change import syntax to allow multi-level imports
 - Changed the startup logging to use JSON formatting as all the other logs do.
 - Added the ability to do [expression matching with CEL](./admin/configuration/expressions.mdx)
+- Changed pass-challenge check to fail immediately if no cookie is set.
 
 ## v1.17.1: Asahi sas Brutus: Echo 1
 
