@@ -28,12 +28,12 @@ func NewCELChecker(cfg *config.ExpressionOrList) (*CELChecker, error) {
 	if cfg.Expression != "" {
 		src = cfg.Expression
 		var iss *cel.Issues
-		interm, iss := env.Compile(src)
+		intermediate, iss := env.Compile(src)
 		if iss != nil {
 			return nil, iss.Err()
 		}
 
-		ast, iss = env.Check(interm)
+		ast, iss = env.Check(intermediate)
 		if iss != nil {
 			return nil, iss.Err()
 		}
