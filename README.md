@@ -16,6 +16,7 @@ Anubis is brought to you by sponsors and donors like:
 
 [![Distrust](./docs/static/img/sponsors/distrust-logo.webp)](https://distrust.co)
 [![Terminal Trove](./docs/static/img/sponsors/terminal-trove.webp)](https://terminaltrove.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis&utm_source=abgh)
+[![canine.tools](./docs/static/img/sponsors/caninetools-logo.webp)](https://canine.tools)
 
 ## Overview
 
