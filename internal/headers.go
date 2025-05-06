@@ -134,6 +134,9 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 	origForwardedList := make([]string, 0, 4)
 	if origXFFHeader != "" {
 		origForwardedList = strings.Split(origXFFHeader, ",")
+		for i := range origForwardedList {
+			origForwardedList[i] = strings.TrimSpace(origForwardedList[i])
+		}
 	}
 	origForwardedList = append(origForwardedList, parsedRemoteIP.String())
 	forwardedList := make([]string, 0, len(origForwardedList))
