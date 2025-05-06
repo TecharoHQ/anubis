@@ -231,7 +231,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	valid, _ := ValidateCookie(ckie, lg, s, rule, r.URL.Path, r.Header)
+	valid := ValidateCookie(ckie, lg, s, rule, r.URL.Path, r.Header)
 	if !valid {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
@@ -242,47 +242,47 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	s.ServeHTTPNext(w, r)
 }
 
-func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, s *Server, rule *policy.Bot, path string, header http.Header) (bool, jwt.MapClaims) {
+func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, s *Server, rule *policy.Bot, path string, header http.Header) bool {
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		return false, jwt.MapClaims{}
+		return false
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", path)
-		return false, jwt.MapClaims{}
+		return false
 	}
 
 	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", path, "err", err)
-		return false, jwt.MapClaims{}
+		return false
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		lg.Debug("invalid token claims type", "path", path)
-		return false, jwt.MapClaims{}
+		return false
 	}
 
 	policyRule, ok := claims["policyRule"].(string)
 	if !ok {
 		lg.Debug("policyRule claim is not a string")
-		return false, jwt.MapClaims{}
+		return false
 	}
 
 	if policyRule != rule.Hash() {
 		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
-		return false, jwt.MapClaims{}
+		return false
 	}
 
 	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(header.Get(s.opts.JWTRestrictionHeader)) {
 		lg.Debug("JWT restriction header is invalid")
-		return false, jwt.MapClaims{}
+		return false
 	}
 
-	return true, claims
+	return true
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
