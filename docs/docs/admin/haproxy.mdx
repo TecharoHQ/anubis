@@ -13,21 +13,46 @@ On any incoming request to the frontend, HAProxy will query Anubis with the cook
 
 If Anubis returns yes, the client has a valid Anubis cookie, its request will be routed directly to the App backend.
 If Anubis returns no, the client does NOT have a valid Anubis cookie, its request will be routed to the Anubis backend, which in return enables the challenge process.
+Furthermore, adding health checks it is possible to build a fail-open scenario, meaning that the website continues to work, even if anubis goes down
 
 Example HAProxy configuration:
 
 ```
 frontend http
-  bind :::443 v6only tfo alpn h2,http/1.1 ssl crt /etc/ssl/crtkey
-  filter spoe engine anubis config /etc/haproxy/spoe.cfg
-  use_backend web if { var(req.anubis.valid) -m bool }
-  default_backend anubis
+  mode http
+  bind :::443 v4v6 tfo alpn h2,http/1.1 ssl crt /etc/ssl/crtkey
 
-backend anubis
-  option forwardfor
-  server anubis1 2a02:1748:f7df:9c80::b:8923
+  filter spoe engine anubis config /etc/haproxy/anubis.cfg
+  # The following two ACLs in combination with them being mentioned in the `use_backend` line allow bypass of anubis
+  # if it is not working properly (ie. the metrics page is not reachable)
+  acl anubis_spoe_healthy nbsrv(anubis-spoe) gt 0
+  acl anubis_http_healthy nbsrv(anubis-http) gt 0
+  use_backend anubis-http if !{ var(req.anubis.valid) -m bool } anubis_http_healthy anubis_spoe_healthy
+
+  # Optionally: More HAProxy request routing logic
+
+  default_backend web
+
+backend anubis-http
+  mode http
+
+  option forwardfor header "X-Real-IP"
+  # The next two lines, as well as the `check port 9090` can be removed if no health check is desired
+  option httpchk
+  http-check send meth GET uri /metrics hdr "X-Real-Ip" "::1"
+
+  server anubis1 2001:db8::42:8923 check port 9090
+
+backend anubis-spoe
+  mode tcp
+
+  option httpchk
+  http-check send meth GET uri /metrics hdr "X-Real-Ip" "::1"
+
+  server anubis1 2001:db8::42:8923 check port 9090
 
 backend web
+  mode http
   server web1 2a02:1748:f7df:9c80::b:3923
 ```
 
@@ -42,7 +67,7 @@ spoe-agent anubis
   timeout hello 2s
   timeout idle 5s
   timeout processing 1s
-  use-backend agents
+  use-backend anubis-spoe
   log global
 
 spoe-message check-client-cookie

@@ -124,7 +124,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	valid, _ := ValidateCookie(ckie, lg, s.Pub, r.URL.Path)
+	valid := ValidateCookie(ckie, lg, s.Pub, r.URL.Path)
 	if !valid {
 		s.ClearCookie(w)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
@@ -135,15 +135,15 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	s.ServeHTTPNext(w, r)
 }
 
-func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, pub ed25519.PublicKey, path string) (bool, jwt.MapClaims) {
+func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, pub ed25519.PublicKey, path string) bool {
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		return false, nil
+		return false
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", path)
-		return false, nil
+		return false
 	}
 
 	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -152,16 +152,10 @@ func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, pub ed25519.PublicKey, p
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", path, "err", err)
-		return false, nil
+		return false
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		lg.Debug("invalid token claims type", "path", path)
-		return false, nil
-	}
-
-	return true, claims
+	return true
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
