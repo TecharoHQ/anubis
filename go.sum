@@ -24,6 +24,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/deckarep/golang-set/v2 v2.6.0 h1:XfcQbWM1LlMB8BsJ8N9vW5ehnnPVIw0je80NsVHagjM=
 github.com/deckarep/golang-set/v2 v2.6.0/go.mod h1:VAky9rY/yGXJOLEDv3OMci+7wtDpOF4IN+y82NBOac4=
+github.com/dropmorepackets/haproxy-go v0.0.5 h1:a6aT2UrdS9MvV60ZLZnXFgi19jxRvVg/lJFQCiFYDFA=
+github.com/dropmorepackets/haproxy-go v0.0.5/go.mod h1:4a2AmmVjvg2zPNdizGZrMN8ZSUpj90U43VlcdbOIBnU=
 github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 h1:0JZ+dUmQeA8IIVUMzysrX4/AKuQwWhV2dYQuPZdvdSQ=
 github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51/go.mod h1:Yg+htXGokKKdzcwhuNDwVvN+uBxDGXJ7G/VN1d8fa64=
 github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456 h1:CkmB2l68uhvRlwOTPrwnuitSxi/S3Cg4L5QYOcL9MBc=
@@ -66,6 +68,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/natefinch/atomic v1.0.1 h1:ZPYKxkqQOx3KZ+RsbnP/YsgvxWQPGxjC0oBt2AhwV0A=
 github.com/natefinch/atomic v1.0.1/go.mod h1:N/D/ELrljoqDyT3rZrsUmtsuzvHkeB/wWjHV22AZRbM=
+github.com/negasus/haproxy-spoe-go v1.0.6 h1:uJ5coC6n0p4tI0MbVPna4ztFTpW1P3pzswvjuKAF8X4=
+github.com/negasus/haproxy-spoe-go v1.0.6/go.mod h1:ZrBizxtx2EeLN37Jkg9w9g32a1AFCJizA8vg46PaAp4=
 github.com/playwright-community/playwright-go v0.5101.0 h1:gVCMZThDO76LJ/aCI27lpB8hEAWhZszeS0YB+oTxJp0=
 github.com/playwright-community/playwright-go v0.5101.0/go.mod h1:kBNWs/w2aJ2ZUp1wEOOFLXgOqvppFngM5OS+qyhl+ZM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

@@ -7,6 +7,7 @@ require (
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/cel-go v0.25.0
+	github.com/negasus/haproxy-spoe-go v1.0.6
 	github.com/playwright-community/playwright-go v0.5101.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
@@ -26,6 +27,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cli/browser v1.3.0 // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
+	github.com/dropmorepackets/haproxy-go v0.0.5 // indirect
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect

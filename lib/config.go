@@ -87,7 +87,7 @@ func New(opts Options) (*Server, error) {
 	result := &Server{
 		next:       opts.Next,
 		priv:       opts.PrivateKey,
-		pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
+		Pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
 		policy:     opts.Policy,
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
