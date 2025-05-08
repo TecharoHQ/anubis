@@ -6,6 +6,8 @@
   "scripts": {
     "test": "npm run assets && go test ./...",
     "test:integration": "npm run assets && go test -v ./internal/test",
+    "test:integration:podman": "npm run assets && go test -v ./internal/test --playwright-runner=podman",
+    "test:integration:docker": "npm run assets && go test -v ./internal/test --playwright-runner=docker",
     "assets": "go generate ./... && ./web/build.sh && ./xess/build.sh",
     "build": "npm run assets && go build -o ./var/anubis ./cmd/anubis",
     "dev": "npm run assets && go run ./cmd/anubis --use-remote-address",
