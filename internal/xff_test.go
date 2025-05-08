@@ -131,6 +131,19 @@ func TestComputeXFFHeader(t *testing.T) {
 			result: "1.1.1.1",
 		},
 		{
+			name:          "TrimSpaces",
+			remoteAddr:    "127.0.0.1:80",
+			origXFFHeader: "1.1.1.1, 10.0.0.1, fe80::, 100.64.0.1, 169.254.0.1",
+			pref: XFFComputePreferences{
+				StripPrivate:  true,
+				StripLoopback: true,
+				StripCGNAT:    true,
+				StripLLU:      true,
+				Flatten:       true,
+			},
+			result: "1.1.1.1",
+		},
+		{
 			name:       "invalid-ip-port",
 			remoteAddr: "fe80::",
 			err:        ErrCantSplitHostParse,
