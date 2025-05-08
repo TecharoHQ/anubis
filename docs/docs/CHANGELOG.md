@@ -20,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disable Open Graph passthrough by default ([#435](https://github.com/TecharoHQ/anubis/issues/435))
 - Clarify the license of the mascot images ([#442](https://github.com/TecharoHQ/anubis/issues/442))
 - Started Suppressing 'Context canceled' errors from http in the logs ([#446](https://github.com/TecharoHQ/anubis/issues/446))
-- Limit concurrency in Firefox and use a pure-JS SHA256 library to eke out more performance in proof of work checking
 
 ## v1.17.1: Asahi sas Brutus: Echo 1
 
