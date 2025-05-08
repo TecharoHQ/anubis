@@ -1,11 +1,12 @@
-import processFast from "./proof-of-work.mjs";
-import processSlow from "./proof-of-work-slow.mjs";
+import processFast from "./algorithms/fast.mjs";
+import processSlow from "./algorithms/slow.mjs";
 
 const defaultDifficulty = 4;
 const algorithms = {
   fast: processFast,
   slow: processSlow,
 };
+const basePrefix = "";
 
 const status = document.getElementById("status");
 const difficultyInput = document.getElementById("difficulty-input");
@@ -42,7 +43,7 @@ const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
     .join("");
 
   const t0 = performance.now();
-  const { hash, nonce } = await process(challenge, Number(difficulty), signal);
+  const { hash, nonce } = await process(basePrefix, challenge, Number(difficulty), signal);
   const t1 = performance.now();
   console.log({ hash, nonce });
 
@@ -114,6 +115,7 @@ const benchmarkLoop = async (controller) => {
   } catch (e) {
     if (e !== false) {
       status.innerText = e;
+      throw e;
     }
     return;
   }

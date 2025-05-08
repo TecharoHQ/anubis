@@ -1,6 +1,6 @@
-import processFast from "./proof-of-work.mjs";
-import processSlow from "./proof-of-work-slow.mjs";
-import { testVideo } from "./video.mjs";
+import processFast from "./algorithms/fast.mjs";
+import processSlow from "./algorithms/slow.mjs";
+import { testVideo } from "./tests/video.mjs";
 
 const algorithms = {
   "fast": processFast,
@@ -168,6 +168,7 @@ function showContinueBar(hash, nonce, t0, t1) {
   try {
     const t0 = Date.now();
     const { hash, nonce } = await process(
+      basePrefix,
       challenge,
       rules.difficulty,
       null,

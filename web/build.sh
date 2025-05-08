@@ -32,9 +32,9 @@ THE SOFTWARE.
 for the JavaScript code in this page.
 */'
 
-esbuild js/main.mjs --sourcemap --bundle --minify --outfile=static/js/main.mjs "--banner:js=${LICENSE}"
-gzip -f -k -n static/js/main.mjs
-zstd -f -k --ultra -22 static/js/main.mjs
-brotli -fZk static/js/main.mjs
-
-esbuild js/bench.mjs --sourcemap --bundle --minify --outfile=static/js/bench.mjs
+for file in js/*.mjs js/worker/*.mjs; do
+  esbuild "${file}" --sourcemap --bundle --minify --outfile=static/"${file}" --banner:js="${LICENSE}"
+  gzip -f -k -n static/${file}
+  zstd -f -k --ultra -22 static/${file}
+  brotli -fZk static/${file}
+done
