@@ -53,7 +53,7 @@ func (elf *ErrorLogFilter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func GetHTTPLogFilter() *log.Logger {
-	stdErrLogger := log.New(os.Stderr, "", log.LstdFlags)
+func GetFilteredHTTPLogger() *log.Logger {
+	stdErrLogger := log.New(os.Stderr, "", log.LstdFlags) // essentially what the default logger is.
 	return log.New(&ErrorLogFilter{Unwrap: stdErrLogger}, "", 0)
 }
