@@ -14,12 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use CSS variables to deduplicate styles
 - Fixed native packages not containing the stdlib and botPolicies.yaml
 - Change import syntax to allow multi-level imports
-- Changed the startup logging to use JSON formatting as all the other logs do.
+- Changed the startup logging to use JSON formatting as all the other logs do
 - Added the ability to do [expression matching with CEL](./admin/configuration/expressions.mdx)
 - Add a warning for clients that don't store cookies
 - Disable Open Graph passthrough by default ([#435](https://github.com/TecharoHQ/anubis/issues/435))
 - Clarify the license of the mascot images ([#442](https://github.com/TecharoHQ/anubis/issues/442))
 - Started Suppressing 'Context canceled' errors from http in the logs ([#446](https://github.com/TecharoHQ/anubis/issues/446))
+- Added Podman and Docker support for running Playwright tests
 
 ## v1.17.1: Asahi sas Brutus: Echo 1
 
