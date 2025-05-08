@@ -1,6 +1,6 @@
 const determineThreadCount = () => {
   if (navigator.userAgent.includes("Firefox")) {
-    return 1;
+    return Math.min(navigator.hardwareConcurrency, 4);
   }
 
   if (!!navigator.hardwareConcurrency) {
@@ -19,7 +19,7 @@ export default function process(
   threads = determineThreadCount(),
 ) {
   return new Promise((resolve, reject) => {
-    let webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/slow.mjs?cacheBuster=${version}`;
+    let webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/fast.mjs?cacheBuster=${version}`;
 
     const workers = [];
     const terminate = () => {
