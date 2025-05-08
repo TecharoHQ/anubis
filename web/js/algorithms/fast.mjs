@@ -1,5 +1,5 @@
 const determineThreadCount = () => {
-  if (navigator.userAgent.contains("Firefox")) {
+  if (navigator.userAgent.includes("Firefox")) {
     return 1;
   }
 

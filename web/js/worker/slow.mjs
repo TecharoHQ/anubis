@@ -18,7 +18,7 @@ addEventListener('message', async (event) => {
   let hash;
   let nonce = 0;
   do {
-    if (nonce & 1023 === 0) {
+    if ((nonce & 1023) === 0) {
       postMessage(nonce);
     }
     hash = await sha256(data + nonce++);
