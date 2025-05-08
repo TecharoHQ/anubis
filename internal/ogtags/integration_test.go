@@ -56,10 +56,10 @@ func TestIntegrationGetOGTags(t *testing.T) {
 
 	// Test with different configurations
 	testCases := []struct {
+		expectedTags map[string]string
 		name         string
 		path         string
 		query        string
-		expectedTags map[string]string
 		expectError  bool
 	}{
 		{
