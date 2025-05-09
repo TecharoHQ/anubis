@@ -55,14 +55,14 @@ jobs:
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           registry: ghcr.io
-          username: techarohq
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
-          images: ghcr.io/techarohq/anubis
+          images: ghcr.io/${{ github.repository }}
 
       - name: Build and push
         id: build
@@ -70,12 +70,13 @@ jobs:
           npm ci
           npm run container
         env:
-          DOCKER_REPO: ghcr.io/techarohq/anubis
+          DOCKER_REPO: ghcr.io/${{ github.repository }}
           SLOG_LEVEL: debug
+
       
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
         with:
-          subject-name: ghcr.io/techarohq/anubis
+          subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
