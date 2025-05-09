@@ -36,7 +36,7 @@ If you run into any issues running Anubis, please [open an issue](https://github
 
 For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in the Patron discord in the channel `#anubis`.
 
-## Star History
+## Stonks
 
 <a href="https://www.star-history.com/#TecharoHQ/anubis&Date">
  <picture>
