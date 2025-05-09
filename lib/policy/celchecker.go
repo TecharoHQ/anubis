@@ -12,8 +12,8 @@ import (
 )
 
 type CELChecker struct {
-	src     string
 	program cel.Program
+	src     string
 }
 
 func NewCELChecker(cfg *config.ExpressionOrList) (*CELChecker, error) {

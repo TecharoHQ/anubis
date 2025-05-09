@@ -12,8 +12,8 @@ func Base(title string, body templ.Component) templ.Component {
 
 func BaseWithChallengeAndOGTags(title string, body templ.Component, challenge string, rules *config.ChallengeRules, ogTags map[string]string) (templ.Component, error) {
 	return base(title, body, struct {
-		Challenge string                 `json:"challenge"`
 		Rules     *config.ChallengeRules `json:"rules"`
+		Challenge string                 `json:"challenge"`
 	}{
 		Challenge: challenge,
 		Rules:     rules,

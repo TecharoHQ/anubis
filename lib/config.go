@@ -23,24 +23,21 @@ import (
 )
 
 type Options struct {
-	Next            http.Handler
-	Policy          *policy.ParsedConfig
-	RedirectDomains []string
-	ServeRobotsTXT  bool
-	PrivateKey      ed25519.PrivateKey
-
-	CookieExpiration  time.Duration
-	CookieDomain      string
-	CookieName        string
-	CookiePartitioned bool
-
-	OGPassthrough        bool
+	Next                 http.Handler
+	Policy               *policy.ParsedConfig
+	Target               string
+	CookieDomain         string
+	CookieName           string
+	BasePrefix           string
+	WebmasterEmail       string
+	RedirectDomains      []string
+	PrivateKey           ed25519.PrivateKey
+	CookieExpiration     time.Duration
 	OGTimeToLive         time.Duration
 	OGCacheConsidersHost bool
-	Target               string
-
-	WebmasterEmail string
-	BasePrefix     string
+	OGPassthrough        bool
+	CookiePartitioned    bool
+	ServeRobotsTXT       bool
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {

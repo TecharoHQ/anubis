@@ -15,9 +15,9 @@ func p[V any](v V) *V { return &v }
 
 func TestBotValid(t *testing.T) {
 	var tests = []struct {
+		err  error
 		name string
 		bot  BotConfig
-		err  error
 	}{
 		{
 			name: "simple user agent",
@@ -239,9 +239,9 @@ func TestConfigValidKnownGood(t *testing.T) {
 
 func TestImportStatement(t *testing.T) {
 	type testCase struct {
+		err        error
 		name       string
 		importPath string
-		err        error
 	}
 
 	var tests []testCase

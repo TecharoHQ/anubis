@@ -20,12 +20,12 @@ const (
 type OGTagCache struct {
 	cache               *decaymap.Impl[string, map[string]string]
 	targetURL           *url.URL
-	ogCacheConsiderHost bool
-	ogPassthrough       bool
-	ogTimeToLive        time.Duration
+	client              *http.Client
 	approvedTags        []string
 	approvedPrefixes    []string
-	client              *http.Client
+	ogTimeToLive        time.Duration
+	ogCacheConsiderHost bool
+	ogPassthrough       bool
 }
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogTagsConsiderHost bool) *OGTagCache {

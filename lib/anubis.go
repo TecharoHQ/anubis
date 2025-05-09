@@ -58,14 +58,14 @@ var (
 )
 
 type Server struct {
-	mux        *http.ServeMux
 	next       http.Handler
-	priv       ed25519.PrivateKey
-	pub        ed25519.PublicKey
+	mux        *http.ServeMux
 	policy     *policy.ParsedConfig
-	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
+	priv       ed25519.PrivateKey
+	pub        ed25519.PublicKey
+	opts       Options
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -232,8 +232,8 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	err = encoder.Encode(struct {
-		Challenge string                 `json:"challenge"`
 		Rules     *config.ChallengeRules `json:"rules"`
+		Challenge string                 `json:"challenge"`
 	}{
 		Challenge: challenge,
 		Rules:     rule.Challenge,

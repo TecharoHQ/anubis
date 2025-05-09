@@ -73,6 +73,21 @@ Anubis uses these environment variables for configuration:
 | `USE_REMOTE_ADDRESS`           | unset                   | If set to `true`, Anubis will take the client's IP from the network socket. For production deployments, it is expected that a reverse proxy is used in front of Anubis, which pass the IP using headers, instead.                                                                                                    |
 | `WEBMASTER_EMAIL`              | unset                   | If set, shows a contact email address when rendering error pages. This email address will be how users can get in contact with administrators.                                                                                                                                                                       |
 
+<details>
+<summary>Advanced configuration settings</summary>
+
+:::note
+
+If you don't know or understand what these settings mean, ignore them. These are intended to work around very specific issues.
+
+:::
+
+| Environment Variable          | Default value | Explanation                                                                                                                                         |
+| :---------------------------- | :------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TARGET_INSECURE_SKIP_VERIFY` | `false`       | If `true`, skip TLS certificate validation for targets that listen over `https`. If your backend does not listen over `https`, ignore this setting. |
+
+</details>
+
 For more detailed information on configuring Open Graph tags, please refer to the [Open Graph Configuration](./configuration/open-graph.mdx) page.
 
 ### Using Base Prefix

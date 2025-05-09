@@ -8,10 +8,10 @@ import (
 )
 
 type Bot struct {
+	Rules     Checker
+	Challenge *config.ChallengeRules
 	Name      string
 	Action    config.Rule
-	Challenge *config.ChallengeRules
-	Rules     Checker
 }
 
 func (b Bot) Hash() string {

@@ -104,10 +104,11 @@ const (
 type action string
 
 type testCase struct {
-	name              string
-	action            action
-	isHard            bool
-	realIP, userAgent string
+	name      string
+	action    action
+	realIP    string
+	userAgent string
+	isHard    bool
 }
 
 func doesNPXExist(t *testing.T) {

@@ -51,15 +51,14 @@ const (
 )
 
 type BotConfig struct {
-	Name           string            `json:"name"`
 	UserAgentRegex *string           `json:"user_agent_regex"`
 	PathRegex      *string           `json:"path_regex"`
 	HeadersRegex   map[string]string `json:"headers_regex"`
-	RemoteAddr     []string          `json:"remote_addresses"`
 	Expression     *ExpressionOrList `json:"expression"`
-
-	Action    Rule            `json:"action"`
-	Challenge *ChallengeRules `json:"challenge,omitempty"`
+	Challenge      *ChallengeRules   `json:"challenge,omitempty"`
+	Name           string            `json:"name"`
+	Action         Rule              `json:"action"`
+	RemoteAddr     []string          `json:"remote_addresses"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -171,9 +170,9 @@ func (b BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
+	Algorithm  Algorithm `json:"algorithm"`
 	Difficulty int       `json:"difficulty"`
 	ReportAs   int       `json:"report_as"`
-	Algorithm  Algorithm `json:"algorithm"`
 }
 
 var (

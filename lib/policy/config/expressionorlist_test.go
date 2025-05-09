@@ -8,11 +8,11 @@ import (
 
 func TestExpressionOrListUnmarshal(t *testing.T) {
 	for _, tt := range []struct {
-		name     string
-		inp      string
 		err      error
 		validErr error
 		result   *ExpressionOrList
+		name     string
+		inp      string
 	}{
 		{
 			name: "simple",

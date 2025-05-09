@@ -8,11 +8,11 @@ import (
 
 func TestRemoteAddrChecker(t *testing.T) {
 	for _, tt := range []struct {
-		name  string
-		cidrs []string
-		ip    string
-		ok    bool
 		err   error
+		name  string
+		ip    string
+		cidrs []string
+		ok    bool
 	}{
 		{
 			name:  "match_ipv4",
@@ -86,13 +86,13 @@ func TestRemoteAddrChecker(t *testing.T) {
 
 func TestHeaderMatchesChecker(t *testing.T) {
 	for _, tt := range []struct {
+		err            error
 		name           string
 		header         string
 		rexStr         string
 		reqHeaderKey   string
 		reqHeaderValue string
 		ok             bool
-		err            error
 	}{
 		{
 			name:           "match",

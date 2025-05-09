@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"golang.org/x/net/html"
 	"io"
 	"log/slog"
 	"mime"
 	"net"
 	"net/http"
+
+	"golang.org/x/net/html"
 )
 
 var (

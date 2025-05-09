@@ -14,11 +14,11 @@ func TestJoin(t *testing.T) {
 	}
 
 	for _, tt := range []struct {
-		name      string
-		clauses   []string
-		op        JoinOperator
 		err       error
+		name      string
+		op        JoinOperator
 		resultStr string
+		clauses   []string
 	}{
 		{
 			name:    "no-clauses",

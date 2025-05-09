@@ -65,12 +65,12 @@ func TestXForwardedForUpdateAddToChain(t *testing.T) {
 
 func TestComputeXFFHeader(t *testing.T) {
 	for _, tt := range []struct {
+		err           error
 		name          string
 		remoteAddr    string
 		origXFFHeader string
-		pref          XFFComputePreferences
 		result        string
-		err           error
+		pref          XFFComputePreferences
 	}{
 		{
 			name:          "StripPrivate",
