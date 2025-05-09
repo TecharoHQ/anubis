@@ -24,7 +24,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
-          images: ghcr.io/techarohq/anubis/docs
+          images: ghcr.io/${{ github.repository }}/docs
 
       - name: Build and push
         id: build

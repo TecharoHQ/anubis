@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   build:
+    if: github.repository == 'TecharoHQ/anubis'
     runs-on: ubuntu-24.04
 
     steps:

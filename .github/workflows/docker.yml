@@ -3,7 +3,7 @@ name: Docker image builds
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "json/gha" ] # todo: remove json/gha
     tags: [ "v*" ]
 
 env:
