@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -344,7 +345,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	// generate JWT cookie
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
 		"challenge": challenge,
-		"nonce":     nonce,
+		"nonce":     nonceStr,
 		"response":  response,
 		"iat":       time.Now().Unix(),
 		"nbf":       time.Now().Add(-1 * time.Minute).Unix(),
