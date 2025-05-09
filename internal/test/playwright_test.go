@@ -38,6 +38,7 @@ var (
 	playwrightServer      = flag.String("playwright", "ws://localhost:9001", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
 	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 5*time.Minute, "maximum time for hard Playwright requests")
+	playwrightRunner      = flag.String("playwright-runner", "npx", "how to start Playwright, can be: none,npx,docker,podman")
 
 	testCases = []testCase{
 		{
@@ -98,7 +99,7 @@ const (
 	actionChallenge action = "CHALLENGE"
 
 	placeholderIP     = "fd11:5ee:bad:c0de::"
-	playwrightVersion = "1.51.1"
+	playwrightVersion = "1.52.0"
 )
 
 type action string
@@ -111,11 +112,11 @@ type testCase struct {
 	isHard    bool
 }
 
-func doesNPXExist(t *testing.T) {
+func doesCommandExist(t *testing.T, command string) {
 	t.Helper()
 
-	if _, err := exec.LookPath("npx"); err != nil {
-		t.Skipf("npx not found in PATH, skipping integration smoke testing: %v", err)
+	if _, err := exec.LookPath(command); err != nil {
+		t.Skipf("%s not found in PATH, skipping integration smoke testing: %v", command, err)
 	}
 }
 
@@ -170,13 +171,30 @@ func daemonize(t *testing.T, command string) {
 func startPlaywright(t *testing.T) {
 	t.Helper()
 
-	if os.Getenv("CI") == "true" {
-		run(t, fmt.Sprintf("npx --yes playwright@%s install --with-deps", playwrightVersion))
-	} else {
-		run(t, fmt.Sprintf("npx --yes playwright@%s install", playwrightVersion))
-	}
+	if *playwrightRunner == "npx" {
+		doesCommandExist(t, "npx")
 
-	daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
+		if os.Getenv("CI") == "true" {
+			run(t, fmt.Sprintf("npx --yes playwright@%s install --with-deps", playwrightVersion))
+		} else {
+			run(t, fmt.Sprintf("npx --yes playwright@%s install", playwrightVersion))
+		}
+
+		daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
+	} else if *playwrightRunner == "docker" || *playwrightRunner == "podman" {
+		doesCommandExist(t, *playwrightRunner)
+
+		// docs: https://playwright.dev/docs/docker
+		pwcmd := fmt.Sprintf("npx -y playwright@%s run-server --port %d --host 0.0.0.0", playwrightVersion, *playwrightPort)
+		container := run(t, fmt.Sprintf("%s run -d --ipc=host --user pwuser --workdir /home/pwuser --net=host mcr.microsoft.com/playwright:v%s-noble /bin/sh -c \"%s\"", *playwrightRunner, playwrightVersion, pwcmd))
+		t.Cleanup(func() {
+			run(t, fmt.Sprintf("%s rm --force %s", *playwrightRunner, container))
+		})
+	} else if *playwrightRunner == "none" {
+		t.Log("not starting Playwright, assuming it is already running")
+	} else {
+		t.Skipf("unknown runner: %s, skipping", *playwrightRunner)
+	}
 
 	for {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
@@ -196,7 +214,6 @@ func TestPlaywrightBrowser(t *testing.T) {
 		return
 	}
 
-	doesNPXExist(t)
 	startPlaywright(t)
 
 	pw := setupPlaywright(t)
@@ -274,7 +291,6 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	t.Skip("NOTE(Xe)\\ these tests require HTTPS support in #364")
 
-	doesNPXExist(t)
 	startPlaywright(t)
 
 	pw := setupPlaywright(t)
