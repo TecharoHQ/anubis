@@ -117,6 +117,7 @@ loadbalancer
 lol
 maintainership
 malware
+mcr
 memes
 mimi
 minica
@@ -141,10 +142,13 @@ pids
 pipefail
 pki
 podkova
+podman
 prebaked
 privkey
 promauto
 promhttp
+pwcmd
+pwuser
 qwant
 qwantbot
 rac
@@ -196,6 +200,7 @@ webpage
 websecure
 websites
 workaround
+workdir
 xcaddy
 Xeact
 xeiaso
