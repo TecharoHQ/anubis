@@ -66,10 +66,7 @@ jobs:
 
     - name: Build Packages
       run: |
-        wget https://github.com/TecharoHQ/yeet/releases/download/v0.2.2/yeet_0.2.2_amd64.deb -O var/yeet.deb
-        sudo apt -y install -f ./var/yeet.deb
-        rm ./var/yeet.deb
-        yeet
+        go tool yeet
 
     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
