@@ -134,8 +134,10 @@ pag
 parseable
 passthrough
 Patreon
+pgrep
 phrik
 pidfile
+pids
 pipefail
 pki
 podkova
@@ -167,6 +169,8 @@ Spambot
 sparkline
 srv
 stackoverflow
+startprecmd
+stoppostcmd
 subgrid
 subr
 subrequest
@@ -208,3 +212,4 @@ yourdomain
 yoursite
 Zenos
 zizmor
+zos
