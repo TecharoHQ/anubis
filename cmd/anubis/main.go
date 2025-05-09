@@ -309,7 +309,7 @@ func main() {
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(h)
 
-	srv := http.Server{Handler: h}
+	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
 	slog.Info(
 		"listening",
@@ -348,7 +348,7 @@ func metricsServer(ctx context.Context, done func()) {
 	mux := http.NewServeMux()
 	mux.Handle(anubis.BasePrefix+"/metrics", promhttp.Handler())
 
-	srv := http.Server{Handler: mux}
+	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
 

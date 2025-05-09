@@ -11,6 +11,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v1.18.0: Varis zos Galvus
+
+The big ticket feature in this release is [CEL expression matching support](https://anubis.techaro.lol/docs/admin/configuration/expressions). This allows you to tailor your approach for the individual services you are protecting.
+
+These can be as simple as:
+
+```yaml
+- name: allow-api-requests
+  action: ALLOW
+  expression:
+    all:
+      - '"Accept" in headers'
+      - 'headers["Accept"] == "application/json"'
+      - 'path.startsWith("/api/")'
+```
+
+Or as complicated as:
+
+```yaml
+- name: allow-git-clients
+  action: ALLOW
+  expression:
+    all:
+      - >-
+        (  
+          userAgent.startsWith("git/") ||
+          userAgent.contains("libgit") ||
+          userAgent.startsWith("go-git") ||
+          userAgent.startsWith("JGit/") ||
+          userAgent.startsWith("JGit-")
+        )
+      - '"Git-Protocol" in headers'
+      - headers["Git-Protocol"] == "version=2"
+```
+
+The docs have more information, but here's a tl;dr of the variables you have access to in expressions:
+
+| Name            | Type                  | Explanation                                                                                                                               | Example                                                      |
+| :-------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                        | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
+| `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                  | `anubis.techaro.lol`                                         |
+| `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                    | `GET`, `POST`, `DELETE`, etc.                                |
+| `path`          | `string`              | The [path](https://web.dev/articles/url-parts#pathname) of the request being processed.                                                   | `/`, `/api/memes/create`                                     |
+| `query`         | `map[string, string]` | The [query parameters](https://web.dev/articles/url-parts#query) of the request being processed.                                          | `?foo=bar` -> `{"foo": "bar"}`                               |
+| `remoteAddress` | `string`              | The IP address of the client.                                                                                                             | `1.1.1.1`                                                    |
+| `userAgent`     | `string`              | The [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) string in the request being processed. | `Mozilla/5.0 Gecko/20100101 Firefox/137.0`                   |
+
+This will be made more elaborate in the future. Give me time. This is a [simple, lovable, and complete](https://longform.asmartbear.com/slc/) implementation of this feature so that administrators can get hacking ASAP.
+
+Other changes:
+
 - Use CSS variables to deduplicate styles
 - Fixed native packages not containing the stdlib and botPolicies.yaml
 - Change import syntax to allow multi-level imports
@@ -19,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a warning for clients that don't store cookies
 - Disable Open Graph passthrough by default ([#435](https://github.com/TecharoHQ/anubis/issues/435))
 - Clarify the license of the mascot images ([#442](https://github.com/TecharoHQ/anubis/issues/442))
+- Started Suppressing 'Context canceled' errors from http in the logs ([#446](https://github.com/TecharoHQ/anubis/issues/446))
 
 ## v1.17.1: Asahi sas Brutus: Echo 1
 
