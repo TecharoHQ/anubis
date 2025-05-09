@@ -186,6 +186,7 @@ traefik
 unixhttpd
 unmarshal
 uvx
+Varis
 vendored
 vhosts
 videotest
@@ -194,7 +195,7 @@ webmaster
 webpage
 websecure
 websites
-Workaround
+workaround
 xcaddy
 Xeact
 xeiaso
