@@ -3,11 +3,13 @@ name: Docker image builds
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "json/gha" ] # todo: remove json/gha
+    branches: [ "main", "json/gha" ] # TODO: remove json/gha
     tags: [ "v*" ]
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
+  DOCKER_REPO: ghcr.io/${{ github.repository_owner }}
+  IMAGE_NAME: ${{ github.repository }}
 
 permissions:
   contents: read
@@ -54,7 +56,7 @@ jobs:
       - name: Log into registry 
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
-          registry: ghcr.io
+          registry: ${{ env.DOCKER_REPO }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,7 +64,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push
         id: build
@@ -70,13 +72,13 @@ jobs:
           npm ci
           npm run container
         env:
-          DOCKER_REPO: ghcr.io/${{ github.repository }}
+          DOCKER_REPO: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           SLOG_LEVEL: debug
 
       
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
         with:
-          subject-name: ghcr.io/${{ github.repository }}
+          subject-name: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true

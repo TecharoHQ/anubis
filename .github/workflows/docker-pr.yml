@@ -2,7 +2,7 @@ name: Docker image builds (pull requests)
 
 on:
   pull_request:
-    branches: [ "main", "json/gha" ]
+    branches: [ "main" ]
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
