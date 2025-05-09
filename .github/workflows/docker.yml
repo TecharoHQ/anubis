@@ -60,6 +60,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: debug stuff
+        run: |
+          echo "DOCKER_REPO: ${{ env.DOCKER_REPO }}"
+          echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
+          echo "GITHUB_REPOSITORY: ${{ github.repository }}"
+          echo "GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}"
+          
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
