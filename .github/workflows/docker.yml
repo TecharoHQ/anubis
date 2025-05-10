@@ -8,7 +8,6 @@ on:
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
-  DOCKER_REPO: ghcr.io/${{ github.repository_owner }}
 
 permissions:
   contents: read
@@ -59,16 +58,9 @@ jobs:
       - name: Log into registry 
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
-          registry: ${{ env.DOCKER_REPO }}
+          registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: debug stuff
-        run: |
-          echo "DOCKER_REPO: ${{ env.DOCKER_REPO }}"
-          echo "GITHUB_REPOSITORY: ${{ github.repository }}"
-          echo "GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}"
-          
 
       - name: Docker meta
         id: meta
