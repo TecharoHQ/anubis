@@ -42,7 +42,10 @@ func main() {
 
 	slog.Info("starting up", "dir", *dir, "socketPath", *socketPath)
 
-	os.Remove(*socketPath)
+	err := os.Remove(*socketPath)
+	if err != nil {
+		panic("could not remove socket: " + err.Error())
+	}
 
 	mux := http.NewServeMux()
 
