@@ -9,7 +9,6 @@ on:
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
   DOCKER_REPO: ghcr.io/${{ github.repository_owner }}
-  IMAGE: ghcr.io/${{ github.repository }}
 
 permissions:
   contents: read
@@ -28,6 +27,10 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Set lowercase image name
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
