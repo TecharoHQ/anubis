@@ -1,12 +1,10 @@
 async function testWithUserAgent(userAgent) {
-  const statusCode =
-    await fetch("https://relayd.local.cetacean.club:3004/reqmeta", {
-      headers: {
-        "User-Agent": userAgent,
-      }
-    })
+  return await fetch("https://relayd.local.cetacean.club:3004/reqmeta", {
+    headers: {
+      "User-Agent": userAgent,
+    }
+  })
       .then(resp => resp.status);
-  return statusCode;
 }
 
 const codes = {
