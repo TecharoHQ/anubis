@@ -28,7 +28,6 @@ function HomepageHeader() {
 }
 
 export default function Home(): ReactNode {
-  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title={`Anubis: self hostable scraper defense software`}

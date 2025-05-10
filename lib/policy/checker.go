@@ -62,7 +62,10 @@ func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
 			return nil, fmt.Errorf("%w: range %s not parsing: %w", ErrMisconfiguration, cidr, err)
 		}
 
-		ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
+		err = ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
+		if err != nil {
+			return nil, fmt.Errorf("%w: error inserting ip range: %w", ErrMisconfiguration, err)
+		}
 		fmt.Fprintln(&sb, cidr)
 	}
 

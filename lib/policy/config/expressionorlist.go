@@ -54,6 +54,9 @@ func (eol *ExpressionOrList) UnmarshalJSON(data []byte) error {
 }
 
 func (eol *ExpressionOrList) Valid() error {
+	if eol.Expression == "" && len(eol.All) == 0 && len(eol.Any) == 0 {
+		return ErrExpressionEmpty
+	}
 	if len(eol.All) != 0 && len(eol.Any) != 0 {
 		return ErrExpressionCantHaveBoth
 	}
