@@ -9,7 +9,7 @@ on:
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
   DOCKER_REPO: ghcr.io/${{ github.repository_owner }}
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE: ghcr.io/${{ github.repository }}
 
 permissions:
   contents: read
@@ -63,7 +63,6 @@ jobs:
       - name: debug stuff
         run: |
           echo "DOCKER_REPO: ${{ env.DOCKER_REPO }}"
-          echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
           echo "GITHUB_REPOSITORY: ${{ github.repository }}"
           echo "GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}"
           
@@ -72,7 +71,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
-          images: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE }}
 
       - name: Build and push
         id: build
@@ -80,13 +79,13 @@ jobs:
           npm ci
           npm run container
         env:
-          DOCKER_REPO: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+          DOCKER_REPO: ${{ env.IMAGE }}
           SLOG_LEVEL: debug
 
       
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
         with:
-          subject-name: ${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+          subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
