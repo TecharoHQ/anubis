@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Add `check-spelling` for spell checking
-- Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend.
+- Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
 - Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.
 - Added Podman and Docker support for running Playwright tests
+- Updated the nonce value in the challenge JWT cookie to be a string instead of a number
 
 ## v1.18.0: Varis zos Galvus
 
@@ -54,7 +55,7 @@ Or as complicated as:
 The docs have more information, but here's a tl;dr of the variables you have access to in expressions:
 
 | Name            | Type                  | Explanation                                                                                                                               | Example                                                      |
-| :-------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+|:----------------|:----------------------|:------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------|
 | `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                        | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
 | `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                  | `anubis.techaro.lol`                                         |
 | `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                    | `GET`, `POST`, `DELETE`, etc.                                |
