@@ -18,14 +18,14 @@ func TestHTTPHeaders(t *testing.T) {
 
 	t.Run("contains-existing-header", func(t *testing.T) {
 		resp := headers.Contains(types.String("User-Agent"))
-		if !bool(resp.(types.Bool)) {
+		if !resp.(types.Bool) {
 			t.Fatal("headers does not contain User-Agent")
 		}
 	})
 
 	t.Run("not-contains-missing-header", func(t *testing.T) {
 		resp := headers.Contains(types.String("Xxx-Random-Header"))
-		if bool(resp.(types.Bool)) {
+		if resp.(types.Bool) {
 			t.Fatal("headers does not contain User-Agent")
 		}
 	})
