@@ -8,7 +8,7 @@ export const testVideo = async (testarea) => {
       testarea.style.display = "none";
       resolve(true);
     };
-    video.onerror = (ev) => {
+    video.onerror = () => {
       testarea.style.display = "none";
       resolve(false);
     };
