@@ -119,7 +119,7 @@ If no rules match the request, it is allowed through. For more details on this d
 There are three actions that can be returned from a rule:
 
 | Action      | Effects                                                                           |
-| :---------- | :-------------------------------------------------------------------------------- |
+|:------------|:----------------------------------------------------------------------------------|
 | `ALLOW`     | Bypass all further checks and send the request to the backend.                    |
 | `DENY`      | Deny the request and send back an error message that scrapers think is a success. |
 | `CHALLENGE` | Show a challenge page and/or validate that clients have passed a challenge.       |
@@ -170,7 +170,7 @@ This rule has been known to have a high false positive rate in testing. Please u
 Challenges can be configured with these settings:
 
 | Key          | Example  | Description                                                                                                                                                                                    |
-| :----------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|:-------------|:---------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `difficulty` | `4`      | The challenge difficulty (number of leading zeros) for proof-of-work. See [Why does Anubis use Proof-of-Work?](/docs/design/why-proof-of-work) for more details.                               |
 | `report_as`  | `4`      | What difficulty the UI should report to the user. Useful for messing with industrial-scale scraping efforts.                                                                                   |
 | `algorithm`  | `"fast"` | The algorithm used on the client to run proof-of-work calculations. This must be set to `"fast"` or `"slow"`. See [Proof-of-Work Algorithm Selection](./algorithm-selection) for more details. |
@@ -238,7 +238,7 @@ remote_addresses:
 In case your service needs it for risk calculation reasons, Anubis exposes information about the rules that any requests match using a few headers:
 
 | Header            | Explanation                                          | Example          |
-| :---------------- | :--------------------------------------------------- | :--------------- |
+|:------------------|:-----------------------------------------------------|:-----------------|
 | `X-Anubis-Rule`   | The name of the rule that was matched                | `bot/lightpanda` |
 | `X-Anubis-Action` | The action that Anubis took in response to that rule | `CHALLENGE`      |
 | `X-Anubis-Status` | The status and how strict Anubis was in its checks   | `PASS`           |

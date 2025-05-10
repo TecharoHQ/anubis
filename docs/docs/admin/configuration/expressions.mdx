@@ -100,7 +100,7 @@ For this rule, if a request comes in matching [the signature of the `go get` com
 Anubis exposes the following variables to expressions:
 
 | Name            | Type                  | Explanation                                                                                                                               | Example                                                      |
-| :-------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+|:----------------|:----------------------|:------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------|
 | `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                        | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
 | `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                  | `anubis.techaro.lol`                                         |
 | `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                    | `GET`, `POST`, `DELETE`, etc.                                |

@@ -7,7 +7,7 @@ This page contains a list of all of the browser extensions that are known to bre
 ## [JShelter](https://jshelter.org/)
 
 | Extension    | JShelter                                                                                                                                           |
-| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+|:-------------|:---------------------------------------------------------------------------------------------------------------------------------------------------|
 | Website      | [jshelter.org](https://jshelter.org/)                                                                                                              |
 | GitHub issue | https://github.com/TecharoHQ/anubis/issues/25                                                                                                      |
 | Be aware of  | [What are Web Workers, and what are the threats that I face?](https://jshelter.org/faq/#what-are-web-workers-and-what-are-the-threats-that-i-face) |
