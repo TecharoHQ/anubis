@@ -306,7 +306,7 @@ func main() {
 	}
 
 	if *spoeBind != "" {
-		go spoeServer(s.Pub, ctx, wg.Done)
+		go spoeServer(s.Pub, s, wg.Done)
 	}
 
 	go startDecayMapCleanup(ctx, s)
@@ -382,10 +382,10 @@ func metricsServer(ctx context.Context, done func()) {
 	}
 }
 
-func spoeServer(pub ed25519.PublicKey, ctx context.Context, done func()) {
+func spoeServer(pub ed25519.PublicKey, server *libanubis.Server, done func()) {
 	defer done()
 
-	spoe := &libanubis.SpoeOptions{Pub: pub}
+	spoe := &libanubis.SpoeOptions{Pub: pub, Server: server}
 
 	listener, spoeUrl := setupListener(*spoeBindNetwork, *spoeBind)
 	slog.Debug("listening for spop data", "url", spoeUrl)
