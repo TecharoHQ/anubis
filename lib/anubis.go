@@ -67,6 +67,7 @@ type Server struct {
 	priv       ed25519.PrivateKey
 	pub        ed25519.PublicKey
 	opts       Options
+	cookieName string
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -117,7 +118,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	ckie, err := r.Cookie(anubis.CookieName)
+	ckie, err := r.Cookie(s.cookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w)
@@ -360,7 +361,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:        anubis.CookieName,
+		Name:        s.cookieName,
 		Value:       tokenString,
 		Expires:     time.Now().Add(s.opts.CookieExpiration),
 		SameSite:    http.SameSiteLaxMode,

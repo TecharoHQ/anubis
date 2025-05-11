@@ -198,13 +198,13 @@ func TestCookieCustomExpiration(t *testing.T) {
 	var ckie *http.Cookie
 	for _, cookie := range resp.Cookies() {
 		t.Logf("%#v", cookie)
-		if cookie.Name == anubis.CookieName {
+		if cookie.Name == srv.cookieName {
 			ckie = cookie
 			break
 		}
 	}
 	if ckie == nil {
-		t.Errorf("Cookie %q not found", anubis.CookieName)
+		t.Errorf("Cookie %q not found", srv.cookieName)
 		return
 	}
 
@@ -288,13 +288,13 @@ func TestCookieSettings(t *testing.T) {
 	var ckie *http.Cookie
 	for _, cookie := range resp.Cookies() {
 		t.Logf("%#v", cookie)
-		if cookie.Name == anubis.CookieName {
+		if cookie.Name == srv.cookieName {
 			ckie = cookie
 			break
 		}
 	}
 	if ckie == nil {
-		t.Errorf("Cookie %q not found", anubis.CookieName)
+		t.Errorf("Cookie %q not found", srv.cookieName)
 		return
 	}
 
