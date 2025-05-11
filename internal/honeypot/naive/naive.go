@@ -91,8 +91,8 @@ func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
 }
 
 func (i *Impl) CheckUA() checker.Impl {
-	return checker.Func(func(r *http.Request) (bool, error) {
-		result, _ := i.uaWeight.Get(r.Context(), internal.SHA256sum(r.UserAgent()))
+	return checker.Func(func(r *checker.RequestMetadata) (bool, error) {
+		result, _ := i.uaWeight.Get(r.Context, internal.SHA256sum(r.Header.Get("User-Agent")))
 		if result >= 25 {
 			return true, nil
 		}
@@ -102,8 +102,8 @@ func (i *Impl) CheckUA() checker.Impl {
 }
 
 func (i *Impl) CheckNetwork() checker.Impl {
-	return checker.Func(func(r *http.Request) (bool, error) {
-		result, _ := i.uaWeight.Get(r.Context(), internal.SHA256sum(r.UserAgent()))
+	return checker.Func(func(r *checker.RequestMetadata) (bool, error) {
+		result, _ := i.uaWeight.Get(r.Context, internal.SHA256sum(r.Header.Get("User-Agent")))
 		if result >= 25 {
 			return true, nil
 		}
