@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 	"regexp"
 	"strings"
 
@@ -17,13 +16,13 @@ var (
 )
 
 type Checker interface {
-	Check(*http.Request) (bool, error)
+	Check(*RequestMetadata) (bool, error)
 	Hash() string
 }
 
 type CheckerList []Checker
 
-func (cl CheckerList) Check(r *http.Request) (bool, error) {
+func (cl CheckerList) Check(r *RequestMetadata) (bool, error) {
 	for _, c := range cl {
 		ok, err := c.Check(r)
 		if err != nil {
@@ -72,18 +71,8 @@ func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
 	}, nil
 }
 
-func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
-	host := r.Header.Get("X-Real-Ip")
-	if host == "" {
-		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
-	}
-
-	addr := net.ParseIP(host)
-	if addr == nil {
-		return false, fmt.Errorf("%w: %s is not an IP address", ErrMisconfiguration, host)
-	}
-
-	ok, err := rac.ranger.Contains(addr)
+func (rac *RemoteAddrChecker) Check(r *RequestMetadata) (bool, error) {
+	ok, err := rac.ranger.Contains(r.RemoteAddr)
 	if err != nil {
 		return false, err
 	}
@@ -117,7 +106,7 @@ func NewHeaderMatchesChecker(header, rexStr string) (Checker, error) {
 	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.SHA256sum(header + ": " + rexStr)}, nil
 }
 
-func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
+func (hmc *HeaderMatchesChecker) Check(r *RequestMetadata) (bool, error) {
 	if hmc.regexp.MatchString(r.Header.Get(hmc.header)) {
 		return true, nil
 	}
@@ -142,8 +131,8 @@ func NewPathChecker(rexStr string) (Checker, error) {
 	return &PathChecker{rex, internal.SHA256sum(rexStr)}, nil
 }
 
-func (pc *PathChecker) Check(r *http.Request) (bool, error) {
-	if pc.regexp.MatchString(r.URL.Path) {
+func (pc *PathChecker) Check(r *RequestMetadata) (bool, error) {
+	if pc.regexp.MatchString(r.Path) {
 		return true, nil
 	}
 
@@ -162,7 +151,7 @@ type headerExistsChecker struct {
 	header string
 }
 
-func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
+func (hec headerExistsChecker) Check(r *RequestMetadata) (bool, error) {
 	if r.Header.Get(hec.header) != "" {
 		return true, nil
 	}

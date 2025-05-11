@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
-	"net"
 	"net/http"
 	"net/url"
 	"slices"
@@ -94,7 +93,7 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg := internal.GetRequestLogger(r)
 
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.checkHTTPRequest(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"")
@@ -218,7 +217,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
 
 	encoder := json.NewEncoder(w)
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.checkHTTPRequest(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -265,7 +264,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	// used by the path checker rule
 	r.URL = redirURL
 
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.checkHTTPRequest(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".\"")
@@ -391,17 +390,7 @@ func cr(name string, rule config.Rule) policy.CheckResult {
 }
 
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
-	host := r.Header.Get("X-Real-Ip")
-	if host == "" {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
-	}
-
-	addr := net.ParseIP(host)
-	if addr == nil {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
-	}
-
+func (s *Server) check(r *policy.RequestMetadata) (policy.CheckResult, *policy.Bot, error) {
 	for _, b := range s.policy.Bots {
 		match, err := b.Rules.Check(r)
 		if err != nil {
@@ -420,6 +409,15 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			Algorithm:  config.AlgorithmFast,
 		},
 	}, nil
+}
+
+func (s *Server) checkHTTPRequest(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
+	meta, err := policy.MetadataFromRequest(r)
+	if err != nil {
+		return policy.CheckResult{}, nil, err
+	}
+
+	return s.check(meta)
 }
 
 func (s *Server) CleanupDecayMap() {

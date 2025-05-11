@@ -3,10 +3,9 @@ package policy
 import (
 	"errors"
 	"fmt"
-	"io"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"io"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )

@@ -2,8 +2,6 @@ package policy
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/lib/policy/expressions"
@@ -66,8 +64,8 @@ func (cc *CELChecker) Hash() string {
 	return internal.SHA256sum(cc.src)
 }
 
-func (cc *CELChecker) Check(r *http.Request) (bool, error) {
-	result, _, err := cc.program.ContextEval(r.Context(), &CELRequest{r})
+func (cc *CELChecker) Check(r *RequestMetadata) (bool, error) {
+	result, _, err := cc.program.ContextEval(r.Context, &CELRequest{r})
 
 	if err != nil {
 		return false, err
@@ -81,7 +79,7 @@ func (cc *CELChecker) Check(r *http.Request) (bool, error) {
 }
 
 type CELRequest struct {
-	*http.Request
+	*RequestMetadata
 }
 
 func (cr *CELRequest) Parent() cel.Activation { return nil }
@@ -89,17 +87,17 @@ func (cr *CELRequest) Parent() cel.Activation { return nil }
 func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	switch name {
 	case "remoteAddress":
-		return cr.Header.Get("X-Real-Ip"), true
+		return cr.RemoteAddr.String(), true
 	case "host":
-		return cr.Host, true
+		return cr.Header.Get("Host"), true
 	case "method":
 		return cr.Method, true
 	case "userAgent":
-		return cr.UserAgent(), true
+		return cr.Header.Get("User-Agent"), true
 	case "path":
-		return cr.URL.Path, true
+		return cr.Path, true
 	case "query":
-		return expressions.URLValues{Values: cr.URL.Query()}, true
+		return expressions.URLValues{Values: cr.Query}, true
 	case "headers":
 		return expressions.HTTPHeaders{Header: cr.Header}, true
 	default:
