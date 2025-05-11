@@ -478,7 +478,7 @@ func main() {
 	}
 
 	if *spoeBind != "" {
-		go spoeServer(s, ctx, wg.Done)
+		go spoeServer(s, wg.Done)
 	}
 
 	var h http.Handler
@@ -567,7 +567,7 @@ func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
 	}
 }
 
-func spoeServer(server *libanubis.Server, ctx context.Context, done func()) {
+func spoeServer(server *libanubis.Server, done func()) {
 	defer done()
 
 	spoe := &libanubis.SpoeOptions{Server: server}
