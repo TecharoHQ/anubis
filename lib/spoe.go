@@ -51,7 +51,8 @@ func (sopt *SpoeOptions) SpoeHandler(_ context.Context, w *encoding.ActionWriter
 		return
 	}
 	slog.Debug(fmt.Sprintf("%+v", cookie))
-	valid, _ := ValidateCookie(cookie, lg, sopt.Server, nil, "spop", nil)
+
+	valid := ValidateCookie(cookie, lg, sopt.Server, nil, "spop", nil)
 
 	if valid {
 		lg.Debug("cookie is valid")
