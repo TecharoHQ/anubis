@@ -16,8 +16,8 @@ import (
 
 type realIPKey struct{}
 
-func RealIP(r *http.Request) (netip.Addr, bool) {
-	result, ok := r.Context().Value(realIPKey{}).(netip.Addr)
+func RealIPFromContext(ctx context.Context) (netip.Addr, bool) {
+	result, ok := ctx.Value(realIPKey{}).(netip.Addr)
 	return result, ok
 }
 

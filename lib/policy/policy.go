@@ -9,7 +9,6 @@ import (
 	"os"
 	"sync/atomic"
 	"time"
-
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"

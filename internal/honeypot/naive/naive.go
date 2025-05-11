@@ -84,10 +84,14 @@ func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
 }
 
 func (i *Impl) CheckNetwork() checker.Impl {
-	return checker.Func(func(r *http.Request) (bool, error) {
-		realIP, _ := internal.RealIP(r)
+	return checker.Func(func(r *checker.RequestMetadata) (bool, error) {
+		realIP, _ := internal.RealIPFromContext(r.Context)
 		if !realIP.IsValid() {
-			realIP = netip.MustParseAddr(r.Header.Get("X-Real-Ip"))
+			var ok bool
+			realIP, ok = netip.AddrFromSlice(r.RemoteAddr)
+			if !ok {
+				return false, nil
+			}
 		}
 
 		network, ok := internal.ClampIP(realIP)
@@ -95,7 +99,18 @@ func (i *Impl) CheckNetwork() checker.Impl {
 			return false, nil
 		}
 
-		result, _ := i.networkWeight.Get(r.Context(), internal.SHA256sum(network.String()))
+		result, _ := i.networkWeight.Get(r.Context, internal.SHA256sum(network.String()))
+		if result >= 25 {
+			return true, nil
+		}
+
+		return false, nil
+	})
+}
+
+func (i *Impl) CheckUA() checker.Impl {
+	return checker.Func(func(r *checker.RequestMetadata) (bool, error) {
+		result, _ := i.uaWeight.Get(r.Context, internal.SHA256sum(r.Header.Get("User-Agent")))
 		if result >= 25 {
 			return true, nil
 		}
@@ -143,7 +158,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		id = uuid.NewString()
 	}
 
-	realIP, _ := internal.RealIP(r)
+	realIP, _ := internal.RealIPFromContext(r.Context())
 	if !realIP.IsValid() {
 		realIP = netip.MustParseAddr(r.Header.Get("X-Real-Ip"))
 	}

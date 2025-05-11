@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strings"
 	"time"
 
@@ -35,12 +34,12 @@ type GeoIPChecker struct {
 	hash      string
 }
 
-func (gipc *GeoIPChecker) Check(r *http.Request) (bool, error) {
-	ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
+func (gipc *GeoIPChecker) Check(r *checker.RequestMetadata) (bool, error) {
+	ctx, cancel := context.WithTimeout(r.Context, 500*time.Millisecond)
 	defer cancel()
 
 	ipInfo, err := gipc.IPToASN.Lookup(ctx, &iptoasnv1.LookupRequest{
-		IpAddress: r.Header.Get("X-Real-Ip"),
+		IpAddress: r.RemoteAddr.String(),
 	})
 	if err != nil {
 		switch {

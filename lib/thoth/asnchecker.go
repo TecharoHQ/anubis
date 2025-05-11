@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"strings"
 	"time"
 
@@ -36,8 +35,8 @@ type ASNChecker struct {
 	hash    string
 }
 
-func (asnc *ASNChecker) Check(r *http.Request) (bool, error) {
-	ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
+func (asnc *ASNChecker) Check(r *checker.RequestMetadata) (bool, error) {
+	ctx, cancel := context.WithTimeout(r.Context, 500*time.Millisecond)
 	defer cancel()
 
 	ipInfo, err := asnc.iptoasn.Lookup(ctx, &iptoasnv1.LookupRequest{

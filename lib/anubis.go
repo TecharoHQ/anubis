@@ -207,7 +207,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	cr, rule, err := s.check(r, lg)
+	cr, rule, err := s.checkHTTPRequest(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		localizer := localization.GetLocalizer(r)
@@ -382,7 +382,8 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = redir
 
 	encoder := json.NewEncoder(w)
-	cr, rule, err := s.check(r, lg)
+
+	cr, rule, err := s.checkHTTPRequest(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -484,7 +485,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cr, rule, err := s.check(r, lg)
+	cr, rule, err := s.checkHTTPRequest(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")), makeCode(err))
@@ -601,7 +602,7 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 }
 
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
+func (s *Server) check(r *checker.RequestMetadata, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
@@ -633,7 +634,7 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 	}
 
 	for _, t := range s.policy.Thresholds {
-		result, _, err := t.Program.ContextEval(r.Context(), &policy.ThresholdRequest{Weight: weight})
+		result, _, err := t.Program.ContextEval(r.Context, &policy.ThresholdRequest{Weight: weight})
 		if err != nil {
 			lg.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
 			continue
@@ -668,4 +669,13 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 		},
 		Rules: &checker.List{},
 	}, nil
+}
+
+func (s *Server) checkHTTPRequest(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
+	meta, err := checker.MetadataFromRequest(r)
+	if err != nil {
+		return policy.CheckResult{}, nil, err
+	}
+
+	return s.check(meta, lg)
 }
