@@ -3,7 +3,7 @@
   action: ALLOW
   expression:
     all:
-    - remoteAddress == "159.69.213.214"
+    - remoteAddress == "159.69.213.214" || remoteAddress == "2a01:4f8:c2c:7bf4::1"
     - userAgent == "Mozilla/5.0 (compatible; utils.web Limnoria module)"
     - '"X-Http-Version" in headers'
     - headers["X-Http-Version"] == "HTTP/1.1"
