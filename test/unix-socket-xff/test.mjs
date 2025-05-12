@@ -3,7 +3,7 @@ async function testWithUserAgent(userAgent) {
     headers: {
       "User-Agent": userAgent,
     }
-  })
+  });
       .then(resp => resp.status);
 }
 
