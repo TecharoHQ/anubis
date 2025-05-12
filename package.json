@@ -18,9 +18,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "cssnano": "^7.0.6",
-    "cssnano-preset-advanced": "^7.0.6",
-    "esbuild": "^0.25.3",
+    "cssnano": "^7.0.7",
+    "cssnano-preset-advanced": "^7.0.7",
+    "esbuild": "^0.25.4",
     "playwright": "^1.52.0",
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.0",
