@@ -81,6 +81,12 @@ func New(opts Options) (*Server, error) {
 
 	anubis.BasePrefix = opts.BasePrefix
 
+	cookieName := anubis.CookieName
+
+	if opts.CookieDomain != "" {
+		cookieName = anubis.WithDomainCookieName + opts.CookieDomain
+	}
+
 	result := &Server{
 		next:       opts.Next,
 		priv:       opts.PrivateKey,
@@ -89,6 +95,7 @@ func New(opts Options) (*Server, error) {
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive, opts.OGCacheConsidersHost),
+		cookieName: cookieName,
 	}
 
 	mux := http.NewServeMux()
