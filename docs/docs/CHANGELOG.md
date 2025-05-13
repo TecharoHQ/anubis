@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the nonce value in the challenge JWT cookie to be a string instead of a number
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options
+- Add Bookstack app in data
 
 ## v1.18.0: Varis zos Galvus
 
@@ -43,7 +44,7 @@ Or as complicated as:
   expression:
     all:
       - >-
-        (  
+        (
           userAgent.startsWith("git/") ||
           userAgent.contains("libgit") ||
           userAgent.startsWith("go-git") ||
