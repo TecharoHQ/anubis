@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Ensure that clients that are shown a challenge support storing cookies
+- Encode challenge pages with gzip level 1
 - Add `check-spelling` for spell checking
 - Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
 - Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.

@@ -80,6 +80,7 @@ goodbot
 googlebot
 govulncheck
 GPG
+grw
 Hashcash
 hashrate
 headermap

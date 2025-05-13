@@ -176,6 +176,10 @@ func TestCookieCustomExpiration(t *testing.T) {
 		t.Fatalf("can't make request: %v", err)
 	}
 
+	for _, ckie := range resp.Cookies() {
+		req.AddCookie(ckie)
+	}
+
 	q := req.URL.Query()
 	q.Set("response", calculated)
 	q.Set("nonce", fmt.Sprint(nonce))
@@ -264,6 +268,10 @@ func TestCookieSettings(t *testing.T) {
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
 	if err != nil {
 		t.Fatalf("can't make request: %v", err)
+	}
+
+	for _, ckie := range resp.Cookies() {
+		req.AddCookie(ckie)
 	}
 
 	q := req.URL.Query()
@@ -455,6 +463,10 @@ func TestBasePrefix(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, ts.URL+passChallengePath, nil)
 			if err != nil {
 				t.Fatalf("can't make request: %v", err)
+			}
+
+			for _, ckie := range resp.Cookies() {
+				req.AddCookie(ckie)
 			}
 
 			q := req.URL.Query()

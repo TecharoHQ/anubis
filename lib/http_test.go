@@ -11,7 +11,7 @@ func TestClearCookie(t *testing.T) {
 	srv := spawnAnubis(t, Options{})
 	rw := httptest.NewRecorder()
 
-	srv.ClearCookie(rw)
+	srv.ClearCookie(rw, srv.cookieName)
 
 	resp := rw.Result()
 
@@ -36,7 +36,7 @@ func TestClearCookieWithDomain(t *testing.T) {
 	srv := spawnAnubis(t, Options{CookieDomain: "techaro.lol"})
 	rw := httptest.NewRecorder()
 
-	srv.ClearCookie(rw)
+	srv.ClearCookie(rw, srv.cookieName)
 
 	resp := rw.Result()
 

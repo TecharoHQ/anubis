@@ -121,21 +121,21 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	ckie, err := r.Cookie(s.cookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -146,7 +146,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -162,7 +162,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		s.ServeHTTPNext(w, r)
 		return true
 	case config.RuleDeny:
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
@@ -181,7 +181,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		s.RenderBench(w, r)
 		return true
 	default:
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
 		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
 		return true
@@ -233,6 +233,8 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg = lg.With("check_result", cr)
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
+	s.SetCookie(w, anubis.TestCookieName, challenge, "")
+
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
@@ -265,14 +267,14 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".\"")
+		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".")
 		return
 	}
 	lg = lg.With("check_result", cr)
 
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Debug("no nonce")
 		s.respondWithError(w, r, "missing nonce")
 		return
@@ -280,7 +282,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	elapsedTimeStr := r.FormValue("elapsedTime")
 	if elapsedTimeStr == "" {
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Debug("no elapsedTime")
 		s.respondWithError(w, r, "missing elapsedTime")
 		return
@@ -288,7 +290,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	elapsedTime, err := strconv.ParseFloat(elapsedTimeStr, 64)
 	if err != nil {
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Debug("elapsedTime doesn't parse", "err", err)
 		s.respondWithError(w, r, "invalid elapsedTime")
 		return
@@ -310,11 +312,21 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
+	if _, err := r.Cookie(anubis.TestCookieName); err == http.ErrNoCookie {
+		s.ClearCookie(w, s.cookieName)
+		s.ClearCookie(w, anubis.TestCookieName)
+		lg.Warn("user has cookies disabled, this is not an anubis bug")
+		s.respondWithError(w, r, "Your browser is configured to disable cookies. Anubis requires cookies for the legitimate interest of making sure you are a valid client. Please enable cookies for this domain.")
+		return
+	}
+
+	s.ClearCookie(w, anubis.TestCookieName)
+
 	nonce, err := strconv.Atoi(nonceStr)
 	if err != nil {
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Debug("nonce doesn't parse", "err", err)
-		s.respondWithError(w, r, "invalid nonce")
+		s.respondWithError(w, r, "invalid response")
 		return
 	}
 
@@ -322,7 +334,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	calculated := internal.SHA256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Debug("hash does not match", "got", response, "want", calculated)
 		s.respondWithStatus(w, r, "invalid response", http.StatusForbidden)
 		failedValidations.Inc()
@@ -331,7 +343,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	// compare the leading zeroes
 	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		lg.Debug("difficulty check failed", "response", response, "difficulty", rule.Challenge.Difficulty)
 		s.respondWithStatus(w, r, "invalid response", http.StatusForbidden)
 		failedValidations.Inc()
@@ -355,20 +367,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := token.SignedString(s.priv)
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName)
 		s.respondWithError(w, r, "failed to sign JWT")
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:        s.cookieName,
-		Value:       tokenString,
-		Expires:     time.Now().Add(s.opts.CookieExpiration),
-		SameSite:    http.SameSiteLaxMode,
-		Domain:      s.opts.CookieDomain,
-		Partitioned: s.opts.CookiePartitioned,
-		Path:        cookiePath,
-	})
+	s.SetCookie(w, s.cookieName, tokenString, cookiePath)
 
 	challengesValidated.Inc()
 	lg.Debug("challenge passed, redirecting to app")
