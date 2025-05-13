@@ -195,6 +195,7 @@ vendored
 vhosts
 videotest
 waitloop
+weblate
 webmaster
 webpage
 websecure

@@ -9,13 +9,11 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
-
-	"github.com/TecharoHQ/anubis"
 )
 
 func (s *Server) ClearCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     anubis.CookieName,
+		Name:     s.cookieName,
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour),
 		MaxAge:   -1,
