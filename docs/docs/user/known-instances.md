@@ -31,6 +31,9 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://codeberg.org/
 - https://www.cfaarchive.org/
 - https://gitlab.freedesktop.org/
+- https://bugzilla.proxmx.com
+- https://hofstede.io/
+- https://www.indiemag.fr/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
