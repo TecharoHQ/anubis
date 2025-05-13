@@ -316,7 +316,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.ClearCookie(w, s.cookieName)
 		s.ClearCookie(w, anubis.TestCookieName)
 		lg.Warn("user has cookies disabled, this is not an anubis bug")
-		s.respondWithError(w, r, "Your browser is configured to disable cookies. Anubis requires cookies for the legitimate interest of making sure you are a valid client. Please enable cookies for this domain.")
+		s.respondWithError(w, r, "Your browser is configured to disable cookies. Anubis requires cookies for the legitimate interest of making sure you are a valid client. Please enable cookies for this domain")
 		return
 	}
 
