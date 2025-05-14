@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump AI-robots.txt to version 1.30 (add QualifiedBot)
 - Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
 - Added SearXNG instance tracker whitelist policy
+- Added Qualys SSL Labs whitelist policy
 
 ## v1.18.0: Varis zos Galvus
 
