@@ -1,0 +1,7 @@
+# This policy allows Qualys SSL Labs to fully work. (https://www.ssllabs.com/ssltest)
+# IP ranges are taken from: https://qualys.my.site.com/discussions/s/article/000005823
+- name: qualys-ssl-labs
+  action: ALLOW
+  remote_addresses:
+  - 64.41.200.0/24
+  - 2600:C02:1020:4202::/64
