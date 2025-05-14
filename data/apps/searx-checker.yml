@@ -1,0 +1,9 @@
+# This policy allows SearXNG's instance tracker to work. (https://searx.space)
+# IPs are taken from `check.searx.space` DNS records.
+# https://toolbox.googleapps.com/apps/dig/#A/check.searx.space
+# https://toolbox.googleapps.com/apps/dig/#AAAA/check.searx.space
+- name: searx-checker
+  action: ALLOW
+  remote_addresses:
+  - 167.235.158.251/32
+  - 2a01:4f8:1c1c:8fc2::1/128
