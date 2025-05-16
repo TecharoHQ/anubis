@@ -3,8 +3,8 @@ services:
     image: xxxtest/caddy
     build: .
     ports:
-      - 8080:80
-      - 8443:443
+      - "8080:80"
+      - "8443:443"
     volumes:
       - "../pki/caddy.local.cetacean.club:/etc/techaro/pki/caddy.local.cetacean.club/"
 
