@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options
 - Bump AI-robots.txt to version 1.30 (add QualifiedBot)
+- Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
 
 ## v1.18.0: Varis zos Galvus
 
