@@ -12,6 +12,8 @@ CacheDirectory=anubis/%i
 CacheDirectoryMode=0755
 StateDirectory=anubis/%i
 StateDirectoryMode=0755
+RuntimeDirectory=anubis
+RuntimeDirectoryMode=0755
 ReadWritePaths=/run
 
 [Install]

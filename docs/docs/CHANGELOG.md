@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options
 - Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service.
+- Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
 
 ## v1.18.0: Varis zos Galvus
 
