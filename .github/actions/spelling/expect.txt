@@ -1,3 +1,4 @@
+acs
 aeacus
 Aibrew
 alrest
@@ -162,12 +163,14 @@ risc
 ruleset
 RUnlock
 sas
+sasl
 Scumm
 sebest
 secretplans
 selfsigned
 setsebool
 sitemap
+sls
 Sourceware
 Spambot
 sparkline
