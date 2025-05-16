@@ -87,7 +87,9 @@ healthcheck
 hec
 hmc
 hostable
+htmx
 httpdebug
+hypertext
 iat
 ifm
 inp
