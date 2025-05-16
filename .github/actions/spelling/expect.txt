@@ -151,6 +151,7 @@ promauto
 promhttp
 pwcmd
 pwuser
+qualys
 qwant
 qwantbot
 rac
@@ -165,6 +166,7 @@ ruleset
 RUnlock
 sas
 Scumm
+searx
 sebest
 secretplans
 selfsigned
@@ -212,6 +214,7 @@ xesite
 xess
 xff
 XForwarded
+XNG
 XReal
 yae
 YAMLTo
