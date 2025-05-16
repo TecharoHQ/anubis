@@ -56,6 +56,7 @@ var (
 	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
+	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
 	targetInsecureSkipVerify = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
@@ -135,7 +136,7 @@ func setupListener(network string, address string) (net.Listener, string) {
 	return listener, formattedAddress
 }
 
-func makeReverseProxy(target string, insecureSkipVerify bool) (http.Handler, error) {
+func makeReverseProxy(target string, targetHost string, insecureSkipVerify bool) (http.Handler, error) {
 	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
@@ -166,6 +167,14 @@ func makeReverseProxy(target string, insecureSkipVerify bool) (http.Handler, err
 
 	rp := httputil.NewSingleHostReverseProxy(targetUri)
 	rp.Transport = transport
+
+	if targetHost != "" {
+		originalDirector := rp.Director
+		rp.Director = func(req *http.Request) {
+			originalDirector(req)
+			req.Host = targetHost
+		}
+	}
 
 	return rp, nil
 }
@@ -205,7 +214,7 @@ func main() {
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
 		var err error
-		rp, err = makeReverseProxy(*target, *targetInsecureSkipVerify)
+		rp, err = makeReverseProxy(*target, *targetHost, *targetInsecureSkipVerify)
 		if err != nil {
 			log.Fatalf("can't make reverse proxy: %v", err)
 		}
