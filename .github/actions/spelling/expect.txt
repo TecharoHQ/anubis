@@ -110,11 +110,13 @@ lgbt
 licend
 licstart
 lightpanda
+LIMSA
 Linting
 linuxbrew
 LLU
 loadbalancer
 lol
+LOMINSA
 maintainership
 malware
 mcr
