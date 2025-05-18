@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed mixed tab/space indentation in Caddy documentation code block
+- Added support for HAProxy SPOE ([#236](https://github.com/TecharoHQ/anubis/issues/236))
 
 <!-- This changes the project to: -->
 
