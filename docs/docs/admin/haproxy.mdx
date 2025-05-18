@@ -3,31 +3,64 @@ title: Integration with HAProxy via SPOP
 ---
 
 To avoid proxying of already validated requests through Anubis, HAProxy can be connected using the SPOP protocol.
+For Details on SPOE see HAProxy documentation: https://github.com/haproxy/haproxy/blob/master/doc/SPOE.txt
 
 Example setup:
 
-Client --> HAProxy frontend :443 --> backend Anubis :8923 --> backend App :3923
-Client --> HAProxy frontend :443 --> backend App :3923
++--------------+          +---------------+          +---------------+
+|              |          |               |          |               |
+|    Client    |--[HTTP]->|    HAProxy    |--[HTTP]->|    Backend    |
+|              |          |               |          |               |
++--------------+          +---------------+          +---------------+
+                              |       |
+                            [SPOP] [HTTP]
+                              V       V
+                          +---------------+
+                          |               |
+                          |     Anubis    |
+                          |               |
+                          +---------------+ 
 
-On any incoming request to the frontend, HAProxy will query Anubis with the cookie contained in the request, asking whether it is valid.
+When a new request comes in, HAProxy will first forward the anubis cookie together with all request metadata to anubis. Anubis then makes a decision
+and reports this decision to HAProxy in the form of a status code. The status code currently can take one of the following values:
+* 0: A rule within anubis has matched which permits this request through without verification
+* 1: The client has a valid cookie, no further verification is needed
+* 2: The client needs verification should be routed to anubis to perform this verification
+* 3: The client should be denied access to the service entirely
+* 255: An error occured within anubis. Check anubis logs for more details
 
-If Anubis returns yes, the client has a valid Anubis cookie, its request will be routed directly to the App backend.
-If Anubis returns no, the client does NOT have a valid Anubis cookie, its request will be routed to the Anubis backend, which in return enables the challenge process.
-Furthermore, adding health checks it is possible to build a fail-open scenario, meaning that the website continues to work, even if anubis goes down
+Most users will want to treat code 0 and 1 identically (by passing the request to the backend) as well as the two error conditions (code 255 and no code set).
+Furthermore it can be useful to set the backend service of anubis to the haproxy ingress, in order to allow OG Passthrough to work. The ACL should exclude localhost from anubis in this case
+
+This offers major advantages over using anubis in the traditional way for anyone using haproxy.
+* Users can take full advantage of HAProxys load balancing features, without having to route a request through it twice
+* Anubis is not part of the data path, reducing load on the system
+* Allow requests to pass through in case anubis breaks/overloads or other unforseen events, like the dog eating the server cable
 
 Example HAProxy configuration:
 
 ```
 frontend http
   mode http
-  bind :::443 v4v6 tfo alpn h2,http/1.1 ssl crt /etc/ssl/crtkey
+  bind :::443 v4v6 alpn h2,http/1.1 ssl crt /etc/ssl/crtkey
 
   filter spoe engine anubis config /etc/haproxy/anubis.cfg
-  # The following two ACLs in combination with them being mentioned in the `use_backend` line allow bypass of anubis
-  # if it is not working properly (ie. the metrics page is not reachable)
-  acl anubis_spoe_healthy nbsrv(anubis-spoe) gt 0
-  acl anubis_http_healthy nbsrv(anubis-http) gt 0
-  use_backend anubis-http if !{ var(req.anubis.valid) -m bool } anubis_http_healthy anubis_spoe_healthy
+  
+  # This config does not use all those ACLs, they are only defined as an example
+  acl anubis_pass      var(req.anubis.result) -m int 0   # explicit pass rule
+  acl anubis_pass      var(req.anubis.result) -m int 1   # cookie ok
+  acl anubis_block     var(req.anubis.result) -m int 2   # explicit block rule
+  acl anubis_challenge var(req.anubis.result) -m int 3   # challenge requested
+  acl anubis_err       var(req.anubis.result) -m int 255 # an error occurred within anubis
+  acl anubis_response  var(req.anubis.result) -m found   # anubis did set a status, allows us to check if it is broken
+
+  # by ignoring error conditions and treating them same as pass we are implementing a fail open situation
+  # allowing requests to pass without being authenticated in case anubis goes offline
+  use_backend anubis-http if anubis_challenge
+  http-request deny if anubis_block
+
+  # any client excempted from anubis in the ACL in the spoe config-file needs to also be excluded from the error ACL
+  #http-request deny if !LOCALHOST anubis_err || anubis_response # uncomment this line to switch to fail-closed operation
 
   # Optionally: More HAProxy request routing logic
 
@@ -49,7 +82,7 @@ backend anubis-spoe
   option httpchk
   http-check send meth GET uri /metrics hdr "X-Real-Ip" "::1"
 
-  server anubis1 2001:db8::42:8923 check port 9090
+  server anubis1 2001:db8::42:9000 check port 9090
 
 backend web
   mode http
@@ -71,8 +104,9 @@ spoe-agent anubis
   log global
 
 spoe-message check-client-cookie
-  args cookie=req.cook(within.website-x-cmd-anubis-auth)
-  event on-frontend-http-request
+  args cookie=req.cook(within.website-x-cmd-anubis-auth) headers=req.hdrs path=path method=method remote_addr=src proto=req.ver
+  # requests from localhost do not need to go to anubis, this prevents request loops
+  event on-frontend-http-request if !LOCALHOST
 ```
 
 If HAProxy and Anubis are hosted on the same machine, it is recommended to use a UNIX domain instead of a TCP/IP socket for SPOP communication.
