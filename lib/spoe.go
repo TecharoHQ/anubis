@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/TecharoHQ/anubis"
-	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/policy/config"
-	"github.com/dropmorepackets/haproxy-go/pkg/encoding"
 	"log/slog"
 	"net/http"
 	"net/textproto"
 	"net/url"
 	"strings"
+
+	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/dropmorepackets/haproxy-go/pkg/encoding"
 )
 
 var (
@@ -140,11 +141,11 @@ func (spoe *SpoeOptions) handleCookie(cookieValue string, rule *policy.Bot, path
 func (spoe *SpoeOptions) interpretResult(cr policy.CheckResult, rule *policy.Bot, lg *slog.Logger, w *encoding.ActionWriter) error {
 	switch cr.Rule {
 	case config.RuleAllow:
-		lg.Debug("allowing traffic to origin (explicit)")
+		lg.Debug("VERDICT: allowing traffic to origin (explicit)")
 		w.SetUInt32(encoding.VarScopeRequest, "result", SPOEStatusPass)
 		return nil
 	case config.RuleDeny:
-		lg.Info("explicit deny")
+		lg.Debug("VERDICT: explicit deny")
 		if rule == nil {
 			return fmt.Errorf("rule is nil, cannot calculate checksum")
 		}
@@ -155,15 +156,15 @@ func (spoe *SpoeOptions) interpretResult(cr policy.CheckResult, rule *policy.Bot
 		return nil
 	case config.RuleChallenge:
 		w.SetUInt32(encoding.VarScopeRequest, "result", SPOEStatusChallenge)
-		lg.Debug("challenge requested")
+		lg.Debug("VERDICT: challenge requested")
 		return nil
 	case config.RuleBenchmark:
 		// Benchmark is treated just like challenge, as it needs to be routed to anubis
 		w.SetUInt32(encoding.VarScopeRequest, "result", SPOEStatusChallenge)
-		lg.Debug("serving benchmark page")
+		lg.Debug("VERDICT: serving benchmark page (challenge)")
 		return nil
 	default:
-		return fmt.Errorf("CONFIG ERROR: unknown rule", "rule", cr.Rule)
+		return fmt.Errorf("CONFIG ERROR: unknown rule %s", cr.Rule)
 	}
 }
 
