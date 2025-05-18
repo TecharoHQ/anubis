@@ -26,14 +26,16 @@ func (s *Server) SetCookie(w http.ResponseWriter, name, value, path string) {
 	})
 }
 
-func (s *Server) ClearCookie(w http.ResponseWriter, name string) {
+func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     name,
-		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour),
-		MaxAge:   -1,
-		SameSite: http.SameSiteLaxMode,
-		Domain:   s.opts.CookieDomain,
+		Name:        name,
+		Value:       "",
+		MaxAge:      -1,
+		Expires:     time.Now().Add(-1 * time.Minute),
+		SameSite:    http.SameSiteLaxMode,
+		Partitioned: s.opts.CookiePartitioned,
+		Domain:      s.opts.CookieDomain,
+		Path:        path,
 	})
 }
 
@@ -82,7 +84,12 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		}
 	}
 
-	s.SetCookie(w, anubis.TestCookieName, challenge, "")
+	http.SetCookie(w, &http.Cookie{
+		Name:    anubis.TestCookieName,
+		Value:   challenge,
+		Expires: time.Now().Add(30 * time.Minute),
+		Path:    "/",
+	})
 
 	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
 	if err != nil {
