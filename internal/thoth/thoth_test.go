@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func loadSecrets(t *testing.T) *Client {
+func loadSecrets(t testing.TB) *Client {
 	if err := godotenv.Load(); err != nil {
 		t.Skip(".env not defined, can't load thoth secrets")
 	}

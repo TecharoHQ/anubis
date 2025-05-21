@@ -60,7 +60,7 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 	return &Client{
 		conn:    conn,
 		health:  hc,
-		iptoasn: iptoasnv1.NewIpToASNServiceClient(conn),
+		iptoasn: NewIpToASNWithCache(iptoasnv1.NewIpToASNServiceClient(conn)),
 	}, nil
 }
 
