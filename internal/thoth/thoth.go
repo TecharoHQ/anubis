@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"time"
 
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -34,6 +36,7 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 		thothURL,
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})),
 		grpc.WithChainUnaryInterceptor(
+			timeout.UnaryClientInterceptor(500*time.Millisecond),
 			clMetrics.UnaryClientInterceptor(),
 			authUnaryClientInterceptor(apiToken),
 		),

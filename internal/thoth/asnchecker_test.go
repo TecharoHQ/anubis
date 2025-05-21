@@ -5,8 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/TecharoHQ/anubis/lib/policy"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
+
+var _ policy.Checker = &ASNChecker{}
 
 func TestASNChecker(t *testing.T) {
 	cli := loadSecrets(t)
@@ -14,7 +17,7 @@ func TestASNChecker(t *testing.T) {
 	asnc := &ASNChecker{
 		iptoasn: cli.iptoasn,
 		asns: map[int]struct{}{
-			13335: struct{}{},
+			13335: {},
 		},
 		hash: "foobar",
 	}
