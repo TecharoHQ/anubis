@@ -56,6 +56,7 @@ var (
 	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
+	targetSNI                = flag.String("target-sni", "", "if set, the value of the TLS handshake hostname when forwarding requests to the target")
 	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
 	targetInsecureSkipVerify = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
@@ -136,7 +137,7 @@ func setupListener(network string, address string) (net.Listener, string) {
 	return listener, formattedAddress
 }
 
-func makeReverseProxy(target string, targetHost string, insecureSkipVerify bool) (http.Handler, error) {
+func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool) (http.Handler, error) {
 	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
@@ -158,10 +159,14 @@ func makeReverseProxy(target string, targetHost string, insecureSkipVerify bool)
 		transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
 	}
 
-	if insecureSkipVerify {
-		slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
+	if insecureSkipVerify || targetSNI != "" {
+		transport.TLSClientConfig = &tls.Config{}
+		if insecureSkipVerify {
+			slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
+			transport.TLSClientConfig.InsecureSkipVerify = true
+		}
+		if targetSNI != "" {
+			transport.TLSClientConfig.ServerName = targetSNI
 		}
 	}
 
@@ -214,7 +219,7 @@ func main() {
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
 		var err error
-		rp, err = makeReverseProxy(*target, *targetHost, *targetInsecureSkipVerify)
+		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify)
 		if err != nil {
 			log.Fatalf("can't make reverse proxy: %v", err)
 		}

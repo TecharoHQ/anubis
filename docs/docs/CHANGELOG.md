@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added SearXNG instance tracker whitelist policy
 - Added Qualys SSL Labs whitelist policy
 - Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
+- Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service.
 
 ## v1.18.0: Varis zos Galvus
 
