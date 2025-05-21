@@ -16,7 +16,7 @@ func TestASNChecker(t *testing.T) {
 
 	asnc := &ASNChecker{
 		iptoasn: cli.iptoasn,
-		asns: map[int]struct{}{
+		asns: map[uint32]struct{}{
 			13335: {},
 		},
 		hash: "foobar",
