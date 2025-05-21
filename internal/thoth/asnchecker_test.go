@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"testing"
+
+	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
 
 func TestASNChecker(t *testing.T) {
@@ -55,5 +57,22 @@ func TestASNChecker(t *testing.T) {
 				t.Error("Wanted error but got none")
 			}
 		})
+	}
+}
+
+func BenchmarkWithCache(b *testing.B) {
+	cli := loadSecrets(b)
+	req := &iptoasnv1.LookupRequest{IpAddress: "1.1.1.1"}
+
+	_, err := cli.iptoasn.Lookup(b.Context(), req)
+	if err != nil {
+		b.Error(err)
+	}
+
+	for b.Loop() {
+		_, err := cli.iptoasn.Lookup(b.Context(), req)
+		if err != nil {
+			b.Error(err)
+		}
 	}
 }
