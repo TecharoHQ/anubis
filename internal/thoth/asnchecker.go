@@ -10,7 +10,7 @@ import (
 
 type ASNChecker struct {
 	iptoasn iptoasnv1.IpToASNServiceClient
-	asns    map[int]struct{}
+	asns    map[uint32]struct{}
 	hash    string
 }
 
@@ -25,7 +25,7 @@ func (asnc *ASNChecker) Check(r *http.Request) (bool, error) {
 		return false, err
 	}
 
-	_, ok := asnc.asns[int(ipInfo.GetAsNumber())]
+	_, ok := asnc.asns[uint32(ipInfo.GetAsNumber())]
 
 	return ok, nil
 }

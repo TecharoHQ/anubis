@@ -4,8 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/policy"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
@@ -69,4 +72,20 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 
 func (c *Client) Close() error {
 	return c.conn.Close()
+}
+
+func (c *Client) ASNCheckerFor(asns []uint32) policy.Checker {
+	asnMap := map[uint32]struct{}{}
+	var sb strings.Builder
+	fmt.Fprintln(&sb, "ASNChecker")
+	for _, asn := range asns {
+		asnMap[asn] = struct{}{}
+		fmt.Fprintln(&sb, "AS", asn)
+	}
+
+	return &ASNChecker{
+		iptoasn: c.iptoasn,
+		asns:    asnMap,
+		hash:    internal.SHA256sum(sb.String()),
+	}
 }
