@@ -66,6 +66,7 @@ var (
 	ogCacheConsiderHost      = flag.Bool("og-cache-consider-host", false, "enable or disable the use of the host in the Open Graph tag cache")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -305,6 +306,7 @@ func main() {
 		Target:               *target,
 		WebmasterEmail:       *webmasterEmail,
 		OGCacheConsidersHost: *ogCacheConsiderHost,
+		PublicUrl:            *publicUrl,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -343,6 +345,7 @@ func main() {
 		"base-prefix", *basePrefix,
 		"cookie-expiration-time", *cookieExpiration,
 		"rule-error-ids", ruleErrorIDs,
+		"public-url", *publicUrl,
 	)
 
 	go func() {
