@@ -1,3 +1,4 @@
+acs
 aeacus
 Aibrew
 alrest
@@ -80,6 +81,7 @@ goodbot
 googlebot
 govulncheck
 GPG
+grw
 Hashcash
 hashrate
 headermap
@@ -87,7 +89,9 @@ healthcheck
 hec
 hmc
 hostable
+htmx
 httpdebug
+hypertext
 iat
 ifm
 inp
@@ -110,11 +114,13 @@ lgbt
 licend
 licstart
 lightpanda
+LIMSA
 Linting
 linuxbrew
 LLU
 loadbalancer
 lol
+LOMINSA
 maintainership
 malware
 mcr
@@ -149,6 +155,7 @@ promauto
 promhttp
 pwcmd
 pwuser
+qualys
 qwant
 qwantbot
 rac
@@ -162,12 +169,15 @@ risc
 ruleset
 RUnlock
 sas
+sasl
 Scumm
+searx
 sebest
 secretplans
 selfsigned
 setsebool
 sitemap
+sls
 Sourceware
 Spambot
 sparkline
@@ -210,6 +220,7 @@ xesite
 xess
 xff
 XForwarded
+XNG
 XReal
 yae
 YAMLTo

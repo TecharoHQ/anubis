@@ -1,0 +1,20 @@
+# Make SASL login work on bookstack with Anubis
+# https://www.bookstackapp.com/docs/admin/saml2-auth/
+- name: allow-bookstack-sasl-login-routes
+  action: ALLOW
+  expression:
+    all:
+      - 'method == "POST"'
+      - path.startsWith("/saml2/acs")
+- name: allow-bookstack-sasl-metadata-routes
+  action: ALLOW
+  expression:
+    all:
+      - 'method == "GET"'
+      - path.startsWith("/saml2/metadata")
+- name: allow-bookstack-sasl-logout-routes
+  action: ALLOW
+  expression:
+    all:
+      - 'method == "GET"'
+      - path.startsWith("/saml2/sls")

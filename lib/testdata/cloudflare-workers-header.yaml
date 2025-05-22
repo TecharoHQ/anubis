@@ -3,3 +3,7 @@ bots:
   headers_regex:
     CF-Worker: .*
   action: DENY
+
+status_codes:
+  CHALLENGE: 401
+  DENY: 403

@@ -34,6 +34,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://bugzilla.proxmox.com
 - https://hofstede.io/
 - https://www.indiemag.fr/
+- https://reddit.nerdvpn.de/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/

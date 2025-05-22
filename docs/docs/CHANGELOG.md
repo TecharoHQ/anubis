@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Ensure that clients that are shown a challenge support storing cookies
+- Encode challenge pages with gzip level 1
 - Add `check-spelling` for spell checking
 - Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
 - Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.
@@ -18,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the nonce value in the challenge JWT cookie to be a string instead of a number
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options
+- Add Bookstack app in data
+- Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service.
+- Bump AI-robots.txt to version 1.30 (add QualifiedBot)
+- Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
+- Added SearXNG instance tracker whitelist policy
+- Added Qualys SSL Labs whitelist policy
+- Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
 
 ## v1.18.0: Varis zos Galvus
 
@@ -43,7 +52,7 @@ Or as complicated as:
   expression:
     all:
       - >-
-        (  
+        (
           userAgent.startsWith("git/") ||
           userAgent.contains("libgit") ||
           userAgent.startsWith("go-git") ||

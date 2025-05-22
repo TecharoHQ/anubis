@@ -10,7 +10,7 @@
     "test:integration:docker": "npm run assets && go test -v ./internal/test --playwright-runner=docker",
     "assets": "go generate ./... && ./web/build.sh && ./xess/build.sh",
     "build": "npm run assets && go build -o ./var/anubis ./cmd/anubis",
-    "dev": "npm run assets && go run ./cmd/anubis --use-remote-address",
+    "dev": "npm run assets && go run ./cmd/anubis --use-remote-address --target http://localhost:3000",
     "container": "npm run assets && go run ./cmd/containerbuild",
     "package": "yeet",
     "lint": "make lint"
