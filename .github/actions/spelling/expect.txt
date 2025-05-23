@@ -178,6 +178,7 @@ selfsigned
 setsebool
 sitemap
 sls
+sni
 Sourceware
 Spambot
 sparkline
