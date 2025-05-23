@@ -1,6 +1,5 @@
 import processFast from "./proof-of-work.mjs";
 import processSlow from "./proof-of-work-slow.mjs";
-import { testVideo } from "./video.mjs";
 
 const algorithms = {
   "fast": processFast,
@@ -35,50 +34,6 @@ const dependencies = [
   },
 ];
 
-function showContinueBar(hash, nonce, t0, t1) {
-  const barContainer = document.createElement("div");
-  barContainer.style.marginTop = "1rem";
-  barContainer.style.width = "100%";
-  barContainer.style.maxWidth = "32rem";
-  barContainer.style.background = "#3c3836";
-  barContainer.style.borderRadius = "4px";
-  barContainer.style.overflow = "hidden";
-  barContainer.style.cursor = "pointer";
-  barContainer.style.height = "2rem";
-  barContainer.style.marginLeft = "auto";
-  barContainer.style.marginRight = "auto";
-  barContainer.title = "Click to continue";
-
-  const barInner = document.createElement("div");
-  barInner.className = "bar-inner";
-  barInner.style.display = "flex";
-  barInner.style.alignItems = "center";
-  barInner.style.justifyContent = "center";
-  barInner.style.color = "white";
-  barInner.style.fontWeight = "bold";
-  barInner.style.height = "100%";
-  barInner.style.width = "0";
-  barInner.innerText = "I've finished reading, continue →";
-
-  barContainer.appendChild(barInner);
-  document.body.appendChild(barContainer);
-
-  requestAnimationFrame(() => {
-    barInner.style.width = "100%";
-  });
-
-  barContainer.onclick = () => {
-    const redir = window.location.href;
-    window.location.replace(
-      u("/.within.website/x/cmd/anubis/api/pass-challenge", {
-        response: hash,
-        nonce,
-        redir,
-        elapsedTime: t1 - t0
-      })
-    );
-  };
-}
 
 (async () => {
   const status = document.getElementById('status');
@@ -113,19 +68,6 @@ function showContinueBar(hash, nonce, t0, t1) {
     });
     return;
   }
-
-  // const testarea = document.getElementById('testarea');
-
-  // const videoWorks = await testVideo(testarea);
-  // console.log(`videoWorks: ${videoWorks}`);
-
-  // if (!videoWorks) {
-  //   title.innerHTML = "Oh no!";
-  //   status.innerHTML = "Checks failed. Please check your browser's settings and try again.";
-  //   image.src = imageURL("reject");
-  //   progress.style.display = "none";
-  //   return;
-  // }
 
   status.innerHTML = 'Calculating...';
 
