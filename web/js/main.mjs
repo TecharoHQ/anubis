@@ -2,8 +2,8 @@ import processFast from "./proof-of-work.mjs";
 import processSlow from "./proof-of-work-slow.mjs";
 
 const algorithms = {
-  "fast": processFast,
-  "slow": processSlow,
+  fast: processFast,
+  slow: processSlow,
 };
 
 // from Xeact
@@ -14,7 +14,9 @@ const u = (url = "", params = {}) => {
 };
 
 const imageURL = (mood, cacheBuster, basePrefix) =>
-  u(`${basePrefix}/.within.website/x/cmd/anubis/static/img/${mood}.webp`, { cacheBuster });
+  u(`${basePrefix}/.within.website/x/cmd/anubis/static/img/${mood}.webp`, {
+    cacheBuster,
+  });
 
 const dependencies = [
   {
@@ -34,15 +36,18 @@ const dependencies = [
   },
 ];
 
-
 (async () => {
-  const status = document.getElementById('status');
-  const image = document.getElementById('image');
-  const title = document.getElementById('title');
-  const progress = document.getElementById('progress');
-  const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
-  const basePrefix = JSON.parse(document.getElementById('anubis_base_prefix').textContent);
-  const details = document.querySelector('details');
+  const status = document.getElementById("status");
+  const image = document.getElementById("image");
+  const title = document.getElementById("title");
+  const progress = document.getElementById("progress");
+  const anubisVersion = JSON.parse(
+    document.getElementById("anubis_version").textContent,
+  );
+  const basePrefix = JSON.parse(
+    document.getElementById("anubis_base_prefix").textContent,
+  );
+  const details = document.querySelector("details");
   let userReadDetails = false;
 
   if (details) {
@@ -69,7 +74,7 @@ const dependencies = [
     return;
   }
 
-  status.innerHTML = 'Calculating...';
+  status.innerHTML = "Calculating...";
 
   for (const { value, name, msg } of dependencies) {
     if (!value) {
@@ -82,7 +87,9 @@ const dependencies = [
     }
   }
 
-  const { challenge, rules } = JSON.parse(document.getElementById('anubis_challenge').textContent);
+  const { challenge, rules } = JSON.parse(
+    document.getElementById("anubis_challenge").textContent,
+  );
 
   const process = algorithms[rules.algorithm];
   if (!process) {
@@ -176,14 +183,13 @@ const dependencies = [
             response: hash,
             nonce,
             redir,
-            elapsedTime: t1 - t0
+            elapsedTime: t1 - t0,
           }),
         );
       }
 
       container.onclick = onDetailsExpand;
       setTimeout(onDetailsExpand, 30000);
-
     } else {
       setTimeout(() => {
         const redir = window.location.href;
@@ -192,12 +198,11 @@ const dependencies = [
             response: hash,
             nonce,
             redir,
-            elapsedTime: t1 - t0
+            elapsedTime: t1 - t0,
           }),
         );
       }, 250);
     }
-
   } catch (err) {
     ohNoes({
       titleMsg: "Calculation error!",
