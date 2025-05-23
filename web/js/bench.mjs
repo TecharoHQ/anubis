@@ -118,7 +118,7 @@ const benchmarkLoop = async (controller) => {
     return;
   }
 
-  benchmarkLoop(controller);
+  await benchmarkLoop(controller);
 };
 
 let controller = null;
@@ -142,7 +142,7 @@ const reset = () => {
     controller.abort();
   }
   controller = new AbortController();
-  benchmarkLoop(controller);
+  void benchmarkLoop(controller);
 };
 
 setupControls();
