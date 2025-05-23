@@ -20,9 +20,6 @@
 # https://twitter.com/nyttypos/status/1898844061873639490
 #\([A-Z][a-z]{2,}(?: [a-z]+){3,}\)\.\s
 
-# Complete sentences shouldn't be in the middle of another sentence as a parenthetical.
-(?<!\.)\.\),
-
 # Complete sentences in parentheticals should not have a space before the period.
 \s\.\)(?!.*\}\})
 
