@@ -73,6 +73,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		s.respondWithError(w, r, "Client Error: Please ensure your browser is up to date and try again later.")
 	}
 
+	challengesIssued.WithLabelValues("embedded").Add(1)
 	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	var ogTags map[string]string = nil

@@ -31,10 +31,10 @@ import (
 )
 
 var (
-	challengesIssued = promauto.NewCounter(prometheus.CounterOpts{
+	challengesIssued = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_challenges_issued",
 		Help: "The total number of challenges issued",
-	})
+	}, []string{"method"})
 
 	challengesValidated = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "anubis_challenges_validated",
@@ -260,7 +260,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lg.Debug("made challenge", "challenge", challenge, "rules", rule.Challenge, "cr", cr)
-	challengesIssued.Inc()
+	challengesIssued.WithLabelValues("api").Inc()
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Record if challenges were issued via the API or via embedded JSON in the challenge page HTML ([#531](https://github.com/TecharoHQ/anubis/issues/531))
 - Ensure that clients that are shown a challenge support storing cookies
 - Encode challenge pages with gzip level 1
 - Add `check-spelling` for spell checking
