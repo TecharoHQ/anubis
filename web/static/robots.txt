@@ -9,6 +9,8 @@ User-agent: Brightbot 1.0
 User-agent: Bytespider
 User-agent: CCBot
 User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
 User-agent: Claude-Web
 User-agent: ClaudeBot
 User-agent: cohere-ai
@@ -21,6 +23,7 @@ User-agent: FacebookBot
 User-agent: Factset_spyderbot
 User-agent: FirecrawlAgent
 User-agent: FriendlyCrawler
+User-agent: Google-CloudVertexBot
 User-agent: Google-Extended
 User-agent: GoogleOther
 User-agent: GoogleOther-Image
@@ -37,6 +40,7 @@ User-agent: meta-externalagent
 User-agent: Meta-ExternalAgent
 User-agent: meta-externalfetcher
 User-agent: Meta-ExternalFetcher
+User-agent: MistralAI-User/1.0
 User-agent: NovaAct
 User-agent: OAI-SearchBot
 User-agent: omgili
@@ -55,6 +59,7 @@ User-agent: TikTokSpider
 User-agent: Timpibot
 User-agent: VelenPublicWebCrawler
 User-agent: Webzio-Extended
+User-agent: wpbot
 User-agent: YouBot
 Disallow: /
 

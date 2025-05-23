@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensure cookie renaming is consistent across configuration options
 - Add Bookstack app in data
 - Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service.
-- Bump AI-robots.txt to version 1.30 (add QualifiedBot)
+- Bump AI-robots.txt to version 1.31
 - Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
 - Added SearXNG instance tracker whitelist policy
 - Added Qualys SSL Labs whitelist policy
