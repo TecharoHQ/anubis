@@ -78,6 +78,13 @@ sudo rpm -ivh ./anubis-$VERSION.$ARCH.rpm
 ```
 
   </TabItem>
+  <TabItem value="distro" label="Package managers">
+
+Some Linux distributions offer Anubis [as a native package](https://repology.org/project/anubis-anti-crawler/versions). If you want to install Anubis from your distribution's package manager, consult any upstream documentation for how to install the package. It will either be named `anubis`, `www-apps/anubis` or `www/anubis`.
+
+If you use a systemd-flavoured distribution, then follow the setup instructions for Debian or Red Hat Linux.
+
+  </TabItem>
 </Tabs>
 
 Once it's installed, make a copy of the default configuration file `/etc/anubis/default.env` based on which service you want to protect. For example, to protect a `gitea` server:
