@@ -9,9 +9,9 @@ export default function process(
 ) {
   console.debug("slow algo");
   return new Promise((resolve, reject) => {
-    let webWorkerURL = URL.createObjectURL(new Blob([
-      '(', processTask(), ')()'
-    ], { type: 'application/javascript' }));
+    let webWorkerURL = URL.createObjectURL(
+      new Blob(["(", processTask(), ")()"], { type: "application/javascript" }),
+    );
 
     let worker = new Worker(webWorkerURL);
     const terminate = () => {
@@ -45,7 +45,7 @@ export default function process(
 
     worker.postMessage({
       data,
-      difficulty
+      difficulty,
     });
 
     URL.revokeObjectURL(webWorkerURL);
@@ -56,26 +56,27 @@ function processTask() {
   return function () {
     const sha256 = (text) => {
       const encoded = new TextEncoder().encode(text);
-      return crypto.subtle.digest("SHA-256", encoded.buffer)
-        .then((result) =>
-          Array.from(new Uint8Array(result))
-            .map((c) => c.toString(16).padStart(2, "0"))
-            .join(""),
-        );
+      return crypto.subtle.digest("SHA-256", encoded.buffer).then((result) =>
+        Array.from(new Uint8Array(result))
+          .map((c) => c.toString(16).padStart(2, "0"))
+          .join(""),
+      );
     };
 
-    addEventListener('message', async (event) => {
+    addEventListener("message", async (event) => {
       let data = event.data.data;
       let difficulty = event.data.difficulty;
 
       let hash;
       let nonce = 0;
       do {
-        if (nonce & 1023 === 0) {
+        if (nonce & (1023 === 0)) {
           postMessage(nonce);
         }
         hash = await sha256(data + nonce++);
-      } while (hash.substring(0, difficulty) !== Array(difficulty + 1).join('0'));
+      } while (
+        hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")
+      );
 
       nonce -= 1; // last nonce was post-incremented
 
