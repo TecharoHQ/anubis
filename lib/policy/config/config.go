@@ -224,7 +224,7 @@ func (is *ImportStatement) open() (fs.File, error) {
 func (is *ImportStatement) load() error {
 	fin, err := is.open()
 	if err != nil {
-		return fmt.Errorf("can't open %s: %w", is.Import, err)
+		return fmt.Errorf("%w: %s: %w", ErrInvalidImportStatement, is.Import, err)
 	}
 	defer fin.Close()
 
