@@ -64,10 +64,10 @@ type Server struct {
 	policy     *policy.ParsedConfig
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
+	cookieName string
 	priv       ed25519.PrivateKey
 	pub        ed25519.PublicKey
 	opts       Options
-	cookieName string
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
