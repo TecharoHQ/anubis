@@ -51,6 +51,13 @@ func TestExpressionOrListUnmarshal(t *testing.T) {
 			}`,
 			validErr: ErrExpressionCantHaveBoth,
 		},
+		{
+			name: "expression-empty",
+			inp: `{
+			"any": []
+			}`,
+			validErr: ErrExpressionEmpty,
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var eol ExpressionOrList
