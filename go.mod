@@ -12,7 +12,7 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/net v0.40.0
-	k8s.io/apimachinery v0.33.0
+	k8s.io/apimachinery v0.33.1
 )
 
 require (
