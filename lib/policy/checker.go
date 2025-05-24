@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/yl2chen/cidranger"
 )
 
@@ -16,43 +17,12 @@ var (
 	ErrMisconfiguration = errors.New("[unexpected] policy: administrator misconfiguration")
 )
 
-type Checker interface {
-	Check(*http.Request) (bool, error)
-	Hash() string
-}
-
-type CheckerList []Checker
-
-func (cl CheckerList) Check(r *http.Request) (bool, error) {
-	for _, c := range cl {
-		ok, err := c.Check(r)
-		if err != nil {
-			return ok, err
-		}
-		if ok {
-			return ok, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (cl CheckerList) Hash() string {
-	var sb strings.Builder
-
-	for _, c := range cl {
-		fmt.Fprintln(&sb, c.Hash())
-	}
-
-	return internal.SHA256sum(sb.String())
-}
-
 type RemoteAddrChecker struct {
 	ranger cidranger.Ranger
 	hash   string
 }
 
-func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
+func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 	ranger := cidranger.NewPCTrieRanger()
 	var sb strings.Builder
 
@@ -105,11 +75,11 @@ type HeaderMatchesChecker struct {
 	hash   string
 }
 
-func NewUserAgentChecker(rexStr string) (Checker, error) {
+func NewUserAgentChecker(rexStr string) (checker.Impl, error) {
 	return NewHeaderMatchesChecker("User-Agent", rexStr)
 }
 
-func NewHeaderMatchesChecker(header, rexStr string) (Checker, error) {
+func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
@@ -134,7 +104,7 @@ type PathChecker struct {
 	hash   string
 }
 
-func NewPathChecker(rexStr string) (Checker, error) {
+func NewPathChecker(rexStr string) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
@@ -154,7 +124,7 @@ func (pc *PathChecker) Hash() string {
 	return pc.hash
 }
 
-func NewHeaderExistsChecker(key string) Checker {
+func NewHeaderExistsChecker(key string) checker.Impl {
 	return headerExistsChecker{strings.TrimSpace(key)}
 }
 
@@ -174,8 +144,8 @@ func (hec headerExistsChecker) Hash() string {
 	return internal.SHA256sum(hec.header)
 }
 
-func NewHeadersChecker(headermap map[string]string) (Checker, error) {
-	var result CheckerList
+func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
+	var result checker.List
 	var errs []error
 
 	for key, rexStr := range headermap {

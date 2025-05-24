@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -8,6 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
+	"github.com/TecharoHQ/anubis/internal/thoth"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
@@ -16,6 +19,8 @@ var (
 		Name: "anubis_policy_results",
 		Help: "The results of each policy rule",
 	}, []string{"rule", "action"})
+
+	ErrNoThothClient = errors.New("config: you have specified Thoth related checks but have no active Thoth client")
 )
 
 type ParsedConfig struct {
@@ -34,13 +39,15 @@ func NewParsedConfig(orig *config.Config) *ParsedConfig {
 	}
 }
 
-func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
+func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
 	c, err := config.Load(fin, fname)
 	if err != nil {
 		return nil, err
 	}
 
 	var validationErrs []error
+
+	tc, hasThothClient := thoth.FromContext(ctx)
 
 	result := NewParsedConfig(c)
 	result.DefaultDifficulty = defaultDifficulty
@@ -56,7 +63,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			Action: b.Action,
 		}
 
-		cl := CheckerList{}
+		cl := checker.List{}
 
 		if len(b.RemoteAddr) > 0 {
 			c, err := NewRemoteAddrChecker(b.RemoteAddr)
@@ -101,6 +108,24 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			} else {
 				cl = append(cl, c)
 			}
+		}
+
+		if b.ASNs != nil {
+			if !hasThothClient {
+				validationErrs = append(validationErrs, fmt.Errorf("%w: %w", ErrMisconfiguration, ErrNoThothClient))
+				continue
+			}
+
+			cl = append(cl, tc.ASNCheckerFor(b.ASNs.Match))
+		}
+
+		if b.GeoIP != nil {
+			if !hasThothClient {
+				validationErrs = append(validationErrs, fmt.Errorf("%w: %w", ErrMisconfiguration, ErrNoThothClient))
+				continue
+			}
+
+			cl = append(cl, tc.GeoIPCheckerFor(b.GeoIP.Countries))
 		}
 
 		if b.Challenge == nil {

@@ -14,6 +14,8 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/thoth"
+	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
@@ -21,7 +23,11 @@ import (
 func loadPolicies(t *testing.T, fname string) *policy.ParsedConfig {
 	t.Helper()
 
-	anubisPolicy, err := LoadPoliciesOrDefault(fname, anubis.DefaultDifficulty)
+	thothCli := &thoth.Client{}
+	thothCli.WithIPToASNService(thothmock.MockIpToASNService())
+	ctx := thoth.With(t.Context(), thothCli)
+
+	anubisPolicy, err := LoadPoliciesOrDefault(ctx, fname, anubis.DefaultDifficulty)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +124,7 @@ func TestLoadPolicies(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := policy.ParseConfig(fin, fname, 4); err != nil {
+			if _, err := policy.ParseConfig(t.Context(), fin, fname, 4); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -268,7 +274,7 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 	for i := 1; i < 10; i++ {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			anubisPolicy, err := LoadPoliciesOrDefault("", i)
+			anubisPolicy, err := LoadPoliciesOrDefault(t.Context(), "", i)
 			if err != nil {
 				t.Fatal(err)
 			}
