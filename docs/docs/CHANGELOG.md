@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v1.19.0: Jenomis cen Lexentale
+
 - Record if challenges were issued via the API or via embedded JSON in the challenge page HTML ([#531](https://github.com/TecharoHQ/anubis/issues/531))
 - Ensure that clients that are shown a challenge support storing cookies
 - Encode challenge pages with gzip level 1
@@ -29,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Qualys SSL Labs whitelist policy
 - Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
 - Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service.
-- Fixed CEL expression matching validator to now properly error out when it receives empty expressions 
+- Fixed CEL expression matching validator to now properly error out when it receives empty expressions
 
 ## v1.18.0: Varis zos Galvus
 

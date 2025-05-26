@@ -1,6 +1,6 @@
 {
   "name": "@techaro/anubis",
-  "version": "1.18.0",
+  "version": "1.19.0-pre1",
   "description": "",
   "main": "index.js",
   "scripts": {
