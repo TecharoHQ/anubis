@@ -1,0 +1,24 @@
+# The URL of the service that Anubis should forward valid requests to. Supports
+# Unix domain sockets.
+#ANUBIS_TARGET="http://localhost:3923"
+#ANUBIS_TARGET="unix:///path/to/socket"
+
+# The network address that Anubis listens on.
+#
+# If unset, listen on /run/anubis_${instance}/anubis.sock Unix socket instead.
+#ANUBIS_BIND_PORT=":8923"
+
+# The network address that Anubis serves Prometheus metrics on.
+#
+# If unset, listen on /run/anubis_${instance}/metrix.sock Unix socket instead.
+#ANUBIS_METRICS_BIND_PORT=":9090"
+
+# The difficulty of the challenge, or the number of leading zeroes that must be
+# in successful responses.
+#ANUBIS_DIFFICULTY=4
+
+# Additional command-line options for Anubis.
+#ANUBIS_OPTS=""
+
+# Configure the user[:group] Anubis will run as.
+#command_user="anubis:anubis"
