@@ -30,11 +30,13 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/thoth"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -67,6 +69,9 @@ var (
 	ogCacheConsiderHost      = flag.Bool("og-cache-consider-host", false, "enable or disable the use of the host in the Open Graph tag cache")
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+
+	thothURL   = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
+	thothToken = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -225,7 +230,19 @@ func main() {
 		}
 	}
 
-	policy, err := libanubis.LoadPoliciesOrDefault(*policyFname, *challengeDifficulty)
+	ctx := context.Background()
+
+	if *thothURL != "" && *thothToken != "" {
+		slog.Debug("connecting to Thoth")
+		thothClient, err := thoth.New(ctx, *thothURL, *thothToken)
+		if err != nil {
+			log.Fatalf("can't dial thoth at %s: %v", *thothURL, err)
+		}
+
+		ctx = thoth.With(ctx, thothClient)
+	}
+
+	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty)
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
 	}

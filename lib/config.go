@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"fmt"
@@ -40,7 +41,7 @@ type Options struct {
 	ServeRobotsTXT       bool
 }
 
-func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
+func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
 	var fin io.ReadCloser
 	var err error
 
@@ -64,7 +65,7 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 		}
 	}(fin)
 
-	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	anubisPolicy, err := policy.ParseConfig(ctx, fin, fname, defaultDifficulty)
 
 	return anubisPolicy, err
 }
