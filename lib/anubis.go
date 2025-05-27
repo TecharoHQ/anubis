@@ -56,6 +56,11 @@ var (
 		Help:    "The time taken for a browser to generate a response (milliseconds)",
 		Buckets: prometheus.ExponentialBucketsRange(1, math.Pow(2, 18), 19),
 	})
+
+	requestsProxied = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "anubis_proxied_requests_total",
+		Help: "Number of requests proxied through Anubis to upstream targets",
+	}, []string{"host"})
 )
 
 type Server struct {

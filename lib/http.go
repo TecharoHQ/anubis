@@ -147,6 +147,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			web.Base("You are not a bot!", web.StaticHappy()),
 		).ServeHTTP(w, r)
 	} else {
+		requestsProxied.WithLabelValues(r.Host).Inc()
 		s.next.ServeHTTP(w, r)
 	}
 }
