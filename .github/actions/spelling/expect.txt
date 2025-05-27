@@ -30,12 +30,14 @@ cgr
 chainguard
 chall
 challengemozilla
+checkpath
 checkresult
 chen
 chibi
 cidranger
 ckie
 cloudflare
+confd
 containerbuild
 coreutils
 CRDs
@@ -56,6 +58,7 @@ dracula
 dronebl
 droneblresponse
 duckduckbot
+eerror
 ellenjoe
 enbyware
 everyones
@@ -96,7 +99,9 @@ iat
 ifm
 inp
 iss
+isset
 ivh
+Jenomis
 JGit
 journalctl
 jshelter
@@ -110,6 +115,7 @@ kinda
 KUBECONFIG
 ldflags
 letsencrypt
+Lexentale
 lgbt
 licend
 licstart
@@ -125,6 +131,7 @@ maintainership
 malware
 mcr
 memes
+metrix
 mimi
 minica
 Mojeek
@@ -137,6 +144,7 @@ NONINFRINGEMENT
 nosleep
 ogtags
 onionservice
+openrc
 pag
 parseable
 passthrough
@@ -167,6 +175,7 @@ reputational
 reqmeta
 risc
 ruleset
+runlevels
 RUnlock
 sas
 sasl
@@ -176,6 +185,7 @@ sebest
 secretplans
 selfsigned
 setsebool
+shellcheck
 sitemap
 sls
 sni
@@ -189,6 +199,7 @@ stoppostcmd
 subgrid
 subr
 subrequest
+SVCNAME
 tagline
 tarballs
 techaro
@@ -211,6 +222,7 @@ webmaster
 webpage
 websecure
 websites
+wordpress
 Workaround
 workdir
 xcaddy
