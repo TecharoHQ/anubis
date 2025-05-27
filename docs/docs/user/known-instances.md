@@ -35,6 +35,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://hofstede.io/
 - https://www.indiemag.fr/
 - https://reddit.nerdvpn.de/
+- https://hosted.weblate.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
