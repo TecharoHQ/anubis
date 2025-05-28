@@ -16,14 +16,14 @@ func TestURLValues(t *testing.T) {
 
 	t.Run("contains-existing-key", func(t *testing.T) {
 		resp := headers.Contains(types.String("format"))
-		if !bool(resp.(types.Bool)) {
+		if !resp.(types.Bool) {
 			t.Fatal("headers does not contain User-Agent")
 		}
 	})
 
 	t.Run("not-contains-missing-key", func(t *testing.T) {
 		resp := headers.Contains(types.String("not-there"))
-		if bool(resp.(types.Bool)) {
+		if resp.(types.Bool) {
 			t.Fatal("headers does not contain User-Agent")
 		}
 	})

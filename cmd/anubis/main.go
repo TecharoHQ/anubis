@@ -420,11 +420,11 @@ func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
 			return os.MkdirAll(destPath, 0o700)
 		}
 
-		data, err := fs.ReadFile(fsys, path)
+		embeddedData, err := fs.ReadFile(fsys, path)
 		if err != nil {
 			return err
 		}
 
-		return os.WriteFile(destPath, data, 0o644)
+		return os.WriteFile(destPath, embeddedData, 0o644)
 	})
 }
