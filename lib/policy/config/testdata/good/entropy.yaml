@@ -1,0 +1,8 @@
+bots:
+  - name: total-randomness
+    action: ALLOW
+    expression:
+      all:
+        - '"Accept" in headers'
+        - headers["Accept"].contains("text/html")
+        - randInt(1) == 0

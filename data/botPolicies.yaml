@@ -11,44 +11,44 @@
 ## /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
 
 bots:
-# Pathological bots to deny
-- # This correlates to data/bots/deny-pathological.yaml in the source tree
-  # https://github.com/TecharoHQ/anubis/blob/main/data/bots/deny-pathological.yaml
-  import: (data)/bots/_deny-pathological.yaml
-- import: (data)/bots/aggressive-brazilian-scrapers.yaml
+  # Pathological bots to deny
+  - # This correlates to data/bots/deny-pathological.yaml in the source tree
+    # https://github.com/TecharoHQ/anubis/blob/main/data/bots/deny-pathological.yaml
+    import: (data)/bots/_deny-pathological.yaml
+  - import: (data)/bots/aggressive-brazilian-scrapers.yaml
 
-# Enforce https://github.com/ai-robots-txt/ai.robots.txt
-- import: (data)/bots/ai-robots-txt.yaml
+  # Enforce https://github.com/ai-robots-txt/ai.robots.txt
+  - import: (data)/bots/ai-robots-txt.yaml
 
-# Search engine crawlers to allow, defaults to:
-#   - Google (so they don't try to bypass Anubis)
-#   - Bing
-#   - DuckDuckGo
-#   - Qwant
-#   - The Internet Archive
-#   - Kagi
-#   - Marginalia
-#   - Mojeek
-- import: (data)/crawlers/_allow-good.yaml
+  # Search engine crawlers to allow, defaults to:
+  #   - Google (so they don't try to bypass Anubis)
+  #   - Bing
+  #   - DuckDuckGo
+  #   - Qwant
+  #   - The Internet Archive
+  #   - Kagi
+  #   - Marginalia
+  #   - Mojeek
+  - import: (data)/crawlers/_allow-good.yaml
 
-# Allow common "keeping the internet working" routes (well-known, favicon, robots.txt)
-- import: (data)/common/keep-internet-working.yaml
+  # Allow common "keeping the internet working" routes (well-known, favicon, robots.txt)
+  - import: (data)/common/keep-internet-working.yaml
 
-# # Punish any bot with "bot" in the user-agent string
-# # This is known to have a high false-positive rate, use at your own risk
-# - name: generic-bot-catchall
-#   user_agent_regex: (?i:bot|crawler)
-#   action: CHALLENGE
-#   challenge:
-#     difficulty: 16  # impossible
-#     report_as: 4    # lie to the operator
-#     algorithm: slow # intentionally waste CPU cycles and time
+  # # Punish any bot with "bot" in the user-agent string
+  # # This is known to have a high false-positive rate, use at your own risk
+  # - name: generic-bot-catchall
+  #   user_agent_regex: (?i:bot|crawler)
+  #   action: CHALLENGE
+  #   challenge:
+  #     difficulty: 16  # impossible
+  #     report_as: 4    # lie to the operator
+  #     algorithm: slow # intentionally waste CPU cycles and time
 
-# Generic catchall rule
-- name: generic-browser
-  user_agent_regex: >-
-    Mozilla|Opera
-  action: CHALLENGE
+  # Generic catchall rule
+  - name: generic-browser
+    user_agent_regex: >-
+      Mozilla|Opera
+    action: CHALLENGE
 
 dnsbl: false
 
@@ -58,4 +58,4 @@ dnsbl: false
 # will stop sending requests once they get it.
 status_codes:
   CHALLENGE: 200
-  DENY: 200 
+  DENY: 200

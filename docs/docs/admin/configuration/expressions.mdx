@@ -143,7 +143,29 @@ Anubis would return a challenge because all of those conditions are true.
 
 ## Functions exposed to Anubis expressions
 
-There are currently no functions from the Anubis runtime exposed to expressions. This will change in the future.
+Anubis expressions can be augmented with the following functions:
+
+### `randInt`
+
+```ts
+function randInt(n: int): int;
+```
+
+randInt returns a randomly selected integer value in the range of `[0,n)`. This is a thin wrapper around [Go's math/rand#Intn](https://pkg.go.dev/math/rand#Intn). Be careful with this as it may cause inconsistent behavior for genuine users.
+
+This is best applied when doing explicit block rules, eg:
+
+```yaml
+# Denies LightPanda about 75% of the time on average
+- name: deny-lightpanda-sometimes
+  action: DENY
+  expression:
+    all:
+      - userAgent.matches("LightPanda")
+      - randInt(16) >= 4
+```
+
+It seems counter-intuitive to allow known bad clients through sometimes, but this allows you to confuse attackers by making Anubis' behavior random. Adjust the thresholds and numbers as facts and circumstances demand.
 
 ## Life advice
 
