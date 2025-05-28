@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
 - Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.
 - Added Podman and Docker support for running Playwright tests
+- Add a default rule to throw challenges when a request with the `X-Firefox-Ai` header is set.
 - Updated the nonce value in the challenge JWT cookie to be a string instead of a number
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options

@@ -30,6 +30,8 @@ bots:
   #   - Marginalia
   #   - Mojeek
   - import: (data)/crawlers/_allow-good.yaml
+  # Challenge Firefox AI previews
+  - import: (data)/clients/x-firefox-ai.yaml
 
   # Allow common "keeping the internet working" routes (well-known, favicon, robots.txt)
   - import: (data)/common/keep-internet-working.yaml
