@@ -51,6 +51,11 @@ var (
 		Help: "The total number of failed validations",
 	})
 
+	requestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "anubis_request_count",
+		Help: "The total number of requests to anubis.",
+	}, []string{"result"})
+
 	timeTaken = promauto.NewHistogram(prometheus.HistogramOpts{
 		Name:    "anubis_time_taken",
 		Help:    "The time taken for a browser to generate a response (milliseconds)",
@@ -106,6 +111,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"")
+		requestCounter.WithLabelValues("error").Inc()
 		return
 	}
 
@@ -172,6 +178,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
 		s.ServeHTTPNext(w, r)
+		requestCounter.WithLabelValues("explicit-allow").Inc()
 		return true
 	case config.RuleDeny:
 		s.ClearCookie(w, s.cookieName, cookiePath)
@@ -185,17 +192,21 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 
 		lg.Debug("rule hash", "hash", hash)
 		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
+		requestCounter.WithLabelValues("explicit-deny").Inc()
 		return true
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
+		requestCounter.WithLabelValues("challenge").Inc()
 	case config.RuleBenchmark:
 		lg.Debug("serving benchmark page")
 		s.RenderBench(w, r)
+		requestCounter.WithLabelValues("benchmark").Inc()
 		return true
 	default:
 		s.ClearCookie(w, s.cookieName, cookiePath)
 		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
 		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
+		requestCounter.WithLabelValues("error").Inc()
 		return true
 	}
 	return false
