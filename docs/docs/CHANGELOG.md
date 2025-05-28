@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service.
 - Fixed CEL expression matching validator to now properly error out when it receives empty expressions
 - Added OpenRC init.d script.
+- Added `--version` flag.
 
 ## v1.18.0: Varis zos Galvus
 
