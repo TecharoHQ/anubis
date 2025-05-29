@@ -1,6 +1,11 @@
 $`npm run assets`;
 
-["amd64", "arm64", "riscv64"].forEach(goarch => {
+[
+    "amd64",
+    "arm64",
+    "ppc64le",
+    "riscv64",
+].forEach(goarch => {
     [deb, rpm, tarball].forEach(method => method.build({
         name: "anubis",
         description: "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
