@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added OpenRC init.d script.
 - Added `--version` flag.
 - Added `anubis_proxied_requests_total` metric to count proxied requests.
+- Add `Applebot` as "good" web crawler
 
 ## v1.18.0: Varis zos Galvus
 

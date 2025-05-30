@@ -22,6 +22,7 @@ bots:
 
   # Search engine crawlers to allow, defaults to:
   #   - Google (so they don't try to bypass Anubis)
+  #   - Apple
   #   - Bing
   #   - DuckDuckGo
   #   - Qwant
