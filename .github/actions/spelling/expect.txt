@@ -6,6 +6,7 @@ amazonbot
 anthro
 anubis
 anubistest
+Applebot
 archlinux
 badregexes
 berr
@@ -113,6 +114,7 @@ keypair
 KHTML
 kinda
 KUBECONFIG
+lcj
 ldflags
 letsencrypt
 Lexentale
