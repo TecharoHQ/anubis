@@ -1,0 +1,16 @@
+# Collects AI training data
+# https://platform.openai.com/docs/bots/overview-of-openai-crawlers
+- name: openai-gptbot
+  user_agent_regex: GPTBot/1\.1; \+https\://openai\.com/gptbot
+  action: ALLOW
+  # https://openai.com/gptbot.json
+  remote_addresses: [
+    "52.230.152.0/24",
+    "20.171.206.0/24",
+    "20.171.207.0/24",
+    "4.227.36.0/25",
+    "20.125.66.80/28",
+    "172.182.204.0/24",
+    "172.182.214.0/24",
+    "172.182.215.0/24",
+  ]
