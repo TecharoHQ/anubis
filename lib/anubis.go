@@ -474,6 +474,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			ReportAs:   s.policy.DefaultDifficulty,
 			Algorithm:  config.AlgorithmFast,
 		},
+		Rules: &policy.CheckerList{},
 	}, nil
 }
 
