@@ -47,7 +47,16 @@ type challenge struct {
 func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challenge {
 	t.Helper()
 
-	resp, err := cli.Post(ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", "", nil)
+	req, err := http.NewRequest(http.MethodPost, ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+
+	q := req.URL.Query()
+	q.Set("redir", "/")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := cli.Do(req)
 	if err != nil {
 		t.Fatalf("can't request challenge: %v", err)
 	}
@@ -86,6 +95,10 @@ func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.
 	resp, err := cli.Do(req)
 	if err != nil {
 		t.Fatalf("can't do request: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusFound {
+		t.Errorf("got wrong status from pass-challenge: %s", resp.Status)
 	}
 
 	return resp
@@ -547,5 +560,33 @@ func TestCloudflareWorkersRule(t *testing.T) {
 				}
 			})
 		})
+	}
+}
+
+func TestRuleChange(t *testing.T) {
+	pol := loadPolicies(t, "testdata/rule_change.yaml")
+	pol.DefaultDifficulty = 0
+	ckieExpiration := 10 * time.Minute
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:     "127.0.0.1",
+		CookieName:       t.Name(),
+		CookieExpiration: ckieExpiration,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := httpClient(t)
+
+	chall := makeChallenge(t, ts, cli)
+	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+
+	if resp.StatusCode != http.StatusFound {
+		resp.Write(os.Stderr)
+		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 	}
 }

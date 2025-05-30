@@ -162,6 +162,29 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		lg.Debug("invalid token claims type", "path", r.URL.Path)
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
+		return
+	}
+
+	policyRule, ok := claims["policyRule"].(string)
+	if !ok {
+		lg.Debug("policyRule claim is not a string")
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
+		return
+	}
+
+	if policyRule != rule.Hash() {
+		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
+		return
+	}
+
 	r.Header.Add("X-Anubis-Status", "PASS")
 	s.ServeHTTPNext(w, r)
 }
@@ -230,6 +253,21 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
+
+	redir := r.FormValue("redir")
+	if redir == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder := json.NewEncoder(w)
+		lg.Error("invalid invocation of MakeChallenge", "redir", redir)
+		encoder.Encode(struct {
+			Error string `json:"error"`
+		}{
+			Error: "Invalid invocation of MakeChallenge",
+		})
+		return
+	}
+
+	r.URL.Path = redir
 
 	encoder := json.NewEncoder(w)
 	cr, rule, err := s.check(r)
@@ -374,15 +412,13 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// generate JWT cookie
-	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
-		"challenge": challenge,
-		"nonce":     nonceStr,
-		"response":  response,
-		"iat":       time.Now().Unix(),
-		"nbf":       time.Now().Add(-1 * time.Minute).Unix(),
-		"exp":       time.Now().Add(s.opts.CookieExpiration).Unix(),
+	tokenString, err := s.signJWT(jwt.MapClaims{
+		"challenge":  challenge,
+		"nonce":      nonceStr,
+		"response":   response,
+		"policyRule": rule.Hash(),
+		"action":     string(cr.Rule),
 	})
-	tokenString, err := token.SignedString(s.priv)
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w, s.cookieName, cookiePath)
