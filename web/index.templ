@@ -123,6 +123,7 @@ templ index() {
 >JShelter</a> will disable. Please disable JShelter or other such
 				plugins for this domain.
 			</p>
+			<p>This website is running Anubis version <code>{ anubis.Version }</code>.</p>
 		</details>
 		<noscript>
 			<p>
@@ -154,15 +155,15 @@ templ errorPage(message string, mail string) {
 }
 
 templ StaticHappy() {
-<div class="centered-div">
-    <img
-            style="display:none;"
-            style="width:100%;max-width:256px;"
-            src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
+	<div class="centered-div">
+		<img
+			style="display:none;"
+			style="width:100%;max-width:256px;"
+			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
     anubis.Version }
-    />
-    <p>This is just a check endpoint for your reverse proxy to use.</p>
-</div>
+		/>
+		<p>This is just a check endpoint for your reverse proxy to use.</p>
+	</div>
 }
 
 templ bench() {
