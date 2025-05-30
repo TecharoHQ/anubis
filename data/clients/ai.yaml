@@ -1,0 +1,8 @@
+# User agents that act on behalf of humans in AI tools, e.g. searching the web.
+# Each entry should have a positive/ALLOW entry created as well, with further documentation.
+# Exceptions:
+#  - Claude-User: No published IP allowlist
+- name: "ai-clients"
+  user_agent_regex: >-
+    ChatGPT-User|Claude-User|MistralAI-User
+  action: DENY

@@ -4,7 +4,7 @@
       "import": "(data)/bots/_deny-pathological.yaml"
     },
     {
-      "import": "(data)/bots/ai-robots-txt.yaml"
+      "import": "(data)/meta/ai-block-aggressive.yaml"
     },
     {
       "import": "(data)/crawlers/_allow-good.yaml"

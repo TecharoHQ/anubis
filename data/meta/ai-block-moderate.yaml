@@ -1,0 +1,7 @@
+# Blocks all AI/LLM bots used for training or unknown/undocumented purposes.
+# Permits user agents with explicitly documented non-training use, and published IP allowlists.
+- import: (data)/bots/ai-catchall.yaml
+- import: (data)/crawlers/ai-training.yaml
+- import: (data)/crawlers/openai-searchbot.yaml
+- import: (data)/clients/openai-chatgpt-user.yaml
+- import: (data)/clients/mistral-mistralai-user.yaml

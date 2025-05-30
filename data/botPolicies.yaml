@@ -17,8 +17,12 @@ bots:
     import: (data)/bots/_deny-pathological.yaml
   - import: (data)/bots/aggressive-brazilian-scrapers.yaml
 
-  # Enforce https://github.com/ai-robots-txt/ai.robots.txt
-  - import: (data)/bots/ai-robots-txt.yaml
+  # Aggressively block AI/LLM related bots/agents by default
+  - import: (data)/meta/ai-block-aggressive.yaml
+
+  # Consider replacing the aggressive AI policy with more selective policies:
+  # - import: (data)/meta/ai-block-moderate.yaml
+  # - import: (data)/meta/ai-block-permissive.yaml
 
   # Search engine crawlers to allow, defaults to:
   #   - Google (so they don't try to bypass Anubis)

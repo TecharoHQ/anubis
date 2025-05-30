@@ -1,0 +1,8 @@
+# User agents that index exclusively for search in for AI systems.
+# Each entry should have a positive/ALLOW entry created as well, with further documentation.
+# Exceptions:
+#  - Claude-SearchBot: No published IP allowlist
+- name: "ai-crawlers-search"
+  user_agent_regex: >-
+    OAI-SearchBot|Claude-SearchBot
+  action: DENY
