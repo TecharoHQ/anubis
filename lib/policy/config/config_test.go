@@ -251,6 +251,7 @@ func TestImportStatement(t *testing.T) {
 		"bots",
 		"common",
 		"crawlers",
+		"meta",
 	} {
 		if err := fs.WalkDir(data.BotPolicies, folderName, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
