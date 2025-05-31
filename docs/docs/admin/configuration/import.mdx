@@ -14,7 +14,7 @@ EG:
 {
   "bots": [
     {
-      "import": "(data)/bots/ai-robots-txt.yaml"
+      "import": "(data)/bots/ai-catchall.yaml"
     },
     {
       "import": "(data)/bots/cloudflare-workers.yaml"
@@ -29,8 +29,8 @@ EG:
 ```yaml
 bots:
   # Pathological bots to deny
-  - # This correlates to data/bots/ai-robots-txt.yaml in the source tree
-    import: (data)/bots/ai-robots-txt.yaml
+  - # This correlates to data/bots/ai-catchall.yaml in the source tree
+    import: (data)/bots/ai-catchall.yaml
   - import: (data)/bots/cloudflare-workers.yaml
 ```
 
@@ -46,7 +46,7 @@ Of note, a bot rule can either have inline bot configuration or import a bot con
 {
   "bots": [
     {
-      "import": "(data)/bots/ai-robots-txt.yaml",
+      "import": "(data)/bots/ai-catchall.yaml",
       "name": "generic-browser",
       "user_agent_regex": "Mozilla|Opera\n",
       "action": "CHALLENGE"
@@ -60,7 +60,7 @@ Of note, a bot rule can either have inline bot configuration or import a bot con
 
 ```yaml
 bots:
-  - import: (data)/bots/ai-robots-txt.yaml
+  - import: (data)/bots/ai-catchall.yaml
     name: generic-browser
     user_agent_regex: >
       Mozilla|Opera
@@ -167,7 +167,7 @@ static
 ├── botPolicies.json
 ├── botPolicies.yaml
 ├── bots
-│   ├── ai-robots-txt.yaml
+│   ├── ai-catchall.yaml
 │   ├── cloudflare-workers.yaml
 │   ├── headless-browsers.yaml
 │   └── us-ai-scraper.yaml

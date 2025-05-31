@@ -1,0 +1,11 @@
+# Extensive list of AI-affiliated agents based on https://github.com/ai-robots-txt/ai.robots.txt
+# Add new/undocumented agents here. Where documentation exists, consider moving to dedicated policy files.
+# Notes on various agents:
+#  - Amazonbot: Well documented, but they refuse to state which agent collects training data.
+#  - anthropic-ai/Claude-Web: Undocumented by Anthropic. Possibly deprecated or hallucinations?
+#  - Perplexity*: Well documented, but they refuse to state which agent collects training data.
+# Warning: May contain user agents that _must_ be blocked in robots.txt, or the opt-out will have no effect.
+- name: "ai-catchall"
+  user_agent_regex: >-
+    AI2Bot|Ai2Bot-Dolma|aiHitBot|Amazonbot|anthropic-ai|Brightbot 1.0|Bytespider|CCBot|Claude-Web|cohere-ai|cohere-training-data-crawler|Cotoyogi|Crawlspace|Diffbot|DuckAssistBot|FacebookBot|Factset_spyderbot|FirecrawlAgent|FriendlyCrawler|Google-CloudVertexBot|GoogleOther|GoogleOther-Image|GoogleOther-Video|iaskspider/2.0|ICC-Crawler|ImagesiftBot|img2dataset|imgproxy|ISSCyberRiskCrawler|Kangaroo Bot|meta-externalagent|Meta-ExternalAgent|meta-externalfetcher|Meta-ExternalFetcher|NovaAct|omgili|omgilibot|Operator|PanguBot|Perplexity-User|PerplexityBot|PetalBot|QualifiedBot|Scrapy|SemrushBot-OCOB|SemrushBot-SWA|Sidetrade indexer bot|TikTokSpider|Timpibot|VelenPublicWebCrawler|Webzio-Extended|wpbot|YouBot
+  action: DENY

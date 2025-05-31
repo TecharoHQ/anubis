@@ -35,6 +35,7 @@ $`npm run assets`;
             $`cp -a data/clients ${doc}/data/clients`;
             $`cp -a data/common ${doc}/data/common`;
             $`cp -a data/crawlers ${doc}/data/crawlers`;
+            $`cp -a data/meta ${doc}/data/meta`;
         },
     }));
 });

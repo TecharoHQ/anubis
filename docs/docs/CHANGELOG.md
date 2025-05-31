@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `--version` flag.
 - Added `anubis_proxied_requests_total` metric to count proxied requests.
 - Add `Applebot` as "good" web crawler
+- Reorganize AI/LLM crawler blocking into three separate stances, maintaining existing status quo as default.
+- Split out AI/LLM user agent blocking policies, adding documentation for each.
 
 ## v1.18.0: Varis zos Galvus
 

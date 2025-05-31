@@ -1,0 +1,8 @@
+# User agents that crawl for training AI/LLM systems
+# Each entry should have a positive/ALLOW entry created as well, with further documentation.
+# Exceptions:
+#  - ClaudeBot: No published IP allowlist
+- name: "ai-crawlers-training"
+  user_agent_regex: >-
+    GPTBot|ClaudeBot
+  action: DENY
