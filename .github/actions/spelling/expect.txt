@@ -85,6 +85,7 @@ goodbot
 googlebot
 govulncheck
 GPG
+GPT
 grw
 Hashcash
 hashrate
@@ -136,6 +137,7 @@ memes
 metrix
 mimi
 minica
+mistralai
 Mojeek
 mojeekbot
 mozilla
@@ -146,6 +148,7 @@ NONINFRINGEMENT
 nosleep
 ogtags
 onionservice
+openai
 openrc
 pag
 parseable
