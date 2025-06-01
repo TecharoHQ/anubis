@@ -37,6 +37,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://reddit.nerdvpn.de/
 - https://hosted.weblate.org/
 - https://gitea.com/
+- https://openwrt.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
