@@ -38,6 +38,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://hosted.weblate.org/
 - https://gitea.com/
 - https://openwrt.org/
+- https://catgirl.click/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
