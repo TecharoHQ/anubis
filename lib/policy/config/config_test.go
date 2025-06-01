@@ -260,9 +260,9 @@ func TestImportStatement(t *testing.T) {
 			if d.IsDir() {
 				return nil
 			}
-            if d.Name() == "README.md" {
-                return nil
-            }
+			if d.Name() == "README.md" {
+				return nil
+			}
 
 			tests = append(tests, testCase{
 				name:       "(data)/" + path,
