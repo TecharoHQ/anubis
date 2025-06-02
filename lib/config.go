@@ -3,6 +3,7 @@ package lib
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -17,6 +18,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
+	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
@@ -65,6 +67,17 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 	}(fin)
 
 	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	var validationErrs []error
+
+	for _, b := range anubisPolicy.Bots {
+		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok {
+			validationErrs = append(validationErrs, fmt.Errorf("%w %s", policy.ErrChallengeRuleHasWrongAlgorithm, b.Challenge.Algorithm))
+		}
+	}
+
+	if len(validationErrs) != 0 {
+		return nil, fmt.Errorf("can't do final validation of Anubis config: %w", errors.Join(validationErrs...))
+	}
 
 	return anubisPolicy, err
 }

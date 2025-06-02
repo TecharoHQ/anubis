@@ -42,13 +42,7 @@ const (
 	RuleBenchmark Rule = "DEBUG_BENCHMARK"
 )
 
-type Algorithm string
-
-const (
-	AlgorithmUnknown Algorithm = ""
-	AlgorithmFast    Algorithm = "fast"
-	AlgorithmSlow    Algorithm = "slow"
-)
+const DefaultAlgorithm = "fast"
 
 type BotConfig struct {
 	UserAgentRegex *string           `json:"user_agent_regex"`
@@ -170,15 +164,14 @@ func (b BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
-	Algorithm  Algorithm `json:"algorithm"`
-	Difficulty int       `json:"difficulty"`
-	ReportAs   int       `json:"report_as"`
+	Algorithm  string `json:"algorithm"`
+	Difficulty int    `json:"difficulty"`
+	ReportAs   int    `json:"report_as"`
 }
 
 var (
-	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
-	ErrChallengeDifficultyTooLow      = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
-	ErrChallengeDifficultyTooHigh     = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
+	ErrChallengeDifficultyTooLow  = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
+	ErrChallengeDifficultyTooHigh = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
 )
 
 func (cr ChallengeRules) Valid() error {
@@ -190,13 +183,6 @@ func (cr ChallengeRules) Valid() error {
 
 	if cr.Difficulty > 64 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
-	}
-
-	switch cr.Algorithm {
-	case AlgorithmFast, AlgorithmSlow, AlgorithmUnknown:
-		// do nothing, it's all good
-	default:
-		errs = append(errs, fmt.Errorf("%w: %q", ErrChallengeRuleHasWrongAlgorithm, cr.Algorithm))
 	}
 
 	if len(errs) != 0 {
