@@ -77,7 +77,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, rule *policy.Bot, chal
 	}
 
 	lg.Debug("challenge took", "elapsedTime", elapsedTime)
-	chall.TimeTaken.WithLabelValues(string(rule.Challenge.Algorithm)).Observe(elapsedTime)
+	chall.TimeTaken.WithLabelValues(i.Algorithm).Observe(elapsedTime)
 
 	return nil
 }

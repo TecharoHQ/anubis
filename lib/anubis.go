@@ -29,7 +29,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 
 	// challenge implementations
-	_ "github.com/TecharoHQ/anubis/lib/challenge/proof-of-work"
+	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 )
 
 var (
