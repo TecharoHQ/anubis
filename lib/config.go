@@ -132,12 +132,15 @@ func New(opts Options) (*Server, error) {
 		}), "GET")
 	}
 
-	registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
 	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
-	registerWithPrefix(anubis.APIPrefix+"test-error", http.HandlerFunc(result.TestError), "GET")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
+	//goland:noinspection GoBoolExpressions
+	if anubis.Version == "devel" {
+		// make-challenge is only used in tests. Only enable while version is devel
+		registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
+	}
 	result.mux = mux
 
 	return result, nil

@@ -438,11 +438,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redir, http.StatusFound)
 }
 
-func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
-	err := r.FormValue("err")
-	s.respondWithError(w, r, err)
-}
-
 func cr(name string, rule config.Rule) policy.CheckResult {
 	return policy.CheckResult{
 		Name: name,
