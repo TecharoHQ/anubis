@@ -38,10 +38,10 @@ var (
 		Help: "The total number of challenges issued",
 	}, []string{"method"})
 
-	challengesValidated = promauto.NewCounter(prometheus.CounterOpts{
+	challengesValidated = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_challenges_validated",
 		Help: "The total number of challenges validated",
-	})
+	}, []string{"method"})
 
 	droneBLHits = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_dronebl_hits",
@@ -395,7 +395,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	s.SetCookie(w, s.cookieName, tokenString, cookiePath)
 
-	challengesValidated.Inc()
+	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
 	lg.Debug("challenge passed, redirecting to app")
 	http.Redirect(w, r, redir, http.StatusFound)
 }
