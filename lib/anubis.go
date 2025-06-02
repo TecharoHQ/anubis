@@ -383,6 +383,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	// generate JWT cookie
 	tokenString, err := s.signJWT(jwt.MapClaims{
 		"challenge":  challengeStr,
+		"method":     rule.Challenge.Algorithm,
 		"policyRule": rule.Hash(),
 		"action":     string(cr.Rule),
 	})
