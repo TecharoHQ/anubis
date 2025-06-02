@@ -214,6 +214,11 @@ func TestPlaywrightBrowser(t *testing.T) {
 		return
 	}
 
+	if os.Getenv("SKIP_INTEGRATION") != "" {
+		t.Skip("SKIP_INTEGRATION was set")
+		return
+	}
+
 	startPlaywright(t)
 
 	pw := setupPlaywright(t)
@@ -286,6 +291,11 @@ func TestPlaywrightBrowser(t *testing.T) {
 func TestPlaywrightWithBasePrefix(t *testing.T) {
 	if os.Getenv("DONT_USE_NETWORK") != "" {
 		t.Skip("test requires network egress")
+		return
+	}
+
+	if os.Getenv("SKIP_INTEGRATION") != "" {
+		t.Skip("SKIP_INTEGRATION was set")
 		return
 	}
 

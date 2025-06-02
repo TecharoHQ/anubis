@@ -12,6 +12,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func (s *Server) SetCookie(w http.ResponseWriter, name, value, path string) {
@@ -147,6 +148,15 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			web.Base("You are not a bot!", web.StaticHappy()),
 		).ServeHTTP(w, r)
 	} else {
+		requestsProxied.WithLabelValues(r.Host).Inc()
 		s.next.ServeHTTP(w, r)
 	}
+}
+
+func (s *Server) signJWT(claims jwt.MapClaims) (string, error) {
+	claims["iat"] = time.Now().Unix()
+	claims["nbf"] = time.Now().Add(-1 * time.Minute).Unix()
+	claims["exp"] = time.Now().Add(s.opts.CookieExpiration).Unix()
+
+	return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.priv)
 }

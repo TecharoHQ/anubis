@@ -1,4 +1,5 @@
 - import: (data)/crawlers/googlebot.yaml
+- import: (data)/crawlers/applebot.yaml
 - import: (data)/crawlers/bingbot.yaml
 - import: (data)/crawlers/duckduckbot.yaml
 - import: (data)/crawlers/qwantbot.yaml

@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +18,10 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
+
+func init() {
+	internal.InitSlog("debug")
+}
 
 func loadPolicies(t *testing.T, fname string) *policy.ParsedConfig {
 	t.Helper()
@@ -47,7 +52,16 @@ type challenge struct {
 func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challenge {
 	t.Helper()
 
-	resp, err := cli.Post(ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", "", nil)
+	req, err := http.NewRequest(http.MethodPost, ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+
+	q := req.URL.Query()
+	q.Set("redir", "/")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := cli.Do(req)
 	if err != nil {
 		t.Fatalf("can't request challenge: %v", err)
 	}
@@ -91,16 +105,48 @@ func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.
 	return resp
 }
 
+type loggingCookieJar struct {
+	t       *testing.T
+	lock    sync.Mutex
+	cookies map[string][]*http.Cookie
+}
+
+func (lcj *loggingCookieJar) Cookies(u *url.URL) []*http.Cookie {
+	lcj.lock.Lock()
+	defer lcj.lock.Unlock()
+
+	// XXX(Xe): This is not RFC compliant in the slightest.
+	result, ok := lcj.cookies[u.Host]
+	if !ok {
+		return nil
+	}
+
+	lcj.t.Logf("requested cookies for %s", u)
+
+	for _, ckie := range result {
+		lcj.t.Logf("get cookie: <- %s", ckie)
+	}
+
+	return result
+}
+
+func (lcj *loggingCookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+	lcj.lock.Lock()
+	defer lcj.lock.Unlock()
+
+	for _, ckie := range cookies {
+		lcj.t.Logf("set cookie: %s -> %s", u, ckie)
+	}
+
+	// XXX(Xe): This is not RFC compliant in the slightest.
+	lcj.cookies[u.Host] = append(lcj.cookies[u.Host], cookies...)
+}
+
 func httpClient(t *testing.T) *http.Client {
 	t.Helper()
 
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	cli := &http.Client{
-		Jar: jar,
+		Jar: &loggingCookieJar{t: t, cookies: map[string][]*http.Cookie{}},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
@@ -134,8 +180,7 @@ func TestCVE2025_24369(t *testing.T) {
 		Next:   http.NewServeMux(),
 		Policy: pol,
 
-		CookiePartitioned: true,
-		CookieName:        t.Name(),
+		CookieName: t.Name(),
 	})
 
 	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
@@ -318,7 +363,7 @@ func TestBasePrefix(t *testing.T) {
 	}{
 		{
 			name:       "no prefix",
-			basePrefix: "",
+			basePrefix: "/",
 			path:       "/.within.website/x/cmd/anubis/api/make-challenge",
 			expected:   "/.within.website/x/cmd/anubis/api/make-challenge",
 		},
@@ -353,8 +398,19 @@ func TestBasePrefix(t *testing.T) {
 			ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
 			defer ts.Close()
 
+			cli := httpClient(t)
+
+			req, err := http.NewRequest(http.MethodPost, ts.URL+tc.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			q := req.URL.Query()
+			q.Set("redir", tc.basePrefix)
+			req.URL.RawQuery = q.Encode()
+
 			// Test API endpoint with prefix
-			resp, err := ts.Client().Post(ts.URL+tc.path, "", nil)
+			resp, err := cli.Do(req)
 			if err != nil {
 				t.Fatalf("can't request challenge: %v", err)
 			}
@@ -388,7 +444,6 @@ func TestBasePrefix(t *testing.T) {
 			elapsedTime := 420
 			redir := "/"
 
-			cli := ts.Client()
 			cli.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
@@ -397,7 +452,7 @@ func TestBasePrefix(t *testing.T) {
 			passChallengePath := tc.path
 			passChallengePath = passChallengePath[:strings.LastIndex(passChallengePath, "/")+1] + "pass-challenge"
 
-			req, err := http.NewRequest(http.MethodGet, ts.URL+passChallengePath, nil)
+			req, err = http.NewRequest(http.MethodGet, ts.URL+passChallengePath, nil)
 			if err != nil {
 				t.Fatalf("can't make request: %v", err)
 			}
@@ -406,7 +461,7 @@ func TestBasePrefix(t *testing.T) {
 				req.AddCookie(ckie)
 			}
 
-			q := req.URL.Query()
+			q = req.URL.Query()
 			q.Set("response", calculated)
 			q.Set("nonce", fmt.Sprint(nonce))
 			q.Set("redir", redir)
@@ -547,5 +602,33 @@ func TestCloudflareWorkersRule(t *testing.T) {
 				}
 			})
 		})
+	}
+}
+
+func TestRuleChange(t *testing.T) {
+	pol := loadPolicies(t, "testdata/rule_change.yaml")
+	pol.DefaultDifficulty = 0
+	ckieExpiration := 10 * time.Minute
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:     "127.0.0.1",
+		CookieName:       t.Name(),
+		CookieExpiration: ckieExpiration,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := httpClient(t)
+
+	chall := makeChallenge(t, ts, cli)
+	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+
+	if resp.StatusCode != http.StatusFound {
+		resp.Write(os.Stderr)
+		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 	}
 }

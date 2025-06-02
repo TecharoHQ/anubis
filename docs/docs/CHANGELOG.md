@@ -11,19 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v1.19.1: Jenomis cen Lexentale - Echo 1
+
+Return `data/bots/ai-robots-txt.yaml` to avoid breaking configs [#599](https://github.com/TecharoHQ/anubis/issues/599)
+
 ## v1.19.0: Jenomis cen Lexentale
+
+Mostly a bunch of small features, no big ticket things this time.
 
 - Record if challenges were issued via the API or via embedded JSON in the challenge page HTML ([#531](https://github.com/TecharoHQ/anubis/issues/531))
 - Ensure that clients that are shown a challenge support storing cookies
+- Imprint the version number into challenge pages
 - Encode challenge pages with gzip level 1
+- Add PowerPC 64 bit little-endian builds (`GOARCH=ppc64le`)
 - Add `check-spelling` for spell checking
 - Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
 - Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.
 - Added Podman and Docker support for running Playwright tests
+- Add a default rule to throw challenges when a request with the `X-Firefox-Ai` header is set.
 - Updated the nonce value in the challenge JWT cookie to be a string instead of a number
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options
 - Add Bookstack app in data
+- Truncate everything but the first five characters of Accept-Language headers when making challenges
+- Ensure client JavaScript is served with Content-Type text/javascript.
 - Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service.
 - Bump AI-robots.txt to version 1.31
 - Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
@@ -32,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
 - Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service.
 - Fixed CEL expression matching validator to now properly error out when it receives empty expressions
+- Added OpenRC init.d script.
+- Added `--version` flag.
+- Added `anubis_proxied_requests_total` metric to count proxied requests.
+- Add `Applebot` as "good" web crawler
+- Reorganize AI/LLM crawler blocking into three separate stances, maintaining existing status quo as default.
+- Split out AI/LLM user agent blocking policies, adding documentation for each.
 
 ## v1.18.0: Varis zos Galvus
 

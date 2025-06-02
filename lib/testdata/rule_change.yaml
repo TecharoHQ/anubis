@@ -1,0 +1,12 @@
+bots:
+- name: old-rule
+  path_regex: ^/old$
+  action: CHALLENGE
+
+- name: new-rule
+  path_regex: ^/new$
+  action: CHALLENGE
+
+status_codes:
+  CHALLENGE: 401
+  DENY: 403

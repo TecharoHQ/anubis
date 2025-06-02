@@ -3,13 +3,13 @@ export default function process(
   difficulty = 5,
   signal = null,
   progressCallback = null,
-  threads = (navigator.hardwareConcurrency || 1),
+  threads = navigator.hardwareConcurrency || 1,
 ) {
   console.debug("fast algo");
   return new Promise((resolve, reject) => {
-    let webWorkerURL = URL.createObjectURL(new Blob([
-      '(', processTask(), ')()'
-    ], { type: 'application/javascript' }));
+    let webWorkerURL = URL.createObjectURL(
+      new Blob(["(", processTask(), ")()"], { type: "application/javascript" }),
+    );
 
     const workers = [];
     const terminate = () => {
@@ -71,7 +71,7 @@ function processTask() {
         .join("");
     }
 
-    addEventListener('message', async (event) => {
+    addEventListener("message", async (event) => {
       let data = event.data.data;
       let difficulty = event.data.difficulty;
       let hash;
@@ -89,7 +89,8 @@ function processTask() {
           const byteIndex = Math.floor(j / 2); // which byte we are looking at
           const nibbleIndex = j % 2; // which nibble in the byte we are looking at (0 is high, 1 is low)
 
-          let nibble = (thisHash[byteIndex] >> (nibbleIndex === 0 ? 4 : 0)) & 0x0F; // Get the nibble
+          let nibble =
+            (thisHash[byteIndex] >> (nibbleIndex === 0 ? 4 : 0)) & 0x0f; // Get the nibble
 
           if (nibble !== 0) {
             valid = false;
@@ -113,7 +114,7 @@ function processTask() {
         // update and they will get behind the others. this is slightly more
         // complicated but ensures an even distribution between threads.
         if (
-          nonce > oldNonce | 1023 && // we've wrapped past 1024
+          (nonce > oldNonce) | 1023 && // we've wrapped past 1024
           (nonce >> 10) % threads === threadId // and it's our turn
         ) {
           postMessage(nonce);
@@ -129,4 +130,3 @@ function processTask() {
     });
   }.toString();
 }
-

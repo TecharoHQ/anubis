@@ -42,11 +42,9 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
             border-radius: 1rem;
             overflow: hidden;
             margin: 1rem 0 2rem;
-            outline-color: #b16286;
-            outline-offset: 2px;
-            outline-style: solid;
-            outline-width: 4px;
-        }
+			outline-offset: 2px;
+			outline: #b16286 solid 4px;
+		}
 
         .bar-inner {
             background-color: #b16286;
@@ -123,6 +121,7 @@ templ index() {
 >JShelter</a> will disable. Please disable JShelter or other such
 				plugins for this domain.
 			</p>
+			<p>This website is running Anubis version <code>{ anubis.Version }</code>.</p>
 		</details>
 		<noscript>
 			<p>
@@ -154,15 +153,15 @@ templ errorPage(message string, mail string) {
 }
 
 templ StaticHappy() {
-<div class="centered-div">
-    <img
-            style="display:none;"
-            style="width:100%;max-width:256px;"
-            src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
+	<div class="centered-div">
+		<img
+			style="display:none;"
+			style="width:100%;max-width:256px;"
+			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
     anubis.Version }
-    />
-    <p>This is just a check endpoint for your reverse proxy to use.</p>
-</div>
+		/>
+		<p>This is just a check endpoint for your reverse proxy to use.</p>
+	</div>
 }
 
 templ bench() {

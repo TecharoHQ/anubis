@@ -1,7 +1,11 @@
 package expressions
 
 import (
+	"math/rand/v2"
+
 	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
 	"github.com/google/cel-go/ext"
 )
 
@@ -29,6 +33,20 @@ func NewEnvironment() (*cel.Env, error) {
 		cel.Variable("headers", cel.MapType(cel.StringType, cel.StringType)),
 
 		// Functions exposed to CEL programs:
+		cel.Function("randInt",
+			cel.Overload("randInt_int",
+				[]*cel.Type{cel.IntType},
+				cel.IntType,
+				cel.UnaryBinding(func(val ref.Val) ref.Val {
+					n, ok := val.(types.Int)
+					if !ok {
+						return types.ValOrErr(val, "value is not an integer, but is %T", val)
+					}
+
+					return types.Int(rand.IntN(int(n)))
+				}),
+			),
+		),
 	)
 }
 

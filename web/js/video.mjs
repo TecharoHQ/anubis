@@ -2,15 +2,15 @@ const videoElement = `<video id="videotest" width="0" height="0" src="/.within.w
 
 export const testVideo = async (testarea) => {
   testarea.innerHTML = videoElement;
-  return (await new Promise((resolve) => {
-    const video = document.getElementById('videotest');
+  return await new Promise((resolve) => {
+    const video = document.getElementById("videotest");
     video.oncanplay = () => {
       testarea.style.display = "none";
       resolve(true);
     };
-    video.onerror = (ev) => {
+    video.onerror = () => {
       testarea.style.display = "none";
       resolve(false);
     };
-  }));
+  });
 };
