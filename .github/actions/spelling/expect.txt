@@ -11,7 +11,7 @@ archlinux
 badregexes
 berr
 bingbot
-Bitcoin
+bitcoin
 blogging
 Bluesky
 blueskybot
@@ -100,6 +100,7 @@ Hashcash
 hashrate
 headermap
 healthcheck
+hebis
 hec
 hmc
 hostable
@@ -236,6 +237,7 @@ Tik
 Timpibot
 torproject
 traefik
+uberspace
 unixhttpd
 unmarshal
 uvx
@@ -251,6 +253,7 @@ webpage
 websecure
 websites
 Webzio
+wildbase
 wordpress
 Workaround
 workdir
