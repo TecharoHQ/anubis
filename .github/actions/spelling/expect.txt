@@ -9,6 +9,7 @@ anubistest
 Applebot
 archlinux
 badregexes
+bdba
 berr
 bingbot
 bitcoin
@@ -27,6 +28,7 @@ caninetools
 Cardyb
 celchecker
 CELPHASE
+cerr
 certresolver
 CGNAT
 cgr
@@ -183,6 +185,7 @@ prebaked
 privkey
 promauto
 promhttp
+proofofwork
 pwcmd
 pwuser
 qualys
