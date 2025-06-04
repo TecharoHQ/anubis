@@ -1,7 +1,7 @@
 {
   "bots": [
     {
-      "import": "(data)/bots/ai-robots-txt.yaml",
+      "import": "(data)/bots/ai-catchall.yaml",
       "name": "generic-browser",
       "user_agent_regex": "Mozilla|Opera\n",
       "action": "CHALLENGE"

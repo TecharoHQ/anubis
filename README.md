@@ -14,10 +14,32 @@
 
 Anubis is brought to you by sponsors and donors like:
 
-[![Distrust](./docs/static/img/sponsors/distrust-logo.webp)](https://distrust.co?utm_campaign=github&utm_medium=referral&utm_content=anubis)
-[![Terminal Trove](./docs/static/img/sponsors/terminal-trove.webp)](https://terminaltrove.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis&utm_source=abgh)
-[![canine.tools](./docs/static/img/sponsors/caninetools-logo.webp)](https://canine.tools?utm_campaign=github&utm_medium=referral&utm_content=anubis)
-[![Weblate](./docs/static/img/sponsors/weblate-logo.webp)](https://weblate.org/?utm_campaign=github&utm_medium=referral&utm_content=anubis)
+### Diamond Tier
+
+<a href="https://www.raptorcs.com/content/base/products.html">
+  <img src="./docs/static/img/sponsors/raptor-computing-logo.webp" alt="Raptor Computing Systems" height=64 />
+</a>
+
+### Gold Tier
+
+<a href="https://distrust.co?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/distrust-logo.webp" alt="Distrust" height="64">
+</a>
+<a href="https://terminaltrove.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis&utm_source=abgh">
+  <img src="./docs/static/img/sponsors/terminal-trove.webp" alt="Terminal Trove" height="64">
+</a>
+<a href="https://canine.tools?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/caninetools-logo.webp" alt="canine.tools" height="64">
+</a>
+<a href="https://weblate.org/">
+  <img src="./docs/static/img/sponsors/weblate-logo.webp" alt="Weblate" height="64">
+</a>
+<a href="https://uberspace.de/">
+  <img src="./docs/static/img/sponsors/uberspace-logo.webp" alt="Uberspace" height="64">
+</a>
+<a href="https://wildbase.xyz/">
+  <img src="./docs/static/img/sponsors/wildbase-logo.webp" alt="Wildbase" height="64">
+</a>
 
 ## Overview
 

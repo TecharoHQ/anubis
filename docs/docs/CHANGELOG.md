@@ -13,7 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactor challenge presentation logic to use a challenge registry
 
+## v1.19.1: Jenomis cen Lexentale - Echo 1
+
+Return `data/bots/ai-robots-txt.yaml` to avoid breaking configs [#599](https://github.com/TecharoHQ/anubis/issues/599)
+
 ## v1.19.0: Jenomis cen Lexentale
+
+Mostly a bunch of small features, no big ticket things this time.
 
 - Record if challenges were issued via the API or via embedded JSON in the challenge page HTML ([#531](https://github.com/TecharoHQ/anubis/issues/531))
 - Ensure that clients that are shown a challenge support storing cookies
@@ -43,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `--version` flag.
 - Added `anubis_proxied_requests_total` metric to count proxied requests.
 - Add `Applebot` as "good" web crawler
+- Reorganize AI/LLM crawler blocking into three separate stances, maintaining existing status quo as default.
+- Split out AI/LLM user agent blocking policies, adding documentation for each.
 
 ## v1.18.0: Varis zos Galvus
 

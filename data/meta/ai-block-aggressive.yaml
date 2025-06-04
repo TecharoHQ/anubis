@@ -1,0 +1,6 @@
+# Blocks all AI/LLM associated user agents, regardless of purpose or human agency
+# Warning: To completely block some AI/LLM training, such as with Google, you _must_ place flags in robots.txt.
+- import: (data)/bots/ai-catchall.yaml
+- import: (data)/clients/ai.yaml
+- import: (data)/crawlers/ai-search.yaml
+- import: (data)/crawlers/ai-training.yaml
