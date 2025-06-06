@@ -25,6 +25,9 @@ func (i *Impl) Setup(mux *http.ServeMux) {}
 
 func (i *Impl) Issue(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string, ogTags map[string]string) (templ.Component, error) {
 	u, err := r.URL.Parse(anubis.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
+	if err != nil {
+		return nil, fmt.Errorf("can't render page: %w", err)
+	}
 
 	q := u.Query()
 	q.Set("redir", r.URL.String())
