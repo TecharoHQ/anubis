@@ -10,11 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
-
-
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
+- Requests can have their weight be adjusted, if a request weighs zero or less then it is allowed through
 - Refactor challenge presentation logic to use a challenge registry
 - Allow challenge implementations to register HTTP routes
 - Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))

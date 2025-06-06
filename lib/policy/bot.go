@@ -12,6 +12,7 @@ type Bot struct {
 	Challenge *config.ChallengeRules
 	Name      string
 	Action    config.Rule
+	Weight    *config.Weight
 }
 
 func (b Bot) Hash() string {

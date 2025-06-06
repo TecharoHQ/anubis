@@ -402,10 +402,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redir, http.StatusFound)
 }
 
-func cr(name string, rule config.Rule) policy.CheckResult {
+func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 	return policy.CheckResult{
-		Name: name,
-		Rule: rule,
+		Name:   name,
+		Rule:   rule,
+		Weight: weight,
 	}
 }
 
@@ -421,6 +422,8 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
+	weight := 0
+
 	for _, b := range s.policy.Bots {
 		match, err := b.Rules.Check(r)
 		if err != nil {
@@ -428,11 +431,28 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		}
 
 		if match {
-			return cr("bot/"+b.Name, b.Action), &b, nil
+			switch b.Action {
+			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark:
+				return cr("bot/"+b.Name, b.Action, weight), &b, nil
+			case config.RuleChallenge:
+				weight += 5
+			case config.RuleWeigh:
+				weight += b.Weight.Adjust
+			}
+		}
+
+		if weight < 0 {
+			return cr("weight/okay", config.RuleAllow, weight), &policy.Bot{
+				Challenge: &config.ChallengeRules{
+					Difficulty: s.policy.DefaultDifficulty,
+					ReportAs:   s.policy.DefaultDifficulty,
+					Algorithm:  config.DefaultAlgorithm,
+				},
+			}, nil
 		}
 	}
 
-	return cr("default/allow", config.RuleAllow), &policy.Bot{
+	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
 			ReportAs:   s.policy.DefaultDifficulty,
