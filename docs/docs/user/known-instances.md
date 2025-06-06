@@ -40,6 +40,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://openwrt.org/
 - https://minihoot.site
 - https://catgirl.click/
+- https://wiki.dolphin-emu.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
