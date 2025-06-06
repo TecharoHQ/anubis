@@ -29,6 +29,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 
 	// challenge implementations
+	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 )
 
