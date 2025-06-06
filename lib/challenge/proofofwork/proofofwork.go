@@ -24,8 +24,8 @@ type Impl struct {
 	Algorithm string
 }
 
-func (i *Impl) Fail(w http.ResponseWriter, r *http.Request) error {
-	return nil
+func (i *Impl) Setup(mux *http.ServeMux) {
+	/* no implementation required */
 }
 
 func (i *Impl) Issue(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string, ogTags map[string]string) (templ.Component, error) {

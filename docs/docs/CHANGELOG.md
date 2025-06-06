@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Refactor challenge presentation logic to use a challenge registry
+- Allow challenge implementations to register HTTP routes
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 

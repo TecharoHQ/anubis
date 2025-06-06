@@ -41,7 +41,12 @@ func Methods() []string {
 }
 
 type Impl interface {
-	Fail(w http.ResponseWriter, r *http.Request) error
+	// Setup registers any additional routes with the Impl for assets or API routes.
+	Setup(mux *http.ServeMux)
+
+	// Issue a new challenge to the user, called by the Anubis.
 	Issue(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string, ogTags map[string]string) (templ.Component, error)
+
+	// Validate a challenge, making sure that it passes muster.
 	Validate(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string) error
 }

@@ -151,6 +151,11 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix(anubis.APIPrefix+"test-error", http.HandlerFunc(result.TestError), "GET")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
+	for _, implKind := range challenge.Methods() {
+		impl, _ := challenge.Get(implKind)
+		impl.Setup(mux)
+	}
+
 	result.mux = mux
 
 	return result, nil
