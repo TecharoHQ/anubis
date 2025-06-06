@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Requests can have their weight be adjusted, if a request weighs zero then it is allowed through
 - Refactor challenge presentation logic to use a challenge registry
 - Allow challenge implementations to register HTTP routes
 

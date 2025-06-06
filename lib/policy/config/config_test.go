@@ -168,6 +168,25 @@ func TestBotValid(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			name: "weight rule without weight",
+			bot: BotConfig{
+				Name:           "weight-adjust-if-mozilla",
+				Action:         RuleWeigh,
+				UserAgentRegex: p("Mozilla"),
+			},
+		},
+		{
+			name: "weight rule with weight adjust",
+			bot: BotConfig{
+				Name:           "weight-adjust-if-mozilla",
+				Action:         RuleWeigh,
+				UserAgentRegex: p("Mozilla"),
+				Weight: &Weight{
+					Adjust: 5,
+				},
+			},
+		},
 	}
 
 	for _, cs := range tests {

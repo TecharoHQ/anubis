@@ -14,8 +14,8 @@ var (
 
 type ExpressionOrList struct {
 	Expression string   `json:"-"`
-	All        []string `json:"all"`
-	Any        []string `json:"any"`
+	All        []string `json:"all,omitempty"`
+	Any        []string `json:"any,omitempty"`
 }
 
 func (eol ExpressionOrList) Equal(rhs *ExpressionOrList) bool {
