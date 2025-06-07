@@ -10,6 +10,20 @@ Anubis can act in one of two modes:
 1. Reverse proxy (the default): Anubis sits in the middle of all traffic and then will reverse proxy it to its destination. This is the moral equivalent of a middleware in your favorite web framework.
 2. Subrequest authentication mode: Anubis listens for requests and if they don't pass muster then they are forwarded to Anubis for challenge processing. This is the equivalent of Anubis being a sidecar service.
 
+:::note
+
+Subrequest authentication requires changing the default policy because nginx interprets the default `DENY` status code `200` as successful authentication and allows the request.
+
+```yaml
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
+```
+
+[See policy definitions](../policies.mdx).
+
+:::
+
 ## Nginx
 
 Anubis can perform [subrequest authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/) with the `auth_request` module in Nginx. In order to set this up, keep the following things in mind:

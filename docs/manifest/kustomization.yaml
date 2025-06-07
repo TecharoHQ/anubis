@@ -3,3 +3,9 @@ resources:
   - ingress.yaml
   - onionservice.yaml
   - service.yaml
+
+configMapGenerator:
+  - name: anubis-cfg
+    behavior: create
+    files:
+      - ./cfg/anubis/botPolicies.yaml

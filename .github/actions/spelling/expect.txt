@@ -9,9 +9,10 @@ anubistest
 Applebot
 archlinux
 badregexes
+bdba
 berr
 bingbot
-Bitcoin
+bitcoin
 blogging
 Bluesky
 blueskybot
@@ -27,6 +28,7 @@ caninetools
 Cardyb
 celchecker
 CELPHASE
+cerr
 certresolver
 CGNAT
 cgr
@@ -100,6 +102,7 @@ Hashcash
 hashrate
 headermap
 healthcheck
+hebis
 hec
 hmc
 hostable
@@ -146,6 +149,7 @@ maintainership
 malware
 mcr
 memes
+metarefresh
 metrix
 mimi
 minica
@@ -182,6 +186,7 @@ prebaked
 privkey
 promauto
 promhttp
+proofofwork
 pwcmd
 pwuser
 qualys
@@ -252,6 +257,7 @@ webpage
 websecure
 websites
 Webzio
+wildbase
 wordpress
 Workaround
 workdir

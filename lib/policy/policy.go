@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-
-	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 var (
@@ -16,6 +15,8 @@ var (
 		Name: "anubis_policy_results",
 		Help: "The results of each policy rule",
 	}, []string{"rule", "action"})
+
+	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
 )
 
 type ParsedConfig struct {
@@ -107,12 +108,12 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			parsedBot.Challenge = &config.ChallengeRules{
 				Difficulty: defaultDifficulty,
 				ReportAs:   defaultDifficulty,
-				Algorithm:  config.AlgorithmFast,
+				Algorithm:  "fast",
 			}
 		} else {
 			parsedBot.Challenge = b.Challenge
-			if parsedBot.Challenge.Algorithm == config.AlgorithmUnknown {
-				parsedBot.Challenge.Algorithm = config.AlgorithmFast
+			if parsedBot.Challenge.Algorithm == "" {
+				parsedBot.Challenge.Algorithm = config.DefaultAlgorithm
 			}
 		}
 
