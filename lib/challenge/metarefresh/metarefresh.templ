@@ -1,0 +1,17 @@
+package metarefresh
+
+import (
+	"fmt"
+
+	"github.com/TecharoHQ/anubis"
+)
+
+templ page(challenge, redir string, difficulty int) {
+	<div class="centered-div">
+		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
+		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
+		<p id="status">Loading...</p>
+		<p>Please wait a moment while we ensure the security of your connection.</p>
+		<meta http-equiv="refresh" content={ fmt.Sprintf("%d; url=%s", difficulty, redir) }/>
+	</div>
+}

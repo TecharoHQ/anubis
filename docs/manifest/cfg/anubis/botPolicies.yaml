@@ -1,0 +1,72 @@
+## Anubis has the ability to let you import snippets of configuration into the main
+## configuration file. This allows you to break up your config into smaller parts
+## that get logically assembled into one big file.
+##
+## Of note, a bot rule can either have inline bot configuration or import a
+## bot config snippet. You cannot do both in a single bot rule.
+##
+## Import paths can either be prefixed with (data) to import from the common/shared
+## rules in the data folder in the Anubis source tree or will point to absolute/relative
+## paths in your filesystem. If you don't have access to the Anubis source tree, check
+## /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
+
+bots:
+  # Pathological bots to deny
+  - # This correlates to data/bots/deny-pathological.yaml in the source tree
+    # https://github.com/TecharoHQ/anubis/blob/main/data/bots/deny-pathological.yaml
+    import: (data)/bots/_deny-pathological.yaml
+  - import: (data)/bots/aggressive-brazilian-scrapers.yaml
+
+  # Aggressively block AI/LLM related bots/agents by default
+  - import: (data)/meta/ai-block-aggressive.yaml
+
+  # Consider replacing the aggressive AI policy with more selective policies:
+  # - import: (data)/meta/ai-block-moderate.yaml
+  # - import: (data)/meta/ai-block-permissive.yaml
+
+  # Search engine crawlers to allow, defaults to:
+  #   - Google (so they don't try to bypass Anubis)
+  #   - Apple
+  #   - Bing
+  #   - DuckDuckGo
+  #   - Qwant
+  #   - The Internet Archive
+  #   - Kagi
+  #   - Marginalia
+  #   - Mojeek
+  - import: (data)/crawlers/_allow-good.yaml
+  # Challenge Firefox AI previews
+  - import: (data)/clients/x-firefox-ai.yaml
+
+  # Allow common "keeping the internet working" routes (well-known, favicon, robots.txt)
+  - import: (data)/common/keep-internet-working.yaml
+
+  # # Punish any bot with "bot" in the user-agent string
+  # # This is known to have a high false-positive rate, use at your own risk
+  # - name: generic-bot-catchall
+  #   user_agent_regex: (?i:bot|crawler)
+  #   action: CHALLENGE
+  #   challenge:
+  #     difficulty: 16  # impossible
+  #     report_as: 4    # lie to the operator
+  #     algorithm: slow # intentionally waste CPU cycles and time
+
+  # Generic catchall rule
+  - name: generic-browser
+    user_agent_regex: >-
+      Mozilla|Opera
+    action: CHALLENGE
+    challenge:
+      difficulty: 1 # Number of seconds to wait before refreshing the page
+      report_as: 4 # Unused by this challenge method
+      algorithm: metarefresh # Specify a non-JS challenge method
+
+dnsbl: false
+
+# By default, send HTTP 200 back to clients that either get issued a challenge
+# or a denial. This seems weird, but this is load-bearing due to the fact that
+# the most aggressive scraper bots seem to really, really, want an HTTP 200 and
+# will stop sending requests once they get it.
+status_codes:
+  CHALLENGE: 200
+  DENY: 200

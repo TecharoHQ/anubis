@@ -45,11 +45,11 @@ func spawnAnubis(t *testing.T, opts Options) *Server {
 	return s
 }
 
-type challenge struct {
+type challengeResp struct {
 	Challenge string `json:"challenge"`
 }
 
-func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challenge {
+func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challengeResp {
 	t.Helper()
 
 	req, err := http.NewRequest(http.MethodPost, ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", nil)
@@ -67,7 +67,7 @@ func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challeng
 	}
 	defer resp.Body.Close()
 
-	var chall challenge
+	var chall challengeResp
 	if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
 		t.Fatalf("can't read challenge response body: %v", err)
 	}
@@ -75,7 +75,7 @@ func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challeng
 	return chall
 }
 
-func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.Client, chall challenge) *http.Response {
+func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.Client, chall challengeResp) *http.Response {
 	t.Helper()
 
 	nonce := 0
@@ -420,7 +420,7 @@ func TestBasePrefix(t *testing.T) {
 				t.Errorf("expected status code %d, got: %d", http.StatusOK, resp.StatusCode)
 			}
 
-			var chall challenge
+			var chall challengeResp
 			if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
 				t.Fatalf("can't read challenge response body: %v", err)
 			}

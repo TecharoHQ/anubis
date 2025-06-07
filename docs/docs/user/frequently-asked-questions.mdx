@@ -18,3 +18,11 @@ Anubis uses [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_W
 2. Web Workers allow you to do multithreaded execution of JavaScript code. This lets Anubis run its checks in parallel across all your system cores so that the challenge can complete as fast as possible. In the last decade, most CPU advancements have come from making cores and code extremely parallel. Using Web Workers lets Anubis take advantage of your hardware as much as possible so that the challenge finishes as fast as possible.
 
 If you use a browser extension such as [JShelter](https://jshelter.org/), you will need to [modify your JShelter configuration](./known-broken-extensions.md#jshelter) to allow Anubis' proof of work computation to complete.
+
+## Does Anubis mine Bitcoin?
+
+No. Anubis does not mine Bitcoin.
+
+In order to mine bitcoin, you need to download a copy of the blockchain (so you have the state required to do mining) and also broadcast your mined blocks to the network should you reach a hash with the right number of leading zeroes. You also need to continuously read for newly broadcasted transactions so you can batch them into a block. This requires gigabytes of data to be transferred from the server to the client.
+
+Anubis transfers two digit numbers of kilobytes from the server to the client (which you can independently verify with your browser's Developer Tools feature). This is orders of magnitude below what is required to mine Bitcoin.

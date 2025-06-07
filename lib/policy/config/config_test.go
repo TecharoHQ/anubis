@@ -131,20 +131,6 @@ func TestBotValid(t *testing.T) {
 			err: ErrChallengeDifficultyTooHigh,
 		},
 		{
-			name: "challenge wrong algorithm",
-			bot: BotConfig{
-				Name:      "mozilla-ua",
-				Action:    RuleChallenge,
-				PathRegex: p("Mozilla"),
-				Challenge: &ChallengeRules{
-					Difficulty: 420,
-					ReportAs:   4,
-					Algorithm:  "high quality rips",
-				},
-			},
-			err: ErrChallengeRuleHasWrongAlgorithm,
-		},
-		{
 			name: "invalid cidr range",
 			bot: BotConfig{
 				Name:       "mozilla-ua",
@@ -361,7 +347,7 @@ func TestBotConfigZero(t *testing.T) {
 	b.Challenge = &ChallengeRules{
 		Difficulty: 4,
 		ReportAs:   4,
-		Algorithm:  AlgorithmFast,
+		Algorithm:  DefaultAlgorithm,
 	}
 	if b.Zero() {
 		t.Error("BotConfig with challenge rules is zero value")

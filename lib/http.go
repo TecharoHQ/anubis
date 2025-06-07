@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"slices"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
@@ -75,7 +77,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	}
 
 	challengesIssued.WithLabelValues("embedded").Add(1)
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	var ogTags map[string]string = nil
 	if s.opts.OGPassthrough {
@@ -88,14 +90,21 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 
 	http.SetCookie(w, &http.Cookie{
 		Name:    anubis.TestCookieName,
-		Value:   challenge,
+		Value:   challengeStr,
 		Expires: time.Now().Add(30 * time.Minute),
 		Path:    "/",
 	})
 
-	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
+	impl, ok := challenge.Get(rule.Challenge.Algorithm)
+	if !ok {
+		lg.Error("check failed", "err", "can't get algorithm", "algorithm", rule.Challenge.Algorithm)
+		s.respondWithError(w, r, fmt.Sprintf("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to file a bug as Anubis is trying to use challenge method %s but it does not exist in the challenge registry", rule.Challenge.Algorithm))
+		return
+	}
+
+	component, err := impl.Issue(r, lg, rule, challengeStr, ogTags)
 	if err != nil {
-		lg.Error("render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
+		lg.Error("[unexpected] render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, "Internal Server Error: please contact the administrator and ask them to look for the logs around \"RenderIndex\"")
 		return
 	}

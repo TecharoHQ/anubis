@@ -91,7 +91,7 @@ work valid?"}
 
 ## Proof of passing challenges
 
-When a client passes a challenge, Anubis sets an HTTP cookie named `"within.website-x-cmd-anubis-auth"` containing a signed [JWT](https://jwt.io/) (JSON Web Token). This JWT contains the following claims:
+When a client passes a challenge, Anubis sets an HTTP cookie named `"techaro.lol-anubis-auth"` containing a signed [JWT](https://jwt.io/) (JSON Web Token). This JWT contains the following claims:
 
 - `challenge`: The challenge string derived from user request metadata
 - `nonce`: The nonce / iteration number used to generate the passing response

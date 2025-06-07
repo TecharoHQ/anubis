@@ -92,6 +92,7 @@ Assuming you are protecting `anubistest.techaro.lol`, you need the following ser
        # throw an "admin misconfiguration" error.
        RequestHeader set "X-Real-Ip" expr=%{REMOTE_ADDR}
        RequestHeader set X-Forwarded-Proto "https"
+       RequestHeader set "X-Http-Version" "%{SERVER_PROTOCOL}s"
 
        ProxyPreserveHost On
 

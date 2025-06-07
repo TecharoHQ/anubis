@@ -40,6 +40,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://openwrt.org/
 - https://minihoot.site
 - https://catgirl.click/
+- https://wiki.dolphin-emu.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
@@ -62,4 +63,11 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - <details>
   <summary>The United Nations</summary>
   - https://policytoolbox.iiep.unesco.org/
+  </details>
+- <details>
+  <summary>hebis (Alliance of Hessian Libraries)</summary>
+  - https://ubmr.hds.hebis.de/
+  - https://tufind.hds.hebis.de/
+  - https://karla.hds.hebis.de/
+  - and many more (see https://www.hebis.de/dienste/hebis-discovery-system/)
   </details>

@@ -11,48 +11,58 @@ spec:
       labels:
         app: anubis-docs
     spec:
+      volumes:
+        - name: anubis
+          configMap:
+            name: anubis-cfg
       containers:
-      - name: anubis-docs
-        image: ghcr.io/techarohq/anubis/docs:main
-        imagePullPolicy: Always
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-        ports:
-        - containerPort: 80
-      - name: anubis
-        image: ghcr.io/techarohq/anubis:main
-        imagePullPolicy: Always
-        env:
-          - name: "BIND"
-            value: ":8081"
-          - name: "DIFFICULTY"
-            value: "4"
-          - name: "METRICS_BIND"
-            value: ":9090"
-          - name: "POLICY_FNAME"
-            value: ""
-          - name: "SERVE_ROBOTS_TXT"
-            value: "false"
-          - name: "TARGET"
-            value: "http://localhost:80"
-          # - name: "SLOG_LEVEL"
-          #   value: "debug"
-        resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 250m
-            memory: 128Mi
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
-          runAsNonRoot: true
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
-          seccompProfile:
-            type: RuntimeDefault
+        - name: anubis-docs
+          image: ghcr.io/techarohq/anubis/docs:main
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+            requests:
+              cpu: 250m
+              memory: 128Mi
+          ports:
+            - containerPort: 80
+        - name: anubis
+          image: ghcr.io/techarohq/anubis:main
+          imagePullPolicy: Always
+          env:
+            - name: "BIND"
+              value: ":8081"
+            - name: "DIFFICULTY"
+              value: "4"
+            - name: "METRICS_BIND"
+              value: ":9090"
+            - name: "POLICY_FNAME"
+              value: "/xe/cfg/anubis/botPolicies.yaml"
+            - name: "SERVE_ROBOTS_TXT"
+              value: "false"
+            - name: "TARGET"
+              value: "http://localhost:80"
+            # - name: "SLOG_LEVEL"
+            #   value: "debug"
+          volumeMounts:
+            - name: anubis
+              mountPath: /xe/cfg/anubis
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 250m
+              memory: 128Mi
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
