@@ -1,0 +1,5 @@
+# Proof of Work (JavaScript)
+
+When Anubis is configured to use the `fast` or `slow` challenge methods, clients will be sent a small [proof of work](https://en.wikipedia.org/wiki/Proof_of_work) challenge. In order to get a token used to access the upstream resource, clients must calculate a complicated math puzzle with JavaScript.
+
+A `fast` challenge uses a heavily optimized multithreaded implementation and a `slow` challenge uses a simplistic single-threaded implementation. The `slow` method is kept around for legacy compatibility.

@@ -1,0 +1,8 @@
+{
+  "label": "Challenges",
+  "position": 10,
+  "link": {
+    "type": "generated-index",
+    "description": "The different challenge methods that Anubis supports."
+  }
+}

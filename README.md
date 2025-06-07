@@ -43,7 +43,7 @@ Anubis is brought to you by sponsors and donors like:
 
 ## Overview
 
-Anubis [weighs the soul of your connection](https://en.wikipedia.org/wiki/Weighing_of_souls) using a proof-of-work challenge in order to protect upstream resources from scraper bots.
+Anubis is a Web AI Firewall Utility that [weighs the soul of your connection](https://en.wikipedia.org/wiki/Weighing_of_souls) using one or more challenges in order to protect upstream resources from scraper bots.
 
 This program is designed to help protect the small internet from the endless storm of requests that flood in from AI companies. Anubis is as lightweight as possible to ensure that everyone can afford to protect the communities closest to them.
 
