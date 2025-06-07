@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"errors"
@@ -18,10 +19,12 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
+	"github.com/TecharoHQ/anubis/internal/store/valkey"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
+	"github.com/redis/go-redis/v9"
 )
 
 type Options struct {
@@ -40,6 +43,7 @@ type Options struct {
 	OGPassthrough        bool
 	CookiePartitioned    bool
 	ServeRobotsTXT       bool
+	ValkeyURL            string
 }
 
 func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -109,6 +113,23 @@ func New(opts Options) (*Server, error) {
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive, opts.OGCacheConsidersHost),
 		cookieName: cookieName,
+	}
+
+	if opts.ValkeyURL != "" {
+		vkOpts, err := redis.ParseURL(opts.ValkeyURL)
+		if err != nil {
+			return nil, fmt.Errorf("can't parse valkey URL: %q: %w", opts.ValkeyURL, err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		cli := redis.NewClient(vkOpts)
+		if _, err := cli.Ping(ctx).Result(); err != nil {
+			return nil, fmt.Errorf("can't ping valkey: %w", err)
+		}
+
+		result.store = valkey.New(cli)
 	}
 
 	mux := http.NewServeMux()
