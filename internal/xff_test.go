@@ -82,6 +82,15 @@ func TestComputeXFFHeader(t *testing.T) {
 			result: "1.1.1.1,127.0.0.1",
 		},
 		{
+			name:          "StripPrivate",
+			remoteAddr:    "127.0.0.1:80",
+			origXFFHeader: "1.1.1.1,10.0.0.1",
+			pref: XFFComputePreferences{
+				StripPrivate: false,
+			},
+			result: "1.1.1.1,10.0.0.1,127.0.0.1",
+		},
+		{
 			name:          "StripLoopback",
 			remoteAddr:    "127.0.0.1:80",
 			origXFFHeader: "1.1.1.1,10.0.0.1,127.0.0.1",
