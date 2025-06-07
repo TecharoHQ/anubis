@@ -117,6 +117,10 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			}
 		}
 
+		if b.Weight != nil {
+			parsedBot.Weight = b.Weight
+		}
+
 		parsedBot.Rules = cl
 
 		result.Bots = append(result.Bots, parsedBot)
