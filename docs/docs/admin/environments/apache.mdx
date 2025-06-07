@@ -120,6 +120,14 @@ Make sure to add a separate configuration file for the listener on port 3001:
 ```text
 # /etc/httpd/conf.d/listener-3001.conf
 
+Listen [::1]:3001
+```
+
+In case you are running an IPv4-only system, use the following configuration instead:
+
+```text
+# /etc/httpd/conf.d/listener-3001.conf
+
 Listen 127.0.0.1:3001
 ```
 
