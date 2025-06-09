@@ -245,6 +245,7 @@ uberspace
 unixhttpd
 unmarshal
 uvx
+UXP
 Varis
 Velen
 vendored
