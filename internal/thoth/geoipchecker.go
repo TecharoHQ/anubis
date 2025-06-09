@@ -3,13 +3,31 @@ package thoth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
+
+func (c *Client) GeoIPCheckerFor(countries []string) checker.Impl {
+	countryMap := map[string]struct{}{}
+	var sb strings.Builder
+	fmt.Fprintln(&sb, "GeoIPChecker")
+	for _, cc := range countries {
+		countryMap[cc] = struct{}{}
+		fmt.Fprintln(&sb, cc)
+	}
+
+	return &GeoIPChecker{
+		iptoasn:   c.iptoasn,
+		countries: countryMap,
+		hash:      sb.String(),
+	}
+}
 
 type GeoIPChecker struct {
 	iptoasn   iptoasnv1.IpToASNServiceClient

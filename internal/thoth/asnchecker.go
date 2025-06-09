@@ -3,12 +3,32 @@ package thoth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
+
+func (c *Client) ASNCheckerFor(asns []uint32) checker.Impl {
+	asnMap := map[uint32]struct{}{}
+	var sb strings.Builder
+	fmt.Fprintln(&sb, "ASNChecker")
+	for _, asn := range asns {
+		asnMap[asn] = struct{}{}
+		fmt.Fprintln(&sb, "AS", asn)
+	}
+
+	return &ASNChecker{
+		iptoasn: c.iptoasn,
+		asns:    asnMap,
+		hash:    internal.SHA256sum(sb.String()),
+	}
+}
 
 type ASNChecker struct {
 	iptoasn iptoasnv1.IpToASNServiceClient
