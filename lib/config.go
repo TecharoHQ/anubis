@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"errors"
@@ -42,7 +43,7 @@ type Options struct {
 	ServeRobotsTXT       bool
 }
 
-func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
+func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
 	var fin io.ReadCloser
 	var err error
 
@@ -66,7 +67,10 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 		}
 	}(fin)
 
-	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	anubisPolicy, err := policy.ParseConfig(ctx, fin, fname, defaultDifficulty)
+	if err != nil {
+		return nil, err
+	}
 	var validationErrs []error
 
 	for _, b := range anubisPolicy.Bots {
@@ -154,7 +158,7 @@ func New(opts Options) (*Server, error) {
 		// make-challenge is only used in tests. Only enable while version is devel
 		registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
 	}
-  
+
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)
 		impl.Setup(mux)
