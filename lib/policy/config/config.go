@@ -75,7 +75,7 @@ func (b BotConfig) Zero() bool {
 	return true
 }
 
-func (b BotConfig) Valid() error {
+func (b *BotConfig) Valid() error {
 	var errs []error
 
 	if b.Name == "" {
