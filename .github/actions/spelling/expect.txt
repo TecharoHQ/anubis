@@ -158,6 +158,7 @@ Mojeek
 mojeekbot
 mozilla
 nbf
+netsurf
 nginx
 nobots
 NONINFRINGEMENT
@@ -170,6 +171,7 @@ onionservice
 openai
 openrc
 pag
+palemoon
 Pangu
 parseable
 passthrough
