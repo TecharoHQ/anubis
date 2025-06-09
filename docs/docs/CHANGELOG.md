@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow challenge implementations to register HTTP routes
 - Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))
 - Bump AI-robots.txt to version 1.34
+- Make progress bar styling more compatible (UXP, etc)
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 
