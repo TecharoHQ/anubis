@@ -55,6 +55,10 @@ type BotConfig struct {
 	Name           string            `json:"name" yaml:"name"`
 	Action         Rule              `json:"action" yaml:"action"`
 	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+
+	// Thoth features
+	GeoIP *GeoIP `json:"geoip,omitempty"`
+	ASNs  *ASNs  `json:"asns,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -66,6 +70,8 @@ func (b BotConfig) Zero() bool {
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
 		b.Challenge != nil,
+		b.GeoIP != nil,
+		b.ASNs != nil,
 	} {
 		if cond {
 			return false
@@ -85,7 +91,9 @@ func (b *BotConfig) Valid() error {
 	allFieldsEmpty := b.UserAgentRegex == nil &&
 		b.PathRegex == nil &&
 		len(b.RemoteAddr) == 0 &&
-		len(b.HeadersRegex) == 0
+		len(b.HeadersRegex) == 0 &&
+		b.ASNs == nil &&
+		b.GeoIP == nil
 
 	if allFieldsEmpty && b.Expression == nil {
 		errs = append(errs, ErrBotMustHaveUserAgentOrPath)
