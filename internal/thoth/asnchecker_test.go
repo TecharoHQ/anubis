@@ -5,11 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
 
-var _ policy.Checker = &ASNChecker{}
+var _ checker.Impl = &ASNChecker{}
 
 func TestASNChecker(t *testing.T) {
 	cli := loadSecrets(t)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -57,7 +58,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			Action: b.Action,
 		}
 
-		cl := CheckerList{}
+		cl := checker.List{}
 
 		if len(b.RemoteAddr) > 0 {
 			c, err := NewRemoteAddrChecker(b.RemoteAddr)

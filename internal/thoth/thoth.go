@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
@@ -74,7 +74,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) ASNCheckerFor(asns []uint32) policy.Checker {
+func (c *Client) ASNCheckerFor(asns []uint32) checker.Impl {
 	asnMap := map[uint32]struct{}{}
 	var sb strings.Builder
 	fmt.Fprintln(&sb, "ASNChecker")
