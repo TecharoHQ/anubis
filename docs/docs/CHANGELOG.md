@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
 - Refactor challenge presentation logic to use a challenge registry
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1

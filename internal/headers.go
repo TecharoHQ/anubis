@@ -7,8 +7,6 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
-	"os"
-	"strconv"
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
@@ -83,14 +81,10 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 
 // XForwardedForUpdate sets or updates the X-Forwarded-For header, adding
 // the known remote address to an existing chain if present
-func XForwardedForUpdate(next http.Handler) http.Handler {
+func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer next.ServeHTTP(w, r)
 
-		stripPrivate := true
-		if val, ok := lookupEnvBool("XFF_STRIP_PRIVATE"); ok {
-			stripPrivate = val
-		}
 		pref := XFFComputePreferences{
 			StripPrivate:  stripPrivate,
 			StripLoopback: true,
@@ -211,17 +205,4 @@ func NoBrowsing(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-// lookupEnvBool returns the boolean value of an environment variable if set and parsable, otherwise false and ok=false.
-func lookupEnvBool(key string) (bool, bool) {
-	val, ok := os.LookupEnv(key)
-	if !ok {
-		return false, false
-	}
-	parsed, err := strconv.ParseBool(val)
-	if err != nil {
-		return false, false
-	}
-	return parsed, true
 }
