@@ -11,7 +11,9 @@ import (
 
 func MockIpToASNService() *IpToASNService {
 	responses := map[string]*iptoasnv1.LookupResponse{
-		"1.1.1.1": {
+		"127.0.0.1": {Announced: false},
+		"::1":       {Announced: false},
+		"10.10.10.10": {
 			Announced:   true,
 			AsNumber:    13335,
 			Cidr:        []string{"1.1.1.0/24"},

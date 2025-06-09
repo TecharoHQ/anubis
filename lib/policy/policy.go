@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/TecharoHQ/anubis/internal/thoth"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -20,7 +21,6 @@ var (
 	}, []string{"rule", "action"})
 
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
-	ErrNoThothClient                  = errors.New("config: you have specified Thoth related checks but have no active Thoth client")
 )
 
 type ParsedConfig struct {
@@ -112,7 +112,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.ASNs != nil {
 			if !hasThothClient {
-				validationErrs = append(validationErrs, fmt.Errorf("%w: %w", ErrMisconfiguration, ErrNoThothClient))
+				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read TODO(Xe): docs link for more information", "check", "asn", "settings", b.ASNs)
 				continue
 			}
 
@@ -121,7 +121,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.GeoIP != nil {
 			if !hasThothClient {
-				validationErrs = append(validationErrs, fmt.Errorf("%w: %w", ErrMisconfiguration, ErrNoThothClient))
+				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read TODO(Xe): docs link for more information", "check", "geoip", "settings", b.GeoIP)
 				continue
 			}
 

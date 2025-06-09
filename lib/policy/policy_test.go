@@ -25,7 +25,6 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 }
 
 func TestGoodConfigs(t *testing.T) {
-	ctx := thothmock.WithMockThoth(t)
 
 	finfos, err := os.ReadDir("config/testdata/good")
 	if err != nil {
@@ -35,15 +34,30 @@ func TestGoodConfigs(t *testing.T) {
 	for _, st := range finfos {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
-			fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer fin.Close()
+			t.Run("with-thoth", func(t *testing.T) {
+				fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer fin.Close()
 
-			if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
-				t.Fatal(err)
-			}
+				ctx := thothmock.WithMockThoth(t)
+				if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
+					t.Fatal(err)
+				}
+			})
+
+			t.Run("without-thoth", func(t *testing.T) {
+				fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer fin.Close()
+
+				if _, err := ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
+					t.Fatal(err)
+				}
+			})
 		})
 	}
 }
