@@ -34,6 +34,11 @@ func (gipc *GeoIPChecker) Check(r *http.Request) (bool, error) {
 		}
 	}
 
+	// If IP is not publicly announced, return false
+	if !ipInfo.GetAnnounced() {
+		return false, nil
+	}
+
 	_, ok := gipc.countries[strings.ToLower(ipInfo.GetCountryCode())]
 
 	return ok, nil

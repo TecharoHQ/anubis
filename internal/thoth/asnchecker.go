@@ -33,6 +33,11 @@ func (asnc *ASNChecker) Check(r *http.Request) (bool, error) {
 		}
 	}
 
+	// If IP is not publicly announced, return false
+	if !ipInfo.GetAnnounced() {
+		return false, nil
+	}
+
 	_, ok := asnc.asns[uint32(ipInfo.GetAsNumber())]
 
 	return ok, nil
