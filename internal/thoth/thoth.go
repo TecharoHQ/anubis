@@ -16,8 +16,6 @@ import (
 )
 
 type Client struct {
-	thothURL string
-
 	conn    *grpc.ClientConn
 	health  healthv1.HealthClient
 	iptoasn iptoasnv1.IpToASNServiceClient
@@ -31,8 +29,7 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 	)
 	prometheus.DefaultRegisterer.Register(clMetrics)
 
-	conn, err := grpc.DialContext(
-		ctx,
+	conn, err := grpc.NewClient(
 		thothURL,
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})),
 		grpc.WithChainUnaryInterceptor(
