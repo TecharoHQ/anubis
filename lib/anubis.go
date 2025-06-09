@@ -432,21 +432,36 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 
 		if match {
 			switch b.Action {
-			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark:
+			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
-			case config.RuleChallenge:
-				weight += 5
 			case config.RuleWeigh:
 				weight += b.Weight.Adjust
 			}
 		}
 
-		if weight < 0 {
+		switch {
+		case weight < 0:
 			return cr("weight/okay", config.RuleAllow, weight), &policy.Bot{
 				Challenge: &config.ChallengeRules{
 					Difficulty: s.policy.DefaultDifficulty,
 					ReportAs:   s.policy.DefaultDifficulty,
 					Algorithm:  config.DefaultAlgorithm,
+				},
+			}, nil
+		case weight >= 0:
+			return cr("weight/mild-suspicion", config.RuleAllow, weight), &policy.Bot{
+				Challenge: &config.ChallengeRules{
+					Difficulty: s.policy.DefaultDifficulty,
+					ReportAs:   s.policy.DefaultDifficulty,
+					Algorithm:  "metarefresh",
+				},
+			}, nil
+		case weight >= 10:
+			return cr("weight/extreme-suspicion", config.RuleAllow, weight), &policy.Bot{
+				Challenge: &config.ChallengeRules{
+					Difficulty: s.policy.DefaultDifficulty,
+					ReportAs:   s.policy.DefaultDifficulty,
+					Algorithm:  "fast",
 				},
 			}, nil
 		}
