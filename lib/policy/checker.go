@@ -47,6 +47,20 @@ func (cl CheckerList) Hash() string {
 	return internal.SHA256sum(sb.String())
 }
 
+type staticHashChecker struct {
+	hash string
+}
+
+func (staticHashChecker) Check(r *http.Request) (bool, error) {
+	return true, nil
+}
+
+func (s staticHashChecker) Hash() string { return s.hash }
+
+func NewStaticHashChecker(hashable string) Checker {
+	return staticHashChecker{hash: internal.SHA256sum(hashable)}
+}
+
 type RemoteAddrChecker struct {
 	ranger cidranger.Ranger
 	hash   string
