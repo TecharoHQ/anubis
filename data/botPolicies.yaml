@@ -55,7 +55,9 @@ bots:
   - name: generic-browser
     user_agent_regex: >-
       Mozilla|Opera
-    action: CHALLENGE
+    action: WEIGH
+    weight:
+      adjust: 10
 
 dnsbl: false
 

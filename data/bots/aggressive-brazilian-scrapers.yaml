@@ -1,28 +1,26 @@
 - name: deny-aggressive-brazilian-scrapers
-  action: DENY
+  action: WEIGH
+  weight:
+    adjust: 20
   expression:
     any:
-    # Internet Explorer should be out of support
-    - userAgent.contains("MSIE")
-    # Trident is the Internet Explorer browser engine
-    - userAgent.contains("Trident")
-    # Opera is a fork of chrome now
-    - userAgent.contains("Presto")
-    # Windows CE is discontinued
-    - userAgent.contains("Windows CE")
-    # Windows 95 is discontinued
-    - userAgent.contains("Windows 95")
-    # Windows 98 is discontinued
-    - userAgent.contains("Windows 98")
-    # Windows 9.x is discontinued
-    - userAgent.contains("Win 9x")
-    # Amazon does not have an Alexa Toolbar.
-    - userAgent.contains("Alexa Toolbar")
-- name: challenge-aggressive-brazilian-scrapers
-  action: CHALLENGE
-  expression:
-    any:
-    # This is not released, even Windows 11 calls itself Windows 10
-    - userAgent.contains("Windows NT 11.0")
-    # iPods are not in common use
-    - userAgent.contains("iPod")
+      # Internet Explorer should be out of support
+      - userAgent.contains("MSIE")
+      # Trident is the Internet Explorer browser engine
+      - userAgent.contains("Trident")
+      # Opera is a fork of chrome now
+      - userAgent.contains("Presto")
+      # Windows CE is discontinued
+      - userAgent.contains("Windows CE")
+      # Windows 95 is discontinued
+      - userAgent.contains("Windows 95")
+      # Windows 98 is discontinued
+      - userAgent.contains("Windows 98")
+      # Windows 9.x is discontinued
+      - userAgent.contains("Win 9x")
+      # Amazon does not have an Alexa Toolbar.
+      - userAgent.contains("Alexa Toolbar")
+      # This is not released, even Windows 11 calls itself Windows 10
+      - userAgent.contains("Windows NT 11.0")
+      # iPods are not in common use
+      - userAgent.contains("iPod")
