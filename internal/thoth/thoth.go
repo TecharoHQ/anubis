@@ -71,7 +71,14 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 }
 
 func (c *Client) Close() error {
-	return c.conn.Close()
+	if c.conn != nil {
+		return c.conn.Close()
+	}
+	return nil
+}
+
+func (c *Client) WithIPToASNService(impl iptoasnv1.IpToASNServiceClient) {
+	c.iptoasn = impl
 }
 
 func (c *Client) ASNCheckerFor(asns []uint32) checker.Impl {
