@@ -267,11 +267,11 @@ This would remove five weight points from the request, making Anubis more forgiv
 
 Weight thresholds and challenge associations will be configurable with CEL expressions in the configuration file in an upcoming patch, for now here's how Anubis configures the weight thresholds:
 
-|                                      Weight Expression | Action                                                                                                                   |
-| -----------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------- |
-|                   `weight < 0` (weight is less than 0) | Allow the request through.                                                                                               |
-|                 `weight < 10` (weight is less than 10) | Challenge the client with the [Meta Refresh challenge](./challenges/metarefresh.mdx) at the default difficulty level.    |
-| `weight >= 10` (weight is greater than or equal to 10) | Challenge the client with the [Proof of Work challenge](./challenges/proof-of-work.mdx) at the default difficulty level. |
+|                                      Weight Expression | Action                                                                                                                                |
+| -----------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------ |
+|                   `weight < 0` (weight is less than 0) | Allow the request through.                                                                                                            |
+|                 `weight < 10` (weight is less than 10) | Challenge the client with the [Meta Refresh challenge](./configuration/challenges/metarefresh.mdx) at the default difficulty level.   |
+| `weight >= 10` (weight is greater than or equal to 10) | Challenge the client with the [Proof of Work challenge](.configuration/challenges/proof-of-work.mdx) at the default difficulty level. |
 
 ### Advice
 
