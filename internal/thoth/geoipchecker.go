@@ -2,6 +2,8 @@ package thoth
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -16,14 +18,20 @@ type GeoIPChecker struct {
 }
 
 func (gipc *GeoIPChecker) Check(r *http.Request) (bool, error) {
-	ctx, cancel := context.WithTimeout(r.Context(), 50*time.Millisecond)
+	ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
 	defer cancel()
 
 	ipInfo, err := gipc.iptoasn.Lookup(ctx, &iptoasnv1.LookupRequest{
 		IpAddress: r.Header.Get("X-Real-Ip"),
 	})
 	if err != nil {
-		return false, err
+		switch {
+		case errors.Is(err, context.DeadlineExceeded):
+			slog.Debug("error contacting thoth", "err", err, "actionable", false)
+			return false, nil
+		default:
+			return false, err
+		}
 	}
 
 	_, ok := gipc.countries[strings.ToLower(ipInfo.GetCountryCode())]
