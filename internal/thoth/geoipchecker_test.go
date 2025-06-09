@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 )
 
-var _ policy.Checker = &ASNChecker{}
+var _ checker.Impl = &ASNChecker{}
 
 func TestGeoIPChecker(t *testing.T) {
 	cli := loadSecrets(t)
