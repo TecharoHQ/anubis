@@ -41,6 +41,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://minihoot.site
 - https://catgirl.click/
 - https://wiki.dolphin-emu.org/
+- https://squirreljme.cc/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
