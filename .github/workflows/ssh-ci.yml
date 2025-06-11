@@ -16,7 +16,7 @@ jobs:
       matrix:
         host:
           - ubuntu@riscv64.techaro.lol
-          #- ci@ppc64le.techaro.lol # XXX(Xe 2025-06-11 16:58): This seems to be broken for now, emailed Taptor CS for advice
+          - ci@ppc64le.techaro.lol
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
