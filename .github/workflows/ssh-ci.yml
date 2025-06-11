@@ -20,6 +20,6 @@ jobs:
         with:
           key: ${{ secrets.CI_SSH_KEY }}
           name: id_rsa
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          known_hosts: ${{ secrets.CI_SSH_KNOWN_HOSTS }}
       - name: Run CI
         run: bash test/ssh-ci/rigging.sh ${{ matrix.version }}
