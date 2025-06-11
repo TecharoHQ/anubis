@@ -69,6 +69,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+euo
 everyones
 evilbot
 evilsite
