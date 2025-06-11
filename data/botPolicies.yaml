@@ -51,6 +51,34 @@ bots:
   #     report_as: 4    # lie to the operator
   #     algorithm: slow # intentionally waste CPU cycles and time
 
+  # Requires a subscription to Thoth to use, see
+  # TODO(Xe): docs link
+  #
+  # Throw blanket challenges for specific countries known to host abusive scrapers
+  # that do not respond to abuse complaints
+  - name: challenge-aggressive-scrapers
+    action: CHALLENGE
+    geoip:
+      counties:
+        - BR
+        - CN
+    challenge:
+      algorithm: metarefresh
+      difficulty: 1
+      report_as: 1
+
+  # Requires a subscription to Thoth to use, see
+  # TODO(Xe): docs link
+  #
+  # Deny traffic from the worst offenders hosting AI scrapers.
+  - name: deny-aggressive-asns-without-functional-abuse-contact
+    action: DENY
+    asns:
+      match:
+        - 13335 # Cloudflare
+        - 136907 # Huawei Cloud
+        - 45102 # Alibaba Cloud
+
   # Generic catchall rule
   - name: generic-browser
     user_agent_regex: >-
