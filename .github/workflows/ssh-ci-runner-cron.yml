@@ -1,8 +1,8 @@
 name: Regenerate ssh ci runner image
 
 on:
-  pull_request:
-    branches: ["main"]
+  # pull_request:
+  #   branches: ["main"]
   schedule:
     - cron: "0 0 1,8,15,22 * *"
   workflow_dispatch:
