@@ -88,12 +88,13 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 // getTarget constructs the target URL string for fetching OG tags.
 // Optimized to minimize allocations by building strings directly.
 func (c *OGTagCache) getTarget(u *url.URL) string {
+	var escapedPath = u.EscapedPath()
 	if c.targetURL.Scheme == "unix" {
 		// Build URL string directly without creating intermediate URL object
 		var sb strings.Builder
-		sb.Grow(len(c.unixPrefix) + len(u.Path) + len(u.RawQuery) + 2) // Pre-allocate
+		sb.Grow(len(c.unixPrefix) + len(escapedPath) + len(u.RawQuery) + 2) // Pre-allocate
 		sb.WriteString(c.unixPrefix)
-		sb.WriteString(u.EscapedPath())
+		sb.WriteString(escapedPath)
 		if u.RawQuery != "" {
 			sb.WriteByte('?')
 			sb.WriteString(u.RawQuery)
@@ -104,7 +105,6 @@ func (c *OGTagCache) getTarget(u *url.URL) string {
 	// For regular http/https targets, build URL string directly
 	var sb strings.Builder
 	// Pre-calculate size: scheme + "://" + host + path + "?" + query
-	escapedPath := u.EscapedPath()
 	estimatedSize := len(c.targetURL.Scheme) + 3 + len(c.targetURL.Host) + len(escapedPath) + len(u.RawQuery) + 2
 	sb.Grow(estimatedSize)
 
