@@ -6,6 +6,7 @@ amazonbot
 anthro
 anubis
 anubistest
+apk
 Applebot
 archlinux
 badregexes
@@ -117,6 +118,7 @@ imgproxy
 inp
 iss
 isset
+itv
 ivh
 Jenomis
 JGit
@@ -246,6 +248,7 @@ traefik
 uberspace
 unixhttpd
 unmarshal
+uuidgen
 uvx
 UXP
 Varis
