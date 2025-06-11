@@ -1,0 +1,25 @@
+name: SSH CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  ssh:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        host:
+          - ubuntu@riscv64.techaro.lol
+          - ci@ppc64le.techaro.lol
+    steps:
+      - name: Install SSH key of bastion
+        uses: shimataro/ssh-key-action@d4fffb50872869abe2d9a9098a6d9c5aa7d16be4 # v2.7.0
+        with:
+          key: ${{ secrets.CI_SSH_KEY }}
+          name: id_rsa
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+      - name: Run CI
+        run: bash test/ssh-ci/rigging.sh ${{ matrix.version }}
