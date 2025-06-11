@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	maxContentLength = 8 << 20 // 8 MiB in bytes,
-	// if there is a reasonable reason that you need more than this...Why?
+	maxContentLength = 8 << 20 // 8 MiB is enough for anyone
 	httpTimeout = 5 * time.Second /*todo: make this configurable?*/
 )
 
