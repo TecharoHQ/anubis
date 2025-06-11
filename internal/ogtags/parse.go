@@ -7,34 +7,23 @@ import (
 )
 
 // extractOGTags traverses the HTML document and extracts approved Open Graph tags
-// Optimized to pre-allocate map and reduce allocations
 func (c *OGTagCache) extractOGTags(doc *html.Node) map[string]string {
-	// Pre-allocate map with reasonable capacity
-	ogTags := make(map[string]string, 10)
+	ogTags := make(map[string]string)
 
-	// Stack-based traversal to avoid function call overhead
-	stack := make([]*html.Node, 0, 32)
-	stack = append(stack, doc)
-
-	for len(stack) > 0 {
-		// Pop from stack
-		n := stack[len(stack)-1]
-		stack = stack[:len(stack)-1]
-
-		// Check if it's a meta tag using the function
+	var traverseNodes func(*html.Node)
+	traverseNodes = func(n *html.Node) {
 		if isOGMetaTag(n) {
 			property, content := c.extractMetaTagInfo(n)
 			if property != "" {
 				ogTags[property] = content
 			}
 		}
-
-		// Add children to stack in reverse order
-		for child := n.LastChild; child != nil; child = child.PrevSibling {
-			stack = append(stack, child)
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			traverseNodes(child)
 		}
 	}
 
+	traverseNodes(doc)
 	return ogTags
 }
 
