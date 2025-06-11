@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))
 - Bump AI-robots.txt to version 1.34
 - Make progress bar styling more compatible (UXP, etc)
-- Optimized the OGTags subsystem reducing allocations and reducing runtime per request by up to 66%
+- Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 
 - Return `data/bots/ai-robots-txt.yaml` to avoid breaking configs [#599](https://github.com/TecharoHQ/anubis/issues/599)
