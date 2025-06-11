@@ -7,13 +7,21 @@ import (
 )
 
 // extractOGTags traverses the HTML document and extracts approved Open Graph tags
+// Optimized to pre-allocate map and reduce allocations
 func (c *OGTagCache) extractOGTags(doc *html.Node) map[string]string {
-	ogTags := make(map[string]string)
+	// Pre-allocate map with reasonable capacity
+	ogTags := make(map[string]string, 10)
 
-	var traverseNodes func(*html.Node)
-	traverseNodes = func(n *html.Node) {
-		// isOGMetaTag only checks if it's a <meta> tag.
-		// The actual filtering happens in extractMetaTagInfo now.
+	// Stack-based traversal to avoid function call overhead
+	stack := make([]*html.Node, 0, 32)
+	stack = append(stack, doc)
+
+	for len(stack) > 0 {
+		// Pop from stack
+		n := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+
+		// Check if it's a meta tag using the function
 		if isOGMetaTag(n) {
 			property, content := c.extractMetaTagInfo(n)
 			if property != "" {
@@ -21,12 +29,12 @@ func (c *OGTagCache) extractOGTags(doc *html.Node) map[string]string {
 			}
 		}
 
-		for child := n.FirstChild; child != nil; child = child.NextSibling {
-			traverseNodes(child)
+		// Add children to stack in reverse order
+		for child := n.LastChild; child != nil; child = child.PrevSibling {
+			stack = append(stack, child)
 		}
 	}
 
-	traverseNodes(doc)
 	return ogTags
 }
 
@@ -39,43 +47,38 @@ func isOGMetaTag(n *html.Node) bool {
 }
 
 // extractMetaTagInfo extracts property and content from a meta tag
-// *and* checks if the property is approved.
-// Returns empty property string if the tag is not approved.
+// Optimized to reduce string operations
 func (c *OGTagCache) extractMetaTagInfo(n *html.Node) (property, content string) {
-	var rawProperty string // Store the property found before approval check
+	var rawProperty string
 
-	for _, attr := range n.Attr {
-		if attr.Key == "property" || attr.Key == "name" {
+	// Single pass through attributes
+	for i := 0; i < len(n.Attr); i++ {
+		attr := &n.Attr[i]
+		switch attr.Key {
+		case "property", "name":
 			rawProperty = attr.Val
-		}
-		if attr.Key == "content" {
+		case "content":
 			content = attr.Val
 		}
 	}
 
-	// Check if the rawProperty is approved
-	isApproved := false
-	for _, prefix := range c.approvedPrefixes {
-		if strings.HasPrefix(rawProperty, prefix) {
-			isApproved = true
-			break
-		}
+	if rawProperty == "" {
+		return "", content
 	}
-	// Check exact approved tags if not already approved by prefix
-	if !isApproved {
-		for _, tag := range c.approvedTags {
-			if rawProperty == tag {
-				isApproved = true
-				break
-			}
+
+	// Check prefixes first (more common case)
+	for i := 0; i < len(c.approvedPrefixes); i++ {
+		if strings.HasPrefix(rawProperty, c.approvedPrefixes[i]) {
+			return rawProperty, content
 		}
 	}
 
-	// Only return the property if it's approved
-	if isApproved {
-		property = rawProperty
+	// Check exact matches
+	for i := 0; i < len(c.approvedTags); i++ {
+		if rawProperty == c.approvedTags[i] {
+			return rawProperty, content
+		}
 	}
 
-	// Content is returned regardless, but property will be "" if not approved
-	return property, content
+	return "", content
 }
