@@ -17,7 +17,7 @@ ssh "${Target}" mkdir -p "${RunFolder}"
 git archive HEAD | ssh "${Target}" tar xC "${RunFolder}"
 
 ssh "${Target}" << EOF
-  ssh -euo pipefail
+  set -euo pipefail
   set -x
   mkdir -p "anubis/cache/{go,go-build,node}"
   podman pull ${CIRunnerImage}
