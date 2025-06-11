@@ -67,6 +67,9 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 	}(fin)
 
 	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
+	}
 	var validationErrs []error
 
 	for _, b := range anubisPolicy.Bots {
@@ -154,7 +157,7 @@ func New(opts Options) (*Server, error) {
 		// make-challenge is only used in tests. Only enable while version is devel
 		registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
 	}
-  
+
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)
 		impl.Setup(mux)

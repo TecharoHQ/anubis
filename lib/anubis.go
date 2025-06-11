@@ -288,15 +288,15 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lg = lg.With("check_result", cr)
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+	chal := s.challengeFor(r, rule.Challenge.Difficulty)
 
-	s.SetCookie(w, anubis.TestCookieName, challenge, "/")
+	s.SetCookie(w, anubis.TestCookieName, chal, "/")
 
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
 	}{
-		Challenge: challenge,
+		Challenge: chal,
 		Rules:     rule.Challenge,
 	})
 	if err != nil {
@@ -304,7 +304,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	lg.Debug("made challenge", "challenge", challenge, "rules", rule.Challenge, "cr", cr)
+	lg.Debug("made challenge", "challenge", chal, "rules", rule.Challenge, "cr", cr)
 	challengesIssued.WithLabelValues("api").Inc()
 }
 
@@ -317,7 +317,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	if _, err := r.Cookie(anubis.TestCookieName); err == http.ErrNoCookie {
+	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
 		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.ClearCookie(w, anubis.TestCookieName, "/")
 		lg.Warn("user has cookies disabled, this is not an anubis bug")
@@ -365,7 +365,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	if err := impl.Validate(r, lg, rule, challengeStr); err != nil {
-		failedValidations.WithLabelValues(string(rule.Challenge.Algorithm)).Inc()
+		failedValidations.WithLabelValues(rule.Challenge.Algorithm).Inc()
 		var cerr *challenge.Error
 		s.ClearCookie(w, s.cookieName, cookiePath)
 		lg.Debug("challenge validate call failed", "err", err)
