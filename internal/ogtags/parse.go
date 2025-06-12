@@ -37,37 +37,37 @@ func isOGMetaTag(n *html.Node) bool {
 
 // extractMetaTagInfo extracts property and content from a meta tag
 func (c *OGTagCache) extractMetaTagInfo(n *html.Node) (property, content string) {
-	var rawProperty string
+	var propertyKey string
 
 	// Single pass through attributes, using range to avoid bounds checking
 	for _, attr := range n.Attr {
 		switch attr.Key {
 		case "property", "name":
-			rawProperty = attr.Val
+			propertyKey = attr.Val
 		case "content":
 			content = attr.Val
 		}
 		// Early exit if we have both
-		if rawProperty != "" && content != "" {
+		if propertyKey != "" && content != "" {
 			break
 		}
 	}
 
-	if rawProperty == "" {
+	if propertyKey == "" {
 		return "", content
 	}
 
 	// Check prefixes first (more common case)
 	for _, prefix := range c.approvedPrefixes {
-		if strings.HasPrefix(rawProperty, prefix) {
-			return rawProperty, content
+		if strings.HasPrefix(propertyKey, prefix) {
+			return propertyKey, content
 		}
 	}
 
 	// Check exact matches
 	for _, tag := range c.approvedTags {
-		if rawProperty == tag {
-			return rawProperty, content
+		if propertyKey == tag {
+			return propertyKey, content
 		}
 	}
 

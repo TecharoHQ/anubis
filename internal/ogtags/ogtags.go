@@ -13,8 +13,11 @@ import (
 )
 
 const (
-	maxContentLength = 8 << 20 // 8 MiB is enough for anyone
-	httpTimeout = 5 * time.Second /*todo: make this configurable?*/
+	maxContentLength = 8 << 20         // 8 MiB is enough for anyone
+	httpTimeout      = 5 * time.Second /*todo: make this configurable?*/
+
+	schemeSeparatorLength = 3 // Length of "://"
+	querySeparatorLength  = 1 // Length of "?" for query strings
 )
 
 type OGTagCache struct {
@@ -87,11 +90,11 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 // getTarget constructs the target URL string for fetching OG tags.
 // Optimized to minimize allocations by building strings directly.
 func (c *OGTagCache) getTarget(u *url.URL) string {
-	var escapedPath = u.EscapedPath()
+	var escapedPath = u.EscapedPath() // will cause an allocation if path contains special characters
 	if c.targetURL.Scheme == "unix" {
 		// Build URL string directly without creating intermediate URL object
 		var sb strings.Builder
-		sb.Grow(len(c.unixPrefix) + len(escapedPath) + len(u.RawQuery) + 2) // Pre-allocate
+		sb.Grow(len(c.unixPrefix) + len(escapedPath) + len(u.RawQuery) + querySeparatorLength) // Pre-allocate
 		sb.WriteString(c.unixPrefix)
 		sb.WriteString(escapedPath)
 		if u.RawQuery != "" {
@@ -104,7 +107,7 @@ func (c *OGTagCache) getTarget(u *url.URL) string {
 	// For regular http/https targets, build URL string directly
 	var sb strings.Builder
 	// Pre-calculate size: scheme + "://" + host + path + "?" + query
-	estimatedSize := len(c.targetURL.Scheme) + 3 + len(c.targetURL.Host) + len(escapedPath) + len(u.RawQuery) + 2
+	estimatedSize := len(c.targetURL.Scheme) + schemeSeparatorLength + len(c.targetURL.Host) + len(escapedPath) + len(u.RawQuery) + querySeparatorLength
 	sb.Grow(estimatedSize)
 
 	sb.WriteString(c.targetURL.Scheme)
