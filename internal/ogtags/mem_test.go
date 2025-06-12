@@ -1,12 +1,11 @@
 package ogtags
 
 import (
+	"golang.org/x/net/html"
 	"net/url"
 	"runtime"
 	"strings"
 	"testing"
-
-	"golang.org/x/net/html"
 )
 
 func BenchmarkGetTarget(b *testing.B) {
@@ -85,8 +84,9 @@ func BenchmarkExtractOGTags(b *testing.B) {
 func TestMemoryUsage(t *testing.T) {
 	cache := NewOGTagCache("http://example.com", false, 0, false)
 
-	// Force GC before measurement
+	// Force GC and wait for it to complete
 	runtime.GC()
+
 	var m1 runtime.MemStats
 	runtime.ReadMemStats(&m1)
 
@@ -98,13 +98,17 @@ func TestMemoryUsage(t *testing.T) {
 
 	// Force GC after operations
 	runtime.GC()
+
 	var m2 runtime.MemStats
 	runtime.ReadMemStats(&m2)
 
-	allocatedBytes := m2.Alloc - m1.Alloc
-	allocatedKB := float64(allocatedBytes) / 1024
+	allocatedBytes := int64(m2.TotalAlloc) - int64(m1.TotalAlloc)
+	allocatedKB := float64(allocatedBytes) / 1024.0
+	allocatedPerOp := float64(allocatedBytes) / 10000.0
 
-	t.Logf("Memory allocated for 10k getTarget calls: %.2f KB", allocatedKB)
+	t.Logf("Memory allocated for 10k getTarget calls:")
+	t.Logf("  Total: %.2f KB (%.2f MB)", allocatedKB, allocatedKB/1024.0)
+	t.Logf("  Per operation: %.2f bytes", allocatedPerOp)
 
 	// Test extractOGTags memory usage
 	htmlDoc := `<html><head>
@@ -129,8 +133,16 @@ func TestMemoryUsage(t *testing.T) {
 	runtime.GC()
 	runtime.ReadMemStats(&m2)
 
-	allocatedBytes = m2.Alloc - m1.Alloc
-	allocatedKB = float64(allocatedBytes) / 1024
+	allocatedBytes = int64(m2.TotalAlloc) - int64(m1.TotalAlloc)
+	allocatedKB = float64(allocatedBytes) / 1024.0
+	allocatedPerOp = float64(allocatedBytes) / 1000.0
 
-	t.Logf("Memory allocated for 1k extractOGTags calls: %.2f KB", allocatedKB)
+	t.Logf("Memory allocated for 1k extractOGTags calls:")
+	t.Logf("  Total: %.2f KB (%.2f MB)", allocatedKB, allocatedKB/1024.0)
+	t.Logf("  Per operation: %.2f bytes", allocatedPerOp)
+
+	// Sanity checks
+	if allocatedPerOp > 10000 {
+		t.Errorf("extractOGTags allocating too much memory per operation: %.2f bytes", allocatedPerOp)
+	}
 }
