@@ -36,18 +36,20 @@ func isOGMetaTag(n *html.Node) bool {
 }
 
 // extractMetaTagInfo extracts property and content from a meta tag
-// Optimized to reduce string operations
 func (c *OGTagCache) extractMetaTagInfo(n *html.Node) (property, content string) {
 	var rawProperty string
 
-	// Single pass through attributes
-	for i := 0; i < len(n.Attr); i++ {
-		attr := &n.Attr[i]
+	// Single pass through attributes, using range to avoid bounds checking
+	for _, attr := range n.Attr {
 		switch attr.Key {
 		case "property", "name":
 			rawProperty = attr.Val
 		case "content":
 			content = attr.Val
+		}
+		// Early exit if we have both
+		if rawProperty != "" && content != "" {
+			break
 		}
 	}
 
@@ -56,15 +58,15 @@ func (c *OGTagCache) extractMetaTagInfo(n *html.Node) (property, content string)
 	}
 
 	// Check prefixes first (more common case)
-	for i := 0; i < len(c.approvedPrefixes); i++ {
-		if strings.HasPrefix(rawProperty, c.approvedPrefixes[i]) {
+	for _, prefix := range c.approvedPrefixes {
+		if strings.HasPrefix(rawProperty, prefix) {
 			return rawProperty, content
 		}
 	}
 
 	// Check exact matches
-	for i := 0; i < len(c.approvedTags); i++ {
-		if rawProperty == c.approvedTags[i] {
+	for _, tag := range c.approvedTags {
+		if rawProperty == tag {
 			return rawProperty, content
 		}
 	}
