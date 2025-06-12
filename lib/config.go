@@ -36,6 +36,7 @@ type Options struct {
 	PrivateKey           ed25519.PrivateKey
 	CookieExpiration     time.Duration
 	OGTimeToLive         time.Duration
+	StripBasePrefix      bool
 	OGCacheConsidersHost bool
 	OGPassthrough        bool
 	CookiePartitioned    bool

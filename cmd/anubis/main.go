@@ -55,6 +55,7 @@ var (
 	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
 	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
+	stripBasePrefix          = flag.Bool("strip-base-prefix", false, "if true, strips the base prefix from requests forwarded to the target server")
 	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
 	targetSNI                = flag.String("target-sni", "", "if set, the value of the TLS handshake hostname when forwarding requests to the target")
 	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
@@ -304,6 +305,7 @@ func main() {
 
 	s, err := libanubis.New(libanubis.Options{
 		BasePrefix:           *basePrefix,
+		StripBasePrefix:      *stripBasePrefix,
 		Next:                 rp,
 		Policy:               policy,
 		ServeRobotsTXT:       *robotsTxt,
