@@ -46,7 +46,8 @@ If you change the build process, make sure to update `build.sh` accordingly.
 
 ## Running integration tests
 
-Anubis has comprehensive integration tests using Playwright that test real browser behavior. Some tests use HTTPS with localhost certificates.
+Anubis has comprehensive integration tests using Playwright that test real browser behavior. Some tests use HTTPS with
+localhost certificates.
 
 ### Setting up test certificates
 
@@ -73,7 +74,8 @@ make test
 make test-certs
 ```
 
-The certificates are automatically generated in `internal/test/certs/` and used by integration tests when available. If mkcert is not installed, HTTPS tests will be skipped with a helpful message.
+The certificates are automatically generated in `internal/test/certs/` and used by integration tests when available.
+If mkcert is not installed, HTTPS tests will be skipped.
 
 ## Production-ready builds
 
@@ -81,7 +83,8 @@ The certificates are automatically generated in `internal/test/certs/` and used 
 npm run container
 ```
 
-This builds a prod-ready container image with [ko](https://ko.build). If you want to change where the container image is pushed, you need to use environment variables:
+This builds a prod-ready container image with [ko](https://ko.build). If you want to change where the container image is
+pushed, you need to use environment variables:
 
 ```text
 DOCKER_REPO=registry.host/org/repo DOCKER_METADATA_OUTPUT_TAGS=registry.host/org/repo:latest npm run container
@@ -89,13 +92,15 @@ DOCKER_REPO=registry.host/org/repo DOCKER_METADATA_OUTPUT_TAGS=registry.host/org
 
 ## Building packages
 
-For more information, see [Building native packages is complicated](https://xeiaso.net/blog/2025/anubis-packaging/) and [#156: Debian, RPM, and binary tarball packages](https://github.com/TecharoHQ/anubis/issues/156).
+For more information, see [Building native packages is complicated](https://xeiaso.net/blog/2025/anubis-packaging/)
+and [#156: Debian, RPM, and binary tarball packages](https://github.com/TecharoHQ/anubis/issues/156).
 
 Install `yeet`:
 
 :::note
 
-`yeet` will soon be moved to a dedicated TecharoHQ repository. This is currently done in a hacky way in order to get this ready for user feedback.
+`yeet` will soon be moved to a dedicated TecharoHQ repository. This is currently done in a hacky way in order to get
+this ready for user feedback.
 
 :::
 
