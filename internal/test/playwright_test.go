@@ -261,7 +261,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 	startPlaywright(t)
 
 	pw := setupPlaywright(t)
-	anubisURL := spawnAnubis(t)
+	anubisURL := spawnAnubis(t, anubisTestOptions{})
 
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
@@ -343,7 +343,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	pw := setupPlaywright(t)
 	basePrefix := "/myapp"
-	anubisURL := spawnAnubisWithAdvancedOptions(t, anubisTestOptions{
+	anubisURL := spawnAnubis(t, anubisTestOptions{
 		basePrefix: basePrefix,
 		useTLS:     true,
 	})
@@ -624,23 +624,13 @@ func setupPlaywright(t *testing.T) *playwright.Playwright {
 	return pw
 }
 
-func spawnAnubis(t *testing.T) string {
-	return spawnAnubisWithOptions(t, "")
-}
-
 type anubisTestOptions struct {
 	basePrefix      string
 	stripBasePrefix bool
 	useTLS          bool
 }
 
-func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
-	return spawnAnubisWithAdvancedOptions(t, anubisTestOptions{
-		basePrefix: basePrefix,
-	})
-}
-
-func spawnAnubisWithAdvancedOptions(t *testing.T, opts anubisTestOptions) string {
+func spawnAnubis(t *testing.T, opts anubisTestOptions) string {
 	t.Helper()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
