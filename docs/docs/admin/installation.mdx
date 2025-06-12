@@ -4,8 +4,6 @@ title: Setting up Anubis
 
 import RandomKey from "@site/src/components/RandomKey";
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
 
 Anubis is meant to sit between your reverse proxy (such as Nginx or Caddy) and your target service. One instance of Anubis must be used per service you are protecting.
 
@@ -32,7 +30,7 @@ TLS terminator)
 Anubis is shipped in the Docker repo [`ghcr.io/techarohq/anubis`](https://github.com/TecharoHQ/anubis/pkgs/container/anubis). The following tags exist for your convenience:
 
 | Tag                 | Meaning                                                                                                                            |
-| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------- |
+|:--------------------|:-----------------------------------------------------------------------------------------------------------------------------------|
 | `latest`            | The latest [tagged release](https://github.com/TecharoHQ/anubis/releases), if you are in doubt, start here.                        |
 | `v<version number>` | The Anubis image for [any given tagged release](https://github.com/TecharoHQ/anubis/tags)                                          |
 | `main`              | The current build on the `main` branch. Only use this if you need the latest and greatest features as they are merged into `main`. |
@@ -50,7 +48,7 @@ For more detailed information on installing Anubis with native packages, please 
 Anubis uses these environment variables for configuration:
 
 | Environment Variable           | Default value           | Explanation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| :----------------------------- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|:-------------------------------|:------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `BASE_PREFIX`                  | unset                   | If set, adds a global prefix to all Anubis endpoints. For example, setting this to `/myapp` would make Anubis accessible at `/myapp/` instead of `/`. This is useful when running Anubis behind a reverse proxy that routes based on path prefixes.                                                                                                                                                                                                                                                     |
 | `BIND`                         | `:8923`                 | The network address that Anubis listens on. For `unix`, set this to a path: `/run/anubis/instance.sock`                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `BIND_NETWORK`                 | `tcp`                   | The address family that Anubis listens on. Accepts `tcp`, `unix` and anything Go's [`net.Listen`](https://pkg.go.dev/net#Listen) supports.                                                                                                                                                                                                                                                                                                                                                              |
