@@ -140,19 +140,24 @@ func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
 	}
 
 	basePrefix := strings.TrimSuffix(s.opts.BasePrefix, "/")
-	if !strings.HasPrefix(r.URL.Path, basePrefix) {
+	path := r.URL.Path
+
+	if !strings.HasPrefix(path, basePrefix) {
 		return r
 	}
 
-	// Create a copy of the request to modify the path
-	r = r.Clone(r.Context())
-	r.URL = &(*r.URL) // Clone the URL struct
-	r.URL.Path = strings.TrimPrefix(r.URL.Path, basePrefix)
-	if r.URL.Path == "" {
-		r.URL.Path = "/"
+	trimmedPath := strings.TrimPrefix(path, basePrefix)
+	if trimmedPath == "" {
+		trimmedPath = "/"
 	}
 
-	return r
+	// Clone the request and URL
+	reqCopy := r.Clone(r.Context())
+	urlCopy := *r.URL
+	urlCopy.Path = trimmedPath
+	reqCopy.URL = &urlCopy
+
+	return reqCopy
 }
 
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
