@@ -305,7 +305,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	pw := setupPlaywright(t)
 	basePrefix := "/myapp"
-	anubisURL := spawnAnubisWithOptions(t, basePrefix, false)
+	anubisURL := spawnAnubisWithOptions(t, basePrefix)
 
 	// Reset BasePrefix after test
 	t.Cleanup(func() {
@@ -584,15 +584,15 @@ func setupPlaywright(t *testing.T) *playwright.Playwright {
 }
 
 func spawnAnubis(t *testing.T) string {
-	return spawnAnubisWithOptions(t, "", false)
+	return spawnAnubisWithOptions(t, "")
 }
 
-func spawnAnubisWithOptions(t *testing.T, basePrefix string, stripBasePrefix bool) string {
+func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 	t.Helper()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "text/html")
-		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span><span id=anubis-path>%s</span></body></html>", time.Now().Unix(), r.URL.Path)
+		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
 	})
 
 	policy, err := libanubis.LoadPoliciesOrDefault("", anubis.DefaultDifficulty)
@@ -610,12 +610,11 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string, stripBasePrefix boo
 	port := strconv.Itoa(addr.Port)
 
 	s, err := libanubis.New(libanubis.Options{
-		Next:            h,
-		Policy:          policy,
-		ServeRobotsTXT:  true,
-		Target:          "http://" + host + ":" + port,
-		BasePrefix:      basePrefix,
-		StripBasePrefix: stripBasePrefix,
+		Next:           h,
+		Policy:         policy,
+		ServeRobotsTXT: true,
+		Target:         "http://" + host + ":" + port,
+		BasePrefix:     basePrefix,
 	})
 	if err != nil {
 		t.Fatalf("can't construct libanubis.Server: %v", err)
@@ -633,127 +632,4 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string, stripBasePrefix boo
 	})
 
 	return ts.URL
-}
-
-func TestPlaywrightStripBasePrefix(t *testing.T) {
-	if os.Getenv("DONT_USE_NETWORK") != "" {
-		t.Skip("test requires network egress")
-		return
-	}
-
-	if os.Getenv("SKIP_INTEGRATION") != "" {
-		t.Skip("SKIP_INTEGRATION was set")
-		return
-	}
-
-	startPlaywright(t)
-
-	pw := setupPlaywright(t)
-	basePrefix := "/myapp"
-
-	testCases := []struct {
-		name            string
-		stripBasePrefix bool
-		requestPath     string
-		expectedPath    string
-	}{
-		{
-			name:            "strip disabled - target receives full path",
-			stripBasePrefix: false,
-			requestPath:     "/myapp/api/users",
-			expectedPath:    "/myapp/api/users",
-		},
-		{
-			name:            "strip enabled - target receives stripped path",
-			stripBasePrefix: true,
-			requestPath:     "/myapp/api/users",
-			expectedPath:    "/api/users",
-		},
-		{
-			name:            "strip enabled - root path becomes slash",
-			stripBasePrefix: true,
-			requestPath:     "/myapp/",
-			expectedPath:    "/",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			anubisURL := spawnAnubisWithOptions(t, basePrefix, tc.stripBasePrefix)
-
-			// Reset BasePrefix after test
-			t.Cleanup(func() {
-				anubis.BasePrefix = ""
-			})
-
-			browser, err := pw.Chromium.Connect(buildBrowserConnect("chromium"), playwright.BrowserTypeConnectOptions{
-				ExposeNetwork: playwright.String("<loopback>"),
-			})
-			if err != nil {
-				t.Fatalf("could not connect to remote browser: %v", err)
-			}
-			defer browser.Close()
-
-			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
-				AcceptDownloads: playwright.Bool(false),
-				ExtraHttpHeaders: map[string]string{
-					"X-Real-Ip": "127.0.0.1",
-				},
-				UserAgent: playwright.String("Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0"),
-			})
-			if err != nil {
-				t.Fatalf("could not create context: %v", err)
-			}
-			defer ctx.Close()
-
-			page, err := ctx.NewPage()
-			if err != nil {
-				t.Fatalf("could not create page: %v", err)
-			}
-			defer page.Close()
-
-			// First complete a challenge to get authorized
-			_, err = page.Goto(anubisURL+basePrefix, playwright.PageGotoOptions{
-				Timeout: playwright.Float(10000),
-			})
-			if err != nil {
-				pwFail(t, page, "could not navigate to challenge page: %v", err)
-			}
-
-			// Wait for and complete the challenge
-			anubisTest := page.Locator("#anubis-test")
-			err = anubisTest.WaitFor(playwright.LocatorWaitForOptions{
-				Timeout: playwright.Float(30000),
-			})
-			if err != nil {
-				pwFail(t, page, "could not wait for challenge to be solved: %v", err)
-			}
-
-			// Now test the specific path to verify stripping behavior
-			_, err = page.Goto(anubisURL+tc.requestPath, playwright.PageGotoOptions{
-				Timeout: playwright.Float(10000),
-			})
-			if err != nil {
-				pwFail(t, page, "could not navigate to test path: %v", err)
-			}
-
-			// Wait for the page to load and check the path received by target
-			pathElement := page.Locator("#anubis-path")
-			err = pathElement.WaitFor(playwright.LocatorWaitForOptions{
-				Timeout: playwright.Float(5000),
-			})
-			if err != nil {
-				pwFail(t, page, "could not wait for path element: %v", err)
-			}
-
-			receivedPath, err := pathElement.TextContent(playwright.LocatorTextContentOptions{})
-			if err != nil {
-				pwFail(t, page, "could not get received path: %v", err)
-			}
-
-			if receivedPath != tc.expectedPath {
-				t.Errorf("target server received path %q, expected %q", receivedPath, tc.expectedPath)
-			}
-		})
-	}
 }
