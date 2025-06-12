@@ -2,7 +2,7 @@ VERSION= $(shell cat ./VERSION)
 GO?= go
 NPM?= npm
 
-.PHONY: build assets deps lint prebaked-build test
+.PHONY: build assets deps lint prebaked-build test test-certs
 
 all: build
 
@@ -28,5 +28,15 @@ lint: assets
 prebaked-build:
 	$(GO) build -o ./var/anubis -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/anubis
 
-test: assets
+test-certs:
+	@command -v mkcert >/dev/null 2>&1 || { echo "mkcert is not installed. Please install it: brew install mkcert"; exit 1; }
+	@mkdir -p internal/test/certs
+	@if [ ! -f internal/test/certs/localhost+2.pem ] || [ ! -f internal/test/certs/localhost+2-key.pem ]; then \
+		echo "Generating localhost certificates for tests..."; \
+		cd internal/test/certs && mkcert localhost 127.0.0.1 ::1; \
+	else \
+		echo "Test certificates already exist"; \
+	fi
+
+test: assets test-certs
 	$(GO) test ./...

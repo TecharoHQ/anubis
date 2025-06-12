@@ -44,6 +44,37 @@ npm run assets
 
 If you change the build process, make sure to update `build.sh` accordingly.
 
+## Running integration tests
+
+Anubis has comprehensive integration tests using Playwright that test real browser behavior. Some tests use HTTPS with localhost certificates.
+
+### Setting up test certificates
+
+For HTTPS integration tests, you'll need mkcert to generate localhost certificates:
+
+1. Install mkcert (already included in Brewfile):
+   ```bash
+   brew install mkcert  # macOS
+   # or download from https://github.com/FiloSottile/mkcert/releases
+   ```
+
+2. Generate test certificates:
+   ```bash
+   make test-certs
+   ```
+
+### Running tests
+
+```bash
+# Run all tests (includes certificate setup)
+make test
+
+# Run just the certificate setup
+make test-certs
+```
+
+The certificates are automatically generated in `internal/test/certs/` and used by integration tests when available. If mkcert is not installed, HTTPS tests will be skipped with a helpful message.
+
 ## Production-ready builds
 
 ```text
