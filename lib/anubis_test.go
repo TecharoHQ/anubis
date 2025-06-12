@@ -632,3 +632,102 @@ func TestRuleChange(t *testing.T) {
 		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 	}
 }
+
+func TestStripBasePrefixFromRequest(t *testing.T) {
+	testCases := []struct {
+		name            string
+		basePrefix      string
+		stripBasePrefix bool
+		requestPath     string
+		expectedPath    string
+	}{
+		{
+			name:            "strip disabled - no change",
+			basePrefix:      "/foo",
+			stripBasePrefix: false,
+			requestPath:     "/foo/bar",
+			expectedPath:    "/foo/bar",
+		},
+		{
+			name:            "strip enabled - removes prefix",
+			basePrefix:      "/foo",
+			stripBasePrefix: true,
+			requestPath:     "/foo/bar",
+			expectedPath:    "/bar",
+		},
+		{
+			name:            "strip enabled - root becomes slash",
+			basePrefix:      "/foo",
+			stripBasePrefix: true,
+			requestPath:     "/foo",
+			expectedPath:    "/",
+		},
+		{
+			name:            "strip enabled - trailing slash on base prefix",
+			basePrefix:      "/foo/",
+			stripBasePrefix: true,
+			requestPath:     "/foo/bar",
+			expectedPath:    "/bar",
+		},
+		{
+			name:            "strip enabled - no prefix match",
+			basePrefix:      "/foo",
+			stripBasePrefix: true,
+			requestPath:     "/other/bar",
+			expectedPath:    "/other/bar",
+		},
+		{
+			name:            "strip enabled - empty base prefix",
+			basePrefix:      "",
+			stripBasePrefix: true,
+			requestPath:     "/foo/bar",
+			expectedPath:    "/foo/bar",
+		},
+		{
+			name:            "strip enabled - nested path",
+			basePrefix:      "/app",
+			stripBasePrefix: true,
+			requestPath:     "/app/api/v1/users",
+			expectedPath:    "/api/v1/users",
+		},
+		{
+			name:            "strip enabled - exact match becomes root",
+			basePrefix:      "/myapp",
+			stripBasePrefix: true,
+			requestPath:     "/myapp/",
+			expectedPath:    "/",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := &Server{
+				opts: Options{
+					BasePrefix:      tc.basePrefix,
+					StripBasePrefix: tc.stripBasePrefix,
+				},
+			}
+
+			req := httptest.NewRequest(http.MethodGet, tc.requestPath, nil)
+			originalPath := req.URL.Path
+
+			result := srv.stripBasePrefixFromRequest(req)
+
+			if result.URL.Path != tc.expectedPath {
+				t.Errorf("expected path %q, got %q", tc.expectedPath, result.URL.Path)
+			}
+
+			// Ensure original request is not modified when no stripping should occur
+			if !tc.stripBasePrefix || tc.basePrefix == "" || !strings.HasPrefix(tc.requestPath, strings.TrimSuffix(tc.basePrefix, "/")) {
+				if result != req {
+					t.Error("expected same request object when no modification needed")
+				}
+			} else {
+				// Ensure original request is not modified when stripping occurs
+				if req.URL.Path != originalPath {
+					t.Error("original request was modified")
+				}
+			}
+		})
+	}
+}

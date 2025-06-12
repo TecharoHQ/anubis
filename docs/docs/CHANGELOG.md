@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump AI-robots.txt to version 1.34
 - Make progress bar styling more compatible (UXP, etc)
 - Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
+- Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 

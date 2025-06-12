@@ -22,9 +22,9 @@ func NewError(verb, publicReason string, privateReason error) *Error {
 }
 
 type Error struct {
+	PrivateReason error
 	Verb          string
 	PublicReason  string
-	PrivateReason error
 	StatusCode    int
 }
 

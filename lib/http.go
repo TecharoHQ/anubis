@@ -134,6 +134,32 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
+func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
+	if !s.opts.StripBasePrefix || s.opts.BasePrefix == "" {
+		return r
+	}
+
+	basePrefix := strings.TrimSuffix(s.opts.BasePrefix, "/")
+	path := r.URL.Path
+
+	if !strings.HasPrefix(path, basePrefix) {
+		return r
+	}
+
+	trimmedPath := strings.TrimPrefix(path, basePrefix)
+	if trimmedPath == "" {
+		trimmedPath = "/"
+	}
+
+	// Clone the request and URL
+	reqCopy := r.Clone(r.Context())
+	urlCopy := *r.URL
+	urlCopy.Path = trimmedPath
+	reqCopy.URL = &urlCopy
+
+	return reqCopy
+}
+
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
 		redir := r.FormValue("redir")
@@ -158,6 +184,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		).ServeHTTP(w, r)
 	} else {
 		requestsProxied.WithLabelValues(r.Host).Inc()
+		r = s.stripBasePrefixFromRequest(r)
 		s.next.ServeHTTP(w, r)
 	}
 }
