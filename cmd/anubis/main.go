@@ -261,6 +261,10 @@ func main() {
 	} else if strings.HasSuffix(*basePrefix, "/") {
 		log.Fatalf("[misconfiguration] base-prefix must not end with a slash")
 	}
+	if *stripBasePrefix && *basePrefix == "" {
+		log.Fatalf("[misconfiguration] strip-base-prefix is set to true, but base-prefix is not set, " +
+			"this may result in unexpected behavior")
+	}
 
 	var priv ed25519.PrivateKey
 	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
