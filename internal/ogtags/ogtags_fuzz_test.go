@@ -52,18 +52,6 @@ func FuzzGetTarget(f *testing.F) {
 			RawQuery: query,
 		}
 
-		// Skip queries with control characters - these wouldn't appear in real HTTP requests
-		hasControlChars := false
-		for i := 0; i < len(query); i++ {
-			if query[i] < 0x20 && query[i] != '\t' {
-				hasControlChars = true
-				break
-			}
-		}
-		if hasControlChars {
-			t.Skip("Skipping query with control characters")
-		}
-
 		// Call getTarget - should not panic
 		result := cache.getTarget(u)
 
