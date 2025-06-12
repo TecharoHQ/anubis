@@ -1,0 +1,36 @@
+name: Regenerate ssh ci runner image
+
+on:
+  # pull_request:
+  #   branches: ["main"]
+  schedule:
+    - cron: "0 0 1,8,15,22 * *"
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: write
+  packages: write
+
+jobs:
+  ssh-ci-rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Log into registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+      - name: Build and push
+        run: |
+          cd ./test/ssh-ci
+          docker buildx bake --push
