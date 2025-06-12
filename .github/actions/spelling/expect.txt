@@ -49,6 +49,7 @@ coreutils
 Cotoyogi
 CRDs
 crt
+Cscript
 daemonizing
 DDOS
 Debian
@@ -69,7 +70,6 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
-euo
 everyones
 evilbot
 evilsite
@@ -108,6 +108,7 @@ hebis
 hec
 hmc
 hostable
+htmlc
 htmx
 httpdebug
 hypertext
@@ -119,7 +120,6 @@ imgproxy
 inp
 iss
 isset
-itv
 ivh
 Jenomis
 JGit
@@ -249,6 +249,7 @@ traefik
 uberspace
 unixhttpd
 unmarshal
+unparseable
 uuidgen
 uvx
 UXP
