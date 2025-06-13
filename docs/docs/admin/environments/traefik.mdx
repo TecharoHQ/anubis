@@ -106,7 +106,7 @@ services:
       - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik where to receive requests
       - traefik.http.routers.target.service=target # Telling Traefik to use the above specified port
       - traefik.http.routers.target.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
-      - traefik.http.routers.target.middlewares=anubis@docker # Use the Anubis middlware
+      - traefik.http.routers.target.middlewares=anubis@docker # Use the Anubis middleware
 
   # Not Protected by Anubis
   target2:
