@@ -96,6 +96,7 @@ gomod
 goodbot
 googlebot
 govulncheck
+goyaml
 GPG
 GPT
 gptbot
@@ -160,6 +161,7 @@ mistralai
 Mojeek
 mojeekbot
 mozilla
+NArg
 nbf
 netsurf
 nginx
