@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -55,7 +55,7 @@ type AnubisRule struct {
 func main() {
 	flag.Parse()
 
-	if *helpFlag || flag.Narg() == 0 {
+	if *helpFlag || flag.NArg() == 0 {
 		showHelp()
 		return
 	}
