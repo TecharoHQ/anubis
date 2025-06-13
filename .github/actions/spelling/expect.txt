@@ -217,6 +217,7 @@ sebest
 secretplans
 selfsigned
 Semrush
+Seo
 setsebool
 shellcheck
 Sidetrade
