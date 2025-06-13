@@ -243,6 +243,28 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 	for _, robotsRule := range robotsRules {
 		userAgent := robotsRule.UserAgent
 
+		// Handle crawl delay as weight adjustment (do this first before any continues)
+		if robotsRule.CrawlDelay > 0 && *crawlDelay > 0 {
+			ruleCounter++
+			rule := AnubisRule{
+				Name:   fmt.Sprintf("%s-crawl-delay-%d", *policyName, ruleCounter),
+				Action: "WEIGH",
+				Weight: &Weight{Adjust: *crawlDelay},
+			}
+
+			if userAgent == "*" {
+				rule.Expression = map[string]interface{}{
+					"single": "true", // Always applies
+				}
+			} else {
+				rule.Expression = map[string]interface{}{
+					"single": fmt.Sprintf("userAgent.contains(%q)", userAgent),
+				}
+			}
+
+			anubisRules = append(anubisRules, rule)
+		}
+
 		// Handle blacklisted user agents (complete deny/challenge)
 		if robotsRule.IsBlacklist {
 			ruleCounter++
@@ -305,27 +327,6 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			anubisRules = append(anubisRules, rule)
 		}
 
-		// Handle crawl delay as weight adjustment
-		if robotsRule.CrawlDelay > 0 && *crawlDelay > 0 {
-			ruleCounter++
-			rule := AnubisRule{
-				Name:   fmt.Sprintf("%s-crawl-delay-%d", *policyName, ruleCounter),
-				Action: "WEIGH",
-				Weight: &Weight{Adjust: *crawlDelay},
-			}
-
-			if userAgent == "*" {
-				rule.Expression = map[string]interface{}{
-					"single": "true", // Always applies
-				}
-			} else {
-				rule.Expression = map[string]interface{}{
-					"single": fmt.Sprintf("userAgent.contains(%q)", userAgent),
-				}
-			}
-
-			anubisRules = append(anubisRules, rule)
-		}
 	}
 
 	return anubisRules
