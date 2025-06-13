@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
