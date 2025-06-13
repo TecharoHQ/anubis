@@ -66,10 +66,10 @@ type Server struct {
 	policy     *policy.ParsedConfig
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
+	cookieName string
 	priv       ed25519.PrivateKey
 	pub        ed25519.PublicKey
 	opts       Options
-	cookieName string
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -288,15 +288,15 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lg = lg.With("check_result", cr)
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+	chal := s.challengeFor(r, rule.Challenge.Difficulty)
 
-	s.SetCookie(w, anubis.TestCookieName, challenge, "/")
+	s.SetCookie(w, anubis.TestCookieName, chal, "/")
 
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
 	}{
-		Challenge: challenge,
+		Challenge: chal,
 		Rules:     rule.Challenge,
 	})
 	if err != nil {
@@ -304,7 +304,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	lg.Debug("made challenge", "challenge", challenge, "rules", rule.Challenge, "cr", cr)
+	lg.Debug("made challenge", "challenge", chal, "rules", rule.Challenge, "cr", cr)
 	challengesIssued.WithLabelValues("api").Inc()
 }
 
@@ -317,7 +317,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	if _, err := r.Cookie(anubis.TestCookieName); err == http.ErrNoCookie {
+	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
 		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.ClearCookie(w, anubis.TestCookieName, "/")
 		lg.Warn("user has cookies disabled, this is not an anubis bug")
@@ -365,7 +365,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	if err := impl.Validate(r, lg, rule, challengeStr); err != nil {
-		failedValidations.WithLabelValues(string(rule.Challenge.Algorithm)).Inc()
+		failedValidations.WithLabelValues(rule.Challenge.Algorithm).Inc()
 		var cerr *challenge.Error
 		s.ClearCookie(w, s.cookieName, cookiePath)
 		lg.Debug("challenge validate call failed", "err", err)
@@ -402,17 +402,19 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redir, http.StatusFound)
 }
 
-func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
-	err := r.FormValue("err")
-	s.respondWithError(w, r, err)
-}
-
-func cr(name string, rule config.Rule) policy.CheckResult {
+func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 	return policy.CheckResult{
-		Name: name,
-		Rule: rule,
+		Name:   name,
+		Rule:   rule,
+		Weight: weight,
 	}
 }
+
+var (
+	weightOkayStatic    = policy.NewStaticHashChecker("weight/okay")
+	weightMildSusStatic = policy.NewStaticHashChecker("weight/mild-suspicion")
+	weightVerySusStatic = policy.NewStaticHashChecker("weight/extreme-suspicion")
+)
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
@@ -426,6 +428,8 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
+	weight := 0
+
 	for _, b := range s.policy.Bots {
 		match, err := b.Rules.Check(r)
 		if err != nil {
@@ -433,11 +437,47 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		}
 
 		if match {
-			return cr("bot/"+b.Name, b.Action), &b, nil
+			switch b.Action {
+			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
+				return cr("bot/"+b.Name, b.Action, weight), &b, nil
+			case config.RuleWeigh:
+				slog.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
+				weight += b.Weight.Adjust
+			}
 		}
 	}
 
-	return cr("default/allow", config.RuleAllow), &policy.Bot{
+	switch {
+	case weight <= 0:
+		return cr("weight/okay", config.RuleAllow, weight), &policy.Bot{
+			Challenge: &config.ChallengeRules{
+				Difficulty: s.policy.DefaultDifficulty,
+				ReportAs:   s.policy.DefaultDifficulty,
+				Algorithm:  config.DefaultAlgorithm,
+			},
+			Rules: weightOkayStatic,
+		}, nil
+	case weight > 0 && weight < 10:
+		return cr("weight/mild-suspicion", config.RuleChallenge, weight), &policy.Bot{
+			Challenge: &config.ChallengeRules{
+				Difficulty: s.policy.DefaultDifficulty,
+				ReportAs:   s.policy.DefaultDifficulty,
+				Algorithm:  "metarefresh",
+			},
+			Rules: weightMildSusStatic,
+		}, nil
+	case weight >= 10:
+		return cr("weight/extreme-suspicion", config.RuleChallenge, weight), &policy.Bot{
+			Challenge: &config.ChallengeRules{
+				Difficulty: s.policy.DefaultDifficulty,
+				ReportAs:   s.policy.DefaultDifficulty,
+				Algorithm:  "fast",
+			},
+			Rules: weightVerySusStatic,
+		}, nil
+	}
+
+	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
 			ReportAs:   s.policy.DefaultDifficulty,

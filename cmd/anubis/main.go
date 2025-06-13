@@ -55,6 +55,7 @@ var (
 	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
 	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
+	stripBasePrefix          = flag.Bool("strip-base-prefix", false, "if true, strips the base prefix from requests forwarded to the target server")
 	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
 	targetSNI                = flag.String("target-sni", "", "if set, the value of the TLS handshake hostname when forwarding requests to the target")
 	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
@@ -69,6 +70,7 @@ var (
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
 	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
+	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -260,6 +262,10 @@ func main() {
 	} else if strings.HasSuffix(*basePrefix, "/") {
 		log.Fatalf("[misconfiguration] base-prefix must not end with a slash")
 	}
+	if *stripBasePrefix && *basePrefix == "" {
+		log.Fatalf("[misconfiguration] strip-base-prefix is set to true, but base-prefix is not set, " +
+			"this may result in unexpected behavior")
+	}
 
 	var priv ed25519.PrivateKey
 	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
@@ -304,6 +310,7 @@ func main() {
 
 	s, err := libanubis.New(libanubis.Options{
 		BasePrefix:           *basePrefix,
+		StripBasePrefix:      *stripBasePrefix,
 		Next:                 rp,
 		Policy:               policy,
 		ServeRobotsTXT:       *robotsTxt,
@@ -338,7 +345,7 @@ func main() {
 	h = s
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
-	h = internal.XForwardedForUpdate(h)
+	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
@@ -423,11 +430,11 @@ func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
 			return os.MkdirAll(destPath, 0o700)
 		}
 
-		data, err := fs.ReadFile(fsys, path)
+		embeddedData, err := fs.ReadFile(fsys, path)
 		if err != nil {
 			return err
 		}
 
-		return os.WriteFile(destPath, data, 0o644)
+		return os.WriteFile(destPath, embeddedData, 0o644)
 	})
 }

@@ -36,6 +36,7 @@ type Options struct {
 	PrivateKey           ed25519.PrivateKey
 	CookieExpiration     time.Duration
 	OGTimeToLive         time.Duration
+	StripBasePrefix      bool
 	OGCacheConsidersHost bool
 	OGPassthrough        bool
 	CookiePartitioned    bool
@@ -68,6 +69,9 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 	}(fin)
 
 	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
+	}
 	var validationErrs []error
 
 	for _, b := range anubisPolicy.Bots {
@@ -146,11 +150,15 @@ func New(opts Options) (*Server, error) {
 		}), "GET")
 	}
 
-	registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
 	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
-	registerWithPrefix(anubis.APIPrefix+"test-error", http.HandlerFunc(result.TestError), "GET")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
+
+	//goland:noinspection GoBoolExpressions
+	if anubis.Version == "devel" {
+		// make-challenge is only used in tests. Only enable while version is devel
+		registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
+	}
 
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)

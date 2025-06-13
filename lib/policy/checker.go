@@ -47,6 +47,20 @@ func (cl CheckerList) Hash() string {
 	return internal.SHA256sum(sb.String())
 }
 
+type staticHashChecker struct {
+	hash string
+}
+
+func (staticHashChecker) Check(r *http.Request) (bool, error) {
+	return true, nil
+}
+
+func (s staticHashChecker) Hash() string { return s.hash }
+
+func NewStaticHashChecker(hashable string) Checker {
+	return staticHashChecker{hash: internal.SHA256sum(hashable)}
+}
+
 type RemoteAddrChecker struct {
 	ranger cidranger.Ranger
 	hash   string
@@ -62,7 +76,10 @@ func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
 			return nil, fmt.Errorf("%w: range %s not parsing: %w", ErrMisconfiguration, cidr, err)
 		}
 
-		ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
+		err = ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
+		if err != nil {
+			return nil, fmt.Errorf("%w: error inserting ip range: %w", ErrMisconfiguration, err)
+		}
 		fmt.Fprintln(&sb, cidr)
 	}
 

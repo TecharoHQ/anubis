@@ -10,6 +10,7 @@ import (
 type Bot struct {
 	Rules     Checker
 	Challenge *config.ChallengeRules
+	Weight    *config.Weight
 	Name      string
 	Action    config.Rule
 }

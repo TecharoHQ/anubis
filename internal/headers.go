@@ -81,12 +81,12 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 
 // XForwardedForUpdate sets or updates the X-Forwarded-For header, adding
 // the known remote address to an existing chain if present
-func XForwardedForUpdate(next http.Handler) http.Handler {
+func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer next.ServeHTTP(w, r)
 
 		pref := XFFComputePreferences{
-			StripPrivate:  true,
+			StripPrivate:  stripPrivate,
 			StripLoopback: true,
 			StripCGNAT:    true,
 			Flatten:       true,

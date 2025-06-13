@@ -12,13 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Added support to use Traefik forwardAuth middleware
 
+- Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
+  development
+- Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
+- Requests can have their weight be adjusted, if a request weighs zero or less than it is allowed through
 - Refactor challenge presentation logic to use a challenge registry
 - Allow challenge implementations to register HTTP routes
 - Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))
+- Bump AI-robots.txt to version 1.34
+- Make progress bar styling more compatible (UXP, etc)
+- Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 
-Return `data/bots/ai-robots-txt.yaml` to avoid breaking configs [#599](https://github.com/TecharoHQ/anubis/issues/599)
+- Return `data/bots/ai-robots-txt.yaml` to avoid breaking configs [#599](https://github.com/TecharoHQ/anubis/issues/599)
 
 ## v1.19.0: Jenomis cen Lexentale
 
@@ -33,27 +40,27 @@ Mostly a bunch of small features, no big ticket things this time.
 - Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
 - Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.
 - Added Podman and Docker support for running Playwright tests
-- Add a default rule to throw challenges when a request with the `X-Firefox-Ai` header is set.
+- Add a default rule to throw challenges when a request with the `X-Firefox-Ai` header is set
 - Updated the nonce value in the challenge JWT cookie to be a string instead of a number
 - Rename cookies in response to user feedback
 - Ensure cookie renaming is consistent across configuration options
 - Add Bookstack app in data
 - Truncate everything but the first five characters of Accept-Language headers when making challenges
 - Ensure client JavaScript is served with Content-Type text/javascript.
-- Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service.
+- Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service
 - Bump AI-robots.txt to version 1.31
 - Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
 - Added SearXNG instance tracker whitelist policy
 - Added Qualys SSL Labs whitelist policy
 - Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
-- Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service.
+- Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service
 - Fixed CEL expression matching validator to now properly error out when it receives empty expressions
-- Added OpenRC init.d script.
-- Added `--version` flag.
-- Added `anubis_proxied_requests_total` metric to count proxied requests.
+- Added OpenRC init.d script
+- Added `--version` flag
+- Added `anubis_proxied_requests_total` metric to count proxied requests
 - Add `Applebot` as "good" web crawler
-- Reorganize AI/LLM crawler blocking into three separate stances, maintaining existing status quo as default.
-- Split out AI/LLM user agent blocking policies, adding documentation for each.
+- Reorganize AI/LLM crawler blocking into three separate stances, maintaining existing status quo as default
+- Split out AI/LLM user agent blocking policies, adding documentation for each
 
 ## v1.18.0: Varis zos Galvus
 

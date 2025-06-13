@@ -244,3 +244,39 @@ In case your service needs it for risk calculation reasons, Anubis exposes infor
 | `X-Anubis-Status` | The status and how strict Anubis was in its checks   | `PASS`           |
 
 Policy rules are matched using [Go's standard library regular expressions package](https://pkg.go.dev/regexp). You can mess around with the syntax at [regex101.com](https://regex101.com), make sure to select the Golang option.
+
+## Request Weight
+
+Anubis rules can also add or remove "weight" from requests, allowing administrators to configure custom levels of suspicion. For example, if your application uses session tokens named `i_love_gitea`:
+
+```yaml
+- name: gitea-session-token
+  action: WEIGH
+  expression:
+    all:
+      - '"Cookie" in headers'
+      - headers["Cookie"].contains("i_love_gitea=")
+  # Remove 5 weight points
+  weight:
+    adjust: -5
+```
+
+This would remove five weight points from the request, making Anubis present the [Meta Refresh challenge](./configuration/challenges/metarefresh.mdx).
+
+### Weight Thresholds
+
+Weight thresholds and challenge associations will be configurable with CEL expressions in the configuration file in an upcoming patch, for now here's how Anubis configures the weight thresholds:
+
+|                                      Weight Expression | Action                                                                                                                                 |
+| -----------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------- |
+|                   `weight < 0` (weight is less than 0) | Allow the request through.                                                                                                             |
+|                 `weight < 10` (weight is less than 10) | Challenge the client with the [Meta Refresh challenge](./configuration/challenges/metarefresh.mdx) at the default difficulty level.    |
+| `weight >= 10` (weight is greater than or equal to 10) | Challenge the client with the [Proof of Work challenge](./configuration/challenges/proof-of-work.mdx) at the default difficulty level. |
+
+### Advice
+
+Weight is still very new and needs work. This is an experimental feature and should be treated as such. Here's some advice to help you better tune requests:
+
+- The default weight for browser-like clients is 10. This triggers an aggressive challenge.
+- Remove and add weight in multiples of five.
+- Be careful with how you configure weight.

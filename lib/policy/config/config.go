@@ -39,20 +39,22 @@ const (
 	RuleAllow     Rule = "ALLOW"
 	RuleDeny      Rule = "DENY"
 	RuleChallenge Rule = "CHALLENGE"
+	RuleWeigh     Rule = "WEIGH"
 	RuleBenchmark Rule = "DEBUG_BENCHMARK"
 )
 
 const DefaultAlgorithm = "fast"
 
 type BotConfig struct {
-	UserAgentRegex *string           `json:"user_agent_regex"`
-	PathRegex      *string           `json:"path_regex"`
-	HeadersRegex   map[string]string `json:"headers_regex"`
-	Expression     *ExpressionOrList `json:"expression"`
+	UserAgentRegex *string           `json:"user_agent_regex,omitempty"`
+	PathRegex      *string           `json:"path_regex,omitempty"`
+	HeadersRegex   map[string]string `json:"headers_regex,omitempty"`
+	Expression     *ExpressionOrList `json:"expression,omitempty"`
 	Challenge      *ChallengeRules   `json:"challenge,omitempty"`
+	Weight         *Weight           `json:"weight,omitempty"`
 	Name           string            `json:"name"`
 	Action         Rule              `json:"action"`
-	RemoteAddr     []string          `json:"remote_addresses"`
+	RemoteAddr     []string          `json:"remote_addresses,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -73,7 +75,7 @@ func (b BotConfig) Zero() bool {
 	return true
 }
 
-func (b BotConfig) Valid() error {
+func (b *BotConfig) Valid() error {
 	var errs []error
 
 	if b.Name == "" {
@@ -144,7 +146,7 @@ func (b BotConfig) Valid() error {
 	}
 
 	switch b.Action {
-	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny:
+	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny, RuleWeigh:
 		// okay
 	default:
 		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))
@@ -154,6 +156,10 @@ func (b BotConfig) Valid() error {
 		if err := b.Challenge.Valid(); err != nil {
 			errs = append(errs, err)
 		}
+	}
+
+	if b.Action == RuleWeigh && b.Weight == nil {
+		b.Weight = &Weight{Adjust: 5}
 	}
 
 	if len(errs) != 0 {

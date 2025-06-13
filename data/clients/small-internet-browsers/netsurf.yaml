@@ -1,0 +1,5 @@
+- name: "reduce-weight-netsurf"
+  user_agent_regex: "NetSurf"
+  action: WEIGH
+  weight:
+    adjust: -5

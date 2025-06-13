@@ -1,4 +1,6 @@
 # https://connect.mozilla.org/t5/firefox-labs/try-out-link-previews-in-firefox-labs-138-and-share-your/td-p/92012
 - name: x-firefox-ai
-  action: CHALLENGE
+  action: WEIGH
   expression: '"X-Firefox-Ai" in headers'
+  weight:
+    adjust: 5

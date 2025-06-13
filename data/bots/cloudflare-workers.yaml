@@ -1,4 +1,6 @@
 - name: cloudflare-workers
   headers_regex:
     CF-Worker: .*
-  action: DENY
+  action: WEIGH
+  weight:
+    adjust: 15

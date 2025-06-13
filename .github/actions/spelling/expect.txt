@@ -6,6 +6,7 @@ amazonbot
 anthro
 anubis
 anubistest
+apk
 Applebot
 archlinux
 badregexes
@@ -68,6 +69,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+euo
 everyones
 evilbot
 evilsite
@@ -117,6 +119,7 @@ imgproxy
 inp
 iss
 isset
+itv
 ivh
 Jenomis
 JGit
@@ -158,6 +161,7 @@ Mojeek
 mojeekbot
 mozilla
 nbf
+netsurf
 nginx
 nobots
 NONINFRINGEMENT
@@ -170,6 +174,7 @@ onionservice
 openai
 openrc
 pag
+palemoon
 Pangu
 parseable
 passthrough
@@ -244,7 +249,9 @@ traefik
 uberspace
 unixhttpd
 unmarshal
+uuidgen
 uvx
+UXP
 Varis
 Velen
 vendored

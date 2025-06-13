@@ -1,0 +1,37 @@
+name: SSH CI
+
+on:
+  push:
+    branches: ["main"]
+  # pull_request:
+  #   branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  ssh:
+    if: github.repository == 'TecharoHQ/anubis'
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        host:
+          - ubuntu@riscv64.techaro.lol
+          - ci@ppc64le.techaro.lol
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install CI target SSH key
+        uses: shimataro/ssh-key-action@d4fffb50872869abe2d9a9098a6d9c5aa7d16be4 # v2.7.0
+        with:
+          key: ${{ secrets.CI_SSH_KEY }}
+          name: id_rsa
+          known_hosts: ${{ secrets.CI_SSH_KNOWN_HOSTS }}
+      - name: Run CI
+        run: bash test/ssh-ci/rigging.sh ${{ matrix.host }}
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}

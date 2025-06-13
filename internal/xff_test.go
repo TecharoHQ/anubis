@@ -23,7 +23,7 @@ func TestXForwardedForUpdateIgnoreUnix(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	XForwardedForUpdate(h).ServeHTTP(w, r)
+	XForwardedForUpdate(true, h).ServeHTTP(w, r)
 
 	if r.RemoteAddr != remoteAddr {
 		t.Errorf("wanted remoteAddr to be %s, got: %s", r.RemoteAddr, remoteAddr)
@@ -43,7 +43,7 @@ func TestXForwardedForUpdateAddToChain(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	srv := httptest.NewServer(XForwardedForUpdate(h))
+	srv := httptest.NewServer(XForwardedForUpdate(true, h))
 
 	r, err := http.NewRequest(http.MethodGet, srv.URL, nil)
 	if err != nil {
@@ -80,6 +80,15 @@ func TestComputeXFFHeader(t *testing.T) {
 				StripPrivate: true,
 			},
 			result: "1.1.1.1,127.0.0.1",
+		},
+		{
+			name:          "StripPrivate",
+			remoteAddr:    "127.0.0.1:80",
+			origXFFHeader: "1.1.1.1,10.0.0.1",
+			pref: XFFComputePreferences{
+				StripPrivate: false,
+			},
+			result: "1.1.1.1,10.0.0.1,127.0.0.1",
 		},
 		{
 			name:          "StripLoopback",
