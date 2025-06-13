@@ -131,7 +131,7 @@ Examples:
   robots2policy -input robots.txt -output policy.yaml
 
   # Convert from URL
-  robots2policy -input https://sourceware.org/robots.txt -format json
+  robots2policy -input https://example.com/robots.txt -format json
 
   # Read from stdin, write to stdout
   curl https://example.com/robots.txt | robots2policy -input - -format yaml
