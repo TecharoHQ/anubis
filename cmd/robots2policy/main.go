@@ -36,12 +36,13 @@ type RobotsRule struct {
 	IsBlacklist bool // true if this is a specifically denied user agent
 }
 
+//betteralign:ignore, we want name to be the first field
 type AnubisRule struct {
+	Name       string                 `yaml:"name" json:"name"`
+	Action     string                 `yaml:"action" json:"action"`
 	Expression map[string]interface{} `yaml:"expression,omitempty" json:"expression,omitempty"`
 	Challenge  *config.ChallengeRules `yaml:"challenge,omitempty" json:"challenge,omitempty"`
 	Weight     *config.Weight         `yaml:"weight,omitempty" json:"weight,omitempty"`
-	Name       string                 `yaml:"name" json:"name"`
-	Action     string                 `yaml:"action" json:"action"`
 }
 
 func main() {
