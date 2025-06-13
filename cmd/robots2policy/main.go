@@ -47,7 +47,7 @@ type AnubisRule struct {
 func main() {
 	flag.Parse()
 
-	if *helpFlag || flag.NArg() == 0 {
+	if *helpFlag || flag.NFlag() == 0 {
 		showHelp()
 		return
 	}
