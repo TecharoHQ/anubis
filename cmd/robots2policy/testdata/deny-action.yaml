@@ -1,0 +1,8 @@
+- name: robots-txt-policy-disallow-1
+  action: DENY
+  expression:
+    single: path.startsWith("/admin/")
+- name: robots-txt-policy-disallow-2
+  action: DENY
+  expression:
+    single: path.startsWith("/private")

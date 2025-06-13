@@ -1,0 +1,8 @@
+- name: my-custom-policy-disallow-1
+  action: CHALLENGE
+  expression:
+    single: path.startsWith("/admin/")
+- name: my-custom-policy-disallow-2
+  action: CHALLENGE
+  expression:
+    single: path.startsWith("/private")
