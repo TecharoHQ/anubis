@@ -69,7 +69,6 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
-euo
 everyones
 evilbot
 evilsite
@@ -119,7 +118,6 @@ imgproxy
 inp
 iss
 isset
-itv
 ivh
 Jenomis
 JGit
@@ -166,6 +164,7 @@ nginx
 nobots
 NONINFRINGEMENT
 nosleep
+nss
 OCOB
 ogtags
 omgili

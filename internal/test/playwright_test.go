@@ -97,6 +97,13 @@ var (
 			userAgent: "AnubisTest/0",
 		},
 	}
+	clientCertificates = []playwright.ClientCertificate{
+		{
+			Origin:   "https://localhost",
+			CertPath: playwright.String("internal/test/certs/localhost+2.pem"),
+			KeyPath:  playwright.String("internal/test/certs/localhost+2-key.pem"),
+		},
+	}
 )
 
 const (
@@ -192,14 +199,6 @@ func ensureTestCertificates(t *testing.T) {
 		t.Skip("mkcert not found, skipping HTTPS tests. Install with: brew install mkcert")
 	}
 
-	// Install the local CA if not already installed
-	t.Log("Installing mkcert root CA...")
-	installCmd := exec.Command("mkcert", "-install")
-	installCmd.Stderr = os.Stderr
-	if err := installCmd.Run(); err != nil {
-		t.Logf("Warning: failed to install mkcert root CA: %v", err)
-	}
-
 	// Create certs directory
 	if err := os.MkdirAll("internal/test/certs", 0755); err != nil {
 		t.Fatalf("failed to create certs directory: %v", err)
@@ -284,7 +283,8 @@ func TestPlaywrightBrowser(t *testing.T) {
 			defer browser.Close()
 
 			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
-				AcceptDownloads: playwright.Bool(false),
+				AcceptDownloads:    playwright.Bool(false),
+				ClientCertificates: clientCertificates,
 				ExtraHttpHeaders: map[string]string{
 					"X-Real-Ip": "127.0.0.1",
 				},
@@ -374,7 +374,8 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 			defer browser.Close()
 
 			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
-				AcceptDownloads: playwright.Bool(false),
+				AcceptDownloads:    playwright.Bool(false),
+				ClientCertificates: clientCertificates,
 				ExtraHttpHeaders: map[string]string{
 					"X-Real-Ip": "127.0.0.1",
 				},
@@ -489,7 +490,8 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 	defer browser.Close()
 
 	ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
-		AcceptDownloads: playwright.Bool(false),
+		AcceptDownloads:    playwright.Bool(false),
+		ClientCertificates: clientCertificates,
 		ExtraHttpHeaders: map[string]string{
 			"X-Real-Ip": tc.realIP,
 		},
