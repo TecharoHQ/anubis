@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/TecharoHQ/anubis/lib/policy/config"
+
 	"sigs.k8s.io/yaml"
 )
 
@@ -34,20 +36,10 @@ type RobotsRule struct {
 	IsBlacklist bool // true if this is a specifically denied user agent
 }
 
-type Weight struct {
-	Adjust int `yaml:"adjust" json:"adjust"`
-}
-
-type Challenge struct {
-	Algorithm  string `yaml:"algorithm,omitempty" json:"algorithm,omitempty"`
-	Difficulty int    `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
-	ReportAs   int    `yaml:"report_as,omitempty" json:"report_as,omitempty"`
-}
-
 type AnubisRule struct {
 	Expression map[string]interface{} `yaml:"expression,omitempty" json:"expression,omitempty"`
-	Challenge  *Challenge             `yaml:"challenge,omitempty" json:"challenge,omitempty"`
-	Weight     *Weight                `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Challenge  *config.ChallengeRules `yaml:"challenge,omitempty" json:"challenge,omitempty"`
+	Weight     *config.Weight         `yaml:"weight,omitempty" json:"weight,omitempty"`
 	Name       string                 `yaml:"name" json:"name"`
 	Action     string                 `yaml:"action" json:"action"`
 }
@@ -249,7 +241,7 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			rule := AnubisRule{
 				Name:   fmt.Sprintf("%s-crawl-delay-%d", *policyName, ruleCounter),
 				Action: "WEIGH",
-				Weight: &Weight{Adjust: *crawlDelay},
+				Weight: &config.Weight{Adjust: *crawlDelay},
 			}
 
 			if userAgent == "*" {
@@ -277,7 +269,7 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 				// This would block everything - convert to a weight adjustment instead
 				rule.Name = fmt.Sprintf("%s-global-restriction-%d", *policyName, ruleCounter)
 				rule.Action = "WEIGH"
-				rule.Weight = &Weight{Adjust: 20} // Increase difficulty significantly
+				rule.Weight = &config.Weight{Adjust: 20} // Increase difficulty significantly
 				rule.Expression = map[string]interface{}{
 					"single": "true", // Always applies
 				}
