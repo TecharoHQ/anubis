@@ -39,17 +39,17 @@ type Weight struct {
 }
 
 type Challenge struct {
-	Difficulty int    `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
 	Algorithm  string `yaml:"algorithm,omitempty" json:"algorithm,omitempty"`
+	Difficulty int    `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
 	ReportAs   int    `yaml:"report_as,omitempty" json:"report_as,omitempty"`
 }
 
 type AnubisRule struct {
-	Name       string                 `yaml:"name" json:"name"`
-	Action     string                 `yaml:"action" json:"action"`
 	Expression map[string]interface{} `yaml:"expression,omitempty" json:"expression,omitempty"`
 	Challenge  *Challenge             `yaml:"challenge,omitempty" json:"challenge,omitempty"`
 	Weight     *Weight                `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Name       string                 `yaml:"name" json:"name"`
+	Action     string                 `yaml:"action" json:"action"`
 }
 
 func main() {
