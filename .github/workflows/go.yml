@@ -79,6 +79,8 @@ jobs:
       run: npm run build
 
     - name: Test
+      env:
+        PLAYWRIGHT_RUNNER: none
       run: npm run test
 
     - name: Lint with staticcheck

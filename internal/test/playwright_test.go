@@ -192,6 +192,14 @@ func ensureTestCertificates(t *testing.T) {
 		t.Skip("mkcert not found, skipping HTTPS tests. Install with: brew install mkcert")
 	}
 
+	// Install the local CA if not already installed
+	t.Log("Installing mkcert root CA...")
+	installCmd := exec.Command("mkcert", "-install")
+	installCmd.Stderr = os.Stderr
+	if err := installCmd.Run(); err != nil {
+		t.Logf("Warning: failed to install mkcert root CA: %v", err)
+	}
+
 	// Create certs directory
 	if err := os.MkdirAll("internal/test/certs", 0755); err != nil {
 		t.Fatalf("failed to create certs directory: %v", err)

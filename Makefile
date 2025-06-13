@@ -37,6 +37,8 @@ test-certs:
 	else \
 		echo "Test certificates already exist"; \
 	fi
+	@echo "Installing mkcert root CA..."
+	@mkcert -install 2>/dev/null || echo "Warning: failed to install mkcert root CA (may already be installed)"
 
 test: assets test-certs
 	$(GO) test ./...
