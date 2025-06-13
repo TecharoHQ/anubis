@@ -170,9 +170,9 @@ func (b *BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
-	Algorithm  string `json:"algorithm"`
-	Difficulty int    `json:"difficulty"`
-	ReportAs   int    `json:"report_as"`
+	Algorithm  string `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
+	Difficulty int    `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
+	ReportAs   int    `json:"report_as,omitempty" yaml:"report_as,omitempty"`
 }
 
 var (
