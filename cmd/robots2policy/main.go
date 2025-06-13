@@ -1,0 +1,347 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	inputFile     = flag.String("input", "", "path to robots.txt file (use - for stdin)")
+	outputFile    = flag.String("output", "", "output file path (use - for stdout, defaults to stdout)")
+	outputFormat  = flag.String("format", "yaml", "output format: yaml or json")
+	baseAction    = flag.String("action", "CHALLENGE", "default action for disallowed paths: ALLOW, DENY, CHALLENGE, WEIGH")
+	crawlDelay    = flag.Int("crawl-delay-weight", 0, "if > 0, add weight adjustment for crawl-delay (difficulty adjustment)")
+	policyName    = flag.String("name", "robots-txt-policy", "name for the generated policy")
+	userAgentDeny = flag.String("deny-user-agents", "DENY", "action for specifically blocked user agents: DENY, CHALLENGE")
+	helpFlag      = flag.Bool("help", false, "show help")
+)
+
+type RobotsRule struct {
+	UserAgent   string
+	Disallows   []string
+	Allows      []string
+	CrawlDelay  int
+	IsBlacklist bool // true if this is a specifically denied user agent
+}
+
+type Weight struct {
+	Adjust int `yaml:"adjust" json:"adjust"`
+}
+
+type Challenge struct {
+	Difficulty int    `yaml:"difficulty,omitempty" json:"difficulty,omitempty"`
+	Algorithm  string `yaml:"algorithm,omitempty" json:"algorithm,omitempty"`
+	ReportAs   int    `yaml:"report_as,omitempty" json:"report_as,omitempty"`
+}
+
+type AnubisRule struct {
+	Name       string                 `yaml:"name" json:"name"`
+	Action     string                 `yaml:"action" json:"action"`
+	Expression map[string]interface{} `yaml:"expression,omitempty" json:"expression,omitempty"`
+	Challenge  *Challenge             `yaml:"challenge,omitempty" json:"challenge,omitempty"`
+	Weight     *Weight                `yaml:"weight,omitempty" json:"weight,omitempty"`
+}
+
+func main() {
+	flag.Parse()
+
+	if *helpFlag || len(os.Args) == 1 {
+		showHelp()
+		return
+	}
+
+	if *inputFile == "" {
+		log.Fatal("input file is required (use -input flag or -help for usage)")
+	}
+
+	// Read robots.txt
+	var input io.Reader
+	if *inputFile == "-" {
+		input = os.Stdin
+	} else if strings.HasPrefix(*inputFile, "http://") || strings.HasPrefix(*inputFile, "https://") {
+		resp, err := http.Get(*inputFile)
+		if err != nil {
+			log.Fatalf("failed to fetch robots.txt from URL: %v", err)
+		}
+		defer resp.Body.Close()
+		input = resp.Body
+	} else {
+		file, err := os.Open(*inputFile)
+		if err != nil {
+			log.Fatalf("failed to open input file: %v", err)
+		}
+		defer file.Close()
+		input = file
+	}
+
+	// Parse robots.txt
+	rules, err := parseRobotsTxt(input)
+	if err != nil {
+		log.Fatalf("failed to parse robots.txt: %v", err)
+	}
+
+	// Convert to Anubis rules
+	anubisRules := convertToAnubisRules(rules)
+
+	// Generate output
+	var output []byte
+	switch strings.ToLower(*outputFormat) {
+	case "yaml":
+		output, err = yaml.Marshal(anubisRules)
+	case "json":
+		output, err = json.MarshalIndent(anubisRules, "", "  ")
+	default:
+		log.Fatalf("unsupported output format: %s (use yaml or json)", *outputFormat)
+	}
+
+	if err != nil {
+		log.Fatalf("failed to marshal output: %v", err)
+	}
+
+	// Write output
+	if *outputFile == "" || *outputFile == "-" {
+		fmt.Print(string(output))
+	} else {
+		err = os.WriteFile(*outputFile, output, 0644)
+		if err != nil {
+			log.Fatalf("failed to write output file: %v", err)
+		}
+		fmt.Printf("Generated Anubis policy written to %s\n", *outputFile)
+	}
+}
+
+func showHelp() {
+	fmt.Printf(`robots2policy - Convert robots.txt to Anubis challenge rules
+
+Usage:
+  robots2policy -input <robots.txt> [options]
+
+Examples:
+  # Convert local robots.txt file
+  robots2policy -input robots.txt -output policy.yaml
+
+  # Convert from URL
+  robots2policy -input https://sourceware.org/robots.txt -format json
+
+  # Read from stdin, write to stdout
+  curl https://example.com/robots.txt | robots2policy -input - -format yaml
+
+Options:
+`)
+	flag.PrintDefaults()
+	fmt.Printf(`
+Actions:
+  ALLOW     - Allow the request without challenge
+  DENY      - Block the request completely  
+  CHALLENGE - Issue proof-of-work challenge (default)
+  WEIGH     - Adjust challenge difficulty weight
+
+The tool converts robots.txt rules as follows:
+  - Disallow rules -> CEL expressions matching request paths
+  - User-agent rules -> CEL expressions matching user agent headers
+  - Crawl-delay -> Optional weight adjustments for challenge difficulty
+  - Blacklisted user agents -> Separate deny/challenge rules
+
+Generated CEL expressions use:
+  - path.startsWith("/pattern") for exact path prefixes
+  - path.matches("regex") for wildcard patterns (* and ?)
+  - userAgent.contains("pattern") for user agent matching
+`)
+}
+
+func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
+	scanner := bufio.NewScanner(input)
+	var rules []RobotsRule
+	var currentRule *RobotsRule
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Split on first colon
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		directive := strings.TrimSpace(strings.ToLower(parts[0]))
+		value := strings.TrimSpace(parts[1])
+
+		switch directive {
+		case "user-agent":
+			// Start a new rule section
+			if currentRule != nil {
+				rules = append(rules, *currentRule)
+			}
+			currentRule = &RobotsRule{
+				UserAgent: value,
+				Disallows: make([]string, 0),
+				Allows:    make([]string, 0),
+			}
+
+		case "disallow":
+			if currentRule != nil && value != "" {
+				currentRule.Disallows = append(currentRule.Disallows, value)
+			}
+
+		case "allow":
+			if currentRule != nil && value != "" {
+				currentRule.Allows = append(currentRule.Allows, value)
+			}
+
+		case "crawl-delay":
+			if currentRule != nil {
+				if delay, err := parseIntSafe(value); err == nil {
+					currentRule.CrawlDelay = delay
+				}
+			}
+		}
+	}
+
+	// Don't forget the last rule
+	if currentRule != nil {
+		rules = append(rules, *currentRule)
+	}
+
+	// Mark blacklisted user agents (those with "Disallow: /")
+	for i := range rules {
+		for _, disallow := range rules[i].Disallows {
+			if disallow == "/" {
+				rules[i].IsBlacklist = true
+				break
+			}
+		}
+	}
+
+	return rules, scanner.Err()
+}
+
+func parseIntSafe(s string) (int, error) {
+	var result int
+	_, err := fmt.Sscanf(s, "%d", &result)
+	return result, err
+}
+
+func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
+	var anubisRules []AnubisRule
+	ruleCounter := 0
+
+	for _, robotsRule := range robotsRules {
+		userAgent := robotsRule.UserAgent
+
+		// Handle blacklisted user agents (complete deny/challenge)
+		if robotsRule.IsBlacklist {
+			ruleCounter++
+			rule := AnubisRule{
+				Name:   fmt.Sprintf("%s-blacklist-%d", *policyName, ruleCounter),
+				Action: *userAgentDeny,
+			}
+
+			if userAgent == "*" {
+				// This would block everything - convert to a weight adjustment instead
+				rule.Name = fmt.Sprintf("%s-global-restriction-%d", *policyName, ruleCounter)
+				rule.Action = "WEIGH"
+				rule.Weight = &Weight{Adjust: 20} // Increase difficulty significantly
+				rule.Expression = map[string]interface{}{
+					"single": "true", // Always applies
+				}
+			} else {
+				rule.Expression = map[string]interface{}{
+					"single": fmt.Sprintf("userAgent.contains(%q)", userAgent),
+				}
+			}
+			anubisRules = append(anubisRules, rule)
+			continue
+		}
+
+		// Handle specific disallow rules
+		for _, disallow := range robotsRule.Disallows {
+			if disallow == "/" {
+				continue // Already handled as blacklist above
+			}
+
+			ruleCounter++
+			rule := AnubisRule{
+				Name:   fmt.Sprintf("%s-disallow-%d", *policyName, ruleCounter),
+				Action: *baseAction,
+			}
+
+			// Build CEL expression
+			var conditions []string
+
+			// Add user agent condition if not wildcard
+			if userAgent != "*" {
+				conditions = append(conditions, fmt.Sprintf("userAgent.contains(%q)", userAgent))
+			}
+
+			// Add path condition
+			pathCondition := buildPathCondition(disallow)
+			conditions = append(conditions, pathCondition)
+
+			if len(conditions) == 1 {
+				rule.Expression = map[string]interface{}{
+					"single": conditions[0],
+				}
+			} else {
+				rule.Expression = map[string]interface{}{
+					"all": conditions,
+				}
+			}
+
+			anubisRules = append(anubisRules, rule)
+		}
+
+		// Handle crawl delay as weight adjustment
+		if robotsRule.CrawlDelay > 0 && *crawlDelay > 0 {
+			ruleCounter++
+			rule := AnubisRule{
+				Name:   fmt.Sprintf("%s-crawl-delay-%d", *policyName, ruleCounter),
+				Action: "WEIGH",
+				Weight: &Weight{Adjust: *crawlDelay},
+			}
+
+			if userAgent == "*" {
+				rule.Expression = map[string]interface{}{
+					"single": "true", // Always applies
+				}
+			} else {
+				rule.Expression = map[string]interface{}{
+					"single": fmt.Sprintf("userAgent.contains(%q)", userAgent),
+				}
+			}
+
+			anubisRules = append(anubisRules, rule)
+		}
+	}
+
+	return anubisRules
+}
+
+func buildPathCondition(robotsPath string) string {
+	// Handle wildcards in robots.txt paths
+	if strings.Contains(robotsPath, "*") || strings.Contains(robotsPath, "?") {
+		// Convert robots.txt wildcards to regex
+		regex := regexp.QuoteMeta(robotsPath)
+		regex = strings.ReplaceAll(regex, `\*`, `.*`) // * becomes .*
+		regex = strings.ReplaceAll(regex, `\?`, `.`)  // ? becomes .
+		regex = "^" + regex
+		return fmt.Sprintf("path.matches(%q)", regex)
+	}
+
+	// Simple prefix match for most cases
+	return fmt.Sprintf("path.startsWith(%q)", robotsPath)
+}
