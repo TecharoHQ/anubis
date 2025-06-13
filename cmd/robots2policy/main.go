@@ -85,6 +85,11 @@ func main() {
 	// Convert to Anubis rules
 	anubisRules := convertToAnubisRules(rules)
 
+	// Check if any rules were generated
+	if len(anubisRules) == 0 {
+		log.Fatal("no valid rules generated from robots.txt - file may be empty or contain no disallow directives")
+	}
+
 	// Generate output
 	var output []byte
 	switch strings.ToLower(*outputFormat) {
