@@ -12,15 +12,12 @@ func (c *OGTagCache) extractOGTags(doc *html.Node) map[string]string {
 
 	var traverseNodes func(*html.Node)
 	traverseNodes = func(n *html.Node) {
-		// isOGMetaTag only checks if it's a <meta> tag.
-		// The actual filtering happens in extractMetaTagInfo now.
 		if isOGMetaTag(n) {
 			property, content := c.extractMetaTagInfo(n)
 			if property != "" {
 				ogTags[property] = content
 			}
 		}
-
 		for child := n.FirstChild; child != nil; child = child.NextSibling {
 			traverseNodes(child)
 		}
@@ -39,43 +36,40 @@ func isOGMetaTag(n *html.Node) bool {
 }
 
 // extractMetaTagInfo extracts property and content from a meta tag
-// *and* checks if the property is approved.
-// Returns empty property string if the tag is not approved.
 func (c *OGTagCache) extractMetaTagInfo(n *html.Node) (property, content string) {
-	var rawProperty string // Store the property found before approval check
+	var propertyKey string
 
+	// Single pass through attributes, using range to avoid bounds checking
 	for _, attr := range n.Attr {
-		if attr.Key == "property" || attr.Key == "name" {
-			rawProperty = attr.Val
-		}
-		if attr.Key == "content" {
+		switch attr.Key {
+		case "property", "name":
+			propertyKey = attr.Val
+		case "content":
 			content = attr.Val
 		}
-	}
-
-	// Check if the rawProperty is approved
-	isApproved := false
-	for _, prefix := range c.approvedPrefixes {
-		if strings.HasPrefix(rawProperty, prefix) {
-			isApproved = true
+		// Early exit if we have both
+		if propertyKey != "" && content != "" {
 			break
 		}
 	}
-	// Check exact approved tags if not already approved by prefix
-	if !isApproved {
-		for _, tag := range c.approvedTags {
-			if rawProperty == tag {
-				isApproved = true
-				break
-			}
+
+	if propertyKey == "" {
+		return "", content
+	}
+
+	// Check prefixes first (more common case)
+	for _, prefix := range c.approvedPrefixes {
+		if strings.HasPrefix(propertyKey, prefix) {
+			return propertyKey, content
 		}
 	}
 
-	// Only return the property if it's approved
-	if isApproved {
-		property = rawProperty
+	// Check exact matches
+	for _, tag := range c.approvedTags {
+		if propertyKey == tag {
+			return propertyKey, content
+		}
 	}
 
-	// Content is returned regardless, but property will be "" if not approved
-	return property, content
+	return "", content
 }
