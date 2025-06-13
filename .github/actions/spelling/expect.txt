@@ -12,6 +12,7 @@ archlinux
 badregexes
 bdba
 berr
+betteralign
 bingbot
 bitcoin
 blogging
@@ -161,9 +162,9 @@ mistralai
 Mojeek
 mojeekbot
 mozilla
-NArg
 nbf
 netsurf
+NFlag
 nginx
 nobots
 NONINFRINGEMENT
