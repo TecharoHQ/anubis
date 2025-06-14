@@ -69,7 +69,21 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("Authorization required"))
 		} else {
-			redir := r.Header.Get("X-Forwarded-Proto") + "://" + r.Header.Get("X-Forwarded-Host") + r.Header.Get("X-Forwarded-Uri")
+			proto := r.Header.Get("X-Forwarded-Proto")
+			host := r.Header.Get("X-Forwarded-Host")
+			uri := r.Header.Get("X-Forwarded-Uri")
+
+			if proto == "" || host == "" || uri == "" {
+				s.respondWithStatus(w, r, "Missing required X-Forwarded-* headers", http.StatusBadRequest)
+				return
+			}
+			// Check if host is allowed in RedirectDomains
+			if len(s.opts.RedirectDomains) > 0 && !slices.Contains(s.opts.RedirectDomains, host) {
+				s.respondWithStatus(w, r, "Redirect domain not allowed", http.StatusBadRequest)
+				return
+			}
+
+			redir := proto + "://" + host + uri
 			escapedURL := url.QueryEscape(redir)
 			http.Redirect(w, r, fmt.Sprintf("%s/.within.website/?redir=%s", s.opts.PublicUrl, escapedURL), http.StatusTemporaryRedirect)
 		}
