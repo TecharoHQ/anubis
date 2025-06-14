@@ -42,7 +42,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://catgirl.click/
 - https://wiki.dolphin-emu.org/
 - https://squirreljme.cc/
-- https://gitlab.postmarketos.org/postmarketOS/
+- https://gitlab.postmarketos.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
