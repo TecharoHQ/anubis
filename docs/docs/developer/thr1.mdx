@@ -1,0 +1,202 @@
+# Techaro HTTP Request Fingerprinting Version 1
+
+The naïve way to identify HTTP clients is to use the HTTP User-Agent string as a signal. In an ideal world, this would give you a perfect view of what clients are connecting to your server. We do not live in that ideal world. As such, we need an alternative method that can scale to the world we have.
+
+## Prior Art
+
+The biggest source of prior art is [FoxIO's JA4H fingerprinting method](https://github.com/FoxIO-LLC/ja4/blob/main/technical_details/JA4H.md). This is fine, but there's a problem with it in the real world: Go doesn't allow you to observe the order headers arrived in. As Anubis is written in Go and I don't feel like boiling the HTTP server ocean today, there needs to be an alternative.
+
+## THR1
+
+The fingerprint consists of four concatenated components:
+
+```text
+<thr1_head>_<thr1_lang>_<thr1_sec>_<thr1_ua>_<thr1_enc>
+```
+
+Example:
+
+```text
+get201004_enca-d6b272e5b_sec-a9649072c_2a347fcf7_zs
+```
+
+Each component is described below:
+
+### `thr1_head`
+
+Overall request summary of method, protocol, and header counts:
+
+- First three letters of the HTTP method, lowercased (e.g. get, pos).
+- HTTP protocol version formatted in two digits (`10` for HTTP/1.0, `11` for HTTP/1.1, `20` for HTTP/2, `30` for HTTP/3 etc.).
+  - If present, prefer the HTTP protocol version in `X-Http-Version`.
+- Number of HTTP headers sent by the client, zero-padded to two digits (e.g. `10`).
+- Number of `Sec-*` headers sent by the client, zero-padded to two digits (e.g. `04`).
+
+Example:
+
+```text
+get201004
+```
+
+### `thr1_lang`
+
+`Accept-Language` header details.
+
+- If no `Accept-Language` header is set, then:
+
+  ```
+  -000000000
+  ```
+
+- Otherwise:
+  - The first 4 alphanumeric characters of the header value (lowercased, right-padded with `0` to length 4), e.g. `enca`.
+  - The first 9 hex characters of the SHA-256 hash of the full `Accept-Language` header value.
+
+Example:
+
+```
+enca-d6b272e5b
+```
+
+### `thr1_sec`
+
+Details about the `Sec-*` headers sent by the client.
+
+```
+thr1_sec = "sec-" + HASH9
+```
+
+Where:
+
+- Collect **all headers whose names start with `sec-` (case-insensitive)**, excluding `Sec-Fetch-User`.
+- For each header:
+
+  1. Normalize the header name by lowercasing.
+  2. If the header is one of the `Sec-CH-UA` family:
+
+     - `Sec-CH-UA`
+     - `Sec-CH-UA-Mobile`
+     - `Sec-CH-UA-Platform`
+     - `Sec-CH-UA-Platform-Version`
+     - `Sec-CH-UA-Model`
+     - `Sec-CH-UA-Full-Version`
+
+     Apply **special normalization rules** (see below).
+
+  3. For all other `sec-` headers:
+     - Unquote values if quoted.
+     - Trim leading/trailing whitespace.
+     - Keep the value as-is (do not parse further).
+
+- Sort all included headers by their normalized header name (ASCII order).
+- Serialize each header as:
+
+  ```text
+  <header_name>:<normalized_value>
+  ```
+
+- Join all serialized lines with `\n`.
+- Compute SHA-256 hash of the resulting canonical string.
+- Take the first 9 hex characters of the hash and prefix with `sec-`.
+
+Example:
+
+```text
+sec-a9649072c
+```
+
+#### Special Normalization Rules for `Sec-CH-UA*` headers
+
+| Header                       | Normalization                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sec-CH-UA`                  | Parse into `{brand, version}` pairs. Omit any with brand `"Not=A?Brand"`. Sort by brand ASC. Serialize as: `ua:Brand1/Version1,Brand2/Version2,...` |
+| `Sec-CH-UA-Mobile`           | Convert `"?1"` → `true`, `"?0"` → `false`. Serialize as: `mobile:true` or `mobile:false`                                                            |
+| `Sec-CH-UA-Platform`         | Lowercase, unquoted, trimmed. Serialize as: `platform:<value>`                                                                                      |
+| `Sec-CH-UA-Platform-Version` | Unquoted, trimmed. Serialize as: `platform_version:<value>`                                                                                         |
+| `Sec-CH-UA-Model`            | Unquoted, trimmed. Serialize as: `model:<value>`                                                                                                    |
+| `Sec-CH-UA-Full-Version`     | Unquoted, trimmed. Serialize as: `full_version:<value>`                                                                                             |
+
+Given these headers:
+
+```text
+Sec-CH-UA: "Google Chrome";v="123", "Not=A?Brand";v="8", "Chromium";v="123"
+Sec-CH-UA-Mobile: ?1
+Sec-CH-UA-Platform: "Windows"
+Sec-CH-UA-Platform-Version: "10.0.0"
+Sec-CH-UA-Model: "Pixel 7"
+Sec-CH-UA-Full-Version: "123.0.6312.122"
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+```
+
+Normalized canonical string before hashing:
+
+```text
+sec-fetch-dest:document
+sec-fetch-mode:navigate
+mobile:true
+platform:windows
+platform_version:10.0.0
+full_version:123.0.6312.122
+model:Pixel 7
+ua:Chromium/123,Google Chrome/123
+```
+
+Then sort by header name:
+
+```text
+full_version:123.0.6312.122
+mobile:true
+model:Pixel 7
+platform:windows
+platform_version:10.0.0
+sec-fetch-dest:document
+sec-fetch-mode:navigate
+ua:Chromium/123,Google Chrome/123
+```
+
+### `thr1_ua`
+
+SHA256 fingerprint of the `User-Agent` string, taking the first 9 hex digits.
+
+Example output:
+
+```text
+2a347fcf7
+```
+
+### `thr1_enc`
+
+Here’s the updated spec and Go implementation for the `thr1_enc` (compression) component, now including:
+
+- **Most preferred compression encoding** (`*`, `gzip`, `deflate`, `br`, `zstd`)
+- **Number of encodings declared**, truncated to **two digits** (`01`–`99`, capped)
+
+---
+
+### ✅ `thr1_enc` Spec (Revised)
+
+**Format:**
+
+```
+<preferred_encoding>-<count>
+```
+
+- `preferred_encoding` is the first matching value in this priority order:
+
+  1. `*`
+  2. `gzip`
+  3. `deflate`
+  4. `br`
+  5. `zstd`
+
+- If none match, use `none`
+- `count` is the number of encoding options, zero-padded to 2 digits (max 99)
+
+**Examples:**
+
+- `gzip, deflate` → `gzip-02`
+- `gzip;q=0.9, br;q=0.8` → `gzip-02`
+- `zstd` → `zstd-01`
+- `bogus` → `none-01`
+- _empty_ → `none-00`
