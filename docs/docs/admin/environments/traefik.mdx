@@ -74,8 +74,8 @@ services:
     environment:
       # Telling Anubis, where to listen for Traefik
       - BIND=:8080
-      # Telling Anubis to do redirect
-      - TARGET=
+      # Telling Anubis to do redirect — ensure there is a space after '='
+      - TARGET= 
       # Specifies which domains Anubis is allowed to redirect to.
       - REDIRECT_DOMAINS=example.com
       # Should be the full external URL for Anubis (including scheme)
