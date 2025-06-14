@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -150,12 +151,46 @@ func TestDataFileConversion(t *testing.T) {
 				t.Fatalf("Failed to read expected file %s: %v", expectedPath, err)
 			}
 
-			// Compare outputs
-			actualStr := strings.TrimSpace(string(actualOutput))
-			expectedStr := strings.TrimSpace(string(expectedOutput))
+			if strings.ToLower(*outputFormat) == "yaml" {
+				var actualData []interface{}
+				var expectedData []interface{}
 
-			if actualStr != expectedStr {
-				t.Errorf("Output mismatch for %s\nExpected:\n%s\n\nActual:\n%s", tc.name, expectedStr, actualStr)
+				err = yaml.Unmarshal(actualOutput, &actualData)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal actual output: %v", err)
+				}
+
+				err = yaml.Unmarshal(expectedOutput, &expectedData)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal expected output: %v", err)
+				}
+
+				// Compare data structures
+				if !compareData(actualData, expectedData) {
+					actualStr := strings.TrimSpace(string(actualOutput))
+					expectedStr := strings.TrimSpace(string(expectedOutput))
+					t.Errorf("Output mismatch for %s\nExpected:\n%s\n\nActual:\n%s", tc.name, expectedStr, actualStr)
+				}
+			} else {
+				var actualData []interface{}
+				var expectedData []interface{}
+
+				err = json.Unmarshal(actualOutput, &actualData)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal actual JSON output: %v", err)
+				}
+
+				err = json.Unmarshal(expectedOutput, &expectedData)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal expected JSON output: %v", err)
+				}
+
+				// Compare data structures
+				if !compareData(actualData, expectedData) {
+					actualStr := strings.TrimSpace(string(actualOutput))
+					expectedStr := strings.TrimSpace(string(expectedOutput))
+					t.Errorf("Output mismatch for %s\nExpected:\n%s\n\nActual:\n%s", tc.name, expectedStr, actualStr)
+				}
 			}
 		})
 	}
@@ -374,4 +409,10 @@ Disallow: /`
 			}
 		})
 	}
+}
+
+// compareData performs a deep comparison of two data structures,
+// ignoring differences that are semantically equivalent in YAML/JSON
+func compareData(actual, expected interface{}) bool {
+	return reflect.DeepEqual(actual, expected)
 }
