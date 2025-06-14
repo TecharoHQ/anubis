@@ -36,12 +36,12 @@ type RobotsRule struct {
 	IsBlacklist bool // true if this is a specifically denied user agent
 }
 
-type AnubisRule struct { // betteralign:ignore, we want name to be the first field
-	Name       string                 `yaml:"name" json:"name"`
-	Action     string                 `yaml:"action" json:"action"`
-	Expression map[string]interface{} `yaml:"expression,omitempty" json:"expression,omitempty"`
-	Challenge  *config.ChallengeRules `yaml:"challenge,omitempty" json:"challenge,omitempty"`
-	Weight     *config.Weight         `yaml:"weight,omitempty" json:"weight,omitempty"`
+type AnubisRule struct {
+	Expression *config.ExpressionOrList `yaml:"expression,omitempty" json:"expression,omitempty"`
+	Challenge  *config.ChallengeRules   `yaml:"challenge,omitempty" json:"challenge,omitempty"`
+	Weight     *config.Weight           `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Name       string                   `yaml:"name" json:"name"`
+	Action     string                   `yaml:"action" json:"action"`
 }
 
 func main() {
@@ -257,12 +257,12 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			}
 
 			if userAgent == "*" {
-				rule.Expression = map[string]interface{}{
-					"single": "true", // Always applies
+				rule.Expression = &config.ExpressionOrList{
+					All: []string{"true"}, // Always applies
 				}
 			} else {
-				rule.Expression = map[string]interface{}{
-					"single": fmt.Sprintf("userAgent.contains(%q)", userAgent),
+				rule.Expression = &config.ExpressionOrList{
+					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
 				}
 			}
 
@@ -282,12 +282,12 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 				rule.Name = fmt.Sprintf("%s-global-restriction-%d", *policyName, ruleCounter)
 				rule.Action = "WEIGH"
 				rule.Weight = &config.Weight{Adjust: 20} // Increase difficulty significantly
-				rule.Expression = map[string]interface{}{
-					"single": "true", // Always applies
+				rule.Expression = &config.ExpressionOrList{
+					All: []string{"true"}, // Always applies
 				}
 			} else {
-				rule.Expression = map[string]interface{}{
-					"single": fmt.Sprintf("userAgent.contains(%q)", userAgent),
+				rule.Expression = &config.ExpressionOrList{
+					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
 				}
 			}
 			anubisRules = append(anubisRules, rule)
@@ -318,14 +318,8 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			pathCondition := buildPathCondition(disallow)
 			conditions = append(conditions, pathCondition)
 
-			if len(conditions) == 1 {
-				rule.Expression = map[string]interface{}{
-					"single": conditions[0],
-				}
-			} else {
-				rule.Expression = map[string]interface{}{
-					"all": conditions,
-				}
+			rule.Expression = &config.ExpressionOrList{
+				All: conditions,
 			}
 
 			anubisRules = append(anubisRules, rule)
