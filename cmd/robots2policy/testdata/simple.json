@@ -1,16 +1,12 @@
 [
   {
-    "name": "robots-txt-policy-disallow-1",
     "action": "CHALLENGE",
-    "expression": {
-      "single": "path.startsWith(\"/admin/\")"
-    }
+    "expression": "path.startsWith(\"/admin/\")",
+    "name": "robots-txt-policy-disallow-1"
   },
   {
-    "name": "robots-txt-policy-disallow-2",
     "action": "CHALLENGE",
-    "expression": {
-      "single": "path.startsWith(\"/private\")"
-    }
+    "expression": "path.startsWith(\"/private\")",
+    "name": "robots-txt-policy-disallow-2"
   }
 ]

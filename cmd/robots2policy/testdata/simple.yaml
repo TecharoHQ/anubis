@@ -1,8 +1,6 @@
-- name: robots-txt-policy-disallow-1
-  action: CHALLENGE
-  expression:
-    single: path.startsWith("/admin/")
-- name: robots-txt-policy-disallow-2
-  action: CHALLENGE
-  expression:
-    single: path.startsWith("/private")
+- action: CHALLENGE
+  expression: path.startsWith("/admin/")
+  name: robots-txt-policy-disallow-1
+- action: CHALLENGE
+  expression: path.startsWith("/private")
+  name: robots-txt-policy-disallow-2

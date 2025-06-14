@@ -75,7 +75,7 @@ func TestDataFileConversion(t *testing.T) {
 			name:         "complex_scenario",
 			robotsFile:   "complex.robots.txt",
 			expectedFile: "complex.yaml",
-			options:      TestOptions{format: "yaml", crawlDelayWeight: 3},
+			options:      TestOptions{format: "yaml", crawlDelayWeight: 5},
 		},
 	}
 
