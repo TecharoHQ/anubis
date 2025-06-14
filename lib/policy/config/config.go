@@ -43,6 +43,15 @@ const (
 	RuleBenchmark Rule = "DEBUG_BENCHMARK"
 )
 
+func (r Rule) Valid() error {
+	switch r {
+	case RuleAllow, RuleDeny, RuleChallenge, RuleWeigh, RuleBenchmark:
+		return nil
+	default:
+		return ErrUnknownAction
+	}
+}
+
 const DefaultAlgorithm = "fast"
 
 type BotConfig struct {
@@ -176,12 +185,17 @@ type ChallengeRules struct {
 }
 
 var (
-	ErrChallengeDifficultyTooLow  = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
-	ErrChallengeDifficultyTooHigh = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
+	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 1)")
+	ErrChallengeDifficultyTooHigh = errors.New("config.ChallengeRules: difficulty is too high (must be <= 64)")
+	ErrChallengeMustHaveAlgorithm = errors.New("config.ChallengeRules: must have algorithm name set")
 )
 
 func (cr ChallengeRules) Valid() error {
 	var errs []error
+
+	if cr.Algorithm == "" {
+		errs = append(errs, ErrChallengeMustHaveAlgorithm)
+	}
 
 	if cr.Difficulty < 1 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
@@ -304,6 +318,7 @@ type fileConfig struct {
 	Bots        []BotOrImport `json:"bots"`
 	DNSBL       bool          `json:"dnsbl"`
 	StatusCodes StatusCodes   `json:"status_codes"`
+	Thresholds  []Threshold   `json:"threshold"`
 }
 
 func (c fileConfig) Valid() error {
@@ -313,14 +328,24 @@ func (c fileConfig) Valid() error {
 		errs = append(errs, ErrNoBotRulesDefined)
 	}
 
-	for _, b := range c.Bots {
+	for i, b := range c.Bots {
 		if err := b.Valid(); err != nil {
-			errs = append(errs, err)
+			errs = append(errs, fmt.Errorf("bot %d: %w", i, err))
 		}
 	}
 
 	if err := c.StatusCodes.Valid(); err != nil {
 		errs = append(errs, err)
+	}
+
+	if len(c.Thresholds) == 0 {
+		errs = append(errs, ErrNoThresholdRulesDefined)
+	}
+
+	for i, t := range c.Thresholds {
+		if err := t.Valid(); err != nil {
+			errs = append(errs, fmt.Errorf("threshold %d: %w", i, err))
+		}
 	}
 
 	if len(errs) != 0 {
