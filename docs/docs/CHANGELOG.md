@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add internal function `remoteAddrInList` to expressions. Tests for remoteAddress in list of CIDR ip ranges.
+
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not

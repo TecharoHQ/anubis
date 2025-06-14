@@ -167,6 +167,26 @@ This is best applied when doing explicit block rules, eg:
 
 It seems counter-intuitive to allow known bad clients through sometimes, but this allows you to confuse attackers by making Anubis' behavior random. Adjust the thresholds and numbers as facts and circumstances demand.
 
+### `remoteAddrInList`
+
+```ts
+function remoteAddrInList(remoteAddr: string, ipList: stringList): bool
+```
+
+Test if supplied IP address is in list of CIDR address ranges.
+
+```yaml
+# Denies clients using Wget or lftp from the set of addresses in the list
+- name: deny-unwanted-scrapers
+    action: DENY
+    expression:
+      all:
+        - userAgent.matches("(?i)Wget|lftp")
+        - remoteAddrInList(remoteAddress, [
+            "5.107.231.0/24",
+            "2609:c022:8002:6255::8888/128" ])
+```
+
 ## Life advice
 
 Expressions are very powerful. This is a benefit and a burden. If you are not careful with your expression targeting, you will be liable to get yourself into trouble. If you are at all in doubt, throw a `CHALLENGE` over a `DENY`. Legitimate users can easily work around a `CHALLENGE` result with a [proof of work challenge](../../design/why-proof-of-work.mdx). Bots are less likely to be able to do this.
