@@ -10,6 +10,52 @@ var (
 	ErrThresholdMustHaveName               = errors.New("config.Thresold: must set name")
 	ErrThresholdMustHaveExpression         = errors.New("config.Threshold: must set expression")
 	ErrThresholdChallengeMustHaveChallenge = errors.New("config.Threshold: a threshold with the CHALLENGE action must have challenge set")
+
+	DefaultThresholds = []Threshold{
+		{
+			Name: "minimal-suspicion",
+			Expression: &ExpressionOrList{
+				Expression: "weight < 0",
+			},
+			Action: RuleAllow,
+		},
+		{
+			Name: "mild-suspicion",
+			Expression: &ExpressionOrList{
+				All: []string{"weight >= 0", "weight < 10"},
+			},
+			Action: RuleChallenge,
+			Challenge: &ChallengeRules{
+				Algorithm:  "metarefresh",
+				Difficulty: 1,
+				ReportAs:   1,
+			},
+		},
+		{
+			Name: "moderate-suspicion",
+			Expression: &ExpressionOrList{
+				All: []string{"weight >= 10", "weight < 20"},
+			},
+			Action: RuleChallenge,
+			Challenge: &ChallengeRules{
+				Algorithm:  "fast",
+				Difficulty: 2,
+				ReportAs:   2,
+			},
+		},
+		{
+			Name: "extreme-suspicion",
+			Expression: &ExpressionOrList{
+				Expression: "weight >= 20",
+			},
+			Action: RuleChallenge,
+			Challenge: &ChallengeRules{
+				Algorithm:  "fast",
+				Difficulty: 4,
+				ReportAs:   4,
+			},
+		},
+	}
 )
 
 type Threshold struct {

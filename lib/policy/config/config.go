@@ -321,7 +321,7 @@ type fileConfig struct {
 	Thresholds  []Threshold   `json:"threshold"`
 }
 
-func (c fileConfig) Valid() error {
+func (c *fileConfig) Valid() error {
 	var errs []error
 
 	if len(c.Bots) == 0 {
@@ -356,11 +356,14 @@ func (c fileConfig) Valid() error {
 }
 
 func Load(fin io.Reader, fname string) (*Config, error) {
-	var c fileConfig
-	c.StatusCodes = StatusCodes{
-		Challenge: http.StatusOK,
-		Deny:      http.StatusOK,
+	c := &fileConfig{
+		StatusCodes: StatusCodes{
+			Challenge: http.StatusOK,
+			Deny:      http.StatusOK,
+		},
+		Thresholds: DefaultThresholds,
 	}
+
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
 		return nil, fmt.Errorf("can't parse policy config YAML %s: %w", fname, err)
 	}

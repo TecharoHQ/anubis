@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -75,6 +76,16 @@ func TestThresholdValid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.input.Valid(); !errors.Is(err, tt.err) {
 				t.Errorf("threshold is invalid: %v", err)
+			}
+		})
+	}
+}
+
+func TestDefaultThresholdsValid(t *testing.T) {
+	for i, th := range DefaultThresholds {
+		t.Run(fmt.Sprintf("%d %s", i, th.Name), func(t *testing.T) {
+			if err := th.Valid(); err != nil {
+				fmt.Errorf("threshold invalid: %v", err)
 			}
 		})
 	}
