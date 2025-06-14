@@ -10,7 +10,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Added support to use Traefik forwardAuth middleware
 
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
@@ -22,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump AI-robots.txt to version 1.34
 - Make progress bar styling more compatible (UXP, etc)
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
+- Added support to use Traefik forwardAuth middleware
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 
