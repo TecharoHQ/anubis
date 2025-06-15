@@ -268,6 +268,8 @@ func TestPlaywrightBrowser(t *testing.T) {
 		})
 
 		for _, tc := range testCases {
+			typ := typ // Capture loop variable
+			tc := tc   // Capture loop variable
 			name := fmt.Sprintf("%s/%s", typ.Name(), tc.name)
 			t.Run(name, func(t *testing.T) {
 				t.Parallel()
