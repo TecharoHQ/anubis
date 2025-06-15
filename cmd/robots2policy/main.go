@@ -44,16 +44,29 @@ type AnubisRule struct {
 	Action     string                   `yaml:"action" json:"action"`
 }
 
+func init() {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s [options] -input <robots.txt>\n\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "\nExamples:")
+		fmt.Fprintln(os.Stderr, "  # Convert local robots.txt file")
+		fmt.Fprintln(os.Stderr, "  robots2policy -input robots.txt -output policy.yaml")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "  # Convert from URL")
+		fmt.Fprintln(os.Stderr, "  robots2policy -input https://example.com/robots.txt -format json")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "  # Read from stdin, write to stdout")
+		fmt.Fprintln(os.Stderr, "  curl https://example.com/robots.txt | robots2policy -input -")
+		os.Exit(2)
+	}
+}
+
 func main() {
 	flag.Parse()
 
-	if *helpFlag || flag.NFlag() == 0 {
-		showHelp()
-		return
-	}
-
-	if *inputFile == "" {
-		log.Fatal("input file is required (use -input flag or -help for usage)")
+	if len(flag.Args()) > 0 || *helpFlag || *inputFile == "" {
+		flag.Usage()
 	}
 
 	// Read robots.txt
@@ -115,45 +128,6 @@ func main() {
 		}
 		fmt.Printf("Generated Anubis policy written to %s\n", *outputFile)
 	}
-}
-
-func showHelp() {
-	fmt.Printf(`robots2policy - Convert robots.txt to Anubis challenge rules
-
-Usage:
-  robots2policy -input <robots.txt> [options]
-
-Examples:
-  # Convert local robots.txt file
-  robots2policy -input robots.txt -output policy.yaml
-
-  # Convert from URL
-  robots2policy -input https://example.com/robots.txt -format json
-
-  # Read from stdin, write to stdout
-  curl https://example.com/robots.txt | robots2policy -input - -format yaml
-
-Options:
-`)
-	flag.PrintDefaults()
-	fmt.Printf(`
-Actions:
-  ALLOW     - Allow the request without challenge
-  DENY      - Block the request completely  
-  CHALLENGE - Issue proof-of-work challenge (default)
-  WEIGH     - Adjust challenge difficulty weight
-
-The tool converts robots.txt rules as follows:
-  - Disallow rules -> CEL expressions matching request paths
-  - User-agent rules -> CEL expressions matching user agent headers
-  - Crawl-delay -> Optional weight adjustments for challenge difficulty
-  - Blacklisted user agents -> Separate deny/challenge rules
-
-Generated CEL expressions use:
-  - path.startsWith("/pattern") for exact path prefixes
-  - path.matches("regex") for wildcard patterns (* and ?)
-  - userAgent.contains("pattern") for user agent matching
-`)
 }
 
 func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
