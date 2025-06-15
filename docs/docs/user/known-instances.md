@@ -49,6 +49,12 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://wiki.freecad.org/
   </details>
 - <details>
+  <summary>ReactOS</summary>
+  - https://reactos.org/forum
+  - https://reactos.org/wiki
+  - https://git.reactos.org
+  </details>
+- <details>
   <summary>ScummVM</summary>
   - https://bugs.scummvm.org/
   - https://forums.scummvm.org/
