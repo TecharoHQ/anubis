@@ -58,22 +58,27 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-golang-
 
+    - name: Cache node modules
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
     - name: Cache playwright binaries
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       id: playwright-cache
       with:
         path: |
           ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-playwright-1.52.0
+        restore-keys: |
+          ${{ runner.os }}-playwright-
 
     - name: install node deps
       run: |
         npm ci
-
-    - name: install playwright browsers
-      run: |
-        npx --no-install playwright@1.52.0 install --with-deps
-        npx --no-install playwright@1.52.0 run-server --port 9001 &
 
     - name: Build
       run: npm run build
@@ -85,6 +90,16 @@ jobs:
       uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6 # v1.3.1
       with:
         version: "latest"
+
+    - name: install playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: |
+        npx --no-install playwright@1.52.0 install --with-deps
+
+    - name: start playwright server
+      run: |
+        npx --no-install playwright@1.52.0 run-server --port 9001 &
+
 
     - name: Govulncheck
       run: |
