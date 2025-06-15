@@ -58,14 +58,21 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-golang-
 
-    - name: Cache node modules
+    - name: Cache npm cache
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-
+          ${{ runner.os }}-npm-cache-
 
+    - name: Cache node_modules
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
     - name: Cache playwright binaries
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       id: playwright-cache
