@@ -228,7 +228,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 	pw := setupPlaywright(t)
 	anubisURL := spawnAnubis(t)
 
-	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox}
+	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
 	for _, typ := range browsers {
 		typ := typ // Bind the current value of the loop variable
