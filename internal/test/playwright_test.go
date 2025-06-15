@@ -231,6 +231,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox}
 
 	for _, typ := range browsers {
+		typ := typ // Bind the current value of the loop variable
 		t.Run(typ.Name()+"/warmup", func(t *testing.T) {
 			t.Parallel()
 			t.Logf("Starting warmup for %s", typ.Name())
