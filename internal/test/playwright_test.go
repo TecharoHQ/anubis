@@ -201,7 +201,7 @@ func startPlaywright(t *testing.T) {
 
 	for {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
-			fmt.Println("Can't reach playwright server... trying again in 500ms")
+			t.Logf("Can't reach playwright server... trying again in 500ms")
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
