@@ -42,6 +42,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://catgirl.click/
 - https://wiki.dolphin-emu.org/
 - https://squirreljme.cc/
+- https://gitlab.postmarketos.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
@@ -49,6 +50,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
   </details>
 - <details>
   <summary>ScummVM</summary>
+  - https://bugs.scummvm.org/
   - https://forums.scummvm.org/
   - https://wiki.scummvm.org/
   </details>
