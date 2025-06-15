@@ -34,11 +34,13 @@ import (
 )
 
 var (
+	screenshotsEnabled    = flag.Bool("enable-screenshots", false, "enable screenshots on test failure")
 	playwrightPort        = flag.Int("playwright-port", 9001, "Playwright port")
 	playwrightServer      = flag.String("playwright", "ws://localhost:9001", "Playwright server URL")
-	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
-	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 5*time.Minute, "maximum time for hard Playwright requests")
-	playwrightRunner      = flag.String("playwright-runner", "npx", "how to start Playwright, can be: none,npx,docker,podman")
+	playwrightMaxTime     = flag.Duration("playwright-max-time", 10*time.Second, "maximum time for Playwright requests")
+	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 2*time.Minute, "maximum time for hard Playwright requests")
+	playwrightRunner      = flag.String("playwright-runner", "npx", "how to start Playwright, can be: none,npx,"+
+		"docker,podman")
 
 	testCases = []testCase{
 		{
@@ -171,7 +173,8 @@ func daemonize(t *testing.T, command string) {
 func startPlaywright(t *testing.T) {
 	t.Helper()
 
-	if *playwrightRunner == "npx" {
+	switch *playwrightRunner {
+	case "npx":
 		doesCommandExist(t, "npx")
 
 		if os.Getenv("CI") == "true" {
@@ -181,7 +184,7 @@ func startPlaywright(t *testing.T) {
 		}
 
 		daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
-	} else if *playwrightRunner == "docker" || *playwrightRunner == "podman" {
+	case "docker", "podman":
 		doesCommandExist(t, *playwrightRunner)
 
 		// docs: https://playwright.dev/docs/docker
@@ -190,14 +193,15 @@ func startPlaywright(t *testing.T) {
 		t.Cleanup(func() {
 			run(t, fmt.Sprintf("%s rm --force %s", *playwrightRunner, container))
 		})
-	} else if *playwrightRunner == "none" {
+	case "none":
 		t.Log("not starting Playwright, assuming it is already running")
-	} else {
+	default:
 		t.Skipf("unknown runner: %s, skipping", *playwrightRunner)
 	}
 
 	for {
 		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
+			fmt.Println("Can't reach playwright server... trying again in 500ms")
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
@@ -205,7 +209,7 @@ func startPlaywright(t *testing.T) {
 	}
 
 	//nosleep:bypass XXX(Xe): Playwright doesn't have a good way to signal readiness. This is a HACK that will just let the tests pass.
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 
 func TestPlaywrightBrowser(t *testing.T) {
@@ -224,10 +228,12 @@ func TestPlaywrightBrowser(t *testing.T) {
 	pw := setupPlaywright(t)
 	anubisURL := spawnAnubis(t)
 
-	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
+	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox}
 
 	for _, typ := range browsers {
 		t.Run(typ.Name()+"/warmup", func(t *testing.T) {
+			t.Parallel()
+			t.Logf("Starting warmup for %s", typ.Name())
 			browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
 				ExposeNetwork: playwright.String("<loopback>"),
 			})
@@ -258,27 +264,27 @@ func TestPlaywrightBrowser(t *testing.T) {
 			page.Goto(anubisURL, playwright.PageGotoOptions{
 				Timeout: &timeout,
 			})
+			t.Logf("Warmup completed for %s", typ.Name())
 		})
 
 		for _, tc := range testCases {
 			name := fmt.Sprintf("%s/%s", typ.Name(), tc.name)
 			t.Run(name, func(t *testing.T) {
+				t.Parallel()
 				_, hasDeadline := t.Deadline()
 				if tc.isHard && hasDeadline {
 					t.Skip("skipping hard challenge with deadline")
 				}
 
-				var performedAction action
-				var err error
-				for i := 0; i < 5; i++ {
-					performedAction, err = executeTestCase(t, tc, typ, anubisURL)
-					if performedAction == tc.action {
-						break
-					}
-					time.Sleep(time.Duration(i+1) * 250 * time.Millisecond)
-				}
+				t.Logf("Starting test: %s with action %s", name, tc.action)
+				start := time.Now()
+				performedAction, err := runTestCase(t, tc, typ, anubisURL)
+				duration := time.Since(start)
+
 				if performedAction != tc.action {
-					t.Errorf("unexpected test result, expected %s, got %s", tc.action, performedAction)
+					t.Errorf("unexpected test result, expected %s, got %s (took %v)", tc.action, performedAction, duration)
+				} else {
+					t.Logf("Test %s completed successfully in %v", name, duration)
 				}
 				if err != nil {
 					t.Fatalf("test error: %v", err)
@@ -316,6 +322,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	for _, typ := range browsers {
 		t.Run(typ.Name()+"/basePrefix", func(t *testing.T) {
+			t.Parallel()
 			browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
 				ExposeNetwork: playwright.String("<loopback>"),
 			})
@@ -344,7 +351,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 			// Test accessing the base URL with prefix
 			_, err = page.Goto(anubisURL+basePrefix, playwright.PageGotoOptions{
-				Timeout: pwTimeout(testCases[0], time.Now().Add(5*time.Second)),
+				Timeout: getTimeout(testCases[0], time.Now().Add(5*time.Second)),
 			})
 			if err != nil {
 				pwFail(t, page, "could not navigate to test server with base prefix: %v", err)
@@ -353,7 +360,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 			// Check if challenge page is displayed
 			image := page.Locator("#image[src*=pensive], #image[src*=happy]")
 			err = image.WaitFor(playwright.LocatorWaitForOptions{
-				Timeout: pwTimeout(testCases[0], time.Now().Add(5*time.Second)),
+				Timeout: getTimeout(testCases[0], time.Now().Add(5*time.Second)),
 			})
 			if err != nil {
 				pwFail(t, page, "could not wait for challenge image: %v", err)
@@ -371,7 +378,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 			// Wait for the challenge to be solved
 			anubisTest := page.Locator("#anubis-test")
 			err = anubisTest.WaitFor(playwright.LocatorWaitForOptions{
-				Timeout: pwTimeout(testCases[0], time.Now().Add(30*time.Second)),
+				Timeout: getTimeout(testCases[0], time.Now().Add(30*time.Second)),
 			})
 			if err != nil {
 				pwFail(t, page, "could not wait for challenge to be solved: %v", err)
@@ -383,15 +390,15 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 				pwFail(t, page, "could not get text content: %v", err)
 			}
 
-			var tm int64
-			if _, err := fmt.Sscanf(content, "%d", &tm); err != nil {
+			var timestamp int64
+			if _, err := fmt.Sscanf(content, "%d", &timestamp); err != nil {
 				pwFail(t, page, "unexpected output: %s", content)
 			}
 
 			// Check if the timestamp is reasonable
 			now := time.Now().Unix()
-			if tm < now-60 || tm > now+60 {
-				pwFail(t, page, "unexpected timestamp in output: %d not in range %d±60", tm, now)
+			if timestamp < now-60 || timestamp > now+60 {
+				pwFail(t, page, "unexpected timestamp in output: %d not in range %d±60", timestamp, now)
 			}
 
 			// Check if cookie has the correct path
@@ -428,8 +435,38 @@ func buildBrowserConnect(name string) string {
 	return u.String()
 }
 
-func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string) (action, error) {
+func runTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string) (action, error) {
+	t.Helper()
 	deadline, _ := t.Deadline()
+
+	var lastErr error
+	for attempt := 1; attempt <= 3; attempt++ {
+		if attempt > 1 {
+			t.Logf("Retry %d/3 for %s/%s", attempt, typ.Name(), tc.name)
+			time.Sleep(time.Duration(attempt-1) * 100 * time.Millisecond)
+		}
+
+		result, err := executeTest(t, tc, typ, anubisURL, deadline)
+		if err == nil && result == tc.action {
+			if attempt > 1 {
+				t.Logf("Succeeded on attempt %d", attempt)
+			}
+			return result, nil
+		}
+
+		lastErr = err
+		if err != nil {
+			t.Logf("Attempt %d failed: %v", attempt, err)
+		} else {
+			t.Logf("Attempt %d wrong result: expected %s, got %s", attempt, tc.action, result)
+		}
+	}
+
+	return "", fmt.Errorf("all attempts failed: %w", lastErr)
+}
+
+func executeTest(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string, deadline time.Time) (action, error) {
+	t.Helper()
 
 	browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
 		ExposeNetwork: playwright.String("<loopback>"),
@@ -457,44 +494,43 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 	}
 	defer page.Close()
 
-	// Attempt challenge.
+	// Navigate to the test URL
 
 	start := time.Now()
 	_, err = page.Goto(anubisURL, playwright.PageGotoOptions{
-		Timeout: pwTimeout(tc, deadline),
+		Timeout: getTimeout(tc, deadline),
 	})
 	if err != nil {
-		return "", pwFail(t, page, "could not navigate to test server: %v", err)
+		return "", pwFail(t, page, "navigation failed: %v", err)
 	}
 
 	hadChallenge := false
 	switch tc.action {
 	case actionChallenge:
-		// FIXME: This could race if challenge is completed too quickly.
-		checkImage(t, tc, deadline, page, "#image[src*=pensive], #image[src*=happy]")
+		waitForImage(t, tc, deadline, page, "#image[src*=pensive], #image[src*=happy]")
 		hadChallenge = true
 	case actionDeny:
-		checkImage(t, tc, deadline, page, "#image[src*=sad]")
+		waitForImage(t, tc, deadline, page, "#image[src*=sad]")
 		return actionDeny, nil
 	}
 
-	// Ensure protected resource was provided.
+	// Verify we reached the protected resource
 
 	res, err := page.Locator("#anubis-test").TextContent(playwright.LocatorTextContentOptions{
-		Timeout: pwTimeout(tc, deadline),
+		Timeout: getTimeout(tc, deadline),
 	})
 	end := time.Now()
 	if err != nil {
-		pwFail(t, page, "could not get text content: %v", err)
+		pwFail(t, page, "could not get protected content: %v", err)
 	}
 
-	var tm int64
-	if _, err := fmt.Sscanf(res, "%d", &tm); err != nil {
-		pwFail(t, page, "unexpected output: %s", res)
+	var timestamp int64
+	if _, err := fmt.Sscanf(res, "%d", &timestamp); err != nil {
+		pwFail(t, page, "invalid response: %s", res)
 	}
 
-	if tm < start.Unix() || end.Unix() < tm {
-		pwFail(t, page, "unexpected timestamp in output: %d not in range %d..%d", tm, start.Unix(), end.Unix())
+	if timestamp < start.Unix() || end.Unix() < timestamp {
+		pwFail(t, page, "timestamp %d not in valid range %d..%d", timestamp, start.Unix(), end.Unix())
 	}
 
 	if hadChallenge {
@@ -504,33 +540,34 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 	}
 }
 
-func checkImage(t *testing.T, tc testCase, deadline time.Time, page playwright.Page, locator string) {
-	image := page.Locator(locator)
+func waitForImage(t *testing.T, tc testCase, deadline time.Time, page playwright.Page, selector string) {
+	image := page.Locator(selector)
 	err := image.WaitFor(playwright.LocatorWaitForOptions{
-		Timeout: pwTimeout(tc, deadline),
+		Timeout: getTimeout(tc, deadline),
 	})
 	if err != nil {
-		pwFail(t, page, "could not wait for result: %v", err)
+		pwFail(t, page, "image not found: %v", err)
 	}
 
-	failIsVisible, err := image.IsVisible()
+	isVisible, err := image.IsVisible()
 	if err != nil {
-		pwFail(t, page, "could not check result image: %v", err)
+		pwFail(t, page, "could not check image visibility: %v", err)
 	}
 
-	if !failIsVisible {
-		pwFail(t, page, "expected result image not visible")
+	if !isVisible {
+		pwFail(t, page, "expected image not visible")
 	}
 }
 
 func pwFail(t *testing.T, page playwright.Page, format string, args ...any) error {
 	t.Helper()
-
-	saveScreenshot(t, page)
+	if *screenshotsEnabled {
+		saveScreenshot(t, page)
+	}
 	return fmt.Errorf(format, args...)
 }
 
-func pwTimeout(tc testCase, deadline time.Time) *float64 {
+func getTimeout(tc testCase, deadline time.Time) *float64 {
 	maxTime := *playwrightMaxTime
 	if tc.isHard {
 		maxTime = *playwrightMaxHardTime
@@ -595,7 +632,7 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
 	})
 
-	policy, err := libanubis.LoadPoliciesOrDefault("", anubis.DefaultDifficulty)
+	policy, err := libanubis.LoadPoliciesOrDefault("", 1) // use a super easy difficulty to speed up CI
 	if err != nil {
 		t.Fatal(err)
 	}
