@@ -45,22 +45,15 @@ type AnubisRule struct {
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		flag.PrintDefaults()
-	}
-
 	flag.Parse()
 
 	if *helpFlag || flag.NFlag() == 0 {
-		flag.Usage()
+		showHelp()
 		return
 	}
 
 	if *inputFile == "" {
-		fmt.Fprintln(os.Stderr, "Error: input file is required.")
-		flag.Usage()
-		os.Exit(2)
+		log.Fatal("input file is required (use -input flag or -help for usage)")
 	}
 
 	// Read robots.txt
