@@ -23,6 +23,7 @@ type ParsedConfig struct {
 	orig *config.Config
 
 	Bots              []Bot
+	Thresholds        []*Threshold
 	DNSBL             bool
 	DefaultDifficulty int
 	StatusCodes       config.StatusCodes
