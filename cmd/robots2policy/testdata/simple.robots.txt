@@ -1,0 +1,5 @@
+# Simple robots.txt test
+User-agent: *
+Disallow: /admin/
+Disallow: /private
+Allow: /public

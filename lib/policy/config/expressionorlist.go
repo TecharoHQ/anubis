@@ -13,9 +13,9 @@ var (
 )
 
 type ExpressionOrList struct {
-	Expression string   `json:"-"`
-	All        []string `json:"all,omitempty"`
-	Any        []string `json:"any,omitempty"`
+	Expression string   `json:"-" yaml:"-"`
+	All        []string `json:"all,omitempty" yaml:"all,omitempty"`
+	Any        []string `json:"any,omitempty" yaml:"any,omitempty"`
 }
 
 func (eol ExpressionOrList) Equal(rhs *ExpressionOrList) bool {
@@ -32,6 +32,43 @@ func (eol ExpressionOrList) Equal(rhs *ExpressionOrList) bool {
 	}
 
 	return true
+}
+
+func (eol *ExpressionOrList) MarshalYAML() (any, error) {
+	switch {
+	case len(eol.All) == 1 && len(eol.Any) == 0:
+		eol.Expression = eol.All[0]
+		eol.All = nil
+	case len(eol.Any) == 1 && len(eol.All) == 0:
+		eol.Expression = eol.Any[0]
+		eol.Any = nil
+	}
+
+	if eol.Expression != "" {
+		return eol.Expression, nil
+	}
+
+	type RawExpressionOrList ExpressionOrList
+	return RawExpressionOrList(*eol), nil
+}
+
+func (eol *ExpressionOrList) MarshalJSON() ([]byte, error) {
+	switch {
+	case len(eol.All) == 1 && len(eol.Any) == 0:
+		eol.Expression = eol.All[0]
+		eol.All = nil
+	case len(eol.Any) == 1 && len(eol.All) == 0:
+		eol.Expression = eol.Any[0]
+		eol.Any = nil
+	}
+
+	if eol.Expression != "" {
+		return json.Marshal(string(eol.Expression))
+	}
+
+	type RawExpressionOrList ExpressionOrList
+	val := RawExpressionOrList(*eol)
+	return json.Marshal(val)
 }
 
 func (eol *ExpressionOrList) UnmarshalJSON(data []byte) error {

@@ -1,11 +1,12 @@
 package ogtags
 
 import (
-	"golang.org/x/net/html"
 	"net/url"
 	"runtime"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func BenchmarkGetTarget(b *testing.B) {

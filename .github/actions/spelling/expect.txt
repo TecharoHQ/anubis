@@ -12,6 +12,7 @@ archlinux
 badregexes
 bdba
 berr
+betteralign
 bingbot
 bitcoin
 blogging
@@ -96,6 +97,7 @@ gomod
 goodbot
 googlebot
 govulncheck
+goyaml
 GPG
 GPT
 gptbot
@@ -162,6 +164,7 @@ mojeekbot
 mozilla
 nbf
 netsurf
+NFlag
 nginx
 nobots
 NONINFRINGEMENT
@@ -217,6 +220,7 @@ sebest
 secretplans
 selfsigned
 Semrush
+Seo
 setsebool
 shellcheck
 Sidetrade

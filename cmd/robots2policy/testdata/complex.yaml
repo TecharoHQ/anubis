@@ -1,0 +1,71 @@
+- action: WEIGH
+  expression: "true"
+  name: robots-txt-policy-crawl-delay-1
+  weight:
+    adjust: 5
+- action: CHALLENGE
+  expression: path.startsWith("/admin/")
+  name: robots-txt-policy-disallow-2
+- action: CHALLENGE
+  expression: path.startsWith("/private/")
+  name: robots-txt-policy-disallow-3
+- action: CHALLENGE
+  expression: path.startsWith("/api/internal/")
+  name: robots-txt-policy-disallow-4
+- action: WEIGH
+  expression: userAgent.contains("Googlebot")
+  name: robots-txt-policy-crawl-delay-5
+  weight:
+    adjust: 5
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("Googlebot")
+        - path.startsWith("/search/")
+  name: robots-txt-policy-disallow-6
+- action: WEIGH
+  expression: userAgent.contains("Bingbot")
+  name: robots-txt-policy-crawl-delay-7
+  weight:
+    adjust: 5
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("Bingbot")
+        - path.startsWith("/search/")
+  name: robots-txt-policy-disallow-8
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("Bingbot")
+        - path.startsWith("/admin/")
+  name: robots-txt-policy-disallow-9
+- action: DENY
+  expression: userAgent.contains("BadBot")
+  name: robots-txt-policy-blacklist-10
+- action: WEIGH
+  expression: userAgent.contains("SeoBot")
+  name: robots-txt-policy-crawl-delay-11
+  weight:
+    adjust: 5
+- action: DENY
+  expression: userAgent.contains("SeoBot")
+  name: robots-txt-policy-blacklist-12
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("TestBot")
+        - path.matches("^/.*/admin")
+  name: robots-txt-policy-disallow-13
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("TestBot")
+        - path.matches("^/temp.*\\.html")
+  name: robots-txt-policy-disallow-14
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("TestBot")
+        - path.matches("^/file.\\.log")
+  name: robots-txt-policy-disallow-15

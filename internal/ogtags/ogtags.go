@@ -21,17 +21,17 @@ const (
 )
 
 type OGTagCache struct {
-	cache               *decaymap.Impl[string, map[string]string]
-	targetURL           *url.URL
-	client              *http.Client
+	cache     *decaymap.Impl[string, map[string]string]
+	targetURL *url.URL
+	client    *http.Client
+
+	// Pre-built strings for optimization
+	unixPrefix          string // "http://unix"
 	approvedTags        []string
 	approvedPrefixes    []string
 	ogTimeToLive        time.Duration
 	ogCacheConsiderHost bool
 	ogPassthrough       bool
-
-	// Pre-built strings for optimization
-	unixPrefix string // "http://unix"
 }
 
 func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogTagsConsiderHost bool) *OGTagCache {

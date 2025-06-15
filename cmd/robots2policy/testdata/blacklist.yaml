@@ -1,0 +1,30 @@
+- action: WEIGH
+  expression: "true"
+  name: robots-txt-policy-crawl-delay-1
+  weight:
+    adjust: 3
+- action: CHALLENGE
+  expression: path.startsWith("/admin")
+  name: robots-txt-policy-disallow-2
+- action: DENY
+  expression: userAgent.contains("BadBot")
+  name: robots-txt-policy-blacklist-3
+- action: WEIGH
+  expression: userAgent.contains("SpamBot")
+  name: robots-txt-policy-crawl-delay-4
+  weight:
+    adjust: 3
+- action: DENY
+  expression: userAgent.contains("SpamBot")
+  name: robots-txt-policy-blacklist-5
+- action: WEIGH
+  expression: userAgent.contains("Googlebot")
+  name: robots-txt-policy-crawl-delay-6
+  weight:
+    adjust: 3
+- action: CHALLENGE
+  expression:
+    all:
+        - userAgent.contains("Googlebot")
+        - path.startsWith("/search")
+  name: robots-txt-policy-disallow-7

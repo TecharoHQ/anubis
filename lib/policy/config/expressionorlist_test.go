@@ -1,12 +1,147 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"testing"
+
+	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 
-func TestExpressionOrListUnmarshal(t *testing.T) {
+func TestExpressionOrListMarshalJSON(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		input  *ExpressionOrList
+		output []byte
+		err    error
+	}{
+		{
+			name: "single expression",
+			input: &ExpressionOrList{
+				Expression: "true",
+			},
+			output: []byte(`"true"`),
+			err:    nil,
+		},
+		{
+			name: "all",
+			input: &ExpressionOrList{
+				All: []string{"true", "true"},
+			},
+			output: []byte(`{"all":["true","true"]}`),
+			err:    nil,
+		},
+		{
+			name: "all one",
+			input: &ExpressionOrList{
+				All: []string{"true"},
+			},
+			output: []byte(`"true"`),
+			err:    nil,
+		},
+		{
+			name: "any",
+			input: &ExpressionOrList{
+				Any: []string{"true", "false"},
+			},
+			output: []byte(`{"any":["true","false"]}`),
+			err:    nil,
+		},
+		{
+			name: "any one",
+			input: &ExpressionOrList{
+				Any: []string{"true"},
+			},
+			output: []byte(`"true"`),
+			err:    nil,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := json.Marshal(tt.input)
+			if !errors.Is(err, tt.err) {
+				t.Errorf("wanted marshal error: %v but got: %v", tt.err, err)
+			}
+
+			if !bytes.Equal(result, tt.output) {
+				t.Logf("wanted: %s", string(tt.output))
+				t.Logf("got:    %s", string(result))
+				t.Error("mismatched output")
+			}
+		})
+	}
+}
+
+func TestExpressionOrListMarshalYAML(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		input  *ExpressionOrList
+		output []byte
+		err    error
+	}{
+		{
+			name: "single expression",
+			input: &ExpressionOrList{
+				Expression: "true",
+			},
+			output: []byte(`"true"`),
+			err:    nil,
+		},
+		{
+			name: "all",
+			input: &ExpressionOrList{
+				All: []string{"true", "true"},
+			},
+			output: []byte(`all:
+    - "true"
+    - "true"`),
+			err: nil,
+		},
+		{
+			name: "all one",
+			input: &ExpressionOrList{
+				All: []string{"true"},
+			},
+			output: []byte(`"true"`),
+			err:    nil,
+		},
+		{
+			name: "any",
+			input: &ExpressionOrList{
+				Any: []string{"true", "false"},
+			},
+			output: []byte(`any:
+    - "true"
+    - "false"`),
+			err: nil,
+		},
+		{
+			name: "any one",
+			input: &ExpressionOrList{
+				Any: []string{"true"},
+			},
+			output: []byte(`"true"`),
+			err:    nil,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := yaml.Marshal(tt.input)
+			if !errors.Is(err, tt.err) {
+				t.Errorf("wanted marshal error: %v but got: %v", tt.err, err)
+			}
+
+			result = bytes.TrimSpace(result)
+
+			if !bytes.Equal(result, tt.output) {
+				t.Logf("wanted: %q", string(tt.output))
+				t.Logf("got:    %q", string(result))
+				t.Error("mismatched output")
+			}
+		})
+	}
+}
+
+func TestExpressionOrListUnmarshalJSON(t *testing.T) {
 	for _, tt := range []struct {
 		err      error
 		validErr error

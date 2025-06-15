@@ -1,0 +1,2 @@
+# Empty robots.txt (comments only)
+# No actual rules

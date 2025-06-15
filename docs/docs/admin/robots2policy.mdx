@@ -1,0 +1,84 @@
+---
+title: robots2policy CLI Tool
+sidebar_position: 50
+---
+
+The `robots2policy` tool converts robots.txt files into Anubis challenge policies. It reads robots.txt rules and generates equivalent CEL expressions for path matching and user-agent filtering.
+
+## Installation
+
+Install directly with Go:
+
+```bash
+go install github.com/TecharoHQ/anubis/cmd/robots2policy@latest
+```
+## Usage
+
+Basic conversion from URL:
+
+```bash
+robots2policy -input https://www.example.com/robots.txt
+```
+
+Convert local file to YAML:
+
+```bash
+robots2policy -input robots.txt -output policy.yaml
+```
+
+Convert with custom settings:
+
+```bash
+robots2policy -input robots.txt -action DENY -format json
+```
+
+## Options
+
+| Flag                  | Description                                                        | Default             |
+|-----------------------|--------------------------------------------------------------------|---------------------|
+| `-input`              | robots.txt file path or URL (use `-` for stdin)                    | *required*          |
+| `-output`             | Output file (use `-` for stdout)                                   | stdout              |
+| `-format`             | Output format: `yaml` or `json`                                    | `yaml`              |
+| `-action`             | Action for disallowed paths: `ALLOW`, `DENY`, `CHALLENGE`, `WEIGH` | `CHALLENGE`         |
+| `-name`               | Policy name prefix                                                 | `robots-txt-policy` |
+| `-crawl-delay-weight` | Weight adjustment for crawl-delay rules                            | `3`                 |
+| `-deny-user-agents`   | Action for blacklisted user agents                                 | `DENY`              |
+
+## Example
+
+Input robots.txt:
+```txt
+User-agent: *
+Disallow: /admin/
+Disallow: /private
+
+User-agent: BadBot
+Disallow: /
+```
+
+Generated policy:
+```yaml
+- name: robots-txt-policy-disallow-1
+  action: CHALLENGE
+  expression:
+    single: path.startsWith("/admin/")
+- name: robots-txt-policy-disallow-2
+  action: CHALLENGE
+  expression:
+    single: path.startsWith("/private")
+- name: robots-txt-policy-blacklist-3
+  action: DENY
+  expression:
+    single: userAgent.contains("BadBot")
+```
+
+## Using the Generated Policy
+
+Save the output and import it in your main policy file:
+
+```yaml
+import:
+  - path: "./robots-policy.yaml"
+```
+
+The tool handles wildcard patterns, user-agent specific rules, and blacklisted bots automatically.
