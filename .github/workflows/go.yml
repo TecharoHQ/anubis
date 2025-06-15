@@ -80,6 +80,15 @@ jobs:
       run: |
         npm ci
 
+    - name: install playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: |
+        npx --no-install playwright@1.52.0 install --with-deps
+
+    - name: start playwright server
+      run: |
+        npx --no-install playwright@1.52.0 run-server --port 9001 &
+
     - name: Build
       run: npm run build
 
@@ -90,15 +99,6 @@ jobs:
       uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6 # v1.3.1
       with:
         version: "latest"
-
-    - name: install playwright browsers
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: |
-        npx --no-install playwright@1.52.0 install --with-deps
-
-    - name: start playwright server
-      run: |
-        npx --no-install playwright@1.52.0 run-server --port 9001 &
 
 
     - name: Govulncheck
