@@ -71,7 +71,7 @@ jobs:
         with:
           path: |
             ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}'
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -81,8 +81,8 @@ jobs:
 
       - name: install playwright browsers
         run: |
-          npx --no-install playwright@1.53.0 install --with-deps
-          npx --no-install playwright@1.53.0 run-server --port 9001 &
+          npx --no-install playwright@${{ steps.playwright-version.outputs.version }} install --with-deps
+          npx --no-install playwright@${{ steps.playwright-version.outputs.version }} run-server --port 9001 &
 
       - name: Build
         run: npm run build
