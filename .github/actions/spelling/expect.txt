@@ -71,6 +71,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+enca
 everyones
 evilbot
 evilsite
@@ -81,6 +82,7 @@ extldflags
 facebookgo
 Factset
 fastcgi
+fcf
 fediverse
 finfos
 Firecrawl
@@ -146,6 +148,7 @@ lightpanda
 LIMSA
 Linting
 linuxbrew
+lkey
 LLU
 loadbalancer
 lol
@@ -246,6 +249,7 @@ techarohq
 templ
 templruntime
 testarea
+thr
 Tik
 Timpibot
 torproject
