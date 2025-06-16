@@ -12,7 +12,6 @@ archlinux
 badregexes
 bdba
 berr
-betteralign
 bingbot
 bitcoin
 blogging
@@ -164,7 +163,6 @@ mojeekbot
 mozilla
 nbf
 netsurf
-NFlag
 nginx
 nobots
 NONINFRINGEMENT
@@ -213,6 +211,7 @@ runlevels
 RUnlock
 sas
 sasl
+screenshots
 Scumm
 searchbot
 searx
