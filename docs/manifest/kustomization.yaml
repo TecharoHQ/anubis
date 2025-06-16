@@ -1,7 +1,9 @@
 resources:
+  - 1password.yaml
   - deployment.yaml
   - ingress.yaml
   - onionservice.yaml
+  - poddisruptionbudget.yaml
   - service.yaml
 
 configMapGenerator:
