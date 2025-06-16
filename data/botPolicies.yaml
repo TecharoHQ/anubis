@@ -52,7 +52,7 @@ bots:
   #     algorithm: slow # intentionally waste CPU cycles and time
 
   # Requires a subscription to Thoth to use, see
-  # TODO(Xe): docs link
+  # https://anubis.techaro.lol/docs/admin/thoth#geoip-based-filtering
   - name: countries-with-aggressive-scrapers
     action: WEIGH
     geoip:
