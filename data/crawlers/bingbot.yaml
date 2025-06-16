@@ -3,3 +3,5 @@
   action: CHALLENGE
   # https://www.bing.com/webmasters/help/how-to-verify-bingbot-3905dc26
   domain_regex: \.search\.msn\.com$
+  challenge:
+    algorithm: "fcrdns"

@@ -3,3 +3,5 @@
   action: CHALLENGE
   # https://www.mojeek.com/bot.html
   domain_regex: \.mojeek\.com$
+  challenge:
+    algorithm: "fcrdns"

@@ -2,4 +2,6 @@
   user_agent_regex: \+https\://help\.qwant\.com/bot/
   action: CHALLENGE
   # https://help.qwant.com/bot/
-  domain_regex: \.qwant\.com
+  domain_regex: \.qwant\.com$
+  challenge:
+    algorithm: "fcrdns"

@@ -21,6 +21,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 )
@@ -75,7 +76,7 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 	var validationErrs []error
 
 	for _, b := range anubisPolicy.Bots {
-		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok {
+		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok && b.Challenge.Algorithm != config.FCrDNSAlgorithm {
 			validationErrs = append(validationErrs, fmt.Errorf("%w %s", policy.ErrChallengeRuleHasWrongAlgorithm, b.Challenge.Algorithm))
 		}
 	}

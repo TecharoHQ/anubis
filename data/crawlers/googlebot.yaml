@@ -3,3 +3,5 @@
   action: CHALLENGE
   # https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
   domain_regex: \.googlebot\.com$
+  challenge:
+    algorithm: "fcrdns"

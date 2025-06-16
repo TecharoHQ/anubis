@@ -2,5 +2,7 @@
 # https://support.apple.com/en-us/119829
 - name: applebot
   user_agent_regex: Applebot
-  action: CHALLENGE
   domain_regex: \.applebot\.apple\.com$
+  action: CHALLENGE
+  challenge:
+    algorithm: "fcrdns"
