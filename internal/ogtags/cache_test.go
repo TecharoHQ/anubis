@@ -158,12 +158,12 @@ func TestGetOGTagsWithHostConsideration(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name                string
-		ogCacheConsiderHost bool
-		requests            []struct {
+		name     string
+		requests []struct {
 			host              string
-			expectedLoadCount int // Expected load count *after* this request
+			expectedLoadCount int
 		}
+		ogCacheConsiderHost bool // Expected load count *after* this request
 	}{
 		{
 			name:                "Host Not Considered - Same Host",

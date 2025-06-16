@@ -1,0 +1,2 @@
+- import: (data)/clients/small-internet-browsers/netsurf.yaml
+- import: (data)/clients/small-internet-browsers/palemoon.yaml

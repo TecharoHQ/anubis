@@ -1,0 +1,28 @@
+# Frequently Asked Questions
+
+## Why can't you just put details about the proof of work challenge into the challenge page so I don't need to run JavaScript?
+
+A common question is something along the lines of "why can't you give me a shell script to run the challenge on my laptop so that I don't have to enable JavaScript". Malware has been known to show an interstitial that [asks the user to paste something into their run box on Windows](https://www.malwarebytes.com/blog/news/2025/03/fake-captcha-websites-hijack-your-clipboard-to-install-information-stealers), which will then make that machine a zombie in a botnet.
+
+It would be in very bad taste to associate a security product such as Anubis with behavior similar to what malware uses. This would destroy user trust in the product and potentially result in reputational damage for the contributors. When at all possible, we want to avoid this happening.
+
+Technically inclined users are easily able to understand how the proof of work check works by either reading the JavaScript on the page or [reading the source code of the JavaScript program](https://github.com/TecharoHQ/anubis/tree/main/web/js). Please note that the format of the challenges and the algorithms used to solve them are liable to change without notice and are not considered part of the public API of Anubis. When such a change occurs, this will break your workarounds.
+
+If [sufficient funding is raised](https://github.com/TecharoHQ/anubis/discussions/278), a browser extension that packages the proof of work checks and looks for Anubis challenge pages to solve them will be created.
+
+## Why does Anubis use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to do its proof of work challenge?
+
+Anubis uses [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to do its proof of work challenge for two main reasons:
+
+1. The proof of work operation is a lot of serially blocking calls. If you do serially blocking calls in JavaScript, some browsers will hang and not respond to user input. This is bad user experience. Using a Web Worker allows the browser to do this computation in the background so your browser will not hang.
+2. Web Workers allow you to do multithreaded execution of JavaScript code. This lets Anubis run its checks in parallel across all your system cores so that the challenge can complete as fast as possible. In the last decade, most CPU advancements have come from making cores and code extremely parallel. Using Web Workers lets Anubis take advantage of your hardware as much as possible so that the challenge finishes as fast as possible.
+
+If you use a browser extension such as [JShelter](https://jshelter.org/), you will need to [modify your JShelter configuration](./known-broken-extensions.md#jshelter) to allow Anubis' proof of work computation to complete.
+
+## Does Anubis mine Bitcoin?
+
+No. Anubis does not mine Bitcoin.
+
+In order to mine bitcoin, you need to download a copy of the blockchain (so you have the state required to do mining) and also broadcast your mined blocks to the network should you reach a hash with the right number of leading zeroes. You also need to continuously read for newly broadcasted transactions so you can batch them into a block. This requires gigabytes of data to be transferred from the server to the client.
+
+Anubis transfers two digit numbers of kilobytes from the server to the client (which you can independently verify with your browser's Developer Tools feature). This is orders of magnitude below what is required to mine Bitcoin.

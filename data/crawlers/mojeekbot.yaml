@@ -1,5 +1,5 @@
 - name: mojeekbot
   user_agent_regex: \+https\://www\.mojeek\.com/bot\.html
-  action: FCRDNS
+  action: CHALLENGE
   # https://www.mojeek.com/bot.html
   domain_regex: \.mojeek\.com$

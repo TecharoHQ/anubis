@@ -1,0 +1,13 @@
+# Indexing for search, does not collect training data
+# https://platform.openai.com/docs/bots/overview-of-openai-crawlers
+- name: openai-searchbot
+  user_agent_regex: OAI-SearchBot/1\.0; \+https\://openai\.com/searchbot
+  action: ALLOW
+  # https://openai.com/searchbot.json
+  remote_addresses: [
+    "20.42.10.176/28",
+    "172.203.190.128/28",
+    "104.210.140.128/28",
+    "51.8.102.0/24",
+    "135.234.64.0/24"
+  ]

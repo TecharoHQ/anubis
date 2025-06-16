@@ -1,0 +1,9 @@
+# chat in the gentoo IRC channels
+- name: gentoo-chat
+  action: ALLOW
+  expression:
+    all:
+    - remoteAddress == "45.76.166.57"
+    - userAgent == "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0"
+    - '"X-Http-Version" in headers'
+    - headers["X-Http-Version"] == "HTTP/1.1"

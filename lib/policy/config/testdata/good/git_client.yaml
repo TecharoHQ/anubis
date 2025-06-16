@@ -1,0 +1,8 @@
+bots:
+- name: allow-git-clients
+  action: ALLOW
+  expression:
+    all:
+    - userAgent.startsWith("git/") || userAgent.contains("libgit")
+    - >
+      "Git-Protocol" in headers && headers["Git-Protocol"] == "version=2"

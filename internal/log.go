@@ -2,9 +2,11 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func InitSlog(level string) {
@@ -33,4 +35,25 @@ func GetRequestLogger(r *http.Request) *slog.Logger {
 		r.Header.Get("X-Forwarded-For"),
 		"x-real-ip", r.Header.Get("X-Real-Ip"),
 	)
+}
+
+// ErrorLogFilter is used to suppress "context canceled" logs from the http server when a request is canceled (e.g., when a client disconnects).
+type ErrorLogFilter struct {
+	Unwrap *log.Logger
+}
+
+func (elf *ErrorLogFilter) Write(p []byte) (n int, err error) {
+	logMessage := string(p)
+	if strings.Contains(logMessage, "context canceled") {
+		return len(p), nil // Suppress the log by doing nothing
+	}
+	if elf.Unwrap != nil {
+		return elf.Unwrap.Writer().Write(p)
+	}
+	return len(p), nil
+}
+
+func GetFilteredHTTPLogger() *log.Logger {
+	stdErrLogger := log.New(os.Stderr, "", log.LstdFlags) // essentially what the default logger is.
+	return log.New(&ErrorLogFilter{Unwrap: stdErrLogger}, "", 0)
 }

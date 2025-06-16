@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -29,6 +30,7 @@ var (
 	ErrInvalidImportStatement            = errors.New("config.ImportStatement: invalid source file")
 	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
 	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
+	ErrStatusCodeNotValid                = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
 )
 
 type Rule string
@@ -38,27 +40,24 @@ const (
 	RuleAllow     Rule = "ALLOW"
 	RuleDeny      Rule = "DENY"
 	RuleChallenge Rule = "CHALLENGE"
-	RuleDns       Rule = "FCRDNS"
+	RuleWeigh     Rule = "WEIGH"
 	RuleBenchmark Rule = "DEBUG_BENCHMARK"
 )
 
-type Algorithm string
-
-const (
-	AlgorithmUnknown Algorithm = ""
-	AlgorithmFast    Algorithm = "fast"
-	AlgorithmSlow    Algorithm = "slow"
-)
+const DefaultAlgorithm = "fast"
+const FCrDNSAlgorithm = "fcrdns"
 
 type BotConfig struct {
-	Name           string            `json:"name"`
-	UserAgentRegex *string           `json:"user_agent_regex"`
-	PathRegex      *string           `json:"path_regex"`
-	HeadersRegex   map[string]string `json:"headers_regex"`
-	Action         Rule              `json:"action"`
-	RemoteAddr     []string          `json:"remote_addresses"`
-	Challenge      *ChallengeRules   `json:"challenge,omitempty"`
-	DomainRegex    *string           `json:"domain_regex"`
+	UserAgentRegex *string           `json:"user_agent_regex,omitempty" yaml:"user_agent_regex,omitempty"`
+	PathRegex      *string           `json:"path_regex,omitempty" yaml:"path_regex,omitempty"`
+	HeadersRegex   map[string]string `json:"headers_regex,omitempty" yaml:"headers_regex,omitempty"`
+	DomainRegex    *string           `json:"domain_regex" yaml:"domain_regex,omitempty"`
+	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
+	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
+	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
+	Name           string            `json:"name" yaml:"name"`
+	Action         Rule              `json:"action" yaml:"action"`
+	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -80,14 +79,19 @@ func (b BotConfig) Zero() bool {
 	return true
 }
 
-func (b BotConfig) Valid() error {
+func (b *BotConfig) Valid() error {
 	var errs []error
 
 	if b.Name == "" {
 		errs = append(errs, ErrBotMustHaveName)
 	}
 
-	if b.UserAgentRegex == nil && b.PathRegex == nil && len(b.RemoteAddr) == 0 && len(b.HeadersRegex) == 0 {
+	allFieldsEmpty := b.UserAgentRegex == nil &&
+		b.PathRegex == nil &&
+		len(b.RemoteAddr) == 0 &&
+		len(b.HeadersRegex) == 0
+
+	if allFieldsEmpty && b.Expression == nil {
 		errs = append(errs, ErrBotMustHaveUserAgentOrPath)
 	}
 
@@ -138,21 +142,27 @@ func (b BotConfig) Valid() error {
 			}
 		}
 	}
-	if b.Action == RuleDns {
+	if b.Action == RuleChallenge && b.Challenge.Algorithm == FCrDNSAlgorithm {
 		if b.DomainRegex == nil {
-			errs = append(errs, ErrDnsTestNoDomains)
+			errs = append(errs, ErrChallengeNoDomains)
 		} else if _, err := regexp.Compile(*b.DomainRegex); err != nil {
 			errs = append(errs, ErrInvalidDomainRegex, err)
 		}
-		if b.UserAgentRegex == nil {
-			errs = append(errs, ErrDnsTestNoUserAgent)
+		if b.UserAgentRegex == nil && b.Expression == nil {
+			errs = append(errs, ErrChallengeNoUserAgent)
 		}
 	} else if b.DomainRegex != nil {
-		errs = append(errs, ErrDnsTestInvalidAction)
+		errs = append(errs, ErrChallengeDomainUnsupported)
+	}
+
+	if b.Expression != nil {
+		if err := b.Expression.Valid(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	switch b.Action {
-	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDns, RuleDeny:
+	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny, RuleWeigh:
 		// okay
 	default:
 		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))
@@ -164,6 +174,10 @@ func (b BotConfig) Valid() error {
 		}
 	}
 
+	if b.Action == RuleWeigh && b.Weight == nil {
+		b.Weight = &Weight{Adjust: 5}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config: bot entry for %q is not valid:\n%w", b.Name, errors.Join(errs...))
 	}
@@ -172,18 +186,18 @@ func (b BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
-	Difficulty int       `json:"difficulty"`
-	ReportAs   int       `json:"report_as"`
-	Algorithm  Algorithm `json:"algorithm"`
+	Algorithm  string `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
+	Difficulty int    `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
+	ReportAs   int    `json:"report_as,omitempty" yaml:"report_as,omitempty"`
 }
 
 var (
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
 	ErrChallengeDifficultyTooLow      = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
 	ErrChallengeDifficultyTooHigh     = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
-	ErrDnsTestInvalidAction           = errors.New("config.Bot.DnsTest: specifying domain regex is only supported for FCRDNS rules")
-	ErrDnsTestNoDomains               = errors.New("config.Bot.DnsTest: FCRDNS rules must specify a domain regex")
-	ErrDnsTestNoUserAgent             = errors.New("config.Bot.DnsTest: FCRDNS rules must specify a user agent regex")
+	ErrChallengeDomainUnsupported     = errors.New("config.Bot.ChallengeRules: specifying domain regex is only supported for FCRDNS rules")
+	ErrChallengeNoDomains             = errors.New("config.Bot.ChallengeRules: FCRDNS rules must specify a domain regex")
+	ErrChallengeNoUserAgent           = errors.New("config.Bot.ChallengeRules: FCRDNS rules must specify a user agent regex or expression")
 )
 
 func (cr ChallengeRules) Valid() error {
@@ -195,13 +209,6 @@ func (cr ChallengeRules) Valid() error {
 
 	if cr.Difficulty > 64 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
-	}
-
-	switch cr.Algorithm {
-	case AlgorithmFast, AlgorithmSlow, AlgorithmUnknown:
-		// do nothing, it's all good
-	default:
-		errs = append(errs, fmt.Errorf("%w: %q", ErrChallengeRuleHasWrongAlgorithm, cr.Algorithm))
 	}
 
 	if len(errs) != 0 {
@@ -229,21 +236,30 @@ func (is *ImportStatement) open() (fs.File, error) {
 func (is *ImportStatement) load() error {
 	fin, err := is.open()
 	if err != nil {
-		return fmt.Errorf("can't open %s: %w", is.Import, err)
+		return fmt.Errorf("%w: %s: %w", ErrInvalidImportStatement, is.Import, err)
 	}
 	defer fin.Close()
 
+	var imported []BotOrImport
 	var result []BotConfig
 
-	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&result); err != nil {
+	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&imported); err != nil {
 		return fmt.Errorf("can't parse %s: %w", is.Import, err)
 	}
 
 	var errs []error
 
-	for _, b := range result {
+	for _, b := range imported {
 		if err := b.Valid(); err != nil {
 			errs = append(errs, err)
+		}
+
+		if b.ImportStatement != nil {
+			result = append(result, b.ImportStatement.Bots...)
+		}
+
+		if b.BotConfig != nil {
+			result = append(result, *b.BotConfig)
 		}
 	}
 
@@ -281,9 +297,33 @@ func (boi *BotOrImport) Valid() error {
 	return ErrMustSetBotOrImportRules
 }
 
+type StatusCodes struct {
+	Challenge int `json:"CHALLENGE"`
+	Deny      int `json:"DENY"`
+}
+
+func (sc StatusCodes) Valid() error {
+	var errs []error
+
+	if sc.Challenge == 0 || (sc.Challenge < 100 && sc.Challenge >= 599) {
+		errs = append(errs, fmt.Errorf("%w: challenge is %d", ErrStatusCodeNotValid, sc.Challenge))
+	}
+
+	if sc.Deny == 0 || (sc.Deny < 100 && sc.Deny >= 599) {
+		errs = append(errs, fmt.Errorf("%w: deny is %d", ErrStatusCodeNotValid, sc.Deny))
+	}
+
+	if len(errs) != 0 {
+		return fmt.Errorf("status codes not valid:\n%w", errors.Join(errs...))
+	}
+
+	return nil
+}
+
 type fileConfig struct {
-	Bots  []BotOrImport `json:"bots"`
-	DNSBL bool          `json:"dnsbl"`
+	Bots        []BotOrImport `json:"bots"`
+	DNSBL       bool          `json:"dnsbl"`
+	StatusCodes StatusCodes   `json:"status_codes"`
 }
 
 func (c fileConfig) Valid() error {
@@ -299,6 +339,10 @@ func (c fileConfig) Valid() error {
 		}
 	}
 
+	if err := c.StatusCodes.Valid(); err != nil {
+		errs = append(errs, err)
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -308,6 +352,10 @@ func (c fileConfig) Valid() error {
 
 func Load(fin io.Reader, fname string) (*Config, error) {
 	var c fileConfig
+	c.StatusCodes = StatusCodes{
+		Challenge: http.StatusOK,
+		Deny:      http.StatusOK,
+	}
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
 		return nil, fmt.Errorf("can't parse policy config YAML %s: %w", fname, err)
 	}
@@ -317,7 +365,8 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 	}
 
 	result := &Config{
-		DNSBL: c.DNSBL,
+		DNSBL:       c.DNSBL,
+		StatusCodes: c.StatusCodes,
 	}
 
 	var validationErrs []error
@@ -350,8 +399,9 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 }
 
 type Config struct {
-	Bots  []BotConfig
-	DNSBL bool
+	Bots        []BotConfig
+	DNSBL       bool
+	StatusCodes StatusCodes
 }
 
 func (c Config) Valid() error {

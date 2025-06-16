@@ -3,20 +3,19 @@ package lib
 import (
 	"crypto/ed25519"
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
-	"math"
 	"net"
 	"net/http"
 	"net/url"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -26,56 +25,66 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/internal/fcrdns"
+	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+
+	// challenge implementations
+	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
+	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 )
 
 var (
-	challengesIssued = promauto.NewCounter(prometheus.CounterOpts{
+	challengesIssued = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_challenges_issued",
 		Help: "The total number of challenges issued",
-	})
+	}, []string{"method"})
 
-	challengesValidated = promauto.NewCounter(prometheus.CounterOpts{
+	challengesValidated = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_challenges_validated",
 		Help: "The total number of challenges validated",
-	})
+	}, []string{"method"})
 
 	droneBLHits = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_dronebl_hits",
 		Help: "The total number of hits from DroneBL",
 	}, []string{"status"})
 
-	failedValidations = promauto.NewCounter(prometheus.CounterOpts{
+	failedValidations = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_failed_validations",
 		Help: "The total number of failed validations",
-	})
+	}, []string{"method"})
 
-	timeTaken = promauto.NewHistogram(prometheus.HistogramOpts{
-		Name:    "anubis_time_taken",
-		Help:    "The time taken for a browser to generate a response (milliseconds)",
-		Buckets: prometheus.ExponentialBucketsRange(1, math.Pow(2, 18), 19),
-	})
+	requestsProxied = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "anubis_proxied_requests_total",
+		Help: "Number of requests proxied through Anubis to upstream targets",
+	}, []string{"host"})
 )
 
 type Server struct {
-	mux        *http.ServeMux
 	next       http.Handler
-	priv       ed25519.PrivateKey
-	pub        ed25519.PublicKey
+	mux        *http.ServeMux
 	policy     *policy.ParsedConfig
-	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
 	FCrDNS     *fcrdns.FCrDNS
+	cookieName string
+	priv       ed25519.PrivateKey
+	pub        ed25519.PublicKey
+	opts       Options
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
-	fp := sha256.Sum256(s.priv.Seed())
+	fp := sha256.Sum256(s.pub[:])
+
+	acceptLanguage := r.Header.Get("Accept-Language")
+	if len(acceptLanguage) > 5 {
+		acceptLanguage = acceptLanguage[:5]
+	}
 
 	challengeData := fmt.Sprintf(
 		"Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
-		r.Header.Get("Accept-Language"),
+		acceptLanguage,
 		r.Header.Get("X-Real-Ip"),
 		r.UserAgent(),
 		time.Now().UTC().Round(24*7*time.Hour).Format(time.RFC3339),
@@ -95,6 +104,12 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg := internal.GetRequestLogger(r)
+
+	// Adjust cookie path if base prefix is not empty
+	cookiePath := "/"
+	if anubis.BasePrefix != "" {
+		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
+	}
 
 	cr, rule, err := s.check(r)
 	if err != nil {
@@ -118,24 +133,24 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	ckie, err := r.Cookie(anubis.CookieName)
+	ckie, err := r.Cookie(s.cookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -146,7 +161,30 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		lg.Debug("invalid token claims type", "path", r.URL.Path)
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
+		return
+	}
+
+	policyRule, ok := claims["policyRule"].(string)
+	if !ok {
+		lg.Debug("policyRule claim is not a string")
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.RenderIndex(w, r, rule, httpStatusOnly)
+		return
+	}
+
+	if policyRule != rule.Hash() {
+		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -156,13 +194,19 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot, ip string) bool {
+	// Adjust cookie path if base prefix is not empty
+	cookiePath := "/"
+	if anubis.BasePrefix != "" {
+		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
+	}
+
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
 		s.ServeHTTPNext(w, r)
 		return true
 	case config.RuleDeny:
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
@@ -172,31 +216,33 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		hash := rule.Hash()
 
 		lg.Debug("rule hash", "hash", hash)
-		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), http.StatusOK)
+		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
 		return true
 	case config.RuleChallenge:
-		lg.Debug("challenge requested")
-	case config.RuleDns:
-		lg.Debug("performing reverse dns check")
+		if rule.Challenge.Algorithm == config.FCrDNSAlgorithm {
+			lg.Debug("performing reverse dns check")
 
-		if passed, err := s.FCrDNS.Check(ip, rule.DomainRegex); err != nil {
-			lg.Error("got error while performing reverse dns check", "err", err)
-			s.respondWithError(w, r, fmt.Sprintf("Could not verify reverse DNS: %s", err.Error()))
-		} else if passed {
-			lg.Debug("allowing traffic to origin (reverse dns check passed)")
-			s.ServeHTTPNext(w, r)
-		} else {
-			lg.Debug("denying traffic (reverse dns check failed)")
-			s.respondWithStatus(w, r, "Access Denied: You appear to be impersonating a bot. Try disabling any User-Agent switchers", http.StatusOK)
+			if passed, err := s.FCrDNS.Check(ip, rule.DomainRegex); err != nil {
+				lg.Error("got error while performing reverse dns check", "err", err)
+				s.respondWithError(w, r, fmt.Sprintf("Could not verify reverse DNS: %s", err.Error()))
+			} else if passed {
+				lg.Debug("allowing traffic to origin (reverse dns check passed)")
+				s.ServeHTTPNext(w, r)
+			} else {
+				lg.Debug("denying traffic (reverse dns check failed)")
+				s.respondWithStatus(w, r, "Access Denied: You appear to be impersonating a bot. Try disabling any User-Agent switchers", http.StatusOK)
+			}
+
+			return true
 		}
 
-		return true
+		lg.Debug("challenge requested")
 	case config.RuleBenchmark:
 		lg.Debug("serving benchmark page")
 		s.RenderBench(w, r)
 		return true
 	default:
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
 		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
 		return true
@@ -219,7 +265,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 
 		if resp != dnsbl.AllGood {
 			lg.Info("DNSBL hit", "status", resp.String())
-			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), http.StatusOK)
+			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), s.policy.StatusCodes.Deny)
 			return true
 		}
 	}
@@ -228,6 +274,21 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
+
+	redir := r.FormValue("redir")
+	if redir == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder := json.NewEncoder(w)
+		lg.Error("invalid invocation of MakeChallenge", "redir", redir)
+		encoder.Encode(struct {
+			Error string `json:"error"`
+		}{
+			Error: "Invalid invocation of MakeChallenge",
+		})
+		return
+	}
+
+	r.URL.Path = redir
 
 	encoder := json.NewEncoder(w)
 	cr, rule, err := s.check(r)
@@ -246,13 +307,15 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lg = lg.With("check_result", cr)
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
+	chal := s.challengeFor(r, rule.Challenge.Difficulty)
+
+	s.SetCookie(w, anubis.TestCookieName, chal, "/")
 
 	err = encoder.Encode(struct {
-		Challenge string                 `json:"challenge"`
 		Rules     *config.ChallengeRules `json:"rules"`
+		Challenge string                 `json:"challenge"`
 	}{
-		Challenge: challenge,
+		Challenge: chal,
 		Rules:     rule.Challenge,
 	})
 	if err != nil {
@@ -260,12 +323,28 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	lg.Debug("made challenge", "challenge", challenge, "rules", rule.Challenge, "cr", cr)
-	challengesIssued.Inc()
+	lg.Debug("made challenge", "challenge", chal, "rules", rule.Challenge, "cr", cr)
+	challengesIssued.WithLabelValues("api").Inc()
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
+
+	// Adjust cookie path if base prefix is not empty
+	cookiePath := "/"
+	if anubis.BasePrefix != "" {
+		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
+	}
+
+	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		s.ClearCookie(w, anubis.TestCookieName, "/")
+		lg.Warn("user has cookies disabled, this is not an anubis bug")
+		s.respondWithError(w, r, "Your browser is configured to disable cookies. Anubis requires cookies for the legitimate interest of making sure you are a valid client. Please enable cookies for this domain")
+		return
+	}
+
+	s.ClearCookie(w, anubis.TestCookieName, "/")
 
 	redir := r.FormValue("redir")
 	redirURL, err := url.ParseRequestURI(redir)
@@ -277,42 +356,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	// used by the path checker rule
 	r.URL = redirURL
 
-	cr, rule, err := s.check(r)
-	if err != nil {
-		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\".\"")
-		return
-	}
-	lg = lg.With("check_result", cr)
-
-	nonceStr := r.FormValue("nonce")
-	if nonceStr == "" {
-		s.ClearCookie(w)
-		lg.Debug("no nonce")
-		s.respondWithError(w, r, "missing nonce")
-		return
-	}
-
-	elapsedTimeStr := r.FormValue("elapsedTime")
-	if elapsedTimeStr == "" {
-		s.ClearCookie(w)
-		lg.Debug("no elapsedTime")
-		s.respondWithError(w, r, "missing elapsedTime")
-		return
-	}
-
-	elapsedTime, err := strconv.ParseFloat(elapsedTimeStr, 64)
-	if err != nil {
-		s.ClearCookie(w)
-		lg.Debug("elapsedTime doesn't parse", "err", err)
-		s.respondWithError(w, r, "invalid elapsedTime")
-		return
-	}
-
-	lg.Info("challenge took", "elapsedTime", elapsedTime)
-	timeTaken.Observe(elapsedTime)
-
-	response := r.FormValue("response")
 	urlParsed, err := r.URL.Parse(redir)
 	if err != nil {
 		s.respondWithError(w, r, "Redirect URL not parseable")
@@ -323,84 +366,74 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	challenge := s.challengeFor(r, rule.Challenge.Difficulty)
-
-	nonce, err := strconv.Atoi(nonceStr)
+	cr, rule, err := s.check(r)
 	if err != nil {
-		s.ClearCookie(w)
-		lg.Debug("nonce doesn't parse", "err", err)
-		s.respondWithError(w, r, "invalid nonce")
+		lg.Error("check failed", "err", err)
+		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\"")
+		return
+	}
+	lg = lg.With("check_result", cr)
+
+	impl, ok := challenge.Get(rule.Challenge.Algorithm)
+	if !ok {
+		lg.Error("check failed", "err", err)
+		s.respondWithError(w, r, fmt.Sprintf("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to file a bug as Anubis is trying to use challenge method %s but it does not exist in the challenge registry", rule.Challenge.Algorithm))
 		return
 	}
 
-	calcString := fmt.Sprintf("%s%d", challenge, nonce)
-	calculated := internal.SHA256sum(calcString)
+	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
 
-	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
-		s.ClearCookie(w)
-		lg.Debug("hash does not match", "got", response, "want", calculated)
-		s.respondWithStatus(w, r, "invalid response", http.StatusForbidden)
-		failedValidations.Inc()
-		return
+	if err := impl.Validate(r, lg, rule, challengeStr); err != nil {
+		failedValidations.WithLabelValues(rule.Challenge.Algorithm).Inc()
+		var cerr *challenge.Error
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		lg.Debug("challenge validate call failed", "err", err)
+
+		switch {
+		case errors.As(err, &cerr):
+			switch {
+			case errors.Is(err, challenge.ErrFailed):
+				s.respondWithStatus(w, r, cerr.PublicReason, cerr.StatusCode)
+			case errors.Is(err, challenge.ErrInvalidFormat), errors.Is(err, challenge.ErrMissingField):
+				s.respondWithError(w, r, cerr.PublicReason)
+			}
+		}
 	}
 
-	// compare the leading zeroes
-	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
-		s.ClearCookie(w)
-		lg.Debug("difficulty check failed", "response", response, "difficulty", rule.Challenge.Difficulty)
-		s.respondWithStatus(w, r, "invalid response", http.StatusForbidden)
-		failedValidations.Inc()
-		return
-	}
-
-	// Adjust cookie path if base prefix is not empty
-	cookiePath := "/"
-	if anubis.BasePrefix != "" {
-		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
-	}
 	// generate JWT cookie
-	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
-		"challenge": challenge,
-		"nonce":     nonce,
-		"response":  response,
-		"iat":       time.Now().Unix(),
-		"nbf":       time.Now().Add(-1 * time.Minute).Unix(),
-		"exp":       time.Now().Add(24 * 7 * time.Hour).Unix(),
+	tokenString, err := s.signJWT(jwt.MapClaims{
+		"challenge":  challengeStr,
+		"method":     rule.Challenge.Algorithm,
+		"policyRule": rule.Hash(),
+		"action":     string(cr.Rule),
 	})
-	tokenString, err := token.SignedString(s.priv)
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
-		s.ClearCookie(w)
+		s.ClearCookie(w, s.cookieName, cookiePath)
 		s.respondWithError(w, r, "failed to sign JWT")
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:        anubis.CookieName,
-		Value:       tokenString,
-		Expires:     time.Now().Add(24 * 7 * time.Hour),
-		SameSite:    http.SameSiteLaxMode,
-		Domain:      s.opts.CookieDomain,
-		Partitioned: s.opts.CookiePartitioned,
-		Path:        cookiePath,
-	})
+	s.SetCookie(w, s.cookieName, tokenString, cookiePath)
 
-	challengesValidated.Inc()
+	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
 	lg.Debug("challenge passed, redirecting to app")
 	http.Redirect(w, r, redir, http.StatusFound)
 }
 
-func (s *Server) TestError(w http.ResponseWriter, r *http.Request) {
-	err := r.FormValue("err")
-	s.respondWithError(w, r, err)
-}
-
-func cr(name string, rule config.Rule) policy.CheckResult {
+func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 	return policy.CheckResult{
-		Name: name,
-		Rule: rule,
+		Name:   name,
+		Rule:   rule,
+		Weight: weight,
 	}
 }
+
+var (
+	weightOkayStatic    = policy.NewStaticHashChecker("weight/okay")
+	weightMildSusStatic = policy.NewStaticHashChecker("weight/mild-suspicion")
+	weightVerySusStatic = policy.NewStaticHashChecker("weight/extreme-suspicion")
+)
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
@@ -414,6 +447,8 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
 	}
 
+	weight := 0
+
 	for _, b := range s.policy.Bots {
 		match, err := b.Rules.Check(r)
 		if err != nil {
@@ -421,16 +456,53 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		}
 
 		if match {
-			return cr("bot/"+b.Name, b.Action), &b, nil
+			switch b.Action {
+			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
+				return cr("bot/"+b.Name, b.Action, weight), &b, nil
+			case config.RuleWeigh:
+				slog.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
+				weight += b.Weight.Adjust
+			}
 		}
 	}
 
-	return cr("default/allow", config.RuleAllow), &policy.Bot{
+	switch {
+	case weight <= 0:
+		return cr("weight/okay", config.RuleAllow, weight), &policy.Bot{
+			Challenge: &config.ChallengeRules{
+				Difficulty: s.policy.DefaultDifficulty,
+				ReportAs:   s.policy.DefaultDifficulty,
+				Algorithm:  config.DefaultAlgorithm,
+			},
+			Rules: weightOkayStatic,
+		}, nil
+	case weight > 0 && weight < 10:
+		return cr("weight/mild-suspicion", config.RuleChallenge, weight), &policy.Bot{
+			Challenge: &config.ChallengeRules{
+				Difficulty: s.policy.DefaultDifficulty,
+				ReportAs:   s.policy.DefaultDifficulty,
+				Algorithm:  "metarefresh",
+			},
+			Rules: weightMildSusStatic,
+		}, nil
+	case weight >= 10:
+		return cr("weight/extreme-suspicion", config.RuleChallenge, weight), &policy.Bot{
+			Challenge: &config.ChallengeRules{
+				Difficulty: s.policy.DefaultDifficulty,
+				ReportAs:   s.policy.DefaultDifficulty,
+				Algorithm:  "fast",
+			},
+			Rules: weightVerySusStatic,
+		}, nil
+	}
+
+	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
 			ReportAs:   s.policy.DefaultDifficulty,
-			Algorithm:  config.AlgorithmFast,
+			Algorithm:  config.DefaultAlgorithm,
 		},
+		Rules: &policy.CheckerList{},
 	}, nil
 }
 

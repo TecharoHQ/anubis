@@ -1,0 +1,22 @@
+services:
+  caddy:
+    image: xxxtest/caddy
+    build: .
+    ports:
+      - 8080:80
+      - 8443:443
+    volumes:
+      - "../pki/caddy.local.cetacean.club:/etc/techaro/pki/caddy.local.cetacean.club/"
+
+  anubis:
+    image: ghcr.io/techarohq/anubis:main
+    environment:
+      BIND: ":3000"
+      TARGET: http://httpdebug:3000
+      POLICY_FNAME: /etc/techaro/anubis/less_paranoid.yaml
+    volumes:
+      - ../anubis_configs:/etc/techaro/anubis
+
+  httpdebug:
+    image: ghcr.io/xe/x/httpdebug
+    pull_policy: always

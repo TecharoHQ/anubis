@@ -9,10 +9,11 @@ import (
 )
 
 type Bot struct {
-	Name        string
-	Action      config.Rule
-	Challenge   *config.ChallengeRules
-	Rules       Checker
+	Rules     Checker
+	Challenge *config.ChallengeRules
+	Weight    *config.Weight
+	Name      string
+	Action    config.Rule
 	DomainRegex *regexp.Regexp
 }
 

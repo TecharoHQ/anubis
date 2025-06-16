@@ -18,9 +18,9 @@ func TestExtractOGTags(t *testing.T) {
 	testCache.approvedPrefixes = []string{"og:"}
 
 	tests := []struct {
+		expected map[string]string
 		name     string
 		htmlStr  string
-		expected map[string]string
 	}{
 		{
 			name: "Basic OG tags", // Includes standard 'description' meta tag

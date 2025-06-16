@@ -1,0 +1,6 @@
+# Permits all well documented AI/LLM user agents with published IP allowlists.
+- import: (data)/bots/ai-catchall.yaml
+- import: (data)/crawlers/openai-searchbot.yaml
+- import: (data)/crawlers/openai-gptbot.yaml
+- import: (data)/clients/openai-chatgpt-user.yaml
+- import: (data)/clients/mistral-mistralai-user.yaml

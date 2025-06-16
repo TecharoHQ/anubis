@@ -1,0 +1,172 @@
+# Expression-based rule matching
+
+Most of the Anubis matchers let you match individual parts of a request and only those parts in isolation. In order to defend a service in depth, you often need the ability to match against multiple aspects of a request. Anubis implements [Common Expression Language (CEL)](https://cel.dev) to let administrators define these more advanced rules. This allows you to tailor your approach for the individual services you are protecting.
+
+As an example, here is a rule that lets you allow JSON API requests through Anubis:
+
+```yaml
+- name: allow-api-requests
+  action: ALLOW
+  expression:
+    all:
+      - '"Accept" in headers'
+      - 'headers["Accept"] == "application/json"'
+      - 'path.startsWith("/api/")'
+```
+
+This is an advanced feature and as such it is easy to get yourself in trouble with it. Use this with care.
+
+## Common Expression Language (CEL)
+
+CEL is an expression language made by Google as a part of their access control lists system. As programs grow more complicated and users have the need to express more complicated security requirements, they often want the ability to just run a small bit of code to check things for themselves. CEL expressions are built for this. They are implicitly sandboxed so that they cannot affect the system they are running in and also designed to evaluate as fast as humanly possible.
+
+Imagine a CEL expression as the contents of an `if` statement in JavaScript or the `WHERE` clause in SQL. Consider this example expression:
+
+```python
+userAgent == ""
+```
+
+This is roughly equivalent to the following in JavaScript:
+
+```js
+if (userAgent == "") {
+  // Do something
+}
+```
+
+Using these expressions, you can define more elaborate rules as facts and circumstances demand. For more information about the syntax and grammar of CEL, take a look at [the language specification](https://github.com/google/cel-spec/blob/master/doc/langdef.md).
+
+## How Anubis uses CEL
+
+Anubis uses CEL to let administrators create complicated filter rules. Anubis has several modes of using CEL:
+
+- Validating requests against single expressions
+- Validating multiple expressions and ensuring at least one of them are true (`any`)
+- Validating multiple expressions and ensuring all of them are true (`all`)
+
+The common pattern is that every Anubis expression returns `true`, `false`, or raises an error.
+
+### Single expressions
+
+A single expression that returns either `true` or `false`. If the expression returns `true`, then the action specified in the rule will be taken. If it returns `false`, Anubis will move on to the next rule.
+
+For example, consider this rule:
+
+```yaml
+- name: no-user-agent-string
+  action: DENY
+  expression: userAgent == ""
+```
+
+For this rule, if a request comes in without a [`User-Agent` string](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) set, Anubis will deny the request and return an error page.
+
+### `any` blocks
+
+An `any` block that contains a list of expressions. If any expression in the list returns `true`, then the action specified in the rule will be taken. If all expressions in that list return `false`, Anubis will move on to the next rule.
+
+For example, consider this rule:
+
+```yaml
+- name: known-banned-user
+  action: DENY
+  expression:
+    any:
+      - remoteAddress == "8.8.8.8"
+      - remoteAddress == "1.1.1.1"
+```
+
+For this rule, if a request comes in from `8.8.8.8` or `1.1.1.1`, Anubis will deny the request and return an error page.
+
+#### `all` blocks
+
+An `all` block that contains a list of expressions. If all expressions in the list return `true`, then the action specified in the rule will be taken. If any of the expressions in the list returns `false`, Anubis will move on to the next rule.
+
+For example, consider this rule:
+
+```yaml
+- name: go-get
+  action: ALLOW
+  expression:
+    all:
+      - userAgent.startsWith("Go-http-client/")
+      - '"go-get" in query'
+      - query["go-get"] == "1"
+```
+
+For this rule, if a request comes in matching [the signature of the `go get` command](https://pkg.go.dev/cmd/go#hdr-Remote_import_paths), Anubis will allow it through to the target.
+
+## Variables exposed to Anubis expressions
+
+Anubis exposes the following variables to expressions:
+
+| Name            | Type                  | Explanation                                                                                                                               | Example                                                      |
+| :-------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                        | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
+| `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                  | `anubis.techaro.lol`                                         |
+| `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                    | `GET`, `POST`, `DELETE`, etc.                                |
+| `path`          | `string`              | The [path](https://web.dev/articles/url-parts#pathname) of the request being processed.                                                   | `/`, `/api/memes/create`                                     |
+| `query`         | `map[string, string]` | The [query parameters](https://web.dev/articles/url-parts#query) of the request being processed.                                          | `?foo=bar` -> `{"foo": "bar"}`                               |
+| `remoteAddress` | `string`              | The IP address of the client.                                                                                                             | `1.1.1.1`                                                    |
+| `userAgent`     | `string`              | The [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) string in the request being processed. | `Mozilla/5.0 Gecko/20100101 Firefox/137.0`                   |
+
+Of note: in many languages when you look up a key in a map and there is nothing there, the language will return some "falsy" value like `undefined` in JavaScript, `None` in Python, or the zero value of the type in Go. In CEL, if you try to look up a value that does not exist, execution of the expression will fail and Anubis will return an error.
+
+In order to avoid this, make sure the header or query parameter you are testing is present in the request with an `all` block like this:
+
+```yaml
+- name: challenge-wiki-history-page
+  action: CHALLENGE
+  all:
+    - 'path == "/index.php"'
+    - '"title" in query'
+    - '"action" in query'
+    - 'query["action"] == "history"
+```
+
+This rule throws a challenge if and only if all of the following conditions are true:
+
+- The URL path is `/index.php`
+- The URL query string contains a `title` value
+- The URL query string contains an `action` value
+- The URL query string's `action` value is `"history"`
+
+So given an HTTP request like this:
+
+```text
+GET /index.php?title=Index&action=history HTTP/1.1
+User-Agent: Mozilla/5.0 Gecko/20100101 Firefox/137.0
+Host: wiki.int.techaro.lol
+X-Real-Ip: 8.8.8.8
+```
+
+Anubis would return a challenge because all of those conditions are true.
+
+## Functions exposed to Anubis expressions
+
+Anubis expressions can be augmented with the following functions:
+
+### `randInt`
+
+```ts
+function randInt(n: int): int;
+```
+
+randInt returns a randomly selected integer value in the range of `[0,n)`. This is a thin wrapper around [Go's math/rand#Intn](https://pkg.go.dev/math/rand#Intn). Be careful with this as it may cause inconsistent behavior for genuine users.
+
+This is best applied when doing explicit block rules, eg:
+
+```yaml
+# Denies LightPanda about 75% of the time on average
+- name: deny-lightpanda-sometimes
+  action: DENY
+  expression:
+    all:
+      - userAgent.matches("LightPanda")
+      - randInt(16) >= 4
+```
+
+It seems counter-intuitive to allow known bad clients through sometimes, but this allows you to confuse attackers by making Anubis' behavior random. Adjust the thresholds and numbers as facts and circumstances demand.
+
+## Life advice
+
+Expressions are very powerful. This is a benefit and a burden. If you are not careful with your expression targeting, you will be liable to get yourself into trouble. If you are at all in doubt, throw a `CHALLENGE` over a `DENY`. Legitimate users can easily work around a `CHALLENGE` result with a [proof of work challenge](../../design/why-proof-of-work.mdx). Bots are less likely to be able to do this.

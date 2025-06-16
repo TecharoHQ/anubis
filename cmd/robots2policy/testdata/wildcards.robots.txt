@@ -1,0 +1,6 @@
+# Test wildcard patterns
+User-agent: *
+Disallow: /search*
+Disallow: /*/private
+Disallow: /file?.txt
+Disallow: /admin/*?action=delete

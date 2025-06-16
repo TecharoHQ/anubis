@@ -8,3 +8,6 @@
 - name: robots-txt
   path_regex: ^/robots.txt$
   action: ALLOW
+- name: sitemap
+  path_regex: ^/sitemap.xml$
+  action: ALLOW

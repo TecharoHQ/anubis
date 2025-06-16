@@ -3,11 +3,10 @@ id: traefik
 title: Traefik
 ---
 
-
 :::note
 
- This only talks about integration through Compose,
- but it also applies to docker cli options.
+This only talks about integration through Compose,
+but it also applies to docker cli options.
 
 :::
 
@@ -174,7 +173,7 @@ services:
     networks:
       - traefik
     labels:
-      - traefik.enable=true # Eneabling Traefik
+      - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
       - traefik.http.routers.target2.rule=Host(`another.com`) # Only Matching Requests for example.com
       - traefik.http.routers.target2.entrypoints=websecure # Listening on the exclusive Anubis Network

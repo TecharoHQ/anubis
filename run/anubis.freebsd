@@ -1,8 +1,27 @@
 #!/bin/sh
 
 # PROVIDE: anubis
-# REQUIRE: NETWORKING
+# REQUIRE: DAEMON NETWORKING
 # KEYWORD: shutdown
+
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf to enable anubis:
+# anubis_enable (bool):        Set to "NO" by default.
+#                              Set it to "YES" to enable anubis.
+# anubis_user (user):          Set to "www" by default.
+#                              User to run anubis as.
+# anubis_group (group):        Set to "www" by default.
+#                              Group to run anubis as.
+# anubis_bin (str):            Set to "/usr/local/bin/anubis" by default.
+#                              Location of the anubis binary
+# anubis_args (str):           Set to "" by default.
+#                              Extra flags passed to anubis.
+# anubis_env (str):            Set to "" by default.
+#                              List of environment variables to be set before starting..
+# anubis_env_file (str):       Set to "/etc/anubis.env" by default.
+#                              Location of a file containing environment variables.
+#
+# Closely follows the init script from https://cgit.freebsd.org/ports/tree/www/go-anubis/files/anubis.in 
+# with a couple of adjustments for more flexible environment variable handling
 
 . /etc/rc.subr
 
@@ -12,23 +31,41 @@ rcvar=anubis_enable
 load_rc_config ${name}
 
 : ${anubis_enable="NO"}
-: ${anubis_user="anubis"}
+: ${anubis_user="www"}
+: ${anubis_group="www"}
 : ${anubis_bin="/usr/local/bin/anubis"}
-: ${anubis_environment_file="/etc/anubis.env"}
+: ${anubis_args=""}
+: ${anubis_env=""}
+: ${anubis_env_file="/etc/anubis.env"}
 
+pidfile=/var/run/${name}.pid
+daemon_pidfile=/var/run/${name}-daemon.pid
 command=/usr/sbin/daemon
 procname=${anubis_bin}
-pidfile=/var/run/anubis.pid
-logfile=/var/log/anubis.log
-command_args="-c -f -p ${pidfile} -o ${logfile} ${procname}"
-start_precmd=anubis_precmd
+logfile=/var/log/${name}.log
+command_args="-c -f -R 5 -r -T ${name} -p ${pidfile} -P ${daemon_pidfile} -o ${logfile} ${procname} ${anubis_args}"
+start_precmd=anubis_startprecmd
+stop_postcmd=anubis_stoppostcmd
 
-anubis_precmd () {
-        export $(xargs < ${anubis_environment_file})
-        if [ ! -f ${logfile} ]; then
-                install -o anubis /dev/null ${logfile}
-        fi
-        install -o anubis /dev/null ${pidfile}
+anubis_startprecmd () {
+    if [ ! -e ${logfile} ]; then
+        install -o ${anubis_user} -g ${anubis_group} /dev/null ${logfile}
+    fi
+    if [ ! -e ${daemon_pidfile} ]; then
+        install -o ${anubis_user} -g ${anubis_group} /dev/null ${daemon_pidfile}
+    fi
+    if [ ! -e ${pidfile} ]; then
+        install -o ${anubis_user} -g ${anubis_group} /dev/null ${pidfile}
+    fi
 }
+
+anubis_stoppostcmd() {
+    if [ -f "${daemon_pidfile}" ]; then
+        pids=$( pgrep -F ${daemon_pidfile} 2>&1 )
+        _err=$?
+        [ ${_err} -eq 0 ] && kill -9 ${pids}
+    fi
+}
+
 
 run_rc_command "$1"

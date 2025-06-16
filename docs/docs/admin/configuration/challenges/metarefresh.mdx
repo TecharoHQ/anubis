@@ -1,0 +1,19 @@
+# Meta Refresh (No JavaScript)
+
+The `metarefresh` challenge sends a browser a much simpler challenge that makes it refresh the page after a set period of time. This enables clients to pass challenges without executing JavaScript.
+
+To use it in your Anubis configuration:
+
+```yaml
+# Generic catchall rule
+- name: generic-browser
+  user_agent_regex: >-
+    Mozilla|Opera
+  action: CHALLENGE
+  challenge:
+    difficulty: 1 # Number of seconds to wait before refreshing the page
+    report_as: 4 # Unused by this challenge method
+    algorithm: metarefresh # Specify a non-JS challenge method
+```
+
+This is not enabled by default while this method is tested and its false positive rate is ascertained. Many modern scrapers use headless Google Chrome, so this will have a much higher false positive rate.

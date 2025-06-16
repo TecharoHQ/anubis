@@ -1,0 +1,7 @@
+- name: allow-api-requests
+  action: ALLOW
+  expression:
+    all:
+      - '"Accept" in headers'
+      - 'headers["Accept"] == "application/json"'
+      - 'path.startsWith("/api/")'

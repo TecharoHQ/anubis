@@ -6,10 +6,9 @@ import (
 	"io"
 	"regexp"
 
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-
-	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 var (
@@ -17,6 +16,8 @@ var (
 		Name: "anubis_policy_results",
 		Help: "The results of each policy rule",
 	}, []string{"rule", "action"})
+
+	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
 )
 
 type ParsedConfig struct {
@@ -25,11 +26,13 @@ type ParsedConfig struct {
 	Bots              []Bot
 	DNSBL             bool
 	DefaultDifficulty int
+	StatusCodes       config.StatusCodes
 }
 
 func NewParsedConfig(orig *config.Config) *ParsedConfig {
 	return &ParsedConfig{
-		orig: orig,
+		orig:        orig,
+		StatusCodes: orig.StatusCodes,
 	}
 }
 
@@ -101,17 +104,30 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			}
 		}
 
+		if b.Expression != nil {
+			c, err := NewCELChecker(b.Expression)
+			if err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s expressions: %w", b.Name, err))
+			} else {
+				cl = append(cl, c)
+			}
+		}
+
 		if b.Challenge == nil {
 			parsedBot.Challenge = &config.ChallengeRules{
 				Difficulty: defaultDifficulty,
 				ReportAs:   defaultDifficulty,
-				Algorithm:  config.AlgorithmFast,
+				Algorithm:  "fast",
 			}
 		} else {
 			parsedBot.Challenge = b.Challenge
-			if parsedBot.Challenge.Algorithm == config.AlgorithmUnknown {
-				parsedBot.Challenge.Algorithm = config.AlgorithmFast
+			if parsedBot.Challenge.Algorithm == "" {
+				parsedBot.Challenge.Algorithm = config.DefaultAlgorithm
 			}
+		}
+
+		if b.Weight != nil {
+			parsedBot.Weight = b.Weight
 		}
 
 		parsedBot.Rules = cl

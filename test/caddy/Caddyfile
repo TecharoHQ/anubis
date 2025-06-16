@@ -1,0 +1,16 @@
+:80 {
+	reverse_proxy http://anubis:3000 {
+		header_up X-Real-Ip {remote_host}
+		header_up X-Http-Version {http.request.proto}
+	}
+}
+
+:443 {
+	tls /etc/techaro/pki/caddy.local.cetacean.club/cert.pem /etc/techaro/pki/caddy.local.cetacean.club/key.pem
+
+	reverse_proxy http://anubis:3000 {
+		header_up X-Real-Ip {remote_host}
+		header_up X-Http-Version {http.request.proto}
+		header_up X-Tls-Version {http.request.tls.version}
+	}
+}

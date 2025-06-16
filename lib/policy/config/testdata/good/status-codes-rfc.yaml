@@ -1,0 +1,8 @@
+bots:
+- name: everything
+  user_agent_regex: .*
+  action: DENY
+
+status_codes:
+  CHALLENGE: 403
+  DENY: 403

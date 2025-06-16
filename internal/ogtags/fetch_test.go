@@ -2,7 +2,6 @@ package ogtags
 
 import (
 	"fmt"
-	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"golang.org/x/net/html"
 )
 
 func TestFetchHTMLDocument(t *testing.T) {

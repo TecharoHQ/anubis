@@ -92,6 +92,7 @@ Assuming you are protecting `anubistest.techaro.lol`, you need the following ser
        # throw an "admin misconfiguration" error.
        RequestHeader set "X-Real-Ip" expr=%{REMOTE_ADDR}
        RequestHeader set X-Forwarded-Proto "https"
+       RequestHeader set "X-Http-Version" "%{SERVER_PROTOCOL}s"
 
        ProxyPreserveHost On
 
@@ -119,7 +120,15 @@ Make sure to add a separate configuration file for the listener on port 3001:
 ```text
 # /etc/httpd/conf.d/listener-3001.conf
 
-Listen 3001
+Listen [::1]:3001
+```
+
+In case you are running an IPv4-only system, use the following configuration instead:
+
+```text
+# /etc/httpd/conf.d/listener-3001.conf
+
+Listen 127.0.0.1:3001
 ```
 
 This can be repeated for multiple sites. Anubis does not care about the HTTP `Host` header and will happily cope with multiple websites via the same instance.

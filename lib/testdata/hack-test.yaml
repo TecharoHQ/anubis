@@ -1,0 +1,3 @@
+- name: well-known
+  path_regex: ^/.well-known/.*$
+  action: ALLOW

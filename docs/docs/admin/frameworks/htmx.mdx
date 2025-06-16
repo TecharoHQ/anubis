@@ -1,0 +1,45 @@
+# HTMX
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+[HTMX](https://htmx.org) is a framework that enables you to write applications using hypertext as the engine of application state. This enables you to simplify you server side code by having it return HTML instead of JSON. This can interfere with Anubis because Anubis challenge pages also return HTML.
+
+To work around this, you can make a custom [expression](../configuration/expressions.mdx) rule that allows HTMX requests if the user has passed a challenge in the past:
+
+<Tabs>
+<TabItem value="json" label="JSON">
+
+```json
+{
+  "name": "allow-htmx-iff-already-passed-challenge",
+  "action": "ALLOW",
+  "expression": {
+    "all": [
+      "\"Cookie\" in headers",
+      "headers[\"Cookie\"].contains(\"anubis-auth\")",
+      "\"Hx-Request\" in headers",
+      "headers[\"Hx-Request\"] == \"true\""
+    ]
+  }
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML" default>
+
+```yaml
+- name: allow-htmx-iff-already-passed-challenge
+  action: ALLOW
+  expression:
+    all:
+      - '"Cookie" in headers'
+      - 'headers["Cookie"].contains("anubis-auth")'
+      - '"Hx-Request" in headers'
+      - 'headers["Hx-Request"] == "true"'
+```
+
+</TabItem>
+</Tabs>
+
+This will reduce some security because it does not assert the validity of the Anubis auth cookie, however in trade it improves the experience for existing users.

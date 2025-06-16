@@ -3,24 +3,27 @@
   --body-preformatted-font: Iosevka Curly Iaso, monospace;
   --body-title-font: Podkova, serif;
 
-  --dark-background: #1d2021;
-  --dark-text: #f9f5d7;
-  --dark-text-selection: #d3869b;
-  --dark-preformatted-background: #3c3836;
-  --dark-link-foreground: #b16286;
-  --dark-link-background: #282828;
-  --dark-blockquote-border-left: 1px solid #bdae93;
-
-  --light-background: #f9f5d7;
-  --light-text: #1d2021;
-  --light-text-selection: #d3869b;
-  --light-preformatted-background: #ebdbb2;
-  --light-link-foreground: #b16286;
-  --light-link-background: #fbf1c7;
-  --light-blockquote-border-left: 1px solid #655c54;
+  --background: #1d2021;
+  --text: #f9f5d7;
+  --text-selection: #d3869b;
+  --preformatted-background: #3c3836;
+  --link-foreground: #b16286;
+  --link-background: #282828;
+  --blockquote-border-left: 1px solid #bdae93;
 
   --progress-bar-outline: #b16286 solid 4px;
   --progress-bar-fill: #b16286;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #f9f5d7;
+    --text: #1d2021;
+    --text-selection: #d3869b;
+    --preformatted-background: #ebdbb2;
+    --link-foreground: #b16286;
+    --link-background: #fbf1c7;
+    --blockquote-border-left: 1px solid #655c54;
+  }
 }
 
 @font-face {
@@ -54,12 +57,12 @@ main {
 }
 
 ::selection {
-  background: var(--dark-text-selection);
+  background: var(--text-selection);
 }
 
 body {
-  background: var(--dark-background);
-  color: var(--dark-text);
+  background: var(--background);
+  color: var(--text);
 }
 
 body,
@@ -113,7 +116,7 @@ html {
 }
 
 pre {
-  background-color: var(--dark-preformatted-background);
+  background-color: var(--preformatted-background);
   padding: 1em;
   border: 0;
   font-family: var(--body-preformatted-font);
@@ -122,8 +125,8 @@ pre {
 a,
 a:active,
 a:visited {
-  color: var(--dark-link-foreground);
-  background-color: var(--dark-link-background);
+  color: var(--link-foreground);
+  background-color: var(--link-background);
 }
 
 h1,
@@ -136,49 +139,11 @@ h5 {
 }
 
 blockquote {
-  border-left: var(--dark-blockquote-border-left);
+  border-left: var(--blockquote-border-left);
   margin: 0.5em 10px;
   padding: 0.5em 10px;
 }
 
 footer {
   text-align: center;
-}
-
-@media (prefers-color-scheme: light) {
-  ::selection {
-    background: var(--light-text-selection);
-  }
-
-  body {
-    background: var(--light-background);
-    color: var(--light-text);
-  }
-
-  pre {
-    background-color: var(--light-preformatted-background);
-    padding: 1em;
-    border: 0;
-  }
-
-  a,
-  a:active,
-  a:visited {
-    color: var(--light-link-foreground);
-    background-color: var(--light-link-background);
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5 {
-    margin-bottom: 0.1rem;
-  }
-
-  blockquote {
-    border-left: var(--light-blockquote-border-left);
-    margin: 0.5em 10px;
-    padding: 0.5em 10px;
-  }
 }

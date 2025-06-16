@@ -37,6 +37,7 @@ go run ../cmd/unixhttpd &
 go tool anubis \
   --bind=./anubis.sock \
   --bind-network=unix \
+  --policy-fname=../anubis_configs/aggressive_403.yaml \
   --target=unix://$(pwd)/unixhttpd.sock &
 
 # A simple TLS terminator that forwards to Anubis, which will forward to

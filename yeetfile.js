@@ -1,6 +1,11 @@
 $`npm run assets`;
 
-["amd64", "arm64", "riscv64"].forEach(goarch => {
+[
+    "amd64",
+    "arm64",
+    "ppc64le",
+    "riscv64",
+].forEach(goarch => {
     [deb, rpm, tarball].forEach(method => method.build({
         name: "anubis",
         description: "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
@@ -11,17 +16,27 @@ $`npm run assets`;
         documentation: {
             "./README.md": "README.md",
             "./LICENSE": "LICENSE",
-            "./docs/docs/CHANGELOG.md": "CHANGELOG.md",
-            "./docs/docs/admin/policies.mdx": "policies.md",
-            "./docs/docs/admin/native-install.mdx": "native-install.mdx",
             "./data/botPolicies.json": "botPolicies.json",
+            "./data/botPolicies.yaml": "botPolicies.yaml",
         },
 
-        build: ({ bin, etc, systemd, out }) => {
+        build: ({ bin, etc, systemd, doc }) => {
             $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/anubis`;
+            $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/robots2policy`;
 
             file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
             file.install("./run/default.env", `${etc}/default.env`);
+
+            $`mkdir -p ${doc}/docs`
+            $`cp -a docs/docs ${doc}`;
+            $`find ${doc} -name _category_.json -delete`;
+            $`mkdir -p ${doc}/data`;
+            $`cp -a data/apps ${doc}/data/apps`;
+            $`cp -a data/bots ${doc}/data/bots`;
+            $`cp -a data/clients ${doc}/data/clients`;
+            $`cp -a data/common ${doc}/data/common`;
+            $`cp -a data/crawlers ${doc}/data/crawlers`;
+            $`cp -a data/meta ${doc}/data/meta`;
         },
     }));
 });
@@ -29,7 +44,7 @@ $`npm run assets`;
 // NOTE(Xe): Fixes #217. This is a "half baked" tarball that includes the harder
 // parts for deterministic distros already done. Distributions like NixOS, Gentoo
 // and *BSD ports have a difficult time fitting the square peg of their dependency
-// model into the bazarr of round holes that various modern languages use. Needless
+// model into the bazaar of round holes that various modern languages use. Needless
 // to say, this makes adoption easier.
 tarball.build({
     name: "anubis-src-vendor",

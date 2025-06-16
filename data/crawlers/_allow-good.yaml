@@ -1,0 +1,9 @@
+- import: (data)/crawlers/googlebot.yaml
+- import: (data)/crawlers/applebot.yaml
+- import: (data)/crawlers/bingbot.yaml
+- import: (data)/crawlers/duckduckbot.yaml
+- import: (data)/crawlers/qwantbot.yaml
+- import: (data)/crawlers/internet-archive.yaml
+- import: (data)/crawlers/kagibot.yaml
+- import: (data)/crawlers/marginalia.yaml
+- import: (data)/crawlers/mojeekbot.yaml

@@ -15,9 +15,9 @@ func p[V any](v V) *V { return &v }
 
 func TestBotValid(t *testing.T) {
 	var tests = []struct {
+		err  error
 		name string
 		bot  BotConfig
-		err  error
 	}{
 		{
 			name: "simple user agent",
@@ -131,20 +131,6 @@ func TestBotValid(t *testing.T) {
 			err: ErrChallengeDifficultyTooHigh,
 		},
 		{
-			name: "challenge wrong algorithm",
-			bot: BotConfig{
-				Name:      "mozilla-ua",
-				Action:    RuleChallenge,
-				PathRegex: p("Mozilla"),
-				Challenge: &ChallengeRules{
-					Difficulty: 420,
-					ReportAs:   4,
-					Algorithm:  "high quality rips",
-				},
-			},
-			err: ErrChallengeRuleHasWrongAlgorithm,
-		},
-		{
 			name: "invalid cidr range",
 			bot: BotConfig{
 				Name:       "mozilla-ua",
@@ -200,6 +186,25 @@ func TestBotValid(t *testing.T) {
 				Domains:        []string{"example.com"},
 			},
 			err: nil,
+		},
+		{
+			name: "weight rule without weight",
+			bot: BotConfig{
+				Name:           "weight-adjust-if-mozilla",
+				Action:         RuleWeigh,
+				UserAgentRegex: p("Mozilla"),
+			},
+		},
+		{
+			name: "weight rule with weight adjust",
+			bot: BotConfig{
+				Name:           "weight-adjust-if-mozilla",
+				Action:         RuleWeigh,
+				UserAgentRegex: p("Mozilla"),
+				Weight: &Weight{
+					Adjust: 5,
+				},
+			},
 		},
 	}
 
@@ -258,9 +263,9 @@ func TestConfigValidKnownGood(t *testing.T) {
 
 func TestImportStatement(t *testing.T) {
 	type testCase struct {
+		err        error
 		name       string
 		importPath string
-		err        error
 	}
 
 	var tests []testCase
@@ -270,12 +275,16 @@ func TestImportStatement(t *testing.T) {
 		"bots",
 		"common",
 		"crawlers",
+		"meta",
 	} {
 		if err := fs.WalkDir(data.BotPolicies, folderName, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
 			if d.IsDir() {
+				return nil
+			}
+			if d.Name() == "README.md" {
 				return nil
 			}
 
@@ -376,7 +385,7 @@ func TestBotConfigZero(t *testing.T) {
 	b.Challenge = &ChallengeRules{
 		Difficulty: 4,
 		ReportAs:   4,
-		Algorithm:  AlgorithmFast,
+		Algorithm:  DefaultAlgorithm,
 	}
 	if b.Zero() {
 		t.Error("BotConfig with challenge rules is zero value")

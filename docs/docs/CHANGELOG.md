@@ -11,6 +11,125 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
+  development
+- Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
+- Requests can have their weight be adjusted, if a request weighs zero or less than it is allowed through
+- Refactor challenge presentation logic to use a challenge registry
+- Allow challenge implementations to register HTTP routes
+- Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))
+- Bump AI-robots.txt to version 1.34
+- Make progress bar styling more compatible (UXP, etc)
+- Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
+- Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
+- Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
+
+## v1.19.1: Jenomis cen Lexentale - Echo 1
+
+- Return `data/bots/ai-robots-txt.yaml` to avoid breaking configs [#599](https://github.com/TecharoHQ/anubis/issues/599)
+
+## v1.19.0: Jenomis cen Lexentale
+
+Mostly a bunch of small features, no big ticket things this time.
+
+- Record if challenges were issued via the API or via embedded JSON in the challenge page HTML ([#531](https://github.com/TecharoHQ/anubis/issues/531))
+- Ensure that clients that are shown a challenge support storing cookies
+- Imprint the version number into challenge pages
+- Encode challenge pages with gzip level 1
+- Add PowerPC 64 bit little-endian builds (`GOARCH=ppc64le`)
+- Add `check-spelling` for spell checking
+- Add `--target-insecure-skip-verify` flag/envvar to allow Anubis to hit a self-signed HTTPS backend
+- Minor adjustments to FreeBSD rc.d script to allow for more flexible configuration.
+- Added Podman and Docker support for running Playwright tests
+- Add a default rule to throw challenges when a request with the `X-Firefox-Ai` header is set
+- Updated the nonce value in the challenge JWT cookie to be a string instead of a number
+- Rename cookies in response to user feedback
+- Ensure cookie renaming is consistent across configuration options
+- Add Bookstack app in data
+- Truncate everything but the first five characters of Accept-Language headers when making challenges
+- Ensure client JavaScript is served with Content-Type text/javascript.
+- Add `--target-host` flag/envvar to allow changing the value of the Host header in requests forwarded to the target service
+- Bump AI-robots.txt to version 1.31
+- Add `RuntimeDirectory` to systemd unit settings so native packages can listen over unix sockets
+- Added SearXNG instance tracker whitelist policy
+- Added Qualys SSL Labs whitelist policy
+- Fixed cookie deletion logic ([#520](https://github.com/TecharoHQ/anubis/issues/520), [#522](https://github.com/TecharoHQ/anubis/pull/522))
+- Add `--target-sni` flag/envvar to allow changing the value of the TLS handshake hostname in requests forwarded to the target service
+- Fixed CEL expression matching validator to now properly error out when it receives empty expressions
+- Added OpenRC init.d script
+- Added `--version` flag
+- Added `anubis_proxied_requests_total` metric to count proxied requests
+- Add `Applebot` as "good" web crawler
+- Reorganize AI/LLM crawler blocking into three separate stances, maintaining existing status quo as default
+- Split out AI/LLM user agent blocking policies, adding documentation for each
+
+## v1.18.0: Varis zos Galvus
+
+The big ticket feature in this release is [CEL expression matching support](https://anubis.techaro.lol/docs/admin/configuration/expressions). This allows you to tailor your approach for the individual services you are protecting.
+
+These can be as simple as:
+
+```yaml
+- name: allow-api-requests
+  action: ALLOW
+  expression:
+    all:
+      - '"Accept" in headers'
+      - 'headers["Accept"] == "application/json"'
+      - 'path.startsWith("/api/")'
+```
+
+Or as complicated as:
+
+```yaml
+- name: allow-git-clients
+  action: ALLOW
+  expression:
+    all:
+      - >-
+        (
+          userAgent.startsWith("git/") ||
+          userAgent.contains("libgit") ||
+          userAgent.startsWith("go-git") ||
+          userAgent.startsWith("JGit/") ||
+          userAgent.startsWith("JGit-")
+        )
+      - '"Git-Protocol" in headers'
+      - headers["Git-Protocol"] == "version=2"
+```
+
+The docs have more information, but here's a tl;dr of the variables you have access to in expressions:
+
+| Name            | Type                  | Explanation                                                                                                                               | Example                                                      |
+| :-------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                        | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
+| `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                  | `anubis.techaro.lol`                                         |
+| `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                    | `GET`, `POST`, `DELETE`, etc.                                |
+| `path`          | `string`              | The [path](https://web.dev/articles/url-parts#pathname) of the request being processed.                                                   | `/`, `/api/memes/create`                                     |
+| `query`         | `map[string, string]` | The [query parameters](https://web.dev/articles/url-parts#query) of the request being processed.                                          | `?foo=bar` -> `{"foo": "bar"}`                               |
+| `remoteAddress` | `string`              | The IP address of the client.                                                                                                             | `1.1.1.1`                                                    |
+| `userAgent`     | `string`              | The [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) string in the request being processed. | `Mozilla/5.0 Gecko/20100101 Firefox/137.0`                   |
+
+This will be made more elaborate in the future. Give me time. This is a [simple, lovable, and complete](https://longform.asmartbear.com/slc/) implementation of this feature so that administrators can get hacking ASAP.
+
+Other changes:
+
+- Use CSS variables to deduplicate styles
+- Fixed native packages not containing the stdlib and botPolicies.yaml
+- Change import syntax to allow multi-level imports
+- Changed the startup logging to use JSON formatting as all the other logs do
+- Added the ability to do [expression matching with CEL](./admin/configuration/expressions.mdx)
+- Add a warning for clients that don't store cookies
+- Disable Open Graph passthrough by default ([#435](https://github.com/TecharoHQ/anubis/issues/435))
+- Clarify the license of the mascot images ([#442](https://github.com/TecharoHQ/anubis/issues/442))
+- Started Suppressing 'Context canceled' errors from http in the logs ([#446](https://github.com/TecharoHQ/anubis/issues/446))
+
+## v1.17.1: Asahi sas Brutus: Echo 1
+
+- Added customization of authorization cookie expiration time with `--cookie-expiration-time` flag or envvar
+- Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing Open Graph tags to be passed through by default
+- Added the ability to [customize Anubis' HTTP status codes](./admin/configuration/custom-status-codes.mdx) ([#355](https://github.com/TecharoHQ/anubis/issues/355))
+
 ## v1.17.0: Asahi sas Brutus
 
 - Ensure regexes can't end in newlines ([#372](https://github.com/TecharoHQ/anubis/issues/372))
@@ -23,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support to allow to restrict the allowed redirect domains
 - Whitelisted [DuckDuckBot](https://duckduckgo.com/duckduckgo-help-pages/results/duckduckbot/) in botPolicies
 - Improvements to build scripts to make them less independent of the build host
-- Improved the OpenGraph error logging
+- Improved the Open Graph error logging
 - Added `Opera` to the `generic-browser` bot policy rule
 - Added FreeBSD rc.d script so can be run as a FreeBSD daemon
 - Allow requests from the Internet Archive
@@ -41,8 +160,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mojeekbot user agent regex
 - Added support for running anubis behind a base path (e.g. `/myapp`)
 - Reduce Anubis' paranoia with user cookies ([#365](https://github.com/TecharoHQ/anubis/pull/365))
-- Added support for Opengraph passthrough while using unix sockets
-- The opengraph subsystem now passes the HTTP `HOST` header through to the origin
+- Added support for Open Graph passthrough while using unix sockets
+- The Open Graph subsystem now passes the HTTP `HOST` header through to the origin
+- Updated the `OG_PASSTHROUGH` to be true by default, thereby allowing Open Graph tags to be passed through by default
 
 ## v1.16.0
 
@@ -56,7 +176,7 @@ The following features are the "big ticket" items:
 - A prebaked tarball has been added, allowing distros to build Anubis like they could in v1.15.x
 - The placeholder Anubis mascot has been replaced with a design by [CELPHASE](https://bsky.app/profile/celphase.bsky.social)
 - Verification page now shows hash rate and a progress bar for completion probability
-- Added support for [OpenGraph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
+- Added support for [Open Graph tags](https://ogp.me/) when rendering the challenge page. This allows for social previews to be generated when sharing the challenge page on social media platforms ([#195](https://github.com/TecharoHQ/anubis/pull/195))
 - Added support for passing the ed25519 signing key in a file with `-ed25519-private-key-hex-file` or `ED25519_PRIVATE_KEY_HEX_FILE`
 
 The other small fixes have been made:
