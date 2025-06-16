@@ -27,6 +27,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/thr1"
 
 	// challenge implementations
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
@@ -75,18 +76,13 @@ type Server struct {
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	fp := sha256.Sum256(s.pub[:])
 
-	acceptLanguage := r.Header.Get("Accept-Language")
-	if len(acceptLanguage) > 5 {
-		acceptLanguage = acceptLanguage[:5]
-	}
-
 	challengeData := fmt.Sprintf(
-		"Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
-		acceptLanguage,
-		r.Header.Get("X-Real-Ip"),
+		"THR1=%s,JA4=%s,Fingerprint=%x,User-Agent=%s,WeekTime=%s,Difficulty=%d",
+		thr1.Fingerprint(r),
+		r.Header.Get("X-Tls-Fingerprint-Ja4"),
+		fp,
 		r.UserAgent(),
 		time.Now().UTC().Round(24*7*time.Hour).Format(time.RFC3339),
-		fp,
 		difficulty,
 	)
 	return internal.SHA256sum(challengeData)
