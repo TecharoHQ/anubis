@@ -26,6 +26,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 
 	// challenge implementations
@@ -483,7 +484,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			ReportAs:   s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,
 		},
-		Rules: &policy.CheckerList{},
+		Rules: &checker.List{},
 	}, nil
 }
 

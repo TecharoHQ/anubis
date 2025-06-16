@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
 - Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
+- Implement GeoIP and ASN based checks via [Thoth](https://anubis.techaro.lol/docs/admin/thoth) ([#206](https://github.com/TecharoHQ/anubis/issues/206))
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 

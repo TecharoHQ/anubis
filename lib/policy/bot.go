@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 type Bot struct {
-	Rules     Checker
+	Rules     checker.Impl
 	Challenge *config.ChallengeRules
 	Weight    *config.Weight
 	Name      string

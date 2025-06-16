@@ -11,5 +11,24 @@
     "zig": false,
     "javascript": false,
     "properties": false
+  },
+  "[markdown]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 80,
+    "editor.wordBasedSuggestions": "off"
+  },
+  "[mdx]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 80,
+    "editor.wordBasedSuggestions": "off"
+  },
+  "[nunjucks]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 80,
+    "editor.wordBasedSuggestions": "off"
+  },
+  "cSpell.enabledFileTypes": {
+    "mdx": true,
+    "md": true
   }
 }
