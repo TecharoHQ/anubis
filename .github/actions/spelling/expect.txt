@@ -12,10 +12,10 @@ archlinux
 asnc
 asnchecker
 asns
+aspirational
 badregexes
 bdba
 berr
-betteralign
 bingbot
 bitcoin
 blogging
@@ -178,7 +178,6 @@ mojeekbot
 mozilla
 nbf
 netsurf
-NFlag
 nginx
 nobots
 NONINFRINGEMENT
