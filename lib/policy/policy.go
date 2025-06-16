@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -89,6 +90,14 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s headers regex map: %w", b.Name, err))
 			} else {
 				cl = append(cl, c)
+			}
+		}
+
+		if b.DomainRegex != nil {
+			if rex, err := regexp.Compile(*b.DomainRegex); err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s domain regex: %w", b.Name, err))
+			} else {
+				parsedBot.DomainRegex = rex
 			}
 		}
 

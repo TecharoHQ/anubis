@@ -182,6 +182,25 @@ func TestBotValid(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			name: "no user agent regex",
+			bot: BotConfig{
+				Name:       "search-bot",
+				Action:     RuleAllow,
+				Domains:    []string{"example.com"},
+			},
+			err: ErrDnsTestNoUserAgent,
+		},
+		{
+			name: "reverse dns",
+			bot: BotConfig{
+				Name:           "search-bot",
+				Action:         RuleAllow,
+				UserAgentRegex: p("SearchBot"),
+				Domains:        []string{"example.com"},
+			},
+			err: nil,
+		},
 	}
 
 	for _, cs := range tests {

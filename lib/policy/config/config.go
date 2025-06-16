@@ -23,6 +23,7 @@ var (
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
 	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
 	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
+	ErrInvalidDomainRegex                = errors.New("config.Bot: invalid domain regex")
 	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
 	ErrRegexEndsWithNewline              = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
 	ErrInvalidImportStatement            = errors.New("config.ImportStatement: invalid source file")
@@ -37,6 +38,7 @@ const (
 	RuleAllow     Rule = "ALLOW"
 	RuleDeny      Rule = "DENY"
 	RuleChallenge Rule = "CHALLENGE"
+	RuleDns       Rule = "FCRDNS"
 	RuleBenchmark Rule = "DEBUG_BENCHMARK"
 )
 
@@ -56,6 +58,7 @@ type BotConfig struct {
 	Action         Rule              `json:"action"`
 	RemoteAddr     []string          `json:"remote_addresses"`
 	Challenge      *ChallengeRules   `json:"challenge,omitempty"`
+	DomainRegex    *string           `json:"domain_regex"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -67,6 +70,7 @@ func (b BotConfig) Zero() bool {
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
 		b.Challenge != nil,
+		b.DomainRegex != nil,
 	} {
 		if cond {
 			return false
@@ -134,9 +138,21 @@ func (b BotConfig) Valid() error {
 			}
 		}
 	}
+	if b.Action == RuleDns {
+		if b.DomainRegex == nil {
+			errs = append(errs, ErrDnsTestNoDomains)
+		} else if _, err := regexp.Compile(*b.DomainRegex); err != nil {
+			errs = append(errs, ErrInvalidDomainRegex, err)
+		}
+		if b.UserAgentRegex == nil {
+			errs = append(errs, ErrDnsTestNoUserAgent)
+		}
+	} else if b.DomainRegex != nil {
+		errs = append(errs, ErrDnsTestInvalidAction)
+	}
 
 	switch b.Action {
-	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny:
+	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDns, RuleDeny:
 		// okay
 	default:
 		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))
@@ -165,6 +181,9 @@ var (
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
 	ErrChallengeDifficultyTooLow      = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
 	ErrChallengeDifficultyTooHigh     = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
+	ErrDnsTestInvalidAction           = errors.New("config.Bot.DnsTest: specifying domain regex is only supported for FCRDNS rules")
+	ErrDnsTestNoDomains               = errors.New("config.Bot.DnsTest: FCRDNS rules must specify a domain regex")
+	ErrDnsTestNoUserAgent             = errors.New("config.Bot.DnsTest: FCRDNS rules must specify a user agent regex")
 )
 
 func (cr ChallengeRules) Valid() error {

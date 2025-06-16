@@ -16,6 +16,7 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
@@ -91,6 +92,7 @@ func New(opts Options) (*Server, error) {
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive, opts.OGCacheConsidersHost),
+		FCrDNS:     fcrdns.NewFCrDNS(),
 	}
 
 	mux := http.NewServeMux()

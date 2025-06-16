@@ -25,6 +25,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
@@ -66,6 +67,7 @@ type Server struct {
 	opts       Options
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
+	FCrDNS     *fcrdns.FCrDNS
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
@@ -112,7 +114,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	if s.checkRules(w, r, cr, lg, rule) {
+	if s.checkRules(w, r, cr, lg, rule, ip) {
 		return
 	}
 
@@ -153,7 +155,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	s.ServeHTTPNext(w, r)
 }
 
-func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
+func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot, ip string) bool {
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
@@ -174,6 +176,21 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		return true
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
+	case config.RuleDns:
+		lg.Debug("performing reverse dns check")
+
+		if passed, err := s.FCrDNS.Check(ip, rule.DomainRegex); err != nil {
+			lg.Error("got error while performing reverse dns check", "err", err)
+			s.respondWithError(w, r, fmt.Sprintf("Could not verify reverse DNS: %s", err.Error()))
+		} else if passed {
+			lg.Debug("allowing traffic to origin (reverse dns check passed)")
+			s.ServeHTTPNext(w, r)
+		} else {
+			lg.Debug("denying traffic (reverse dns check failed)")
+			s.respondWithStatus(w, r, "Access Denied: You appear to be impersonating a bot. Try disabling any User-Agent switchers", http.StatusOK)
+		}
+
+		return true
 	case config.RuleBenchmark:
 		lg.Debug("serving benchmark page")
 		s.RenderBench(w, r)
@@ -420,4 +437,5 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 func (s *Server) CleanupDecayMap() {
 	s.DNSBLCache.Cleanup()
 	s.OGTags.Cleanup()
+	s.FCrDNS.Cleanup()
 }
