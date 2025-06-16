@@ -1,25 +1,20 @@
-package thoth
+package thoth_test
 
 import (
 	"fmt"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/TecharoHQ/anubis/internal/thoth"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 )
 
-var _ checker.Impl = &ASNChecker{}
+var _ checker.Impl = &thoth.GeoIPChecker{}
 
 func TestGeoIPChecker(t *testing.T) {
 	cli := loadSecrets(t)
 
-	asnc := &GeoIPChecker{
-		iptoasn: cli.iptoasn,
-		countries: map[string]struct{}{
-			"us": {},
-		},
-		hash: "foobar",
-	}
+	asnc := cli.GeoIPCheckerFor([]string{"us"})
 
 	for _, cs := range []struct {
 		ipAddress string
@@ -32,14 +27,19 @@ func TestGeoIPChecker(t *testing.T) {
 			wantError: false,
 		},
 		{
-			ipAddress: "70.31.0.1",
+			ipAddress: "2.2.2.2",
 			wantMatch: false,
 			wantError: false,
 		},
 		{
 			ipAddress: "taco",
 			wantMatch: false,
-			wantError: true,
+			wantError: false,
+		},
+		{
+			ipAddress: "127.0.0.1",
+			wantMatch: false,
+			wantError: false,
 		},
 	} {
 		t.Run(fmt.Sprintf("%v", cs), func(t *testing.T) {

@@ -1,26 +1,21 @@
-package thoth
+package thoth_test
 
 import (
 	"fmt"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/TecharoHQ/anubis/internal/thoth"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
 
-var _ checker.Impl = &ASNChecker{}
+var _ checker.Impl = &thoth.ASNChecker{}
 
 func TestASNChecker(t *testing.T) {
 	cli := loadSecrets(t)
 
-	asnc := &ASNChecker{
-		iptoasn: cli.iptoasn,
-		asns: map[uint32]struct{}{
-			13335: {},
-		},
-		hash: "foobar",
-	}
+	asnc := cli.ASNCheckerFor([]uint32{13335})
 
 	for _, cs := range []struct {
 		ipAddress string
@@ -33,14 +28,19 @@ func TestASNChecker(t *testing.T) {
 			wantError: false,
 		},
 		{
-			ipAddress: "8.8.8.8",
+			ipAddress: "2.2.2.2",
 			wantMatch: false,
 			wantError: false,
 		},
 		{
 			ipAddress: "taco",
 			wantMatch: false,
-			wantError: true,
+			wantError: false,
+		},
+		{
+			ipAddress: "127.0.0.1",
+			wantMatch: false,
+			wantError: false,
 		},
 	} {
 		t.Run(fmt.Sprintf("%v", cs), func(t *testing.T) {
@@ -67,13 +67,13 @@ func BenchmarkWithCache(b *testing.B) {
 	cli := loadSecrets(b)
 	req := &iptoasnv1.LookupRequest{IpAddress: "1.1.1.1"}
 
-	_, err := cli.iptoasn.Lookup(b.Context(), req)
+	_, err := cli.IPToASN.Lookup(b.Context(), req)
 	if err != nil {
 		b.Error(err)
 	}
 
 	for b.Loop() {
-		_, err := cli.iptoasn.Lookup(b.Context(), req)
+		_, err := cli.IPToASN.Lookup(b.Context(), req)
 		if err != nil {
 			b.Error(err)
 		}

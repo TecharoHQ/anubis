@@ -20,7 +20,7 @@ import (
 type Client struct {
 	conn    *grpc.ClientConn
 	health  healthv1.HealthClient
-	iptoasn iptoasnv1.IpToASNServiceClient
+	IPToASN iptoasnv1.IpToASNServiceClient
 }
 
 func New(ctx context.Context, thothURL, apiToken string, plaintext bool) (*Client, error) {
@@ -72,7 +72,7 @@ func New(ctx context.Context, thothURL, apiToken string, plaintext bool) (*Clien
 	return &Client{
 		conn:    conn,
 		health:  hc,
-		iptoasn: NewIpToASNWithCache(iptoasnv1.NewIpToASNServiceClient(conn)),
+		IPToASN: NewIpToASNWithCache(iptoasnv1.NewIpToASNServiceClient(conn)),
 	}, nil
 }
 
@@ -84,5 +84,5 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) WithIPToASNService(impl iptoasnv1.IpToASNServiceClient) {
-	c.iptoasn = impl
+	c.IPToASN = impl
 }

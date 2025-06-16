@@ -23,15 +23,15 @@ func (c *Client) GeoIPCheckerFor(countries []string) checker.Impl {
 	}
 
 	return &GeoIPChecker{
-		iptoasn:   c.iptoasn,
-		countries: countryMap,
+		IPToASN:   c.IPToASN,
+		Countries: countryMap,
 		hash:      sb.String(),
 	}
 }
 
 type GeoIPChecker struct {
-	iptoasn   iptoasnv1.IpToASNServiceClient
-	countries map[string]struct{}
+	IPToASN   iptoasnv1.IpToASNServiceClient
+	Countries map[string]struct{}
 	hash      string
 }
 
@@ -39,7 +39,7 @@ func (gipc *GeoIPChecker) Check(r *http.Request) (bool, error) {
 	ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
 	defer cancel()
 
-	ipInfo, err := gipc.iptoasn.Lookup(ctx, &iptoasnv1.LookupRequest{
+	ipInfo, err := gipc.IPToASN.Lookup(ctx, &iptoasnv1.LookupRequest{
 		IpAddress: r.Header.Get("X-Real-Ip"),
 	})
 	if err != nil {
@@ -48,7 +48,8 @@ func (gipc *GeoIPChecker) Check(r *http.Request) (bool, error) {
 			slog.Debug("error contacting thoth", "err", err, "actionable", false)
 			return false, nil
 		default:
-			return false, err
+			slog.Error("error contacting thoth, please contact support", "err", err, "actionable", true)
+			return false, nil
 		}
 	}
 
@@ -57,7 +58,7 @@ func (gipc *GeoIPChecker) Check(r *http.Request) (bool, error) {
 		return false, nil
 	}
 
-	_, ok := gipc.countries[strings.ToLower(ipInfo.GetCountryCode())]
+	_, ok := gipc.Countries[strings.ToLower(ipInfo.GetCountryCode())]
 
 	return ok, nil
 }

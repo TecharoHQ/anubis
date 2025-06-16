@@ -24,7 +24,7 @@ func (c *Client) ASNCheckerFor(asns []uint32) checker.Impl {
 	}
 
 	return &ASNChecker{
-		iptoasn: c.iptoasn,
+		iptoasn: c.IPToASN,
 		asns:    asnMap,
 		hash:    internal.SHA256sum(sb.String()),
 	}
@@ -49,7 +49,8 @@ func (asnc *ASNChecker) Check(r *http.Request) (bool, error) {
 			slog.Debug("error contacting thoth", "err", err, "actionable", false)
 			return false, nil
 		default:
-			return false, err
+			slog.Error("error contacting thoth, please contact support", "err", err, "actionable", true)
+			return false, nil
 		}
 	}
 
