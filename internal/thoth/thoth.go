@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/TecharoHQ/anubis"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -21,7 +23,7 @@ type Client struct {
 	iptoasn iptoasnv1.IpToASNServiceClient
 }
 
-func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
+func New(ctx context.Context, thothURL, apiToken string, plaintext bool) (*Client, error) {
 	clMetrics := grpcprom.NewClientMetrics(
 		grpcprom.WithClientHandlingTimeHistogram(
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
@@ -29,9 +31,7 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 	)
 	prometheus.DefaultRegisterer.Register(clMetrics)
 
-	conn, err := grpc.NewClient(
-		thothURL,
-		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})),
+	do := []grpc.DialOption{
 		grpc.WithChainUnaryInterceptor(
 			timeout.UnaryClientInterceptor(500*time.Millisecond),
 			clMetrics.UnaryClientInterceptor(),
@@ -41,6 +41,18 @@ func New(ctx context.Context, thothURL, apiToken string) (*Client, error) {
 			clMetrics.StreamClientInterceptor(),
 			authStreamClientInterceptor(apiToken),
 		),
+		grpc.WithUserAgent(fmt.Sprint("Techaro/anubis:", anubis.Version)),
+	}
+
+	if plaintext {
+		do = append(do, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		do = append(do, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+	}
+
+	conn, err := grpc.NewClient(
+		thothURL,
+		do...,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("can't dial thoth at %s: %w", thothURL, err)

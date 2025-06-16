@@ -73,8 +73,9 @@ var (
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
 
-	thothURL   = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
-	thothToken = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
+	thothInsecure = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
+	thothURL      = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
+	thothToken    = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -242,7 +243,7 @@ func main() {
 
 	if *thothURL != "" && *thothToken != "" {
 		slog.Debug("connecting to Thoth")
-		thothClient, err := thoth.New(ctx, *thothURL, *thothToken)
+		thothClient, err := thoth.New(ctx, *thothURL, *thothToken, *thothInsecure)
 		if err != nil {
 			log.Fatalf("can't dial thoth at %s: %v", *thothURL, err)
 		}

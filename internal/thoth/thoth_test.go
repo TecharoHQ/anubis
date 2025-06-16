@@ -12,7 +12,7 @@ func loadSecrets(t testing.TB) *Client {
 		t.Skip(".env not defined, can't load thoth secrets")
 	}
 
-	cli, err := New(t.Context(), os.Getenv("THOTH_URL"), os.Getenv("THOTH_API_KEY"))
+	cli, err := New(t.Context(), os.Getenv("THOTH_URL"), os.Getenv("THOTH_API_KEY"), false)
 	if err != nil {
 		t.Fatal(err)
 	}
