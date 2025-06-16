@@ -112,7 +112,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.ASNs != nil {
 			if !hasThothClient {
-				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read TODO(Xe): docs link for more information", "check", "asn", "settings", b.ASNs)
+				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
 				continue
 			}
 
@@ -121,7 +121,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.GeoIP != nil {
 			if !hasThothClient {
-				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read TODO(Xe): docs link for more information", "check", "geoip", "settings", b.GeoIP)
+				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
 				continue
 			}
 
