@@ -1,0 +1,8 @@
+# Disallow Wget from IPv6 localhost - OK for IPv4
+bots:
+  - name: deny-unwanted-scrapers
+    action: DENY
+    expression:
+      all:
+        - userAgent.matches("Wget")
+        - remoteAddrInList(remoteAddress, [ "::1/128" ])
