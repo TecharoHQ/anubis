@@ -99,7 +99,7 @@ const (
 	actionChallenge action = "CHALLENGE"
 
 	placeholderIP     = "fd11:5ee:bad:c0de::"
-	playwrightVersion = "1.52.0"
+	playwrightVersion = "1.53.0"
 )
 
 type action string
