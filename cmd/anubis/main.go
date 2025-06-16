@@ -241,7 +241,13 @@ func main() {
 
 	ctx := context.Background()
 
-	if *thothURL != "" && *thothToken != "" {
+	// Thoth configuration
+	switch {
+	case *thothURL != "" && *thothToken == "":
+		slog.Warn("THOTH_URL is set but no THOTH_TOKEN is set")
+	case *thothURL == "" && *thothToken != "":
+		slog.Warn("THOTH_TOKEN is set but no THOTH_URL is set")
+	case *thothURL != "" && *thothToken != "":
 		slog.Debug("connecting to Thoth")
 		thothClient, err := thoth.New(ctx, *thothURL, *thothToken, *thothInsecure)
 		if err != nil {
