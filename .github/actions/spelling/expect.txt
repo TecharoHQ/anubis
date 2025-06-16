@@ -202,6 +202,7 @@ qwant
 qwantbot
 rac
 rcvar
+rdb
 redir
 redirectscheme
 relayd
@@ -257,6 +258,7 @@ unparseable
 uuidgen
 uvx
 UXP
+valkey
 Varis
 Velen
 vendored
