@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -17,19 +18,34 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (s *Server) SetCookie(w http.ResponseWriter, name, value, path string) {
+func (s *Server) GetCookieScope(hostHeader string) (cookieDomain string, cookieName string) {
+	if s.opts.CookieDomain == "DYNAMIC_SECOND_LEVEL_DOMAIN" {
+		// check if host header is a valid domain
+		match, err := regexp.MatchString("^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", hostHeader)
+
+		if err == nil && match {
+			domainParts := strings.Split(hostHeader, ".")
+			cookieDomain = domainParts[len(domainParts)-2] + "." + domainParts[len(domainParts)-1]
+			cookieName = anubis.WithDomainCookieName + cookieDomain
+			return cookieDomain, cookieName
+		}
+	}
+	return s.opts.CookieDomain, s.cookieName
+}
+
+func (s *Server) SetCookie(w http.ResponseWriter, value, name string, path string, domain string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       value,
 		Expires:     time.Now().Add(s.opts.CookieExpiration),
 		SameSite:    http.SameSiteLaxMode,
-		Domain:      s.opts.CookieDomain,
+		Domain:      domain,
 		Partitioned: s.opts.CookiePartitioned,
 		Path:        path,
 	})
 }
 
-func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
+func (s *Server) ClearCookie(w http.ResponseWriter, name string, path string, domain string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       "",
@@ -37,7 +53,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
 		Expires:     time.Now().Add(-1 * time.Minute),
 		SameSite:    http.SameSiteLaxMode,
 		Partitioned: s.opts.CookiePartitioned,
-		Domain:      s.opts.CookieDomain,
+		Domain:      domain,
 		Path:        path,
 	})
 }
