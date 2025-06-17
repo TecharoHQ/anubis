@@ -3,14 +3,14 @@ package policy
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
-	"github.com/yl2chen/cidranger"
+	"github.com/gaissmai/bart"
 )
 
 var (
@@ -32,30 +32,27 @@ func NewStaticHashChecker(hashable string) checker.Impl {
 }
 
 type RemoteAddrChecker struct {
-	ranger cidranger.Ranger
-	hash   string
+	table *bart.Lite
+	hash  string
 }
 
 func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
-	ranger := cidranger.NewPCTrieRanger()
+	table := new(bart.Lite)
 	var sb strings.Builder
 
 	for _, cidr := range cidrs {
-		_, rng, err := net.ParseCIDR(cidr)
+		prefix, err := netip.ParsePrefix(cidr)
 		if err != nil {
 			return nil, fmt.Errorf("%w: range %s not parsing: %w", ErrMisconfiguration, cidr, err)
 		}
 
-		err = ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
-		if err != nil {
-			return nil, fmt.Errorf("%w: error inserting ip range: %w", ErrMisconfiguration, err)
-		}
+		table.Insert(prefix)
 		fmt.Fprintln(&sb, cidr)
 	}
 
 	return &RemoteAddrChecker{
-		ranger: ranger,
-		hash:   internal.SHA256sum(sb.String()),
+		table: table,
+		hash:  internal.SHA256sum(sb.String()),
 	}, nil
 }
 
@@ -65,21 +62,13 @@ func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
 		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
 	}
 
-	addr := net.ParseIP(host)
-	if addr == nil {
-		return false, fmt.Errorf("%w: %s is not an IP address", ErrMisconfiguration, host)
-	}
-
-	ok, err := rac.ranger.Contains(addr)
+	addr, err := netip.ParseAddr(host)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
 	}
 
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
+	ok := rac.table.Contains(addr)
+	return ok, nil
 }
 
 func (rac *RemoteAddrChecker) Hash() string {
