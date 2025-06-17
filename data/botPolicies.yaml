@@ -56,7 +56,7 @@ bots:
   - name: countries-with-aggressive-scrapers
     action: WEIGH
     geoip:
-      counties:
+      countries:
         - BR
         - CN
     weight:
