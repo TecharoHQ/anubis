@@ -37,5 +37,5 @@ func (l List) Hash() string {
 		fmt.Fprintln(&sb, c.Hash())
 	}
 
-	return internal.SHA256sum(sb.String())
+	return internal.FastHash(sb.String())
 }

@@ -28,7 +28,7 @@ func (staticHashChecker) Check(r *http.Request) (bool, error) {
 func (s staticHashChecker) Hash() string { return s.hash }
 
 func NewStaticHashChecker(hashable string) checker.Impl {
-	return staticHashChecker{hash: internal.SHA256sum(hashable)}
+	return staticHashChecker{hash: internal.FastHash(hashable)}
 }
 
 type RemoteAddrChecker struct {
@@ -55,7 +55,7 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 
 	return &RemoteAddrChecker{
 		ranger: ranger,
-		hash:   internal.SHA256sum(sb.String()),
+		hash:   internal.FastHash(sb.String()),
 	}, nil
 }
 
@@ -101,7 +101,7 @@ func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.SHA256sum(header + ": " + rexStr)}, nil
+	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.FastHash(header + ": " + rexStr)}, nil
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
@@ -126,7 +126,7 @@ func NewPathChecker(rexStr string) (checker.Impl, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &PathChecker{rex, internal.SHA256sum(rexStr)}, nil
+	return &PathChecker{rex, internal.FastHash(rexStr)}, nil
 }
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
@@ -158,7 +158,7 @@ func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
 }
 
 func (hec headerExistsChecker) Hash() string {
-	return internal.SHA256sum(hec.header)
+	return internal.FastHash(hec.header)
 }
 
 func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
@@ -177,7 +177,7 @@ func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
 			continue
 		}
 
-		result = append(result, &HeaderMatchesChecker{key, rex, internal.SHA256sum(key + ": " + rexStr)})
+		result = append(result, &HeaderMatchesChecker{key, rex, internal.FastHash(key + ": " + rexStr)})
 	}
 
 	if len(errs) != 0 {

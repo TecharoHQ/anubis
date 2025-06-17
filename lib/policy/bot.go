@@ -17,5 +17,5 @@ type Bot struct {
 }
 
 func (b Bot) Hash() string {
-	return internal.SHA256sum(fmt.Sprintf("%s::%s", b.Name, b.Rules.Hash()))
+	return internal.FastHash(fmt.Sprintf("%s::%s", b.Name, b.Rules.Hash()))
 }

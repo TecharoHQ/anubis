@@ -26,7 +26,7 @@ func (c *Client) ASNCheckerFor(asns []uint32) checker.Impl {
 	return &ASNChecker{
 		iptoasn: c.IPToASN,
 		asns:    asnMap,
-		hash:    internal.SHA256sum(sb.String()),
+		hash:    internal.FastHash(sb.String()),
 	}
 }
 

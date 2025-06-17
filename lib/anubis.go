@@ -90,7 +90,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 		fp,
 		difficulty,
 	)
-	return internal.SHA256sum(challengeData)
+	return internal.FastHash(challengeData)
 }
 
 func (s *Server) maybeReverseProxyHttpStatusOnly(w http.ResponseWriter, r *http.Request) {
