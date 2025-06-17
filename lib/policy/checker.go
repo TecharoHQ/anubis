@@ -32,8 +32,8 @@ func NewStaticHashChecker(hashable string) checker.Impl {
 }
 
 type RemoteAddrChecker struct {
-	table *bart.Lite
-	hash  string
+	prefixTable *bart.Lite
+	hash        string
 }
 
 func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
@@ -49,8 +49,8 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 	}
 
 	return &RemoteAddrChecker{
-		table: table,
-		hash:  internal.SHA256sum(strings.Join(cidrs, ",")),
+		prefixTable: table,
+		hash:        internal.SHA256sum(strings.Join(cidrs, ",")),
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
 		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
 	}
 
-	return rac.table.Contains(addr), nil
+	return rac.prefixTable.Contains(addr), nil
 }
 
 func (rac *RemoteAddrChecker) Hash() string {
