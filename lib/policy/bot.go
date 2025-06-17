@@ -2,6 +2,7 @@ package policy
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -14,6 +15,7 @@ type Bot struct {
 	Weight    *config.Weight
 	Name      string
 	Action    config.Rule
+	DomainRegex *regexp.Regexp
 }
 
 func (b Bot) Hash() string {

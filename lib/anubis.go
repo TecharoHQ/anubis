@@ -24,6 +24,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -67,6 +68,7 @@ type Server struct {
 	policy     *policy.ParsedConfig
 	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags     *ogtags.OGTagCache
+	FCrDNS     *fcrdns.FCrDNS
 	cookieName string
 	priv       ed25519.PrivateKey
 	pub        ed25519.PublicKey
@@ -128,7 +130,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	if s.checkRules(w, r, cr, lg, rule) {
+	if s.checkRules(w, r, cr, lg, rule, ip) {
 		return
 	}
 
@@ -192,7 +194,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	s.ServeHTTPNext(w, r)
 }
 
-func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
+func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot, ip string) bool {
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
 	if anubis.BasePrefix != "" {
@@ -218,6 +220,23 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
 		return true
 	case config.RuleChallenge:
+		if rule.Challenge.Algorithm == config.FCrDNSAlgorithm {
+			lg.Debug("performing reverse dns check")
+
+			if passed, err := s.FCrDNS.Check(ip, rule.DomainRegex); err != nil {
+				lg.Error("got error while performing reverse dns check", "err", err)
+				s.respondWithError(w, r, fmt.Sprintf("Could not verify reverse DNS: %s", err.Error()))
+			} else if passed {
+				lg.Debug("allowing traffic to origin (reverse dns check passed)")
+				s.ServeHTTPNext(w, r)
+			} else {
+				lg.Debug("denying traffic (reverse dns check failed)")
+				s.respondWithStatus(w, r, "Access Denied: You appear to be impersonating a bot. Try disabling any User-Agent switchers", http.StatusOK)
+			}
+
+			return true
+		}
+
 		lg.Debug("challenge requested")
 	case config.RuleBenchmark:
 		lg.Debug("serving benchmark page")
@@ -491,4 +510,5 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 func (s *Server) CleanupDecayMap() {
 	s.DNSBLCache.Cleanup()
 	s.OGTags.Cleanup()
+	s.FCrDNS.Cleanup()
 }

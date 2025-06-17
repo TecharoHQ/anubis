@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Implement a DNS-based challenge method: [`fcrdns`](./admin/configuration/challenges/fcrdns.mdx) ([#431](https://github.com/TecharoHQ/anubis/issues/431))
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not

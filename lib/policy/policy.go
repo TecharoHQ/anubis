@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"log/slog"
 
 	"github.com/TecharoHQ/anubis/internal/thoth"
@@ -98,6 +99,14 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s headers regex map: %w", b.Name, err))
 			} else {
 				cl = append(cl, c)
+			}
+		}
+
+		if b.DomainRegex != nil {
+			if rex, err := regexp.Compile(*b.DomainRegex); err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s domain regex: %w", b.Name, err))
+			} else {
+				parsedBot.DomainRegex = rex
 			}
 		}
 

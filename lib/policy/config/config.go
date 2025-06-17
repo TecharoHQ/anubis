@@ -24,6 +24,7 @@ var (
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
 	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
 	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
+	ErrInvalidDomainRegex                = errors.New("config.Bot: invalid domain regex")
 	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
 	ErrRegexEndsWithNewline              = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
 	ErrInvalidImportStatement            = errors.New("config.ImportStatement: invalid source file")
@@ -44,11 +45,13 @@ const (
 )
 
 const DefaultAlgorithm = "fast"
+const FCrDNSAlgorithm = "fcrdns"
 
 type BotConfig struct {
 	UserAgentRegex *string           `json:"user_agent_regex,omitempty" yaml:"user_agent_regex,omitempty"`
 	PathRegex      *string           `json:"path_regex,omitempty" yaml:"path_regex,omitempty"`
 	HeadersRegex   map[string]string `json:"headers_regex,omitempty" yaml:"headers_regex,omitempty"`
+	DomainRegex    *string           `json:"domain_regex,omitempty" yaml:"domain_regex,omitempty"`
 	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
 	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
@@ -70,6 +73,7 @@ func (b BotConfig) Zero() bool {
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
 		b.Challenge != nil,
+		b.DomainRegex != nil,
 		b.GeoIP != nil,
 		b.ASNs != nil,
 	} {
@@ -146,6 +150,18 @@ func (b *BotConfig) Valid() error {
 			}
 		}
 	}
+	if b.Action == RuleChallenge && b.Challenge != nil && b.Challenge.Algorithm == FCrDNSAlgorithm {
+		if b.DomainRegex == nil {
+			errs = append(errs, ErrChallengeNoDomains)
+		} else if _, err := regexp.Compile(*b.DomainRegex); err != nil {
+			errs = append(errs, ErrInvalidDomainRegex, err)
+		}
+		if b.UserAgentRegex == nil && b.Expression == nil {
+			errs = append(errs, ErrChallengeNoUserAgent)
+		}
+	} else if b.DomainRegex != nil {
+		errs = append(errs, ErrChallengeDomainUnsupported)
+	}
 
 	if b.Expression != nil {
 		if err := b.Expression.Valid(); err != nil {
@@ -184,19 +200,25 @@ type ChallengeRules struct {
 }
 
 var (
-	ErrChallengeDifficultyTooLow  = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
-	ErrChallengeDifficultyTooHigh = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
+	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
+	ErrChallengeDifficultyTooLow      = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
+	ErrChallengeDifficultyTooHigh     = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
+	ErrChallengeDomainUnsupported     = errors.New("config.Bot.ChallengeRules: specifying domain regex is only supported for challenge rules with the \"fcrdns\" algorithm")
+	ErrChallengeNoDomains             = errors.New("config.Bot.ChallengeRules: FCrDNS rules must specify a domain regex")
+	ErrChallengeNoUserAgent           = errors.New("config.Bot.ChallengeRules: FCrDNS rules must specify a user agent regex or expression")
 )
 
 func (cr ChallengeRules) Valid() error {
 	var errs []error
 
-	if cr.Difficulty < 1 {
-		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
-	}
+	if cr.Algorithm != FCrDNSAlgorithm {
+		if cr.Difficulty < 1 {
+			errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
+		}
 
-	if cr.Difficulty > 64 {
-		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
+		if cr.Difficulty > 64 {
+			errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
+		}
 	}
 
 	if len(errs) != 0 {

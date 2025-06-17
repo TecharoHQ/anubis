@@ -18,9 +18,11 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 )
@@ -75,7 +77,7 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 	var validationErrs []error
 
 	for _, b := range anubisPolicy.Bots {
-		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok {
+		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok && b.Challenge.Algorithm != config.FCrDNSAlgorithm {
 			validationErrs = append(validationErrs, fmt.Errorf("%w %s", policy.ErrChallengeRuleHasWrongAlgorithm, b.Challenge.Algorithm))
 		}
 	}
@@ -113,6 +115,7 @@ func New(opts Options) (*Server, error) {
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive, opts.OGCacheConsidersHost),
+		FCrDNS:     fcrdns.NewFCrDNS(),
 		cookieName: cookieName,
 	}
 
