@@ -201,5 +201,9 @@ func (s *Server) signJWT(claims jwt.MapClaims) (string, error) {
 	claims["nbf"] = time.Now().Add(-1 * time.Minute).Unix()
 	claims["exp"] = time.Now().Add(s.opts.CookieExpiration).Unix()
 
-	return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.priv)
+	if len(s.hs512Secret) == 0 {
+		return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.ed25519Priv)
+	} else {
+		return jwt.NewWithClaims(jwt.SigningMethodHS512, claims).SignedString(s.hs512Secret)
+	}
 }

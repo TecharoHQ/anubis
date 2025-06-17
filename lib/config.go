@@ -36,7 +36,8 @@ type Options struct {
 	BasePrefix        string
 	WebmasterEmail    string
 	RedirectDomains   []string
-	PrivateKey        ed25519.PrivateKey
+	ED25519PrivateKey ed25519.PrivateKey
+	HS512Secret       []byte
 	CookieExpiration  time.Duration
 	StripBasePrefix   bool
 	OpenGraph         config.OpenGraph
@@ -88,13 +89,13 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 }
 
 func New(opts Options) (*Server, error) {
-	if opts.PrivateKey == nil {
+	if opts.ED25519PrivateKey == nil && opts.HS512Secret == nil {
 		slog.Debug("opts.PrivateKey not set, generating a new one")
 		_, priv, err := ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			return nil, fmt.Errorf("lib: can't generate private key: %v", err)
 		}
-		opts.PrivateKey = priv
+		opts.ED25519PrivateKey = priv
 	}
 
 	anubis.BasePrefix = opts.BasePrefix
@@ -106,14 +107,14 @@ func New(opts Options) (*Server, error) {
 	}
 
 	result := &Server{
-		next:       opts.Next,
-		priv:       opts.PrivateKey,
-		pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
-		policy:     opts.Policy,
-		opts:       opts,
-		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
-		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
-		cookieName: cookieName,
+		next:        opts.Next,
+		ed25519Priv: opts.ED25519PrivateKey,
+		hs512Secret: opts.HS512Secret,
+		policy:      opts.Policy,
+		opts:        opts,
+		DNSBLCache:  decaymap.New[string, dnsbl.DroneBLResponse](),
+		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
+		cookieName:  cookieName,
 	}
 
 	mux := http.NewServeMux()
