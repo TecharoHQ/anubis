@@ -193,7 +193,7 @@ func TestBotValid(t *testing.T) {
 			err: ErrChallengeNoDomains,
 		},
 		{
-			name: "no fcrdnsalgorithm",
+			name: "no fcrdns algorithm",
 			bot: BotConfig{
 				Name:           "search-bot",
 				Action:         RuleChallenge,

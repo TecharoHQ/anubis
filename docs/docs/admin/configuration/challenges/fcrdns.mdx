@@ -1,0 +1,23 @@
+# FCrDNS (No JavaScript)
+
+The `fcrdns` challenge dynamically verifies some legitimate bots using DNS and the client IP address. It works in three steps:
+
+1. Reverse DNS records for the client IP are looked up.
+2. Any records that match the `domain_regex` are queried.
+3. The client passes the challenge if the domain has an `A` or `AAAA` record that matches the client IP.
+
+You will need to do some searching to find out what the reverse DNS of legitimate requests should look like. Use `remote_addresses` instead if the bot you are working with cannot be identified with reverse DNS.
+This challenge only makes sense for bots, so all rules using the `fcrdns` method must have a `user_agent_regex` or `expression` to identify them.
+
+To use it in your Anubis configuration:
+
+```yaml
+# Example rule for Qwantbot: https://help.qwant.com/bot/
+- name: qwantbot
+  user_agent_regex: >-
+    Qwantbot
+  action: CHALLENGE
+  domain_regex: \.qwant\.com$ # The reverse domain expected for legitimate requests (see the link above)
+  challenge:
+    algorithm: fcrdns
+```
