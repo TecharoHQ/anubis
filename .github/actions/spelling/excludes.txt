@@ -83,6 +83,7 @@
 ^\Q.github/FUNDING.yml\E$
 ^\Q.github/workflows/spelling.yml\E$
 ^data/crawlers/
+^docs/manifest/.*$
 ^docs/static/\.nojekyll$
 ignore$
 robots.txt

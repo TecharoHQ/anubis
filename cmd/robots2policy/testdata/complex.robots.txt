@@ -1,0 +1,30 @@
+# Complex real-world example
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/internal/
+Allow: /api/public/
+Crawl-delay: 5
+
+User-agent: Googlebot
+Disallow: /search/
+Allow: /api/
+Crawl-delay: 2
+
+User-agent: Bingbot
+Disallow: /search/
+Disallow: /admin/
+Crawl-delay: 10
+
+User-agent: BadBot
+Disallow: /
+
+User-agent: SeoBot
+Disallow: /
+Crawl-delay: 300
+
+# Test with various patterns
+User-agent: TestBot
+Disallow: /*/admin
+Disallow: /temp*.html
+Disallow: /file?.log

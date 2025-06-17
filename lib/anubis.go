@@ -26,6 +26,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 
 	// challenge implementations
@@ -89,7 +90,7 @@ func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 		fp,
 		difficulty,
 	)
-	return internal.SHA256sum(challengeData)
+	return internal.FastHash(challengeData)
 }
 
 func (s *Server) maybeReverseProxyHttpStatusOnly(w http.ResponseWriter, r *http.Request) {
@@ -483,7 +484,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			ReportAs:   s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,
 		},
-		Rules: &policy.CheckerList{},
+		Rules: &checker.List{},
 	}, nil
 }
 

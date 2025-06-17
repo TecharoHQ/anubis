@@ -1,10 +1,14 @@
 package policy
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 
+	"github.com/TecharoHQ/anubis/internal/thoth"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -35,13 +39,15 @@ func NewParsedConfig(orig *config.Config) *ParsedConfig {
 	}
 }
 
-func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
+func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int) (*ParsedConfig, error) {
 	c, err := config.Load(fin, fname)
 	if err != nil {
 		return nil, err
 	}
 
 	var validationErrs []error
+
+	tc, hasThothClient := thoth.FromContext(ctx)
 
 	result := NewParsedConfig(c)
 	result.DefaultDifficulty = defaultDifficulty
@@ -57,7 +63,7 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			Action: b.Action,
 		}
 
-		cl := CheckerList{}
+		cl := checker.List{}
 
 		if len(b.RemoteAddr) > 0 {
 			c, err := NewRemoteAddrChecker(b.RemoteAddr)
@@ -102,6 +108,24 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 			} else {
 				cl = append(cl, c)
 			}
+		}
+
+		if b.ASNs != nil {
+			if !hasThothClient {
+				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
+				continue
+			}
+
+			cl = append(cl, tc.ASNCheckerFor(b.ASNs.Match))
+		}
+
+		if b.GeoIP != nil {
+			if !hasThothClient {
+				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
+				continue
+			}
+
+			cl = append(cl, tc.GeoIPCheckerFor(b.GeoIP.Countries))
 		}
 
 		if b.Challenge == nil {

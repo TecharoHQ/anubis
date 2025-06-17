@@ -42,13 +42,22 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://catgirl.click/
 - https://wiki.dolphin-emu.org/
 - https://squirreljme.cc/
+- https://gitlab.postmarketos.org/
+- https://wiki.koha-community.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
   - https://wiki.freecad.org/
   </details>
 - <details>
+  <summary>ReactOS</summary>
+  - https://reactos.org/forum
+  - https://reactos.org/wiki
+  - https://git.reactos.org
+  </details>
+- <details>
   <summary>ScummVM</summary>
+  - https://bugs.scummvm.org/
   - https://forums.scummvm.org/
   - https://wiki.scummvm.org/
   </details>
