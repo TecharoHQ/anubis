@@ -38,7 +38,6 @@ type RemoteAddrChecker struct {
 
 func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 	table := new(bart.Lite)
-	var sb strings.Builder
 
 	for _, cidr := range cidrs {
 		prefix, err := netip.ParsePrefix(cidr)
@@ -47,12 +46,11 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 		}
 
 		table.Insert(prefix)
-		fmt.Fprintln(&sb, cidr)
 	}
 
 	return &RemoteAddrChecker{
 		table: table,
-		hash:  internal.SHA256sum(sb.String()),
+		hash:  internal.SHA256sum(strings.Join(cidrs, ",")),
 	}, nil
 }
 
@@ -67,8 +65,7 @@ func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
 		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
 	}
 
-	ok := rac.table.Contains(addr)
-	return ok, nil
+	return rac.table.Contains(addr), nil
 }
 
 func (rac *RemoteAddrChecker) Hash() string {
