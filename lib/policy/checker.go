@@ -50,7 +50,7 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 
 	return &RemoteAddrChecker{
 		prefixTable: table,
-		hash:   internal.FastHash(sb.String()),
+		hash:        internal.FastHash(strings.Join(cidrs, ",")),
 	}, nil
 }
 
