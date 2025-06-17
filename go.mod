@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/TecharoHQ/thoth-proto v0.4.0
 	github.com/a-h/templ v0.3.898
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 	github.com/gaissmai/bart v0.20.4
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -43,7 +44,6 @@ require (
 	github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cli/browser v1.3.0 // indirect
 	github.com/cli/go-gh v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect

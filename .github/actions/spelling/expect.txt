@@ -36,6 +36,7 @@ celchecker
 CELPHASE
 cerr
 certresolver
+cespare
 CGNAT
 cgr
 chainguard
@@ -186,7 +187,6 @@ OCOB
 ogtags
 omgili
 omgilibot
-onionservice
 openai
 openrc
 pag
@@ -214,6 +214,7 @@ qualys
 qwant
 qwantbot
 rac
+rawler
 rcvar
 redir
 redirectscheme
@@ -264,7 +265,6 @@ thoth
 thothmock
 Tik
 Timpibot
-torproject
 traefik
 uberspace
 unixhttpd
