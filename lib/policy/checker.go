@@ -9,43 +9,13 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/yl2chen/cidranger"
 )
 
 var (
 	ErrMisconfiguration = errors.New("[unexpected] policy: administrator misconfiguration")
 )
-
-type Checker interface {
-	Check(*http.Request) (bool, error)
-	Hash() string
-}
-
-type CheckerList []Checker
-
-func (cl CheckerList) Check(r *http.Request) (bool, error) {
-	for _, c := range cl {
-		ok, err := c.Check(r)
-		if err != nil {
-			return ok, err
-		}
-		if ok {
-			return ok, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (cl CheckerList) Hash() string {
-	var sb strings.Builder
-
-	for _, c := range cl {
-		fmt.Fprintln(&sb, c.Hash())
-	}
-
-	return internal.SHA256sum(sb.String())
-}
 
 type staticHashChecker struct {
 	hash string
@@ -57,8 +27,8 @@ func (staticHashChecker) Check(r *http.Request) (bool, error) {
 
 func (s staticHashChecker) Hash() string { return s.hash }
 
-func NewStaticHashChecker(hashable string) Checker {
-	return staticHashChecker{hash: internal.SHA256sum(hashable)}
+func NewStaticHashChecker(hashable string) checker.Impl {
+	return staticHashChecker{hash: internal.FastHash(hashable)}
 }
 
 type RemoteAddrChecker struct {
@@ -66,7 +36,7 @@ type RemoteAddrChecker struct {
 	hash   string
 }
 
-func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
+func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 	ranger := cidranger.NewPCTrieRanger()
 	var sb strings.Builder
 
@@ -85,7 +55,7 @@ func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
 
 	return &RemoteAddrChecker{
 		ranger: ranger,
-		hash:   internal.SHA256sum(sb.String()),
+		hash:   internal.FastHash(sb.String()),
 	}, nil
 }
 
@@ -122,16 +92,16 @@ type HeaderMatchesChecker struct {
 	hash   string
 }
 
-func NewUserAgentChecker(rexStr string) (Checker, error) {
+func NewUserAgentChecker(rexStr string) (checker.Impl, error) {
 	return NewHeaderMatchesChecker("User-Agent", rexStr)
 }
 
-func NewHeaderMatchesChecker(header, rexStr string) (Checker, error) {
+func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.SHA256sum(header + ": " + rexStr)}, nil
+	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.FastHash(header + ": " + rexStr)}, nil
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
@@ -151,12 +121,12 @@ type PathChecker struct {
 	hash   string
 }
 
-func NewPathChecker(rexStr string) (Checker, error) {
+func NewPathChecker(rexStr string) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &PathChecker{rex, internal.SHA256sum(rexStr)}, nil
+	return &PathChecker{rex, internal.FastHash(rexStr)}, nil
 }
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
@@ -171,7 +141,7 @@ func (pc *PathChecker) Hash() string {
 	return pc.hash
 }
 
-func NewHeaderExistsChecker(key string) Checker {
+func NewHeaderExistsChecker(key string) checker.Impl {
 	return headerExistsChecker{strings.TrimSpace(key)}
 }
 
@@ -188,11 +158,11 @@ func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
 }
 
 func (hec headerExistsChecker) Hash() string {
-	return internal.SHA256sum(hec.header)
+	return internal.FastHash(hec.header)
 }
 
-func NewHeadersChecker(headermap map[string]string) (Checker, error) {
-	var result CheckerList
+func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
+	var result checker.List
 	var errs []error
 
 	for key, rexStr := range headermap {
@@ -207,7 +177,7 @@ func NewHeadersChecker(headermap map[string]string) (Checker, error) {
 			continue
 		}
 
-		result = append(result, &HeaderMatchesChecker{key, rex, internal.SHA256sum(key + ": " + rexStr)})
+		result = append(result, &HeaderMatchesChecker{key, rex, internal.FastHash(key + ": " + rexStr)})
 	}
 
 	if len(errs) != 0 {

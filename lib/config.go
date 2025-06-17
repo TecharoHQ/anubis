@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"errors"
@@ -45,7 +46,7 @@ type Options struct {
 	ServeRobotsTXT       bool
 }
 
-func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
+func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
 	var fin io.ReadCloser
 	var err error
 
@@ -69,7 +70,7 @@ func LoadPoliciesOrDefault(fname string, defaultDifficulty int) (*policy.ParsedC
 		}
 	}(fin)
 
-	anubisPolicy, err := policy.ParseConfig(fin, fname, defaultDifficulty)
+	anubisPolicy, err := policy.ParseConfig(ctx, fin, fname, defaultDifficulty)
 	if err != nil {
 		return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
 	}

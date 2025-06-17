@@ -51,6 +51,29 @@ bots:
   #     report_as: 4    # lie to the operator
   #     algorithm: slow # intentionally waste CPU cycles and time
 
+  # Requires a subscription to Thoth to use, see
+  # https://anubis.techaro.lol/docs/admin/thoth#geoip-based-filtering
+  - name: countries-with-aggressive-scrapers
+    action: WEIGH
+    geoip:
+      counties:
+        - BR
+        - CN
+    weight:
+      adjust: 10
+
+  # Requires a subscription to Thoth to use, see
+  # https://anubis.techaro.lol/docs/admin/thoth#asn-based-filtering
+  - name: aggressive-asns-without-functional-abuse-contact
+    action: WEIGH
+    asns:
+      match:
+        - 13335 # Cloudflare
+        - 136907 # Huawei Cloud
+        - 45102 # Alibaba Cloud
+    weight:
+      adjust: 10
+
   # Generic catchall rule
   - name: generic-browser
     user_agent_regex: >-

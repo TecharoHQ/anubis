@@ -9,10 +9,13 @@ anubistest
 apk
 Applebot
 archlinux
+asnc
+asnchecker
+asns
+aspirational
 badregexes
 bdba
 berr
-betteralign
 bingbot
 bitcoin
 blogging
@@ -25,6 +28,7 @@ Brightbot
 broked
 Bytespider
 cachebuster
+cachediptoasn
 Caddyfile
 caninetools
 Cardyb
@@ -32,6 +36,7 @@ celchecker
 CELPHASE
 cerr
 certresolver
+cespare
 CGNAT
 cgr
 chainguard
@@ -89,9 +94,14 @@ Fordola
 forgejo
 fsys
 fullchain
+gaissmai
 Galvus
+geoip
+geoipchecker
 gha
+gipc
 gitea
+godotenv
 goland
 gomod
 goodbot
@@ -101,6 +111,7 @@ goyaml
 GPG
 GPT
 gptbot
+grpcprom
 grw
 Hashcash
 hashrate
@@ -113,6 +124,7 @@ hostable
 htmlc
 htmx
 httpdebug
+Huawei
 hypertext
 iaskspider
 iat
@@ -120,11 +132,14 @@ ifm
 Imagesift
 imgproxy
 inp
+IPTo
+iptoasn
 iss
 isset
 ivh
 Jenomis
 JGit
+joho
 journalctl
 jshelter
 JWTs
@@ -164,7 +179,6 @@ mojeekbot
 mozilla
 nbf
 netsurf
-NFlag
 nginx
 nobots
 NONINFRINGEMENT
@@ -173,7 +187,6 @@ OCOB
 ogtags
 omgili
 omgilibot
-onionservice
 openai
 openrc
 pag
@@ -201,6 +214,7 @@ qualys
 qwant
 qwantbot
 rac
+rawler
 rcvar
 redir
 redirectscheme
@@ -241,14 +255,16 @@ subrequest
 SVCNAME
 tagline
 tarballs
+tarrif
 techaro
 techarohq
 templ
 templruntime
 testarea
+thoth
+thothmock
 Tik
 Timpibot
-torproject
 traefik
 uberspace
 unixhttpd
@@ -270,6 +286,7 @@ websecure
 websites
 Webzio
 wildbase
+withthothmock
 wordpress
 Workaround
 workdir

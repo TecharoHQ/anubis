@@ -68,3 +68,6 @@ spec:
                 - ALL
             seccompProfile:
               type: RuntimeDefault
+          envFrom:
+            - secretRef:
+                name: anubis-docs-thoth
