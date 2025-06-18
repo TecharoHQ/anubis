@@ -1,0 +1,11 @@
+bots:
+  - name: everything
+    user_agent_regex: .*
+    action: DENY
+
+openGraph:
+  enabled: true
+  considerHost: false
+  ttl: 1h
+  default:
+    "og:description": "We're no strangers to love, you know the rules and so do I"

@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/TecharoHQ/anubis/data"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -323,10 +324,11 @@ func (sc StatusCodes) Valid() error {
 }
 
 type fileConfig struct {
-	Bots        []BotOrImport `json:"bots"`
-	DNSBL       bool          `json:"dnsbl"`
-	StatusCodes StatusCodes   `json:"status_codes"`
-	Thresholds  []Threshold   `json:"threshold"`
+	Bots        []BotOrImport       `json:"bots"`
+	DNSBL       bool                `json:"dnsbl"`
+	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
+	StatusCodes StatusCodes         `json:"status_codes"`
+	Thresholds  []Threshold         `json:"threshold"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -339,6 +341,12 @@ func (c *fileConfig) Valid() error {
 	for i, b := range c.Bots {
 		if err := b.Valid(); err != nil {
 			errs = append(errs, fmt.Errorf("bot %d: %w", i, err))
+		}
+	}
+
+	if c.OpenGraph.Enabled {
+		if err := c.OpenGraph.Valid(); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
@@ -381,8 +389,19 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 	}
 
 	result := &Config{
-		DNSBL:       c.DNSBL,
+		DNSBL: c.DNSBL,
+		OpenGraph: OpenGraph{
+			Enabled:      c.OpenGraph.Enabled,
+			ConsiderHost: c.OpenGraph.ConsiderHost,
+			Default:      c.OpenGraph.Default,
+		},
 		StatusCodes: c.StatusCodes,
+	}
+
+	if c.OpenGraph.TimeToLive != "" {
+		// XXX(Xe): already validated in Valid()
+		ogTTL, _ := time.ParseDuration(c.OpenGraph.TimeToLive)
+		result.OpenGraph.TimeToLive = ogTTL
 	}
 
 	var validationErrs []error
@@ -427,6 +446,7 @@ type Config struct {
 	Bots        []BotConfig
 	Thresholds  []Threshold
 	DNSBL       bool
+	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
 }
 
