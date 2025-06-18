@@ -412,12 +412,6 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 	}
 }
 
-var (
-	weightOkayStatic    = policy.NewStaticHashChecker("weight/okay")
-	weightMildSusStatic = policy.NewStaticHashChecker("weight/mild-suspicion")
-	weightVerySusStatic = policy.NewStaticHashChecker("weight/extreme-suspicion")
-)
-
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
