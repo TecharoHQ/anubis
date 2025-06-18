@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Replace cidranger with bart for IP range checking, improving IP matching performance by 3-20x with zero heap 
+  allocations
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
@@ -22,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make progress bar styling more compatible (UXP, etc)
 - Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
+- Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
+- Implement GeoIP and ASN based checks via [Thoth](https://anubis.techaro.lol/docs/admin/thoth) ([#206](https://github.com/TecharoHQ/anubis/issues/206))
+- Replace internal SHA256 hashing with xxhash for 4-6x performance improvement in policy evaluation and cache operations
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 
@@ -157,7 +162,6 @@ Other changes:
 - Moved all CSS inline to the Xess package, changed colors to be CSS variables
 - Set or append to `X-Forwarded-For` header unless the remote connects over a loopback address [#328](https://github.com/TecharoHQ/anubis/issues/328)
 - Fixed mojeekbot user agent regex
-- Added support for running anubis behind a base path (e.g. `/myapp`)
 - Reduce Anubis' paranoia with user cookies ([#365](https://github.com/TecharoHQ/anubis/pull/365))
 - Added support for Open Graph passthrough while using unix sockets
 - The Open Graph subsystem now passes the HTTP `HOST` header through to the origin

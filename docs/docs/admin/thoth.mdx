@@ -1,0 +1,81 @@
+# Thoth-based advanced checks
+
+Status: Beta
+
+Anubis instances are normally isolated. Each Anubis instance has its own configuration and exists in roughly its own world without any long term memory between requests. As threats, workarounds, and AI scraper toolchains evolve, administrators will need a way to get more up to date information faster than Anubis' release cycle.
+
+Thus, Thoth is being created. Thoth is the reputation database for Anubis. Thoth feeds information to Anubis so that it can make better decisions about which traffic is innocuous and which traffic is suspicious.
+
+:::note
+
+Thoth is hosted by [Techaro](https://techaro.lol). Thoth is a paid service. Thoth is opt-in and requires manual intervention (including payment) to use. The code that powers Thoth is currently closed source.
+
+To get access to Thoth, please subscribe [on GitHub Sponsors](https://github.com/sponsors/Xe) and [email Xe](mailto:xe@techaro.lol). This will be self-service soon.
+
+:::
+
+## Implementation
+
+Thoth is a web service that listens over [gRPC](https://grpc.io/). Thoth's API is documented in protocol buffer definitions in the GitHub repo [TecharoHQ/thoth-proto](https://github.com/TecharoHQ/thoth-proto).
+
+Thoth is designed to be _informative_, not _authoritative_. Thoth cannot and will not arbitrarily block requests, origins, or other traffic. Thoth is there to inform Anubis and influence the weight of requests so that upstream resources can be protected. Additionally, Anubis aggressively caches data from Thoth such that over time Anubis will not need to request data very often. This makes the fast path for repeat visitors even faster and reduces the amount of data that Thoth is exposed to.
+
+## Thoth features
+
+Thoth is currently in active development. Currently, Thoth provides the following features to Anubis:
+
+- BGP Autonomous System (ASN) based filtering
+- GeoIP location based filtering
+
+### ASN-based filtering
+
+When companies link their backbone infrastructure to the Internet, they do so via a [BGP Autonomous System](<https://en.wikipedia.org/wiki/Autonomous_system_(Internet)>), denoted by a number (the Autonomous System Number or ASN). Every IP address on the Internet is owned by an ASN with a 1:1 lookup that does not change very frequently.
+
+Anubis uses Thoth to match IP addresses to BGP Autonomous Systems so that you can either issue arbitrary challenges to individual internet service providers (such as Cloudflare or Huawei Cloud) or, at the administrator's explicit instruction, block them altogether. For example, here's how you add 10 weight points to requests from Cloudflare, Huawei Cloud, and Alibaba Cloud:
+
+```yaml
+- name: aggressive-asns-without-functional-abuse-contact
+  action: WEIGH
+  asns:
+    match:
+      - 13335 # Cloudflare
+      - 136907 # Huawei Cloud
+      - 45102 # Alibaba Cloud
+  weight:
+    adjust: 10
+```
+
+You can look up details for [AS13335](https://bgp.tools/as/13335) or any of these other top offenders on [bgp.tools](https://bgp.tools).
+
+### GeoIP-based filtering
+
+In extreme cases, an administrator may have to take action against an entire country. This is not an ideal circumstance, but sometimes reality forces their hands and the administrators just want to sleep at night.
+
+Anubis uses Thoth to look up the geographic location registered to an IP address. This lookup is not the best and will get better with time, but you ship what you can so you can make it better for next time.
+
+For example, to add 10 weight points to requests from Brazil and China:
+
+```yaml
+- name: countries-with-aggressive-scrapers
+  action: WEIGH
+  geoip:
+    countries:
+      - BR
+      - CN
+  weight:
+    adjust: 10
+```
+
+Use this with care.
+
+## Work-in-progress features
+
+This section is a bit aspirational and is where Thoth will end up rather than things you can use today.
+
+In general, a lot of Thoth features are focused on taking the same Anubis you know and love and making it better, smarter, and less paranoid. These include:
+
+- Private rulesets for advanced patterns, current known exploits, and other recognition tactics that need to be kept cloak and dagger for operational security reasons
+- Private challenge implementations via WebAssembly, including advanced browser detection logic
+- Reputation querying so that Thoth can arbitrarily influence the weight of requests based on the net aggregate pass rate so that the most common browsers can get through with no challenge issued at all
+- APIs for trusted administrators to report abusive request fingerprints so that Anubis can react to threats as they evolve
+- A way for Anubis to periodically report the pass rate per ASN and other fingerprints so that methodology can be improved

@@ -1,0 +1,6 @@
+- action: CHALLENGE
+  expression: path.startsWith("/admin/")
+  name: robots-txt-policy-disallow-1
+- action: CHALLENGE
+  expression: path.startsWith("/private")
+  name: robots-txt-policy-disallow-2

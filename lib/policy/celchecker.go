@@ -34,7 +34,7 @@ func NewCELChecker(cfg *config.ExpressionOrList) (*CELChecker, error) {
 }
 
 func (cc *CELChecker) Hash() string {
-	return internal.SHA256sum(cc.src)
+	return internal.FastHash(cc.src)
 }
 
 func (cc *CELChecker) Check(r *http.Request) (bool, error) {

@@ -1,11 +1,12 @@
 package ogtags
 
 import (
-	"golang.org/x/net/html"
 	"net/url"
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"golang.org/x/net/html"
 )
 
 // FuzzGetTarget tests getTarget with various inputs

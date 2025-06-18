@@ -1,0 +1,6 @@
+bots:
+  - name: compute-tarrif-us
+    action: CHALLENGE
+    geoip:
+      countries:
+        - US

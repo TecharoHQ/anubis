@@ -3,49 +3,19 @@ package policy
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/yl2chen/cidranger"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
+	"github.com/gaissmai/bart"
 )
 
 var (
 	ErrMisconfiguration = errors.New("[unexpected] policy: administrator misconfiguration")
 )
-
-type Checker interface {
-	Check(*http.Request) (bool, error)
-	Hash() string
-}
-
-type CheckerList []Checker
-
-func (cl CheckerList) Check(r *http.Request) (bool, error) {
-	for _, c := range cl {
-		ok, err := c.Check(r)
-		if err != nil {
-			return ok, err
-		}
-		if ok {
-			return ok, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (cl CheckerList) Hash() string {
-	var sb strings.Builder
-
-	for _, c := range cl {
-		fmt.Fprintln(&sb, c.Hash())
-	}
-
-	return internal.SHA256sum(sb.String())
-}
 
 type staticHashChecker struct {
 	hash string
@@ -57,35 +27,30 @@ func (staticHashChecker) Check(r *http.Request) (bool, error) {
 
 func (s staticHashChecker) Hash() string { return s.hash }
 
-func NewStaticHashChecker(hashable string) Checker {
-	return staticHashChecker{hash: internal.SHA256sum(hashable)}
+func NewStaticHashChecker(hashable string) checker.Impl {
+	return staticHashChecker{hash: internal.FastHash(hashable)}
 }
 
 type RemoteAddrChecker struct {
-	ranger cidranger.Ranger
-	hash   string
+	prefixTable *bart.Lite
+	hash        string
 }
 
-func NewRemoteAddrChecker(cidrs []string) (Checker, error) {
-	ranger := cidranger.NewPCTrieRanger()
-	var sb strings.Builder
+func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
+	table := new(bart.Lite)
 
 	for _, cidr := range cidrs {
-		_, rng, err := net.ParseCIDR(cidr)
+		prefix, err := netip.ParsePrefix(cidr)
 		if err != nil {
 			return nil, fmt.Errorf("%w: range %s not parsing: %w", ErrMisconfiguration, cidr, err)
 		}
 
-		err = ranger.Insert(cidranger.NewBasicRangerEntry(*rng))
-		if err != nil {
-			return nil, fmt.Errorf("%w: error inserting ip range: %w", ErrMisconfiguration, err)
-		}
-		fmt.Fprintln(&sb, cidr)
+		table.Insert(prefix)
 	}
 
 	return &RemoteAddrChecker{
-		ranger: ranger,
-		hash:   internal.SHA256sum(sb.String()),
+		prefixTable: table,
+		hash:        internal.FastHash(strings.Join(cidrs, ",")),
 	}, nil
 }
 
@@ -95,21 +60,12 @@ func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
 		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
 	}
 
-	addr := net.ParseIP(host)
-	if addr == nil {
-		return false, fmt.Errorf("%w: %s is not an IP address", ErrMisconfiguration, host)
-	}
-
-	ok, err := rac.ranger.Contains(addr)
+	addr, err := netip.ParseAddr(host)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
 	}
 
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
+	return rac.prefixTable.Contains(addr), nil
 }
 
 func (rac *RemoteAddrChecker) Hash() string {
@@ -122,16 +78,16 @@ type HeaderMatchesChecker struct {
 	hash   string
 }
 
-func NewUserAgentChecker(rexStr string) (Checker, error) {
+func NewUserAgentChecker(rexStr string) (checker.Impl, error) {
 	return NewHeaderMatchesChecker("User-Agent", rexStr)
 }
 
-func NewHeaderMatchesChecker(header, rexStr string) (Checker, error) {
+func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.SHA256sum(header + ": " + rexStr)}, nil
+	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.FastHash(header + ": " + rexStr)}, nil
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
@@ -151,12 +107,12 @@ type PathChecker struct {
 	hash   string
 }
 
-func NewPathChecker(rexStr string) (Checker, error) {
+func NewPathChecker(rexStr string) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &PathChecker{rex, internal.SHA256sum(rexStr)}, nil
+	return &PathChecker{rex, internal.FastHash(rexStr)}, nil
 }
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
@@ -171,7 +127,7 @@ func (pc *PathChecker) Hash() string {
 	return pc.hash
 }
 
-func NewHeaderExistsChecker(key string) Checker {
+func NewHeaderExistsChecker(key string) checker.Impl {
 	return headerExistsChecker{strings.TrimSpace(key)}
 }
 
@@ -188,11 +144,11 @@ func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
 }
 
 func (hec headerExistsChecker) Hash() string {
-	return internal.SHA256sum(hec.header)
+	return internal.FastHash(hec.header)
 }
 
-func NewHeadersChecker(headermap map[string]string) (Checker, error) {
-	var result CheckerList
+func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
+	var result checker.List
 	var errs []error
 
 	for key, rexStr := range headermap {
@@ -207,7 +163,7 @@ func NewHeadersChecker(headermap map[string]string) (Checker, error) {
 			continue
 		}
 
-		result = append(result, &HeaderMatchesChecker{key, rex, internal.SHA256sum(key + ": " + rexStr)})
+		result = append(result, &HeaderMatchesChecker{key, rex, internal.FastHash(key + ": " + rexStr)})
 	}
 
 	if len(errs) != 0 {

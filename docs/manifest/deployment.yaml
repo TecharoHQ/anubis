@@ -38,6 +38,8 @@ spec:
               value: "4"
             - name: "METRICS_BIND"
               value: ":9090"
+            - name: "OG_PASSTHROUGH"
+              value: "true"
             - name: "POLICY_FNAME"
               value: "/xe/cfg/anubis/botPolicies.yaml"
             - name: "SERVE_ROBOTS_TXT"
@@ -66,3 +68,6 @@ spec:
                 - ALL
             seccompProfile:
               type: RuntimeDefault
+          envFrom:
+            - secretRef:
+                name: anubis-docs-thoth

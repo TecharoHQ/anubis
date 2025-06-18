@@ -1,0 +1,15 @@
+# Test with blacklisted user agents
+User-agent: *
+Disallow: /admin
+Crawl-delay: 10
+
+User-agent: BadBot
+Disallow: /
+
+User-agent: SpamBot
+Disallow: /
+Crawl-delay: 60
+
+User-agent: Googlebot
+Disallow: /search
+Crawl-delay: 5

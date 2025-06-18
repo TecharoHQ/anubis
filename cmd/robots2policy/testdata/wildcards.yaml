@@ -1,0 +1,12 @@
+- action: CHALLENGE
+  expression: path.matches("^/search.*")
+  name: robots-txt-policy-disallow-1
+- action: CHALLENGE
+  expression: path.matches("^/.*/private")
+  name: robots-txt-policy-disallow-2
+- action: CHALLENGE
+  expression: path.matches("^/file.\\.txt")
+  name: robots-txt-policy-disallow-3
+- action: CHALLENGE
+  expression: path.matches("^/admin/.*.action=delete")
+  name: robots-txt-policy-disallow-4

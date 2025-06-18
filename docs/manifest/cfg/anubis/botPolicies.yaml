@@ -51,6 +51,13 @@ bots:
   #     report_as: 4    # lie to the operator
   #     algorithm: slow # intentionally waste CPU cycles and time
 
+  - name: rss-feed-blog
+    action: ALLOW
+    expression:
+      any:
+        - path.startsWith("/blog/atom.")
+        - path.startsWith("/blog/rss.")
+
   # Generic catchall rule
   - name: generic-browser
     user_agent_regex: >-

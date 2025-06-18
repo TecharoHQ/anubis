@@ -55,15 +55,19 @@ func (r Rule) Valid() error {
 const DefaultAlgorithm = "fast"
 
 type BotConfig struct {
-	UserAgentRegex *string           `json:"user_agent_regex,omitempty"`
-	PathRegex      *string           `json:"path_regex,omitempty"`
-	HeadersRegex   map[string]string `json:"headers_regex,omitempty"`
-	Expression     *ExpressionOrList `json:"expression,omitempty"`
-	Challenge      *ChallengeRules   `json:"challenge,omitempty"`
-	Weight         *Weight           `json:"weight,omitempty"`
-	Name           string            `json:"name"`
-	Action         Rule              `json:"action"`
-	RemoteAddr     []string          `json:"remote_addresses,omitempty"`
+	UserAgentRegex *string           `json:"user_agent_regex,omitempty" yaml:"user_agent_regex,omitempty"`
+	PathRegex      *string           `json:"path_regex,omitempty" yaml:"path_regex,omitempty"`
+	HeadersRegex   map[string]string `json:"headers_regex,omitempty" yaml:"headers_regex,omitempty"`
+	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
+	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
+	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
+	Name           string            `json:"name" yaml:"name"`
+	Action         Rule              `json:"action" yaml:"action"`
+	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+
+	// Thoth features
+	GeoIP *GeoIP `json:"geoip,omitempty"`
+	ASNs  *ASNs  `json:"asns,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -75,6 +79,8 @@ func (b BotConfig) Zero() bool {
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
 		b.Challenge != nil,
+		b.GeoIP != nil,
+		b.ASNs != nil,
 	} {
 		if cond {
 			return false
@@ -94,7 +100,9 @@ func (b *BotConfig) Valid() error {
 	allFieldsEmpty := b.UserAgentRegex == nil &&
 		b.PathRegex == nil &&
 		len(b.RemoteAddr) == 0 &&
-		len(b.HeadersRegex) == 0
+		len(b.HeadersRegex) == 0 &&
+		b.ASNs == nil &&
+		b.GeoIP == nil
 
 	if allFieldsEmpty && b.Expression == nil {
 		errs = append(errs, ErrBotMustHaveUserAgentOrPath)
@@ -179,9 +187,9 @@ func (b *BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
-	Algorithm  string `json:"algorithm"`
-	Difficulty int    `json:"difficulty"`
-	ReportAs   int    `json:"report_as"`
+	Algorithm  string `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
+	Difficulty int    `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
+	ReportAs   int    `json:"report_as,omitempty" yaml:"report_as,omitempty"`
 }
 
 var (
