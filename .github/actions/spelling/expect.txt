@@ -44,7 +44,6 @@ chall
 challengemozilla
 checkpath
 checkresult
-chen
 chibi
 cidranger
 ckie
@@ -185,9 +184,11 @@ NONINFRINGEMENT
 nosleep
 OCOB
 ogtags
+ogtitle
 omgili
 omgilibot
 openai
+opengraph
 openrc
 pag
 palemoon
