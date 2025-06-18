@@ -21,27 +21,26 @@ import (
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 )
 
 type Options struct {
-	Next                 http.Handler
-	Policy               *policy.ParsedConfig
-	Target               string
-	CookieDomain         string
-	CookieName           string
-	BasePrefix           string
-	WebmasterEmail       string
-	RedirectDomains      []string
-	PrivateKey           ed25519.PrivateKey
-	CookieExpiration     time.Duration
-	OGTimeToLive         time.Duration
-	StripBasePrefix      bool
-	OGCacheConsidersHost bool
-	OGPassthrough        bool
-	CookiePartitioned    bool
-	ServeRobotsTXT       bool
+	Next              http.Handler
+	Policy            *policy.ParsedConfig
+	Target            string
+	CookieDomain      string
+	CookieName        string
+	BasePrefix        string
+	WebmasterEmail    string
+	RedirectDomains   []string
+	PrivateKey        ed25519.PrivateKey
+	CookieExpiration  time.Duration
+	StripBasePrefix   bool
+	OpenGraph         config.OpenGraph
+	CookiePartitioned bool
+	ServeRobotsTXT    bool
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -112,7 +111,7 @@ func New(opts Options) (*Server, error) {
 		policy:     opts.Policy,
 		opts:       opts,
 		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
-		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.OGPassthrough, opts.OGTimeToLive, opts.OGCacheConsidersHost),
+		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
 		cookieName: cookieName,
 	}
 
