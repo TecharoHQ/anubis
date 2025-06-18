@@ -80,7 +80,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	var ogTags map[string]string = nil
-	if s.opts.OGPassthrough {
+	if s.opts.OpenGraph.Enabled {
 		var err error
 		ogTags, err = s.OGTags.GetOGTags(r.URL, r.Host)
 		if err != nil {
