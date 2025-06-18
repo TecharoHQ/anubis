@@ -15,6 +15,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/playwright-community/playwright-go v0.5200.0
 	github.com/prometheus/client_golang v1.22.0
+	github.com/redis/go-redis/v9 v9.9.0
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	golang.org/x/net v0.41.0
 	google.golang.org/grpc v1.72.2
@@ -49,6 +50,7 @@ require (
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/dop251/goja v0.0.0-20250309171923-bcd7cc6bf64c // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect

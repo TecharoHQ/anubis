@@ -25,6 +25,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
+	"github.com/TecharoHQ/anubis/internal/store"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -72,6 +73,7 @@ type Server struct {
 	priv       ed25519.PrivateKey
 	pub        ed25519.PublicKey
 	opts       Options
+	store      store.Impl
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
