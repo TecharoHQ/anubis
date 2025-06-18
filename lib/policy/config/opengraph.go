@@ -9,7 +9,7 @@ import (
 var (
 	ErrInvalidOpenGraphConfig   = errors.New("config.OpenGraph: invalid OpenGraph configuration")
 	ErrOpenGraphTTLDoesNotParse = errors.New("config.OpenGraph: ttl does not parse as a Duration, see https://pkg.go.dev/time#ParseDuration (formatted like 5m -> 5 minutes, 2h -> 2 hours, etc)")
-	ErrOpenGraphMissingProperty = errors.New("config.OpenGraph: default opengraph tags missing a property:")
+	ErrOpenGraphMissingProperty = errors.New("config.OpenGraph: default opengraph tags missing a property")
 )
 
 type openGraphFileConfig struct {
