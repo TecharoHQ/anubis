@@ -11,10 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Replace cidranger with bart for IP range checking, improving IP matching performance by 3-20x with zero heap
-  allocations
-- Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
-  development
+- Add conventional commit linting to enforce standardized commit message formatting across the project
+- Replace cidranger with bart for IP range checking, improving IP matching performance by 3-20x with zero heap allocations
+- Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
 - Requests can have their weight be adjusted, if a request weighs zero or less than it is allowed through
 - Refactor challenge presentation logic to use a challenge registry

@@ -44,7 +44,6 @@ chall
 challengemozilla
 checkpath
 checkresult
-chen
 chibi
 cidranger
 ckie
@@ -159,7 +158,7 @@ licend
 licstart
 lightpanda
 LIMSA
-Linting
+linting
 linuxbrew
 LLU
 loadbalancer

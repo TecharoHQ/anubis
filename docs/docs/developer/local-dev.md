@@ -56,6 +56,43 @@ This builds a prod-ready container image with [ko](https://ko.build). If you wan
 DOCKER_REPO=registry.host/org/repo DOCKER_METADATA_OUTPUT_TAGS=registry.host/org/repo:latest npm run container
 ```
 
+## Commit linting
+
+Anubis enforces [conventional commits](https://www.conventionalcommits.org/) to maintain consistent commit messages. The commit linting is automatically set up when you run:
+
+```text
+npm ci
+```
+
+### Commit message format
+
+Commits must follow this format:
+
+```text
+type(scope): description
+```
+
+**Valid types:**
+- `feat`: New features
+- `fix`: Bug fixes
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, missing semicolons, etc.)
+- `refactor`: Code refactoring without changing functionality
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `build`: Build system changes
+- `ci`: CI/CD configuration changes
+- `chore`: Maintenance tasks
+- `revert`: Reverting previous commits
+
+**Examples:**
+- `feat: add dark mode support`
+- `fix(policy): resolve memory leak in challenge validation`
+- `docs: update API documentation`
+- `perf(hash): optimize SHA-256 hashing performance`
+
+The commit hook will automatically validate your commit messages and prevent commits that don't follow the conventional format.
+
 ## Building packages
 
 For more information, see [Building native packages is complicated](https://xeiaso.net/blog/2025/anubis-packaging/) and [#156: Debian, RPM, and binary tarball packages](https://github.com/TecharoHQ/anubis/issues/156).

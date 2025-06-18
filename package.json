@@ -13,14 +13,18 @@
     "dev": "npm run assets && go run ./cmd/anubis --use-remote-address --target http://localhost:3000",
     "container": "npm run assets && go run ./cmd/containerbuild",
     "package": "yeet",
-    "lint": "make lint"
+    "lint": "make lint",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "cssnano": "^7.0.7",
     "cssnano-preset-advanced": "^7.0.7",
     "esbuild": "^0.25.5",
+    "husky": "^9.1.7",
     "playwright": "^1.52.0",
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.0",
