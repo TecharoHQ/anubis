@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	_ "embed"
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/challenge"
@@ -18,17 +19,31 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+//go:embed public_second_level_domains.yml
+var publicSLDs string
+
 func (s *Server) GetCookieScope(hostHeader string) (cookieDomain string, cookieName string) {
 	if s.opts.CookieDomain == "DYNAMIC_SECOND_LEVEL_DOMAIN" {
 		// check if host header is a valid domain
-		match, err := regexp.MatchString("^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", hostHeader)
-
-		if err == nil && match {
+		isDomain, err := regexp.MatchString("^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", hostHeader)
+		if err == nil && isDomain {
 			domainParts := strings.Split(hostHeader, ".")
 			cookieDomain = domainParts[len(domainParts)-2] + "." + domainParts[len(domainParts)-1]
 			cookieName = anubis.WithDomainCookieName + cookieDomain
+
+			// check if domain is public second level domain (e.g. domain.co.uk), in this case, use the third level domain
+			if slices.Contains(strings.Split(publicSLDs, "\n"), cookieDomain) {
+				// check if domain has three layers (e.g. domain.co.uk) and not only two (e.g. co.uk)
+				if len(domainParts) >= 3 {
+					cookieDomain = domainParts[len(domainParts)-3] + "." + cookieDomain
+					cookieName = anubis.WithDomainCookieName + cookieDomain
+				} else {
+					return "", anubis.CookieName
+				}
+			}
 			return cookieDomain, cookieName
 		}
+		return "", anubis.CookieName
 	}
 	return s.opts.CookieDomain, s.cookieName
 }
