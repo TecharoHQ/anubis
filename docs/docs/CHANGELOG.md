@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add conventional commit linting to enforce standardized commit message formatting across the project
 - Replace cidranger with bart for IP range checking, improving IP matching performance by 3-20x with zero heap 
   allocations
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
