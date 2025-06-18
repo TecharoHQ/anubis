@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Move Open Graph configuration [to the policy file](./admin/configuration/open-graph.mdx)
+- Enable support for default Open Graph metadata
 - Replace cidranger with bart for IP range checking, improving IP matching performance by 3-20x with zero heap
   allocations
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
