@@ -11,6 +11,39 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
+func TestCacheReturnsDefault(t *testing.T) {
+	want := map[string]string{
+		"og:title":       "Foo bar",
+		"og:description": "The best website ever made!!!1!",
+	}
+	cache := NewOGTagCache("", config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+		Default:      want,
+	})
+
+	u, err := url.Parse("https://anubis.techaro.lol")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := cache.GetOGTags(u, "anubis.techaro.lol")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for k, v := range want {
+		t.Run(k, func(t *testing.T) {
+			if got := result[k]; got != v {
+				t.Logf("want: tags[%q] = %q", k, v)
+				t.Logf("got:  tags[%q] = %q", k, got)
+				t.Error("invalid result from function")
+			}
+		})
+	}
+}
+
 func TestCheckCache(t *testing.T) {
 	cache := NewOGTagCache("http://example.com", config.OpenGraph{
 		Enabled:      true,
