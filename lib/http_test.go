@@ -77,7 +77,10 @@ func TestRenderIndexRedirect(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusTemporaryRedirect, rr.Code)
 	}
 	location := rr.Header().Get("Location")
-	parsedURL, _ := url.Parse(location)
+	parsedURL, err := url.Parse(location)
+	if err != nil {
+		t.Fatalf("failed to parse location URL %q: %v", location, err)
+	}
 
 	scheme := "https"
 	if parsedURL.Scheme != scheme {
