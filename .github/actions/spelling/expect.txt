@@ -154,6 +154,7 @@ lcj
 ldflags
 letsencrypt
 Lexentale
+lftp
 lgbt
 licend
 licstart
