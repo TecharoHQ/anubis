@@ -74,6 +74,19 @@ type Server struct {
 	opts        Options
 }
 
+func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
+	// return ED25519 key if HS512 is not set
+	if len(s.hs512Secret) == 0 {
+		return func(token *jwt.Token) (interface{}, error) {
+			return s.ed25519Priv.Public().(ed25519.PublicKey), nil
+		}
+	} else {
+		return func(token *jwt.Token) (interface{}, error) {
+			return s.hs512Secret, nil
+		}
+	}
+}
+
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	var fp [32]byte
 	if len(s.hs512Secret) == 0 {
@@ -154,16 +167,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	var token *jwt.Token
-	if len(s.hs512Secret) == 0 {
-		token, err = jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return s.ed25519Priv.Public().(ed25519.PublicKey), nil
-		}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
-	} else {
-		token, err = jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return s.hs512Secret, nil
-		}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
-	}
+	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
