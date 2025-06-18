@@ -163,7 +163,6 @@ Other changes:
 - Moved all CSS inline to the Xess package, changed colors to be CSS variables
 - Set or append to `X-Forwarded-For` header unless the remote connects over a loopback address [#328](https://github.com/TecharoHQ/anubis/issues/328)
 - Fixed mojeekbot user agent regex
-- Added support for running anubis behind a base path (e.g. `/myapp`)
 - Reduce Anubis' paranoia with user cookies ([#365](https://github.com/TecharoHQ/anubis/pull/365))
 - Added support for Open Graph passthrough while using unix sockets
 - The Open Graph subsystem now passes the HTTP `HOST` header through to the origin
