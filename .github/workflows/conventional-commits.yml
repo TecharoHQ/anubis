@@ -12,13 +12,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
           cache: npm
+
       - name: Install commitlint
-        run: npm install -D @commitlint/cli @commitlint/config-conventional
+        run: npm ci
 
       - name: Validate current commit (last commit) with commitlint
         if: github.event_name == 'push'
