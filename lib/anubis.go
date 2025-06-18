@@ -394,7 +394,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		"method":     rule.Challenge.Algorithm,
 		"policyRule": rule.Hash(),
 		"action":     string(cr.Rule),
-		"src_ip":     r.Header.Get("X-Forwarded-For"),
 	})
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
