@@ -7,10 +7,16 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 func TestCheckCache(t *testing.T) {
-	cache := NewOGTagCache("http://example.com", true, time.Minute, false)
+	cache := NewOGTagCache("http://example.com", config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+	})
 
 	// Set up test data
 	urlStr := "http://example.com/page"
@@ -69,7 +75,11 @@ func TestGetOGTags(t *testing.T) {
 	defer ts.Close()
 
 	// Create an instance of OGTagCache with a short TTL for testing
-	cache := NewOGTagCache(ts.URL, true, 1*time.Minute, false)
+	cache := NewOGTagCache(ts.URL, config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+	})
 
 	// Parse the test server URL
 	parsedURL, err := url.Parse(ts.URL)
@@ -216,7 +226,11 @@ func TestGetOGTagsWithHostConsideration(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			loadCount = 0 // Reset load count for each test case
-			cache := NewOGTagCache(ts.URL, true, 1*time.Minute, tc.ogCacheConsiderHost)
+			cache := NewOGTagCache(ts.URL, config.OpenGraph{
+				Enabled:      true,
+				TimeToLive:   time.Minute,
+				ConsiderHost: tc.ogCacheConsiderHost,
+			})
 
 			for i, req := range tc.requests {
 				ogTags, err := cache.GetOGTags(parsedURL, req.host)
