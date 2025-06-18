@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis/data"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 func p[V any](v V) *V { return &v }
@@ -313,12 +312,8 @@ func TestConfigValidBad(t *testing.T) {
 			}
 			defer fin.Close()
 
-			var c fileConfig
-			if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
-				t.Fatalf("can't decode file: %v", err)
-			}
-
-			if err := c.Valid(); err == nil {
+			_, err = Load(fin, filepath.Join("testdata", "bad", st.Name()))
+			if err == nil {
 				t.Fatal("validation should have failed but didn't somehow")
 			} else {
 				t.Log(err)

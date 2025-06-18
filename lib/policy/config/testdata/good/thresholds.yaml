@@ -1,0 +1,38 @@
+bots:
+  - name: simple-weight-adjust
+    action: WEIGH
+    user_agent_regex: Mozilla
+    weight:
+      adjust: 5
+
+thresholds:
+  - name: minimal-suspicion
+    expression: weight < 0
+    action: ALLOW
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight >= 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      algorithm: metarefresh
+      difficulty: 1
+      report_as: 1
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 2
+      report_as: 2
+  - name: extreme-suspicion
+    expression: weight >= 20
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 4
+      report_as: 4
