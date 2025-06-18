@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
+
+	"github.com/TecharoHQ/anubis"
 )
 
 var (
@@ -13,46 +15,15 @@ var (
 
 	DefaultThresholds = []Threshold{
 		{
-			Name: "minimal-suspicion",
+			Name: "legacy-anubis-behaviour",
 			Expression: &ExpressionOrList{
-				Expression: "weight < 0",
-			},
-			Action: RuleAllow,
-		},
-		{
-			Name: "mild-suspicion",
-			Expression: &ExpressionOrList{
-				All: []string{"weight >= 0", "weight < 10"},
-			},
-			Action: RuleChallenge,
-			Challenge: &ChallengeRules{
-				Algorithm:  "metarefresh",
-				Difficulty: 1,
-				ReportAs:   1,
-			},
-		},
-		{
-			Name: "moderate-suspicion",
-			Expression: &ExpressionOrList{
-				All: []string{"weight >= 10", "weight < 20"},
+				Expression: "weight > 0",
 			},
 			Action: RuleChallenge,
 			Challenge: &ChallengeRules{
 				Algorithm:  "fast",
-				Difficulty: 2,
-				ReportAs:   2,
-			},
-		},
-		{
-			Name: "extreme-suspicion",
-			Expression: &ExpressionOrList{
-				Expression: "weight >= 20",
-			},
-			Action: RuleChallenge,
-			Challenge: &ChallengeRules{
-				Algorithm:  "fast",
-				Difficulty: 4,
-				ReportAs:   4,
+				Difficulty: anubis.DefaultDifficulty,
+				ReportAs:   anubis.DefaultDifficulty,
 			},
 		},
 	}

@@ -85,7 +85,7 @@ func TestDefaultThresholdsValid(t *testing.T) {
 	for i, th := range DefaultThresholds {
 		t.Run(fmt.Sprintf("%d %s", i, th.Name), func(t *testing.T) {
 			if err := th.Valid(); err != nil {
-				fmt.Errorf("threshold invalid: %v", err)
+				t.Errorf("threshold invalid: %v", err)
 			}
 		})
 	}

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
+	"sync/atomic"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,6 +19,7 @@ var (
 	}, []string{"rule", "action"})
 
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
+	warnedAboutThresholds             = &atomic.Bool{}
 )
 
 type ParsedConfig struct {
@@ -128,6 +131,16 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 	}
 
 	for _, t := range c.Thresholds {
+		if t.Name == "legacy-anubis-behaviour" && t.Expression.String() == "true" {
+			if !warnedAboutThresholds.Load() {
+				slog.Warn("configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")
+				warnedAboutThresholds.Store(true)
+			}
+
+			t.Challenge.Difficulty = defaultDifficulty
+			t.Challenge.ReportAs = defaultDifficulty
+		}
+
 		threshold, err := ParsedThresholdFromConfig(t)
 		if err != nil {
 			validationErrs = append(validationErrs, fmt.Errorf("can't compile threshold config for %s: %w", t.Name, err))
