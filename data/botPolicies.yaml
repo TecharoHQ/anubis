@@ -79,6 +79,9 @@ status_codes:
 #     weight
 #   - action: the Anubis action to apply, similar to in a bot policy
 #   - challenge: which challenge to send to the user, similar to in a bot policy
+#
+# See https://anubis.techaro.lol/docs/admin/configuration/thresholds for more
+# information.
 thresholds:
   # By default Anubis ships with the following thresholds:
   - name: minimal-suspicion # This client is likely fine, its soul is lighter than a feather

@@ -12,6 +12,7 @@ var (
 	ErrThresholdMustHaveName               = errors.New("config.Threshold: must set name")
 	ErrThresholdMustHaveExpression         = errors.New("config.Threshold: must set expression")
 	ErrThresholdChallengeMustHaveChallenge = errors.New("config.Threshold: a threshold with the CHALLENGE action must have challenge set")
+	ErrThresholdCannotHaveWeighAction      = errors.New("config.Threshold: a threshold cannot have the WEIGH action")
 
 	DefaultThresholds = []Threshold{
 		{
@@ -55,6 +56,10 @@ func (t Threshold) Valid() error {
 
 	if err := t.Action.Valid(); err != nil {
 		errs = append(errs, err)
+	}
+
+	if t.Action == RuleWeigh {
+		errs = append(errs, ErrThresholdCannotHaveWeighAction)
 	}
 
 	if t.Action == RuleChallenge && t.Challenge == nil {
