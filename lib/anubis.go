@@ -465,7 +465,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		if matches {
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
 				Challenge: t.Challenge,
-				Rules:     &policy.CheckerList{},
+				Rules:     &checker.List{},
 			}, nil
 		}
 	}
