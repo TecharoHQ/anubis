@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrNoThresholdRulesDefined             = errors.New("config: no thresholds defined")
-	ErrThresholdMustHaveName               = errors.New("config.Thresold: must set name")
+	ErrThresholdMustHaveName               = errors.New("config.Threshold: must set name")
 	ErrThresholdMustHaveExpression         = errors.New("config.Threshold: must set expression")
 	ErrThresholdChallengeMustHaveChallenge = errors.New("config.Threshold: a threshold with the CHALLENGE action must have challenge set")
 

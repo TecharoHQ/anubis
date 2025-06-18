@@ -8,7 +8,7 @@ import (
 
 type Threshold struct {
 	config.Threshold
-	program cel.Program
+	Program cel.Program
 }
 
 func ParsedThresholdFromConfig(t config.Threshold) (*Threshold, error) {
@@ -26,7 +26,22 @@ func ParsedThresholdFromConfig(t config.Threshold) (*Threshold, error) {
 		return nil, err
 	}
 
-	result.program = program
+	result.Program = program
 
 	return result, nil
+}
+
+type ThresholdRequest struct {
+	Weight int
+}
+
+func (tr *ThresholdRequest) Parent() cel.Activation { return nil }
+
+func (tr *ThresholdRequest) ResolveName(name string) (any, bool) {
+	switch name {
+	case "weight":
+		return tr.Weight, true
+	default:
+		return nil, false
+	}
 }

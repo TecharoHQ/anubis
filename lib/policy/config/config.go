@@ -399,6 +399,15 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		}
 	}
 
+	for _, t := range c.Thresholds {
+		if err := t.Valid(); err != nil {
+			validationErrs = append(validationErrs, err)
+			continue
+		}
+
+		result.Thresholds = append(result.Thresholds, t)
+	}
+
 	if len(validationErrs) > 0 {
 		return nil, fmt.Errorf("errors validating policy config %s: %w", fname, errors.Join(validationErrs...))
 	}
@@ -408,6 +417,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 
 type Config struct {
 	Bots        []BotConfig
+	Thresholds  []Threshold
 	DNSBL       bool
 	StatusCodes StatusCodes
 }

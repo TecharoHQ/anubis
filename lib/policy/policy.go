@@ -127,6 +127,16 @@ func ParseConfig(fin io.Reader, fname string, defaultDifficulty int) (*ParsedCon
 		result.Bots = append(result.Bots, parsedBot)
 	}
 
+	for _, t := range c.Thresholds {
+		threshold, err := ParsedThresholdFromConfig(t)
+		if err != nil {
+			validationErrs = append(validationErrs, fmt.Errorf("can't compile threshold config for %s: %w", t.Name, err))
+			continue
+		}
+
+		result.Thresholds = append(result.Thresholds, threshold)
+	}
+
 	if len(validationErrs) > 0 {
 		return nil, fmt.Errorf("errors validating policy config JSON %s: %w", fname, errors.Join(validationErrs...))
 	}
