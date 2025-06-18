@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The default `favicon` pattern in `data/common/keep-internet-working.yaml` has been updated to permit requests for png/gif/jpg/svg files as well as ico.
 - The `--cookie-prefix` flag has been fixed so that it is fully respected.
 - The default patterns in `data/common/keep-internet-working.yaml` have been updated to appropriately escape the '.' character in the regular expression patterns.
+- Add optional restrictions based on the value of a header
 
 ### Breaking changes
 

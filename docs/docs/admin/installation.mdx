@@ -96,12 +96,21 @@ If you don't know or understand what these settings mean, ignore them. These are
 
 :::
 
+<<<<<<< HEAD
 | Environment Variable          | Default value | Explanation                                                                                                                                                             |
 | :---------------------------- | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TARGET_SNI`                  | unset         | If set, overrides the TLS handshake hostname in requests forwarded to `TARGET`.                                                                                         |
 | `TARGET_HOST`                 | unset         | If set, overrides the Host header in requests forwarded to `TARGET`.                                                                                                    |
 | `TARGET_INSECURE_SKIP_VERIFY` | `false`       | If `true`, skip TLS certificate validation for targets that listen over `https`. If your backend does not listen over `https`, ignore this setting.                     |
 | `HS512_SECRET`                | unset         | Secret string for JWT HS512 algorithm. If this is not set, Anubis will use ED25519 as defined via the variables above. The longer the better; 128 chars should suffice. |
+=======
+| Environment Variable          | Default value | Explanation                                                                                                                                         |
+| :---------------------------- | :------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TARGET_SNI`                  | unset         | If set, overrides the TLS handshake hostname in requests forwarded to `TARGET`.                                                                     |
+| `TARGET_HOST`                 | unset         | If set, overrides the Host header in requests forwarded to `TARGET`.                                                                                |
+| `TARGET_INSECURE_SKIP_VERIFY` | `false`       | If `true`, skip TLS certificate validation for targets that listen over `https`. If your backend does not listen over `https`, ignore this setting. |
+| `JWT_RESTRICTION_HEADER       | unset         | If set, the JWT is only valid if the current value of this header matched the value when the JWT was created. Example: `X-Real-IP`                  |
+>>>>>>> 22f32dc (Add JWTRestrictionHeader to docs)
 
 </details>
 
