@@ -83,7 +83,7 @@ var (
 	thothInsecure        = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
 	thothToken           = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
-	jwtRestrictionHeader = flag.String("jwt-restriction-header", "", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
+	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
