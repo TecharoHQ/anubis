@@ -26,6 +26,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -87,6 +88,8 @@ func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 	}
 }
 
+
+
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	var fp [32]byte
 	if len(s.hs512Secret) == 0 {
@@ -126,7 +129,8 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy\"")
+		localizer := localization.GetLocalizer(r)
+		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy\"", localizer.T("internal_server_error")))
 		return
 	}
 
@@ -210,6 +214,8 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
+	localizer := localization.GetLocalizer(r)
+
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.Debug("allowing traffic to origin (explicit)")
@@ -220,13 +226,13 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
-			s.respondWithError(w, r, "Internal Server Error: Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.RuleDeny\"")
+			s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.RuleDeny\"", localizer.T("internal_server_error")))
 			return true
 		}
 		hash := rule.Hash()
 
 		lg.Debug("rule hash", "hash", hash)
-		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
+		s.respondWithStatus(w, r, fmt.Sprintf("%s %s", localizer.T("access_denied"), hash), s.policy.StatusCodes.Deny)
 		return true
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
@@ -237,7 +243,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 	default:
 		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
 		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
-		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.Rules\"")
+		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.Rules\"", localizer.T("internal_server_error")))
 		return true
 	}
 	return false
@@ -258,7 +264,12 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 
 		if resp != dnsbl.AllGood {
 			lg.Info("DNSBL hit", "status", resp.String())
-			s.respondWithStatus(w, r, fmt.Sprintf("DroneBL reported an entry: %s, see https://dronebl.org/lookup?ip=%s", resp.String(), ip), s.policy.StatusCodes.Deny)
+			localizer := localization.GetLocalizer(r)
+			s.respondWithStatus(w, r, fmt.Sprintf("%s: %s, %s https://dronebl.org/lookup?ip=%s", 
+				localizer.T("dronebl_entry"), 
+				resp.String(), 
+				localizer.T("see_dronebl_lookup"), 
+				ip), s.policy.StatusCodes.Deny)
 			return true
 		}
 	}
@@ -267,6 +278,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
+	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
 	if redir == "" {
@@ -276,7 +288,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		encoder.Encode(struct {
 			Error string `json:"error"`
 		}{
-			Error: "Invalid invocation of MakeChallenge",
+			Error: localizer.T("invalid_invocation"),
 		})
 		return
 	}
@@ -291,7 +303,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		err := encoder.Encode(struct {
 			Error string `json:"error"`
 		}{
-			Error: "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"makeChallenge\"",
+			Error: fmt.Sprintf("%s \"makeChallenge\"", localizer.T("internal_server_error")),
 		})
 		if err != nil {
 			lg.Error("failed to encode error response", "err", err)
@@ -322,6 +334,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
+	localizer := localization.GetLocalizer(r)
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
@@ -333,7 +346,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
 		s.ClearCookie(w, anubis.TestCookieName, "/", r.Host)
 		lg.Warn("user has cookies disabled, this is not an anubis bug")
-		s.respondWithError(w, r, "Your browser is configured to disable cookies. Anubis requires cookies for the legitimate interest of making sure you are a valid client. Please enable cookies for this domain")
+		s.respondWithError(w, r, localizer.T("cookies_disabled"))
 		return
 	}
 
@@ -343,7 +356,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	redirURL, err := url.ParseRequestURI(redir)
 	if err != nil {
 		lg.Error("invalid redirect", "err", err)
-		s.respondWithError(w, r, "Invalid redirect")
+		s.respondWithError(w, r, localizer.T("invalid_redirect"))
 		return
 	}
 	// used by the path checker rule
@@ -351,18 +364,18 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	urlParsed, err := r.URL.Parse(redir)
 	if err != nil {
-		s.respondWithError(w, r, "Redirect URL not parseable")
+		s.respondWithError(w, r, localizer.T("redirect_not_parseable"))
 		return
 	}
 	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
-		s.respondWithError(w, r, "Redirect domain not allowed")
+		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"))
 		return
 	}
 
 	cr, rule, err := s.check(r)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"passChallenge\"")
+		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")))
 		return
 	}
 	lg = lg.With("check_result", cr)
@@ -370,7 +383,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	impl, ok := challenge.Get(rule.Challenge.Algorithm)
 	if !ok {
 		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to file a bug as Anubis is trying to use challenge method %s but it does not exist in the challenge registry", rule.Challenge.Algorithm))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
 		return
 	}
 
@@ -403,7 +416,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
-		s.respondWithError(w, r, "failed to sign JWT")
+		s.respondWithError(w, r, localizer.T("failed_to_sign_jwt"))
 		return
 	}
 

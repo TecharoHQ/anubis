@@ -8,6 +8,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
@@ -33,8 +34,10 @@ func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *challenge.IssueInput)
 	q.Set("redir", r.URL.String())
 	q.Set("challenge", in.Challenge)
 	u.RawQuery = q.Encode()
+	
+	loc := localization.GetLocalizer(r)
+	component, err := web.BaseWithChallengeAndOGTags(loc.T("making_sure_not_bot"), page(in.Challenge, u.String(), in.Rule.Challenge.Difficulty), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags, loc.Localizer)
 
-	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", page(in.Challenge, u.String(), in.Rule.Challenge.Difficulty), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags)
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
 	}
