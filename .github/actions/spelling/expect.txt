@@ -44,7 +44,6 @@ chall
 challengemozilla
 checkpath
 checkresult
-chen
 chibi
 cidranger
 ckie
@@ -61,7 +60,6 @@ DDOS
 Debian
 debrpm
 decaymap
-decompiling
 Diffbot
 discordapp
 discordbot
@@ -300,6 +298,7 @@ xess
 xff
 XForwarded
 XNG
+XOB
 XReal
 yae
 YAMLTo
