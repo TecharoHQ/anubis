@@ -45,7 +45,7 @@ func spawnAnubis(t *testing.T, opts Options) *Server {
 	t.Helper()
 
 	if opts.Policy == nil {
-		opts.Policy = loadPolicies(t, "")
+		opts.Policy = loadPolicies(t, "", 4)
 	}
 
 	s, err := New(opts)
