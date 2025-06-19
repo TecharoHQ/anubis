@@ -326,7 +326,7 @@ type fileConfig struct {
 	Bots        []BotOrImport `json:"bots"`
 	DNSBL       bool          `json:"dnsbl"`
 	StatusCodes StatusCodes   `json:"status_codes"`
-	Thresholds  []Threshold   `json:"threshold"`
+	Thresholds  []Threshold   `json:"thresholds"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -344,10 +344,6 @@ func (c *fileConfig) Valid() error {
 
 	if err := c.StatusCodes.Valid(); err != nil {
 		errs = append(errs, err)
-	}
-
-	if len(c.Thresholds) == 0 {
-		errs = append(errs, ErrNoThresholdRulesDefined)
 	}
 
 	for i, t := range c.Thresholds {
@@ -369,7 +365,6 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			Challenge: http.StatusOK,
 			Deny:      http.StatusOK,
 		},
-		Thresholds: DefaultThresholds,
 	}
 
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
@@ -405,6 +400,10 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 
 			result.Bots = append(result.Bots, *boi.BotConfig)
 		}
+	}
+
+	if len(c.Thresholds) == 0 {
+		c.Thresholds = DefaultThresholds
 	}
 
 	for _, t := range c.Thresholds {

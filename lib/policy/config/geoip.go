@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	countryCodeRegexp = regexp.MustCompile(`^\w{2}$`)
+	countryCodeRegexp = regexp.MustCompile(`^[a-zA-Z]{2}$`)
 
 	ErrNotCountryCode = errors.New("config.Bot: invalid country code")
 )
