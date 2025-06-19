@@ -84,6 +84,30 @@ bots:
 
 dnsbl: false
 
+# Open Graph passthrough configuration, see here for more information:
+# https://anubis.techaro.lol/docs/admin/configuration/open-graph/
+openGraph:
+  # Enables Open Graph passthrough
+  enabled: false
+  # Enables the use of the HTTP host in the cache key, this enables
+  # caching metadata for multiple http hosts at once.
+  considerHost: false
+  # How long cached OpenGraph metadata should last in memory
+  ttl: 24h
+  # # If set, return these opengraph values instead of looking them up with
+  # # the target service.
+  # #
+  # # Correlates to properties in https://ogp.me/
+  # override:
+  #   # og:title is required, it is the title of the website
+  #   "og:title": "Techaro Anubis"
+  #   "og:description": >-
+  #     Anubis is a Web AI Firewall Utility that helps you fight the bots
+  #     away so that you can maintain uptime at work!
+  #   "description": >-
+  #     Anubis is a Web AI Firewall Utility that helps you fight the bots
+  #     away so that you can maintain uptime at work!
+
 # By default, send HTTP 200 back to clients that either get issued a challenge
 # or a denial. This seems weird, but this is load-bearing due to the fact that
 # the most aggressive scraper bots seem to really, really, want an HTTP 200 and
