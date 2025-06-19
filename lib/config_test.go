@@ -26,7 +26,7 @@ func TestBadConfigs(t *testing.T) {
 	for _, st := range finfos {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
-			if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("policy", "config", "testdata", "good", st.Name()), anubis.DefaultDifficulty); err == nil {
+			if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("policy", "config", "testdata", "bad", st.Name()), anubis.DefaultDifficulty); err == nil {
 				t.Fatal(err)
 			} else {
 				t.Log(err)
