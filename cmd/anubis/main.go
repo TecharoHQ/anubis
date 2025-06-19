@@ -48,6 +48,7 @@ var (
 	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
 	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
@@ -290,11 +291,15 @@ func main() {
 			"this may result in unexpected behavior")
 	}
 
-	var priv ed25519.PrivateKey
-	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
+	var ed25519Priv ed25519.PrivateKey
+	if *hs512Secret != "" && (*ed25519PrivateKeyHex != "" || *ed25519PrivateKeyHexFile != "") {
+		log.Fatal("do not specify both HS512 and ED25519 secrets")
+	} else if *hs512Secret != "" {
+		ed25519Priv = ed25519.PrivateKey(*hs512Secret)
+	} else if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
 		log.Fatal("do not specify both ED25519_PRIVATE_KEY_HEX and ED25519_PRIVATE_KEY_HEX_FILE")
 	} else if *ed25519PrivateKeyHex != "" {
-		priv, err = keyFromHex(*ed25519PrivateKeyHex)
+		ed25519Priv, err = keyFromHex(*ed25519PrivateKeyHex)
 		if err != nil {
 			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
 		}
@@ -304,12 +309,12 @@ func main() {
 			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
 		}
 
-		priv, err = keyFromHex(string(bytes.TrimSpace(hexFile)))
+		ed25519Priv, err = keyFromHex(string(bytes.TrimSpace(hexFile)))
 		if err != nil {
 			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
 		}
 	} else {
-		_, priv, err = ed25519.GenerateKey(rand.Reader)
+		_, ed25519Priv, err = ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
@@ -337,7 +342,8 @@ func main() {
 		Next:                 rp,
 		Policy:               policy,
 		ServeRobotsTXT:       *robotsTxt,
-		PrivateKey:           priv,
+		ED25519PrivateKey:    ed25519Priv,
+		HS512Secret:          []byte(*hs512Secret),
 		CookieDomain:         *cookieDomain,
 		CookieExpiration:     *cookieExpiration,
 		CookiePartitioned:    *cookiePartitioned,
