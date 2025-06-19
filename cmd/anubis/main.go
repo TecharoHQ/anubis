@@ -337,7 +337,7 @@ func main() {
 		policy.OpenGraph.Enabled = *ogPassthrough
 		policy.OpenGraph.ConsiderHost = *ogCacheConsiderHost
 		policy.OpenGraph.TimeToLive = *ogTimeToLive
-		policy.OpenGraph.Default = map[string]string{}
+		policy.OpenGraph.Override = map[string]string{}
 	}
 
 	s, err := libanubis.New(libanubis.Options{
