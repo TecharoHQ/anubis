@@ -16,13 +16,13 @@ type openGraphFileConfig struct {
 	Enabled      bool              `json:"enabled" yaml:"enabled"`
 	ConsiderHost bool              `json:"considerHost" yaml:"enabled"`
 	TimeToLive   string            `json:"ttl" yaml:"ttl"`
-	Default      map[string]string `json:"default" yaml:"default"`
+	Override     map[string]string `json:"override,omitempty" yaml:"override,omitempty"`
 }
 
 type OpenGraph struct {
 	Enabled      bool              `json:"enabled" yaml:"enabled"`
 	ConsiderHost bool              `json:"considerHost" yaml:"enabled"`
-	Default      map[string]string `json:"default" yaml:"default"`
+	Override     map[string]string `json:"override,omitempty" yaml:"override,omitempty"`
 	TimeToLive   time.Duration     `json:"ttl" yaml:"ttl"`
 }
 
@@ -33,11 +33,11 @@ func (og *openGraphFileConfig) Valid() error {
 		errs = append(errs, fmt.Errorf("%w: ParseDuration(%q) returned: %w", ErrOpenGraphTTLDoesNotParse, og.TimeToLive, err))
 	}
 
-	if len(og.Default) != 0 {
+	if len(og.Override) != 0 {
 		for _, tag := range []string{
 			"og:title",
 		} {
-			if _, ok := og.Default[tag]; !ok {
+			if _, ok := og.Override[tag]; !ok {
 				errs = append(errs, fmt.Errorf("%w: %s", ErrOpenGraphMissingProperty, tag))
 			}
 		}

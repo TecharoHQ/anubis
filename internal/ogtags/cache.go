@@ -13,8 +13,8 @@ func (c *OGTagCache) GetOGTags(url *url.URL, originalHost string) (map[string]st
 		return nil, errors.New("nil URL provided, cannot fetch OG tags")
 	}
 
-	if len(c.ogDefault) != 0 {
-		return c.ogDefault, nil
+	if len(c.ogOverride) != 0 {
+		return c.ogOverride, nil
 	}
 
 	target := c.getTarget(url)

@@ -33,7 +33,7 @@ type OGTagCache struct {
 	ogTimeToLive        time.Duration
 	ogCacheConsiderHost bool
 	ogPassthrough       bool
-	ogDefault           map[string]string
+	ogOverride          map[string]string
 }
 
 func NewOGTagCache(target string, conf config.OpenGraph) *OGTagCache {
@@ -82,7 +82,7 @@ func NewOGTagCache(target string, conf config.OpenGraph) *OGTagCache {
 		ogPassthrough:       conf.Enabled,
 		ogTimeToLive:        conf.TimeToLive,
 		ogCacheConsiderHost: conf.ConsiderHost,
-		ogDefault:           conf.Default,
+		ogOverride:          conf.Override,
 		approvedTags:        defaultApprovedTags,
 		approvedPrefixes:    defaultApprovedPrefixes,
 		client:              client,

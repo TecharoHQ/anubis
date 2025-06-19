@@ -20,7 +20,7 @@ func TestCacheReturnsDefault(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-		Default:      want,
+		Override:     want,
 	})
 
 	u, err := url.Parse("https://anubis.techaro.lol")

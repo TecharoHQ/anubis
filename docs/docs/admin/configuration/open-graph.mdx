@@ -20,11 +20,11 @@ openGraph:
   considerHost: true
   # How long cached OpenGraph metadata should last in memory
   ttl: 24h
-  # If set, return these default values instead of looking up with
+  # If set, return these opengraph values instead of looking them up with
   # the target service.
   #
   # Correlates to properties in https://ogp.me/
-  default:
+  override:
     # og:title is required, it is the title of the website
     "og:title": "Techaro Anubis"
     "og:description": >-

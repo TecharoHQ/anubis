@@ -393,7 +393,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		OpenGraph: OpenGraph{
 			Enabled:      c.OpenGraph.Enabled,
 			ConsiderHost: c.OpenGraph.ConsiderHost,
-			Default:      c.OpenGraph.Default,
+			Override:     c.OpenGraph.Override,
 		},
 		StatusCodes: c.StatusCodes,
 	}

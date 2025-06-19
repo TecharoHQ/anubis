@@ -17,7 +17,7 @@ func TestOpenGraphFileConfigValid(t *testing.T) {
 				Enabled:      true,
 				ConsiderHost: false,
 				TimeToLive:   "1h",
-				Default:      map[string]string{},
+				Override:     map[string]string{},
 			},
 			err: nil,
 		},
@@ -27,7 +27,7 @@ func TestOpenGraphFileConfigValid(t *testing.T) {
 				Enabled:      true,
 				ConsiderHost: false,
 				TimeToLive:   "1h",
-				Default: map[string]string{
+				Override: map[string]string{
 					"og:title": "foobar",
 				},
 			},
@@ -39,7 +39,7 @@ func TestOpenGraphFileConfigValid(t *testing.T) {
 				Enabled:      true,
 				ConsiderHost: false,
 				TimeToLive:   "taco",
-				Default:      map[string]string{},
+				Override:     map[string]string{},
 			},
 			err: ErrOpenGraphTTLDoesNotParse,
 		},
@@ -49,7 +49,7 @@ func TestOpenGraphFileConfigValid(t *testing.T) {
 				Enabled:      true,
 				ConsiderHost: false,
 				TimeToLive:   "1h",
-				Default: map[string]string{
+				Override: map[string]string{
 					"description": "foobar",
 				},
 			},
