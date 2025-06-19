@@ -24,12 +24,16 @@ func init() {
 	internal.InitSlog("debug")
 }
 
-func loadPolicies(t *testing.T, fname string) *policy.ParsedConfig {
+func loadPolicies(t *testing.T, fname string, difficulty int) *policy.ParsedConfig {
 	t.Helper()
 
 	ctx := thothmock.WithMockThoth(t)
 
-	anubisPolicy, err := LoadPoliciesOrDefault(ctx, fname, anubis.DefaultDifficulty)
+	if fname == "" {
+		fname = "./testdata/test_config.yaml"
+	}
+
+	anubisPolicy, err := LoadPoliciesOrDefault(ctx, fname, difficulty)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,8 +180,7 @@ func TestLoadPolicies(t *testing.T) {
 
 // Regression test for CVE-2025-24369
 func TestCVE2025_24369(t *testing.T) {
-	pol := loadPolicies(t, "")
-	pol.DefaultDifficulty = 4
+	pol := loadPolicies(t, "", anubis.DefaultDifficulty)
 
 	srv := spawnAnubis(t, Options{
 		Next:   http.NewServeMux(),
@@ -200,8 +203,7 @@ func TestCVE2025_24369(t *testing.T) {
 }
 
 func TestCookieCustomExpiration(t *testing.T) {
-	pol := loadPolicies(t, "")
-	pol.DefaultDifficulty = 0
+	pol := loadPolicies(t, "", 0)
 	ckieExpiration := 10 * time.Minute
 
 	srv := spawnAnubis(t, Options{
@@ -250,8 +252,7 @@ func TestCookieCustomExpiration(t *testing.T) {
 }
 
 func TestCookieSettings(t *testing.T) {
-	pol := loadPolicies(t, "")
-	pol.DefaultDifficulty = 0
+	pol := loadPolicies(t, "", 0)
 
 	srv := spawnAnubis(t, Options{
 		Next:   http.NewServeMux(),
@@ -316,10 +317,7 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 	for i := 1; i < 10; i++ {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			anubisPolicy, err := LoadPoliciesOrDefault(t.Context(), "", i)
-			if err != nil {
-				t.Fatal(err)
-			}
+			anubisPolicy := loadPolicies(t, "", i)
 
 			s, err := New(Options{
 				Next:           h,
@@ -337,10 +335,12 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 			req.Header.Add("X-Real-Ip", "127.0.0.1")
 
-			_, bot, err := s.check(req)
+			cr, bot, err := s.check(req)
 			if err != nil {
 				t.Fatal(err)
 			}
+
+			t.Log(cr.Name)
 
 			if bot.Challenge.Difficulty != i {
 				t.Errorf("Challenge.Difficulty is wrong, wanted %d, got: %d", i, bot.Challenge.Difficulty)
@@ -389,8 +389,7 @@ func TestBasePrefix(t *testing.T) {
 			// Reset the global BasePrefix before each test
 			anubis.BasePrefix = ""
 
-			pol := loadPolicies(t, "")
-			pol.DefaultDifficulty = 4
+			pol := loadPolicies(t, "", 4)
 
 			srv := spawnAnubis(t, Options{
 				Next:       h,
@@ -518,8 +517,7 @@ func TestCustomStatusCodes(t *testing.T) {
 		"DENY":      403,
 	}
 
-	pol := loadPolicies(t, "./testdata/aggressive_403.yaml")
-	pol.DefaultDifficulty = 4
+	pol := loadPolicies(t, "./testdata/aggressive_403.yaml", 4)
 
 	srv := spawnAnubis(t, Options{
 		Next:   h,
@@ -553,7 +551,7 @@ func TestCustomStatusCodes(t *testing.T) {
 func TestCloudflareWorkersRule(t *testing.T) {
 	for _, variant := range []string{"cel", "header"} {
 		t.Run(variant, func(t *testing.T) {
-			pol := loadPolicies(t, "./testdata/cloudflare-workers-"+variant+".yaml")
+			pol := loadPolicies(t, "./testdata/cloudflare-workers-"+variant+".yaml", 0)
 
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, "OK")
@@ -609,8 +607,7 @@ func TestCloudflareWorkersRule(t *testing.T) {
 }
 
 func TestRuleChange(t *testing.T) {
-	pol := loadPolicies(t, "testdata/rule_change.yaml")
-	pol.DefaultDifficulty = 0
+	pol := loadPolicies(t, "testdata/rule_change.yaml", 0)
 	ckieExpiration := 10 * time.Minute
 
 	srv := spawnAnubis(t, Options{
