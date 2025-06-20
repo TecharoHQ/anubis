@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/TecharoHQ/anubis/data"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -323,10 +324,11 @@ func (sc StatusCodes) Valid() error {
 }
 
 type fileConfig struct {
-	Bots        []BotOrImport `json:"bots"`
-	DNSBL       bool          `json:"dnsbl"`
-	StatusCodes StatusCodes   `json:"status_codes"`
-	Thresholds  []Threshold   `json:"threshold"`
+	Bots        []BotOrImport       `json:"bots"`
+	DNSBL       bool                `json:"dnsbl"`
+	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
+	StatusCodes StatusCodes         `json:"status_codes"`
+	Thresholds  []Threshold         `json:"thresholds"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -342,12 +344,14 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
-	if err := c.StatusCodes.Valid(); err != nil {
-		errs = append(errs, err)
+	if c.OpenGraph.Enabled {
+		if err := c.OpenGraph.Valid(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	if len(c.Thresholds) == 0 {
-		errs = append(errs, ErrNoThresholdRulesDefined)
+	if err := c.StatusCodes.Valid(); err != nil {
+		errs = append(errs, err)
 	}
 
 	for i, t := range c.Thresholds {
@@ -369,7 +373,6 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			Challenge: http.StatusOK,
 			Deny:      http.StatusOK,
 		},
-		Thresholds: DefaultThresholds,
 	}
 
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
@@ -381,8 +384,19 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 	}
 
 	result := &Config{
-		DNSBL:       c.DNSBL,
+		DNSBL: c.DNSBL,
+		OpenGraph: OpenGraph{
+			Enabled:      c.OpenGraph.Enabled,
+			ConsiderHost: c.OpenGraph.ConsiderHost,
+			Override:     c.OpenGraph.Override,
+		},
 		StatusCodes: c.StatusCodes,
+	}
+
+	if c.OpenGraph.TimeToLive != "" {
+		// XXX(Xe): already validated in Valid()
+		ogTTL, _ := time.ParseDuration(c.OpenGraph.TimeToLive)
+		result.OpenGraph.TimeToLive = ogTTL
 	}
 
 	var validationErrs []error
@@ -407,6 +421,10 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		}
 	}
 
+	if len(c.Thresholds) == 0 {
+		c.Thresholds = DefaultThresholds
+	}
+
 	for _, t := range c.Thresholds {
 		if err := t.Valid(); err != nil {
 			validationErrs = append(validationErrs, err)
@@ -427,6 +445,7 @@ type Config struct {
 	Bots        []BotConfig
 	Thresholds  []Threshold
 	DNSBL       bool
+	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
 }
 

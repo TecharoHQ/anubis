@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -88,5 +90,22 @@ func TestDefaultThresholdsValid(t *testing.T) {
 				t.Errorf("threshold invalid: %v", err)
 			}
 		})
+	}
+}
+
+func TestLoadActuallyLoadsThresholds(t *testing.T) {
+	fin, err := os.Open(filepath.Join(".", "testdata", "good", "thresholds.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close()
+
+	c, err := Load(fin, fin.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(c.Thresholds) != 4 {
+		t.Errorf("wanted 4 thresholds, got %d thresholds", len(c.Thresholds))
 	}
 }

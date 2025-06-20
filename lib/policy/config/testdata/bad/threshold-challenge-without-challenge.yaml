@@ -1,0 +1,11 @@
+bots:
+  - name: simple-weight-adjust
+    action: WEIGH
+    user_agent_regex: Mozilla
+    weight:
+      adjust: 5
+
+thresholds:
+  - name: extreme-suspicion
+    expression: "true"
+    action: WEIGH

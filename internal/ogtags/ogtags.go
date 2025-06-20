@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/decaymap"
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 const (
@@ -32,9 +33,10 @@ type OGTagCache struct {
 	ogTimeToLive        time.Duration
 	ogCacheConsiderHost bool
 	ogPassthrough       bool
+	ogOverride          map[string]string
 }
 
-func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration, ogTagsConsiderHost bool) *OGTagCache {
+func NewOGTagCache(target string, conf config.OpenGraph) *OGTagCache {
 	// Predefined approved tags and prefixes
 	defaultApprovedTags := []string{"description", "keywords", "author"}
 	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
@@ -77,9 +79,10 @@ func NewOGTagCache(target string, ogPassthrough bool, ogTimeToLive time.Duration
 	return &OGTagCache{
 		cache:               decaymap.New[string, map[string]string](),
 		targetURL:           parsedTargetURL,
-		ogPassthrough:       ogPassthrough,
-		ogTimeToLive:        ogTimeToLive,
-		ogCacheConsiderHost: ogTagsConsiderHost,
+		ogPassthrough:       conf.Enabled,
+		ogTimeToLive:        conf.TimeToLive,
+		ogCacheConsiderHost: conf.ConsiderHost,
+		ogOverride:          conf.Override,
 		approvedTags:        defaultApprovedTags,
 		approvedPrefixes:    defaultApprovedPrefixes,
 		client:              client,

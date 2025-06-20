@@ -18,6 +18,7 @@ assets: deps
 
 build: assets
 	$(GO) build -o ./var/anubis ./cmd/anubis
+	$(GO) build -o ./var/robots2policy ./cmd/robots2policy
 	@echo "Anubis is now built to ./var/anubis"
 
 lint: assets
@@ -27,6 +28,7 @@ lint: assets
 
 prebaked-build:
 	$(GO) build -o ./var/anubis -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/anubis
+	$(GO) build -o ./var/robots2policy -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/robots2policy
 
 test: assets
 	$(GO) test ./...

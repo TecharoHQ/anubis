@@ -273,14 +273,6 @@
 # Most people only have two hands. Reword.
 \b(?i)on the third hand\b
 
-# Should be `Open Graph`
-# unless talking about a specific Open Graph implementation:
-# - Java
-# - Node
-# - Py
-# - Ruby
-\bOpenGraph\b
-
 # Should be `OpenShift`
 \bOpenshift\b
 

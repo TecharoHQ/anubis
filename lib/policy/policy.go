@@ -31,6 +31,7 @@ type ParsedConfig struct {
 	Bots              []Bot
 	Thresholds        []*Threshold
 	DNSBL             bool
+	OpenGraph         config.OpenGraph
 	DefaultDifficulty int
 	StatusCodes       config.StatusCodes
 }
@@ -38,6 +39,7 @@ type ParsedConfig struct {
 func NewParsedConfig(orig *config.Config) *ParsedConfig {
 	return &ParsedConfig{
 		orig:        orig,
+		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
 	}
 }
