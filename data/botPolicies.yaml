@@ -132,14 +132,14 @@ status_codes:
 thresholds:
   # By default Anubis ships with the following thresholds:
   - name: minimal-suspicion # This client is likely fine, its soul is lighter than a feather
-    expression: weight < 0 # a feather weighs zero units
+    expression: weight <= 0 # a feather weighs zero units
     action: ALLOW # Allow the traffic through
   # For clients that had some weight reduced through custom rules, give them a
   # lightweight challenge.
   - name: mild-suspicion
     expression:
       all:
-        - weight >= 0
+        - weight > 0
         - weight < 10
     action: CHALLENGE
     challenge:
