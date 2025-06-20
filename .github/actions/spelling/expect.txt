@@ -183,7 +183,6 @@ NONINFRINGEMENT
 nosleep
 OCOB
 ogtags
-ogtitle
 omgili
 omgilibot
 openai
@@ -218,6 +217,7 @@ rawler
 rcvar
 redir
 redirectscheme
+refactors
 relayd
 reputational
 reqmeta
@@ -261,6 +261,7 @@ techarohq
 templ
 templruntime
 testarea
+Thancred
 thoth
 thothmock
 Tik
