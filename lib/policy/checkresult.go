@@ -7,9 +7,10 @@ import (
 )
 
 type CheckResult struct {
-	Name   string
-	Rule   config.Rule
-	Weight int
+	Name      string
+	Rule      config.Rule
+	Weight    int
+	RerouteTo *string
 }
 
 func (cr CheckResult) LogValue() slog.Value {
