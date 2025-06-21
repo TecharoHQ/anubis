@@ -116,13 +116,14 @@ If no rules match the request, it is allowed through. For more details on this d
 
 ## Writing your own rules
 
-There are three actions that can be returned from a rule:
+There are four actions that can be returned from a rule:
 
-| Action      | Effects                                                                           |
-| :---------- | :-------------------------------------------------------------------------------- |
-| `ALLOW`     | Bypass all further checks and send the request to the backend.                    |
-| `DENY`      | Deny the request and send back an error message that scrapers think is a success. |
-| `CHALLENGE` | Show a challenge page and/or validate that clients have passed a challenge.       |
+| Action             | Effects                                                                                                                                                                               |
+|:-------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ALLOW`            | Bypass all further checks and send the request to the backend.                                                                                                                        |
+| `DENY`             | Deny the request and send back an error message that scrapers think is a success.                                                                                                     |
+| `DENY_AND_REROUTE` | Deny the request and redirect it to an external URL (e.g. a [tarpit](https://www.pcworld.com/article/2592071/one-rebels-malicious-tar-pit-trap-is-driving-ai-scrapers-insane.html))). |
+| `CHALLENGE`        | Show a challenge page and/or validate that clients have passed a challenge.                                                                                                           |
 
 Name your rules in lower case using kebab-case. Rule names will be exposed in Prometheus metrics.
 
@@ -244,6 +245,37 @@ In case your service needs it for risk calculation reasons, Anubis exposes infor
 | `X-Anubis-Status` | The status and how strict Anubis was in its checks   | `PASS`           |
 
 Policy rules are matched using [Go's standard library regular expressions package](https://pkg.go.dev/regexp). You can mess around with the syntax at [regex101.com](https://regex101.com), make sure to select the Golang option.
+
+### Deny and Reroute Configuration
+
+The `DENY_AND_REROUTE` action allows you to redirect denied requests to external AI tarpits or honeypots. This is useful for sending bot traffic to services like [Nepenthes](https://zadzmo.org/code/nepenthes/) or [Iocaine](https://iocaine.madhouse-project.org/) that specialize in wasting bots' time and resources.
+
+<Tabs>
+<TabItem value="json" label="JSON" default>
+
+```json
+{
+  "name": "ai-scrapers-to-tarpit",
+  "user_agent_regex": "(ChatGPT|GPTBot|Claude-Web|OpenAI|Anthropic)",
+  "action": "DENY_AND_REROUTE",
+  "reroute_to": "https://tarpit.example.com/honeypot"
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```yaml
+- name: ai-scrapers-to-tarpit
+  user_agent_regex: (ChatGPT|GPTBot|Claude-Web|OpenAI|Anthropic)
+  action: DENY_AND_REROUTE
+  reroute_to: https://tarpit.example.com/honeypot
+```
+
+</TabItem>
+</Tabs>
+
+The `reroute_to` field must contain an absolute URL (including the scheme like `http://` or `https://`). When this rule matches, Anubis will send a `307 Temporary Redirect` response to redirect the client to the specified URL.
 
 ## Request Weight
 
