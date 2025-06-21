@@ -1,0 +1,26 @@
+bots:
+  - name: "reroute-bot"
+    action: "DENY_AND_REROUTE"
+    user_agent_regex: "REROUTE_ME"
+    reroute_to: "https://example.com/tarpit"
+  
+  - name: "deny-bot"
+    action: "DENY"
+    user_agent_regex: "DENY_ME"
+  
+  - name: "allow-bot"
+    action: "ALLOW"
+    user_agent_regex: "ALLOW_ME"
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 200
+
+thresholds:
+  - name: "legacy-anubis-behaviour"
+    expression: "true"
+    action: "CHALLENGE"
+    challenge:
+      algorithm: "fast"
+      difficulty: 5
+      report_as: 5

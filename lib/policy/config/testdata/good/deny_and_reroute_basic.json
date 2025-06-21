@@ -1,0 +1,31 @@
+{
+  "bots": [
+    {
+      "name": "ai-scrapers-tarpit",
+      "action": "DENY_AND_REROUTE",
+      "user_agent_regex": "(ChatGPT|GPTBot|Claude-Web)",
+      "reroute_to": "https://example.com/tarpit"
+    },
+    {
+      "name": "allow-legitimate",
+      "action": "ALLOW",
+      "user_agent_regex": "(Googlebot|Bingbot)"
+    }
+  ],
+  "status_codes": {
+    "CHALLENGE": 200,
+    "DENY": 403
+  },
+  "thresholds": [
+    {
+      "name": "legacy-anubis-behaviour",
+      "expression": "true",
+      "action": "CHALLENGE",
+      "challenge": {
+        "algorithm": "fast",
+        "difficulty": 5,
+        "report_as": 5
+      }
+    }
+  ]
+}

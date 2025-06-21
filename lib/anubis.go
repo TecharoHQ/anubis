@@ -218,6 +218,17 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		lg.Debug("rule hash", "hash", hash)
 		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
 		return true
+	case config.RuleDenyAndReroute:
+		s.ClearCookie(w, s.cookieName, cookiePath)
+		lg.Info("deny and reroute", "reroute_to", cr.RerouteTo)
+		if cr.RerouteTo == nil || *cr.RerouteTo == "" {
+			lg.Error("reroute URL is missing for DENY_AND_REROUTE action")
+			s.respondWithError(w, r, "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around \"maybeReverseProxy.RuleDenyAndReroute\"")
+			return true
+		}
+		// note for others, would it be better to be reverse proxying here?
+		http.Redirect(w, r, *cr.RerouteTo, http.StatusTemporaryRedirect)
+		return true
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
 	case config.RuleBenchmark:
@@ -412,6 +423,15 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 	}
 }
 
+func crWithReroute(name string, rule config.Rule, weight int, rerouteTo *string) policy.CheckResult {
+	return policy.CheckResult{
+		Name:      name,
+		Rule:      rule,
+		Weight:    weight,
+		RerouteTo: rerouteTo,
+	}
+}
+
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
@@ -436,6 +456,8 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			switch b.Action {
 			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
+			case config.RuleDenyAndReroute:
+				return crWithReroute("bot/"+b.Name, b.Action, weight, b.RerouteTo), &b, nil
 			case config.RuleWeigh:
 				slog.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
 				weight += b.Weight.Adjust

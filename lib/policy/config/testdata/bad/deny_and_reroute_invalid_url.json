@@ -1,0 +1,26 @@
+{
+  "bots": [
+    {
+      "name": "invalid-url",
+      "action": "DENY_AND_REROUTE",
+      "user_agent_regex": "BadBot",
+      "reroute_to": "not-a-valid-url"
+    }
+  ],
+  "status_codes": {
+    "CHALLENGE": 200,
+    "DENY": 403
+  },
+  "thresholds": [
+    {
+      "name": "legacy-anubis-behaviour",
+      "expression": "true",
+      "action": "CHALLENGE",
+      "challenge": {
+        "algorithm": "fast",
+        "difficulty": 5,
+        "report_as": 5
+      }
+    }
+  ]
+}

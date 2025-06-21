@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added `DENY_AND_REROUTE` action for redirecting denied requests to external AI tarpits ([#61](https://github.com/json-kyle/anubis/issues/61))
+
 ## v1.20.0: Thancred Waters
 
 The big ticket items are as follows:
