@@ -12,20 +12,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Implement a DNS-based challenge method: [`fcrdns`](./admin/configuration/challenges/fcrdns.mdx) ([#431](https://github.com/TecharoHQ/anubis/issues/431))
+
+## v1.20.0: Thancred Waters
+
+The big ticket items are as follows:
+
+- Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))
+- Implement request "weight", allowing administrators to customize the behaviour of Anubis based on specific criteria
+- Implement GeoIP and ASN based checks via [Thoth](https://anubis.techaro.lol/docs/admin/thoth) ([#206](https://github.com/TecharoHQ/anubis/issues/206))
+- Add [custom weight thresholds](./admin/configuration/thresholds.mdx) via CEL ([#688](https://github.com/TecharoHQ/anubis/pull/688))
+- Move Open Graph configuration [to the policy file](./admin/configuration/open-graph.mdx)
+- Enable support for Open Graph metadata to be returned by default instead of doing lookups against the target
+- Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
+- Refactor challenge presentation logic to use a challenge registry
+- Allow challenge implementations to register HTTP routes
+
+A lot of performance improvements have been made:
+
+- Replace internal SHA256 hashing with xxhash for 4-6x performance improvement in policy evaluation and cache operations
+- Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
+- Replace cidranger with bart for IP range checking, improving IP matching performance by 3-20x with zero heap
+  allocations
+
+And some cleanups/refactors were added:
+
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
-- Requests can have their weight be adjusted, if a request weighs zero or less than it is allowed through
-- Refactor challenge presentation logic to use a challenge registry
-- Allow challenge implementations to register HTTP routes
-- Implement a no-JS challenge method: [`metarefresh`](./admin/configuration/challenges/metarefresh.mdx) ([#95](https://github.com/TecharoHQ/anubis/issues/95))
-- Bump AI-robots.txt to version 1.34
+- Bump AI-robots.txt to version 1.37
 - Make progress bar styling more compatible (UXP, etc)
-- Optimized the OGTags subsystem with reduced allocations and runtime per request by up to 66%
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
-- Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
-- Implement GeoIP and ASN based checks via [Thoth](https://anubis.techaro.lol/docs/admin/thoth) ([#206](https://github.com/TecharoHQ/anubis/issues/206))
-- Replace internal SHA256 hashing with xxhash for 4-6x performance improvement in policy evaluation and cache operations
+- Fix an off-by-one in the default threshold config
+
+Request weight is one of the biggest ticket features in Anubis. This enables Anubis to be much closer to a Web Application Firewall and when combined with custom thresholds allows administrators to have Anubis take advanced reactions. For more information about request weight, see [the request weight section](./admin/policies.mdx#request-weight) of the policy file documentation.
+
+TL;DR when you have one or more WEIGHT rules like this:
+
+```yaml
+bots:
+  - name: gitea-session-token
+    action: WEIGH
+    expression:
+      all:
+        - '"Cookie" in headers'
+        - headers["Cookie"].contains("i_love_gitea=")
+    # Remove 5 weight points
+    weight:
+      adjust: -5
+```
+
+You can configure custom thresholds like this:
+
+```yaml
+thresholds:
+  - name: minimal-suspicion # This client is likely fine, its soul is lighter than a feather
+    expression: weight < 0 # a feather weighs zero units
+    action: ALLOW # Allow the traffic through
+
+  # For clients that had some weight reduced through custom rules, give them a
+  # lightweight challenge.
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight >= 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/metarefresh
+      algorithm: metarefresh
+      difficulty: 1
+      report_as: 1
+
+  # For clients that are browser-like but have either gained points from custom
+  # rules or report as a standard browser.
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
+      algorithm: fast
+      difficulty: 2 # two leading zeros, very fast for most clients
+      report_as: 2
+
+  # For clients that are browser like and have gained many points from custom
+  # rules
+  - name: extreme-suspicion
+    expression: weight >= 20
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
+      algorithm: fast
+      difficulty: 4
+      report_as: 4
+```
+
+These thresholds apply when no other `ALLOW`, `DENY`, or `CHALLENGE` rule matches the request. `WEIGHT` rules add and remove request weight as needed:
+
+```yaml
+bots:
+  - name: gitea-session-token
+    action: WEIGH
+    expression:
+      all:
+        - '"Cookie" in headers'
+        - headers["Cookie"].contains("i_love_gitea=")
+    # Remove 5 weight points
+    weight:
+      adjust: -5
+
+  - name: bot-like-user-agent
+    action: WEIGH
+    expression: '"Bot" in userAgent'
+    # Add 5 weight points
+    weight:
+      adjust: 5
+```
+
+Of note: the default "generic browser" rule assigns 10 weight points:
+
+```yaml
+# Generic catchall rule
+- name: generic-browser
+  user_agent_regex: >-
+    Mozilla|Opera
+  action: WEIGH
+  weight:
+    adjust: 10
+```
+
+Adjust this as you see fit.
 
 ## v1.19.1: Jenomis cen Lexentale - Echo 1
 
@@ -161,7 +279,6 @@ Other changes:
 - Moved all CSS inline to the Xess package, changed colors to be CSS variables
 - Set or append to `X-Forwarded-For` header unless the remote connects over a loopback address [#328](https://github.com/TecharoHQ/anubis/issues/328)
 - Fixed mojeekbot user agent regex
-- Added support for running anubis behind a base path (e.g. `/myapp`)
 - Reduce Anubis' paranoia with user cookies ([#365](https://github.com/TecharoHQ/anubis/pull/365))
 - Added support for Open Graph passthrough while using unix sockets
 - The Open Graph subsystem now passes the HTTP `HOST` header through to the origin

@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 func TestIntegrationGetOGTags(t *testing.T) {
@@ -104,7 +106,11 @@ func TestIntegrationGetOGTags(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create cache instance
-			cache := NewOGTagCache(ts.URL, true, 1*time.Minute, false)
+			cache := NewOGTagCache(ts.URL, config.OpenGraph{
+				Enabled:      true,
+				TimeToLive:   time.Minute,
+				ConsiderHost: false,
+			})
 
 			// Create URL for test
 			testURL, _ := url.Parse(ts.URL)

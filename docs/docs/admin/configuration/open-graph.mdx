@@ -9,11 +9,44 @@ This page provides detailed information on how to configure [Open Graph tag](htt
 
 ## Configuration Options
 
+Open Graph settings are configured in the `openGraph` section of the [Policy File](../policies.mdx).
+
+```yaml
+openGraph:
+  # Enables Open Graph passthrough
+  enabled: true
+  # Enables the use of the HTTP host in the cache key, this enables
+  # caching metadata for multiple http hosts at once.
+  considerHost: true
+  # How long cached OpenGraph metadata should last in memory
+  ttl: 24h
+  # If set, return these opengraph values instead of looking them up with
+  # the target service.
+  #
+  # Correlates to properties in https://ogp.me/
+  override:
+    # og:title is required, it is the title of the website
+    "og:title": "Techaro Anubis"
+    "og:description": >-
+      Anubis is a Web AI Firewall Utility that helps you fight the bots
+      away so that you can maintain uptime at work!
+    "description": >-
+      Anubis is a Web AI Firewall Utility that helps you fight the bots
+      away so that you can maintain uptime at work!
+```
+
+<details>
+<summary>Configuration flags / envvars (old)</summary>
+
+Open Graph passthrough used to be configured with configuration flags / environment variables. Reference to these settings are maintained for backwards compatibility's sake.
+
 | Name                     | Description                                               | Type     | Default | Example                       |
 | ------------------------ | --------------------------------------------------------- | -------- | ------- | ----------------------------- |
 | `OG_PASSTHROUGH`         | Enables or disables the Open Graph tag passthrough system | Boolean  | `true`  | `OG_PASSTHROUGH=true`         |
 | `OG_EXPIRY_TIME`         | Configurable cache expiration time for Open Graph tags    | Duration | `24h`   | `OG_EXPIRY_TIME=1h`           |
 | `OG_CACHE_CONSIDER_HOST` | Enables or disables the use of the host in the cache key  | Boolean  | `false` | `OG_CACHE_CONSIDER_HOST=true` |
+
+</details>
 
 ## Usage
 

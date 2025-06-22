@@ -16,7 +16,6 @@ require (
 	github.com/playwright-community/playwright-go v0.5200.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
-	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/net v0.41.0
 	google.golang.org/grpc v1.72.2
 	gopkg.in/yaml.v3 v3.0.1

@@ -1,0 +1,140 @@
+# Weight Threshold Configuration
+
+Anubis offers the ability to assign "weight" to requests. This is a custom level of suspicion that rules can add to or remove from. For example, here's how you assign 10 weight points to anything that might be a browser:
+
+```yaml
+# botPolicies.yaml
+
+bots:
+  - name: generic-browser
+    user_agent_regex: >-
+      Mozilla|Opera
+    action: WEIGH
+    weight:
+      adjust: 10
+```
+
+Thresholds let you take this per-request weight value and take actions in response to it. Thresholds are defined alongside your bot configuration in `botPolicies.yaml`.
+
+:::note
+
+Thresholds DO NOT apply when a request matches a bot rule with the CHALLENGE action. Thresholds only apply when requests don't match any terminal bot rules.
+
+:::
+
+```yaml
+# botPolicies.yaml
+
+bots: ...
+
+thresholds:
+  - name: minimal-suspicion
+    expression: weight < 0
+    action: ALLOW
+
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight >= 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      algorithm: metarefresh
+      difficulty: 1
+      report_as: 1
+
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 2
+      report_as: 2
+
+  - name: extreme-suspicion
+    expression: weight >= 20
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 4
+      report_as: 4
+```
+
+This defines a suite of 4 thresholds:
+
+1. If the request weight is less than zero, allow it through.
+2. If the request weight is greater than or equal to zero, but less than ten: give it [a very lightweight challenge](./challenges/metarefresh.mdx).
+3. If the request weight is greater than or equal to ten, but less than twenty: give it [a slightly heavier challenge](./challenges/proof-of-work.mdx).
+4. Otherwise, give it [the heaviest challenge](./challenges/proof-of-work.mdx).
+
+Thresholds can be configured with the following options:
+
+<table>
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`name`</td>
+      <td>The human-readable name for this threshold.</td>
+      <td>
+
+```yaml
+name: extreme-suspicion
+```
+
+      </td>
+    </tr>
+    <tr>
+    <td>`expression`</td>
+    <td>A [CEL](https://cel.dev/) expression taking the request weight and returning true or false</td>
+    <td>
+
+To check if the request weight is less than zero:
+
+```yaml
+expression: weight < 0
+```
+
+To check if it's between 0 and 10 (inclusive):
+
+```yaml
+expression:
+  all:
+    - weight >= 0
+    - weight < 10
+```
+
+    </td>
+    </tr>
+    <tr>
+    <td>`action`</td>
+    <td>The Anubis action to apply: `ALLOW`, `CHALLENGE`, or `DENY`</td>
+    <td>
+
+```yaml
+action: ALLOW
+```
+
+If you set the CHALLENGE action, you must set challenge details:
+
+```yaml
+action: CHALLENGE
+challenge:
+  algorithm: metarefresh
+  difficulty: 1
+  report_as: 1
+```
+
+    </td>
+    </tr>
+
+  </tbody>
+</table>

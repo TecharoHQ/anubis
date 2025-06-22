@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/cel-go/common/types"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -413,12 +414,6 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 	}
 }
 
-var (
-	weightOkayStatic    = policy.NewStaticHashChecker("weight/okay")
-	weightMildSusStatic = policy.NewStaticHashChecker("weight/mild-suspicion")
-	weightVerySusStatic = policy.NewStaticHashChecker("weight/extreme-suspicion")
-)
-
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
@@ -450,34 +445,25 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 		}
 	}
 
-	switch {
-	case weight <= 0:
-		return cr("weight/okay", config.RuleAllow, weight), &policy.Bot{
-			Challenge: &config.ChallengeRules{
-				Difficulty: s.policy.DefaultDifficulty,
-				ReportAs:   s.policy.DefaultDifficulty,
-				Algorithm:  config.DefaultAlgorithm,
-			},
-			Rules: weightOkayStatic,
-		}, nil
-	case weight > 0 && weight < 10:
-		return cr("weight/mild-suspicion", config.RuleChallenge, weight), &policy.Bot{
-			Challenge: &config.ChallengeRules{
-				Difficulty: s.policy.DefaultDifficulty,
-				ReportAs:   s.policy.DefaultDifficulty,
-				Algorithm:  "metarefresh",
-			},
-			Rules: weightMildSusStatic,
-		}, nil
-	case weight >= 10:
-		return cr("weight/extreme-suspicion", config.RuleChallenge, weight), &policy.Bot{
-			Challenge: &config.ChallengeRules{
-				Difficulty: s.policy.DefaultDifficulty,
-				ReportAs:   s.policy.DefaultDifficulty,
-				Algorithm:  "fast",
-			},
-			Rules: weightVerySusStatic,
-		}, nil
+	for _, t := range s.policy.Thresholds {
+		result, _, err := t.Program.ContextEval(r.Context(), &policy.ThresholdRequest{Weight: weight})
+		if err != nil {
+			slog.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
+			continue
+		}
+
+		var matches bool
+
+		if val, ok := result.(types.Bool); ok {
+			matches = bool(val)
+		}
+
+		if matches {
+			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
+				Challenge: t.Challenge,
+				Rules:     &checker.List{},
+			}, nil
+		}
 	}
 
 	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{

@@ -43,6 +43,8 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://wiki.dolphin-emu.org/
 - https://squirreljme.cc/
 - https://gitlab.postmarketos.org/
+- https://wiki.koha-community.org/
+- https://extensions.typo3.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/

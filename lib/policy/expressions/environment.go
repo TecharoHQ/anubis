@@ -9,20 +9,12 @@ import (
 	"github.com/google/cel-go/ext"
 )
 
-// NewEnvironment creates a new CEL environment, this is the set of
+// BotEnvironment creates a new CEL environment, this is the set of
 // variables and functions that are passed into the CEL scope so that
 // Anubis can fail loudly and early when something is invalid instead
 // of blowing up at runtime.
-func NewEnvironment() (*cel.Env, error) {
-	return cel.NewEnv(
-		ext.Strings(
-			ext.StringsLocale("en_US"),
-			ext.StringsValidateFormatCalls(true),
-		),
-
-		// default all timestamps to UTC
-		cel.DefaultUTCTimeZone(true),
-
+func BotEnvironment() (*cel.Env, error) {
+	return New(
 		// Variables exposed to CEL programs:
 		cel.Variable("remoteAddress", cel.StringType),
 		cel.Variable("host", cel.StringType),
@@ -31,8 +23,27 @@ func NewEnvironment() (*cel.Env, error) {
 		cel.Variable("path", cel.StringType),
 		cel.Variable("query", cel.MapType(cel.StringType, cel.StringType)),
 		cel.Variable("headers", cel.MapType(cel.StringType, cel.StringType)),
+	)
+}
 
-		// Functions exposed to CEL programs:
+// NewThreshold creates a new CEL environment for threshold checking.
+func ThresholdEnvironment() (*cel.Env, error) {
+	return New(
+		cel.Variable("weight", cel.IntType),
+	)
+}
+
+func New(opts ...cel.EnvOption) (*cel.Env, error) {
+	args := []cel.EnvOption{
+		ext.Strings(
+			ext.StringsLocale("en_US"),
+			ext.StringsValidateFormatCalls(true),
+		),
+
+		// default all timestamps to UTC
+		cel.DefaultUTCTimeZone(true),
+
+		// Functions exposed to all CEL programs:
 		cel.Function("randInt",
 			cel.Overload("randInt_int",
 				[]*cel.Type{cel.IntType},
@@ -47,12 +58,25 @@ func NewEnvironment() (*cel.Env, error) {
 				}),
 			),
 		),
-	)
+	}
+
+	args = append(args, opts...)
+	return cel.NewEnv(args...)
 }
 
 // Compile takes CEL environment and syntax tree then emits an optimized
 // Program for execution.
-func Compile(env *cel.Env, ast *cel.Ast) (cel.Program, error) {
+func Compile(env *cel.Env, src string) (cel.Program, error) {
+	intermediate, iss := env.Compile(src)
+	if iss != nil {
+		return nil, iss.Err()
+	}
+
+	ast, iss := env.Check(intermediate)
+	if iss != nil {
+		return nil, iss.Err()
+	}
+
 	return env.Program(
 		ast,
 		cel.EvalOptions(

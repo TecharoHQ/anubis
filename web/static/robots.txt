@@ -21,7 +21,9 @@ User-agent: Cotoyogi
 User-agent: Crawlspace
 User-agent: Diffbot
 User-agent: DuckAssistBot
+User-agent: EchoboxBot
 User-agent: FacebookBot
+User-agent: facebookexternalhit
 User-agent: Factset_spyderbot
 User-agent: FirecrawlAgent
 User-agent: FriendlyCrawler
@@ -42,6 +44,7 @@ User-agent: Meta-ExternalAgent
 User-agent: meta-externalfetcher
 User-agent: Meta-ExternalFetcher
 User-agent: MistralAI-User/1.0
+User-agent: MyCentralAIScraperBot
 User-agent: NovaAct
 User-agent: OAI-SearchBot
 User-agent: omgili
@@ -54,12 +57,17 @@ User-agent: Perplexity-User
 User-agent: PerplexityBot
 User-agent: PetalBot
 User-agent: PhindBot
+User-agent: Poseidon Research Crawler
 User-agent: QualifiedBot
 User-agent: QuillBot
 User-agent: quillbot.com
 User-agent: SBIntuitionsBot
 User-agent: Scrapy
+User-agent: SemrushBot
+User-agent: SemrushBot-BA
+User-agent: SemrushBot-CT
 User-agent: SemrushBot-OCOB
+User-agent: SemrushBot-SI
 User-agent: SemrushBot-SWA
 User-agent: Sidetrade indexer bot
 User-agent: TikTokSpider
