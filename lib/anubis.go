@@ -131,7 +131,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	if s.checkRules(w, r, cr, lg, rule, ip) {
+	if s.checkRules(w, r, cr, lg, rule) {
 		return
 	}
 
@@ -195,7 +195,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	s.ServeHTTPNext(w, r)
 }
 
-func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot, ip string) bool {
+func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
 	if anubis.BasePrefix != "" {
