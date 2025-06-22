@@ -31,6 +31,7 @@ type ParsedConfig struct {
 	Bots              []Bot
 	Thresholds        []*Threshold
 	DNSBL             bool
+	Impressum         *config.Impressum
 	OpenGraph         config.OpenGraph
 	DefaultDifficulty int
 	StatusCodes       config.StatusCodes
@@ -149,6 +150,8 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		if b.Weight != nil {
 			parsedBot.Weight = b.Weight
 		}
+
+		result.Impressum = c.Impressum
 
 		parsedBot.Rules = cl
 

@@ -24,6 +24,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
+	"github.com/a-h/templ"
 )
 
 type Options struct {
@@ -146,6 +147,14 @@ func New(opts Options) (*Server, error) {
 		}), "GET")
 		registerWithPrefix("/.well-known/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFileFS(w, r, web.Static, "static/robots.txt")
+		}), "GET")
+	}
+
+	if opts.Policy.Impressum != nil {
+		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			templ.Handler(
+				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum),
+			).ServeHTTP(w, r)
 		}), "GET")
 	}
 

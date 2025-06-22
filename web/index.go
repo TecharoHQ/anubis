@@ -6,12 +6,12 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
-func Base(title string, body templ.Component) templ.Component {
-	return base(title, body, nil, nil)
+func Base(title string, body templ.Component, impressum *config.Impressum) templ.Component {
+	return base(title, body, impressum, nil, nil)
 }
 
-func BaseWithChallengeAndOGTags(title string, body templ.Component, challenge string, rules *config.ChallengeRules, ogTags map[string]string) (templ.Component, error) {
-	return base(title, body, struct {
+func BaseWithChallengeAndOGTags(title string, body templ.Component, impressum *config.Impressum, challenge string, rules *config.ChallengeRules, ogTags map[string]string) (templ.Component, error) {
+	return base(title, body, impressum, struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
 	}{
