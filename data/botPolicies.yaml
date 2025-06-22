@@ -84,6 +84,35 @@ bots:
 
 dnsbl: false
 
+# #
+# impressum:
+#   # Displayed at the bottom of every page rendered by Anubis.
+#   footer: >-
+#     This website is hosted by Techaro. If you have any complaints or notes
+#     about the service, please contact
+#     <a href="mailto:contact@techaro.lol">contact@techaro.lol</a> and we
+#     will assist you as soon as possible.
+
+#   # The imprint page that will be linked to at the footer of every Anubis page.
+#   page:
+#     # The HTML <title> of the page
+#     title: Imprint and Privacy Policy
+#     # The HTML contents of the page. The exact contents of this page can
+#     # and will vary by locale. Please consult with a lawyer if you are not
+#     # sure what to put here
+#     body: >-
+#       <p>Last updated: June 2025</p>
+
+#       <h2>Information that is gathered from visitors</h2>
+
+#       <p>In common with other websites, log files are stored on the web server saving details such as the visitor's IP address, browser type, referring page and time of visit.</p>
+
+#       <p>Cookies may be used to remember visitor preferences when interacting with the website.</p>
+
+#       <p>Where registration is required, the visitor's email and a username will be stored on the server.</p>
+
+#       <!-- ... -->
+
 # Open Graph passthrough configuration, see here for more information:
 # https://anubis.techaro.lol/docs/admin/configuration/open-graph/
 openGraph:
