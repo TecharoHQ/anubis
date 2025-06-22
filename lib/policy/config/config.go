@@ -45,7 +45,6 @@ const (
 )
 
 const DefaultAlgorithm = "fast"
-const FCrDNSAlgorithm = "fcrdns"
 
 type BotConfig struct {
 	UserAgentRegex *string           `json:"user_agent_regex,omitempty" yaml:"user_agent_regex,omitempty"`
@@ -150,19 +149,11 @@ func (b *BotConfig) Valid() error {
 			}
 		}
 	}
-	if b.Action == RuleChallenge && b.Challenge != nil && b.Challenge.Algorithm == FCrDNSAlgorithm {
-		if b.DomainRegex == nil {
-			errs = append(errs, ErrChallengeNoDomains)
-		} else if _, err := regexp.Compile(*b.DomainRegex); err != nil {
+	if b.DomainRegex != nil {
+		if _, err := regexp.Compile(*b.DomainRegex); err != nil {
 			errs = append(errs, ErrInvalidDomainRegex, err)
 		}
-		if b.UserAgentRegex == nil && b.Expression == nil {
-			errs = append(errs, ErrChallengeNoUserAgent)
-		}
-	} else if b.DomainRegex != nil {
-		errs = append(errs, ErrChallengeDomainUnsupported)
 	}
-
 	if b.Expression != nil {
 		if err := b.Expression.Valid(); err != nil {
 			errs = append(errs, err)
@@ -203,22 +194,17 @@ var (
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
 	ErrChallengeDifficultyTooLow      = errors.New("config.Bot.ChallengeRules: difficulty is too low (must be >= 1)")
 	ErrChallengeDifficultyTooHigh     = errors.New("config.Bot.ChallengeRules: difficulty is too high (must be <= 64)")
-	ErrChallengeDomainUnsupported     = errors.New("config.Bot.ChallengeRules: specifying domain regex is only supported for challenge rules with the \"fcrdns\" algorithm")
-	ErrChallengeNoDomains             = errors.New("config.Bot.ChallengeRules: FCrDNS rules must specify a domain regex")
-	ErrChallengeNoUserAgent           = errors.New("config.Bot.ChallengeRules: FCrDNS rules must specify a user agent regex or expression")
 )
 
 func (cr ChallengeRules) Valid() error {
 	var errs []error
 
-	if cr.Algorithm != FCrDNSAlgorithm {
-		if cr.Difficulty < 1 {
-			errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
-		}
+	if cr.Difficulty < 1 {
+		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
+	}
 
-		if cr.Difficulty > 64 {
-			errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
-		}
+	if cr.Difficulty > 64 {
+		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
 	}
 
 	if len(errs) != 0 {

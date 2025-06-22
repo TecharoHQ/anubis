@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/yl2chen/cidranger"
 )
@@ -185,4 +186,31 @@ func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
 	}
 
 	return result, nil
+}
+
+type FCrDNSChecker struct {
+	fcrdns *fcrdns.FCrDNS
+	regexp *regexp.Regexp
+	hash   string
+}
+
+func NewFCrDNSChecker(fcrdns *fcrdns.FCrDNS, domainRexStr string) (checker.Impl, error) {
+	rex, err := regexp.Compile(strings.TrimSpace(domainRexStr))
+	if err != nil {
+		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, domainRexStr, err)
+	}
+	return &FCrDNSChecker{fcrdns, rex, internal.FastHash(domainRexStr)}, nil
+}
+
+func (fdc *FCrDNSChecker) Check(r *http.Request) (bool, error) {
+	host := r.Header.Get("X-Real-Ip")
+	if host == "" {
+		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
+	}
+
+	return fdc.fcrdns.Check(host, fdc.regexp)
+}
+
+func (fdc *FCrDNSChecker) Hash() string {
+	return fdc.hash
 }

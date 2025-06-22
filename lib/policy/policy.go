@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
 	"log/slog"
 
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/thoth"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -49,6 +49,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	var validationErrs []error
 
 	tc, hasThothClient := thoth.FromContext(ctx)
+	fcrdns, hasFCrDNS := fcrdns.FromContext(ctx)
 
 	result := NewParsedConfig(c)
 	result.DefaultDifficulty = defaultDifficulty
@@ -102,14 +103,6 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			}
 		}
 
-		if b.DomainRegex != nil {
-			if rex, err := regexp.Compile(*b.DomainRegex); err != nil {
-				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s domain regex: %w", b.Name, err))
-			} else {
-				parsedBot.DomainRegex = rex
-			}
-		}
-
 		if b.Expression != nil {
 			c, err := NewCELChecker(b.Expression)
 			if err != nil {
@@ -119,6 +112,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			}
 		}
 
+		// These checkers may require network requests and should run last.
 		if b.ASNs != nil {
 			if !hasThothClient {
 				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
@@ -135,6 +129,16 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			}
 
 			cl = append(cl, tc.GeoIPCheckerFor(b.GeoIP.Countries))
+		}
+
+		if b.DomainRegex != nil {
+			if !hasFCrDNS {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s: no FCrDNS client in the context. This is a bug", b.Name))
+			} else if c, err := NewFCrDNSChecker(fcrdns, *b.DomainRegex); err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s domain regex: %w", b.Name, err))
+			} else {
+				cl = append(cl, c)
+			}
 		}
 
 		if b.Challenge == nil {

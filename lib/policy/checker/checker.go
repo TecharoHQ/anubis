@@ -19,15 +19,12 @@ type List []Impl
 func (l List) Check(r *http.Request) (bool, error) {
 	for _, c := range l {
 		ok, err := c.Check(r)
-		if err != nil {
+		if err != nil || !ok {
 			return ok, err
-		}
-		if ok {
-			return ok, nil
 		}
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (l List) Hash() string {

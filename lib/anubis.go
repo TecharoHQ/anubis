@@ -23,8 +23,8 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
-	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/internal/fcrdns"
+	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -220,23 +220,6 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		s.respondWithStatus(w, r, fmt.Sprintf("Access Denied: error code %s", hash), s.policy.StatusCodes.Deny)
 		return true
 	case config.RuleChallenge:
-		if rule.Challenge.Algorithm == config.FCrDNSAlgorithm {
-			lg.Debug("performing reverse dns check")
-
-			if passed, err := s.FCrDNS.Check(ip, rule.DomainRegex); err != nil {
-				lg.Error("got error while performing reverse dns check", "err", err)
-				s.respondWithError(w, r, fmt.Sprintf("Could not verify reverse DNS: %s", err.Error()))
-			} else if passed {
-				lg.Debug("allowing traffic to origin (reverse dns check passed)")
-				s.ServeHTTPNext(w, r)
-			} else {
-				lg.Debug("denying traffic (reverse dns check failed)")
-				s.respondWithStatus(w, r, "Access Denied: You appear to be impersonating a bot. Try disabling any User-Agent switchers", http.StatusOK)
-			}
-
-			return true
-		}
-
 		lg.Debug("challenge requested")
 	case config.RuleBenchmark:
 		lg.Debug("serving benchmark page")

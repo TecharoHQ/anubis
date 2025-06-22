@@ -1,7 +1,5 @@
 - name: googlebot
   user_agent_regex: \+http\://www\.google\.com/bot\.html
-  action: CHALLENGE
+  action: ALLOW
   # https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
   domain_regex: \.googlebot\.com$
-  challenge:
-    algorithm: "fcrdns"

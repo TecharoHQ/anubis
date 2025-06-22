@@ -30,6 +30,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/thoth"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
@@ -239,7 +240,8 @@ func main() {
 		}
 	}
 
-	ctx := context.Background()
+	fdns := fcrdns.NewFCrDNS()
+	ctx := fcrdns.With(context.Background(), fdns)
 
 	// Thoth configuration
 	switch {
@@ -347,6 +349,8 @@ func main() {
 		Target:               *target,
 		WebmasterEmail:       *webmasterEmail,
 		OGCacheConsidersHost: *ogCacheConsiderHost,
+		FCrDNS:               fdns,
+
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)

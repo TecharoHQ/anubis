@@ -169,49 +169,12 @@ func TestBotValid(t *testing.T) {
 			err: nil,
 		},
 		{
-			name: "no user agent regex",
-			bot: BotConfig{
-				Name:        "search-bot",
-				Action:      RuleChallenge,
-				DomainRegex: p("example.com"),
-				Challenge:   &ChallengeRules{
-					Algorithm: "fcrdns",
-				},
-			},
-			err: ErrChallengeNoUserAgent,
-		},
-		{
-			name: "no domain regex",
-			bot: BotConfig{
-				Name:           "search-bot",
-				Action:         RuleChallenge,
-				UserAgentRegex: p("SearchBot"),
-				Challenge:      &ChallengeRules{
-					Algorithm: "fcrdns",
-				},
-			},
-			err: ErrChallengeNoDomains,
-		},
-		{
-			name: "no fcrdns algorithm",
-			bot: BotConfig{
-				Name:           "search-bot",
-				Action:         RuleChallenge,
-				UserAgentRegex: p("SearchBot"),
-				DomainRegex:    p("example.com"),
-			},
-			err: ErrChallengeDomainUnsupported,
-		},
-		{
 			name: "reverse dns",
 			bot: BotConfig{
 				Name:           "search-bot",
 				Action:         RuleChallenge,
 				UserAgentRegex: p("SearchBot"),
 				DomainRegex:    p("example.com"),
-				Challenge:   &ChallengeRules{
-					Algorithm: "fcrdns",
-				},
 			},
 			err: nil,
 		},
