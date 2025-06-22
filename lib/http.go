@@ -29,19 +29,17 @@ func (s *Server) GetCookieScope(hostHeader string) (cookieDomain string, cookieN
 		if err == nil && isDomain {
 			domainParts := strings.Split(hostHeader, ".")
 			cookieDomain = domainParts[len(domainParts)-2] + "." + domainParts[len(domainParts)-1]
-			cookieName = anubis.WithDomainCookieName + cookieDomain
 
 			// check if domain is public second level domain (e.g. domain.co.uk), in this case, use the third level domain
 			if slices.Contains(strings.Split(publicSLDs, "\n"), cookieDomain) {
 				// check if domain has three layers (e.g. domain.co.uk) and not only two (e.g. co.uk)
 				if len(domainParts) >= 3 {
 					cookieDomain = domainParts[len(domainParts)-3] + "." + cookieDomain
-					cookieName = anubis.WithDomainCookieName + cookieDomain
 				} else {
 					return "", anubis.CookieName
 				}
 			}
-			return cookieDomain, cookieName
+			return cookieDomain, anubis.CookieName
 		}
 		return "", anubis.CookieName
 	}
