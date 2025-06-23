@@ -25,6 +25,7 @@ The big ticket items are as follows:
 - Refactor challenge presentation logic to use a challenge registry
 - Allow challenge implementations to register HTTP routes
 - [Imprint/Impressum support](./admin/configuration/impressum.mdx) ([#362](https://github.com/TecharoHQ/anubis/issues/362))
+- Fix "invalid response" after "Success!" in Chromium ([#564](https://github.com/TecharoHQ/anubis/issues/564))
 
 A lot of performance improvements have been made:
 
