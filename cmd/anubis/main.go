@@ -353,6 +353,7 @@ func main() {
 		RedirectDomains:   redirectDomainsList,
 		Target:            *target,
 		WebmasterEmail:    *webmasterEmail,
+		OpenGraph:         policy.OpenGraph,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
