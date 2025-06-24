@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
+
 ## v1.20.0: Thancred Waters
 
 The big ticket items are as follows:
