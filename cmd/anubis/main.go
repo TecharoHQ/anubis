@@ -107,8 +107,41 @@ func doHealthCheck() error {
 	return nil
 }
 
+// parseBindNetFromAddr determine bind network and address based on the given network and address.
+func parseBindNetFromAddr(address string) (string, string) {
+	defaultScheme := "http://"
+	if !strings.Contains(address, "://") {
+		if strings.HasPrefix(address, ":") {
+			address = defaultScheme + "localhost" + address
+		} else {
+			address = defaultScheme + address
+		}
+	}
+
+	bindUri, err := url.Parse(address)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to parse bind URL: %w", err))
+	}
+
+	switch bindUri.Scheme {
+	case "unix":
+		return "unix", bindUri.Path
+	case "tcp", "http", "https":
+		return "tcp", bindUri.Host
+	default:
+		log.Fatal(fmt.Errorf("unsupported network scheme %s in address %s", bindUri.Scheme, address))
+	}
+	return "", address
+}
+
 func setupListener(network string, address string) (net.Listener, string) {
 	formattedAddress := ""
+
+	if network == "" {
+		// keep compatibility
+		network, address = parseBindNetFromAddr(address)
+	}
+
 	switch network {
 	case "unix":
 		formattedAddress = "unix:" + address
