@@ -233,6 +233,45 @@ remote_addresses:
 </TabItem>
 </Tabs>
 
+### Reverse DNS based filtering
+
+The `domain_regex` field can be used to verify some legitimate bots using DNS and the client IP address. It works in three steps:
+
+1. Reverse DNS records for the client IP are looked up.
+2. Any records that match the `domain_regex` are queried.
+3. The client passes the challenge if the domain has an `A` or `AAAA` record that matches the client IP.
+
+You will need to look at the bot owner's website to find out what the reverse DNS of legitimate requests should look like. Use `remote_addresses` instead if the bot you are working with cannot be identified with reverse DNS.
+Rules that use `domain_regex` should also have a `user_agent_regex` or `expression` to avoid unnecessary DNS requests.
+
+Example:
+
+<Tabs>
+<TabItem value="json" label="JSON" default>
+
+```json
+{
+  "name": "qwantbot",
+  "user_agent_regex": "\\+https\\:\\/\\/help\\.qwant\\.com/bot/",
+  "action": "ALLOW",
+  "domain_regex": "\\.qwant\\.com$"
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```yaml
+- name: qwantbot
+  user_agent_regex: \+https\://help\.qwant\.com/bot/
+  action: ALLOW
+  # The reverse domain expected for legitimate requests (see https://help.qwant.com/bot/)
+  domain_regex: \.qwant\.com$
+```
+
+</TabItem>
+</Tabs>
+
 ## Imprint / Impressum support
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.
