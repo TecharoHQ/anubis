@@ -1,11 +1,13 @@
 package web
 
 import (
+	"fmt"
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/xess"
 )
 
-templ base(title string, body templ.Component, challenge any, ogTags map[string]string) {
+templ base(title string, body templ.Component, impressum *config.Impressum, challenge any, ogTags map[string]string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -36,16 +38,16 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
         }
 
         #progress {
-            display: none;
-            width: 90%;
-            width: min(20rem, 90%);
-            height: 2rem;
-            border-radius: 1rem;
-            overflow: hidden;
-            margin: 1rem 0 2rem;
-			outline-offset: 2px;
-			outline: #b16286 solid 4px;
-		}
+          display: none;
+          width: 90%;
+          width: min(20rem, 90%);
+          height: 2rem;
+          border-radius: 1rem;
+          overflow: hidden;
+          margin: 1rem 0 2rem;
+					outline-offset: 2px;
+					outline: #b16286 solid 4px;
+				}
 
         .bar-inner {
             background-color: #b16286;
@@ -53,7 +55,7 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
             width: 0;
             transition: width 0.25s ease-in;
         }
-    </style>
+    	</style>
 			@templ.JSONScript("anubis_version", anubis.Version)
 			if challenge != nil {
 				@templ.JSONScript("anubis_challenge", challenge)
@@ -74,6 +76,10 @@ templ base(title string, body templ.Component, challenge any, ogTags map[string]
 >Techaro</a>. Made with ❤️ in 🇨🇦.
 						</p>
 						<p>Mascot design by <a href="https://bsky.app/profile/celphase.bsky.social">CELPHASE</a>.</p>
+						if impressum != nil {
+							<p>@templ.Raw(impressum.Footer)
+-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a></p>
+						}
 					</center>
 				</footer>
 			</main>

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Implement a DNS-based challenge method: [`fcrdns`](./admin/configuration/challenges/fcrdns.mdx) ([#431](https://github.com/TecharoHQ/anubis/issues/431))
+- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
 
 ## v1.20.0: Thancred Waters
 
@@ -26,6 +27,8 @@ The big ticket items are as follows:
 - Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
 - Refactor challenge presentation logic to use a challenge registry
 - Allow challenge implementations to register HTTP routes
+- [Imprint/Impressum support](./admin/configuration/impressum.mdx) ([#362](https://github.com/TecharoHQ/anubis/issues/362))
+- Fix "invalid response" after "Success!" in Chromium ([#564](https://github.com/TecharoHQ/anubis/issues/564))
 
 A lot of performance improvements have been made:
 
