@@ -67,6 +67,7 @@ distros
 dnf
 dnsbl
 dnserr
+domainhere
 dracula
 dronebl
 droneblresponse
@@ -314,4 +315,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
+Zonbocom
 zos
