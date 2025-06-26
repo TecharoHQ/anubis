@@ -87,5 +87,6 @@
 ^docs/manifest/.*$
 ^docs/static/\.nojekyll$
 ^lib/policy/config/testdata/bad/unparseable\.json$
+^lib/public_second_level_domains\.yml$
 ignore$
 robots.txt
