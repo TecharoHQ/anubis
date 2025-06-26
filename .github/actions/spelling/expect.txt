@@ -67,6 +67,7 @@ distros
 dnf
 dnsbl
 dnserr
+domainhere
 dracula
 dronebl
 droneblresponse
@@ -74,6 +75,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+etld
 everyones
 evilbot
 evilsite
@@ -145,6 +147,7 @@ JWTs
 kagi
 kagibot
 keikaku
+Keyfunc
 keypair
 KHTML
 kinda
@@ -162,6 +165,7 @@ Linting
 linuxbrew
 LLU
 loadbalancer
+locahost
 lol
 LOMINSA
 maintainership
@@ -208,6 +212,7 @@ privkey
 promauto
 promhttp
 proofofwork
+publicsuffix
 pwcmd
 pwuser
 qualys
@@ -313,4 +318,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
+Zonbocom
 zos
