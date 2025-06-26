@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -15,21 +16,40 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/net/publicsuffix"
 )
 
-func (s *Server) SetCookie(w http.ResponseWriter, name, value, path string) {
+var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+
+func (s *Server) SetCookie(w http.ResponseWriter, name, value, path, host string) {
+	var domain = s.opts.CookieDomain
+	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(host) {
+		if etld, err := publicsuffix.EffectiveTLDPlusOne(host); err == nil {
+			domain = etld
+			name = anubis.WithDomainCookieName + etld
+		}
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       value,
 		Expires:     time.Now().Add(s.opts.CookieExpiration),
 		SameSite:    http.SameSiteLaxMode,
-		Domain:      s.opts.CookieDomain,
+		Domain:      domain,
 		Partitioned: s.opts.CookiePartitioned,
 		Path:        path,
 	})
 }
 
-func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
+func (s *Server) ClearCookie(w http.ResponseWriter, name, path, host string) {
+	var domain = s.opts.CookieDomain
+	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(host) {
+		if etld, err := publicsuffix.EffectiveTLDPlusOne(host); err == nil {
+			domain = etld
+			name = anubis.WithDomainCookieName + etld
+		}
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       "",
@@ -37,7 +57,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
 		Expires:     time.Now().Add(-1 * time.Minute),
 		SameSite:    http.SameSiteLaxMode,
 		Partitioned: s.opts.CookiePartitioned,
-		Domain:      s.opts.CookieDomain,
+		Domain:      domain,
 		Path:        path,
 	})
 }
@@ -80,7 +100,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
 
 	var ogTags map[string]string = nil
-	if s.opts.OGPassthrough {
+	if s.opts.OpenGraph.Enabled {
 		var err error
 		ogTags, err = s.OGTags.GetOGTags(r.URL, r.Host)
 		if err != nil {
@@ -102,7 +122,14 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		return
 	}
 
-	component, err := impl.Issue(r, lg, rule, challengeStr, ogTags)
+	in := &challenge.IssueInput{
+		Impressum: s.policy.Impressum,
+		Rule:      rule,
+		Challenge: challengeStr,
+		OGTags:    ogTags,
+	}
+
+	component, err := impl.Issue(r, lg, in)
 	if err != nil {
 		lg.Error("[unexpected] render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, "Internal Server Error: please contact the administrator and ask them to look for the logs around \"RenderIndex\"")
@@ -118,7 +145,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(
-		web.Base("Benchmarking Anubis!", web.Bench()),
+		web.Base("Benchmarking Anubis!", web.Bench(), s.policy.Impressum),
 	).ServeHTTP(w, r)
 }
 
@@ -127,7 +154,7 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 }
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail)), templ.WithStatus(status)).ServeHTTP(w, r)
+	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail), s.policy.Impressum), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -180,7 +207,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		}
 
 		templ.Handler(
-			web.Base("You are not a bot!", web.StaticHappy()),
+			web.Base("You are not a bot!", web.StaticHappy(), s.policy.Impressum),
 		).ServeHTTP(w, r)
 	} else {
 		requestsProxied.WithLabelValues(r.Host).Inc()
@@ -194,5 +221,9 @@ func (s *Server) signJWT(claims jwt.MapClaims) (string, error) {
 	claims["nbf"] = time.Now().Add(-1 * time.Minute).Unix()
 	claims["exp"] = time.Now().Add(s.opts.CookieExpiration).Unix()
 
-	return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.priv)
+	if len(s.hs512Secret) == 0 {
+		return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.ed25519Priv)
+	} else {
+		return jwt.NewWithClaims(jwt.SigningMethodHS512, claims).SignedString(s.hs512Secret)
+	}
 }

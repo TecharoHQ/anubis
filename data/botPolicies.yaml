@@ -84,6 +84,59 @@ bots:
 
 dnsbl: false
 
+# #
+# impressum:
+#   # Displayed at the bottom of every page rendered by Anubis.
+#   footer: >-
+#     This website is hosted by Zonbocom. If you have any complaints or notes
+#     about the service, please contact
+#     <a href="mailto:contact@domainhere.example">contact@domainhere.example</a>
+#     and we will assist you as soon as possible.
+
+#   # The imprint page that will be linked to at the footer of every Anubis page.
+#   page:
+#     # The HTML <title> of the page
+#     title: Imprint and Privacy Policy
+#     # The HTML contents of the page. The exact contents of this page can
+#     # and will vary by locale. Please consult with a lawyer if you are not
+#     # sure what to put here
+#     body: >-
+#       <p>Last updated: June 2025</p>
+
+#       <h2>Information that is gathered from visitors</h2>
+
+#       <p>In common with other websites, log files are stored on the web server saving details such as the visitor's IP address, browser type, referring page and time of visit.</p>
+
+#       <p>Cookies may be used to remember visitor preferences when interacting with the website.</p>
+
+#       <p>Where registration is required, the visitor's email and a username will be stored on the server.</p>
+
+#       <!-- ... -->
+
+# Open Graph passthrough configuration, see here for more information:
+# https://anubis.techaro.lol/docs/admin/configuration/open-graph/
+openGraph:
+  # Enables Open Graph passthrough
+  enabled: false
+  # Enables the use of the HTTP host in the cache key, this enables
+  # caching metadata for multiple http hosts at once.
+  considerHost: false
+  # How long cached OpenGraph metadata should last in memory
+  ttl: 24h
+  # # If set, return these opengraph values instead of looking them up with
+  # # the target service.
+  # #
+  # # Correlates to properties in https://ogp.me/
+  # override:
+  #   # og:title is required, it is the title of the website
+  #   "og:title": "Techaro Anubis"
+  #   "og:description": >-
+  #     Anubis is a Web AI Firewall Utility that helps you fight the bots
+  #     away so that you can maintain uptime at work!
+  #   "description": >-
+  #     Anubis is a Web AI Firewall Utility that helps you fight the bots
+  #     away so that you can maintain uptime at work!
+
 # By default, send HTTP 200 back to clients that either get issued a challenge
 # or a denial. This seems weird, but this is load-bearing due to the fact that
 # the most aggressive scraper bots seem to really, really, want an HTTP 200 and
@@ -91,3 +144,57 @@ dnsbl: false
 status_codes:
   CHALLENGE: 200
   DENY: 200
+
+# The weight thresholds for when to trigger individual challenges. Any
+# CHALLENGE will take precedence over this.
+#
+# A threshold has four configuration options:
+#
+#   - name: the name that is reported down the stack and used for metrics
+#   - expression: A CEL expression with the request weight in the variable
+#     weight
+#   - action: the Anubis action to apply, similar to in a bot policy
+#   - challenge: which challenge to send to the user, similar to in a bot policy
+#
+# See https://anubis.techaro.lol/docs/admin/configuration/thresholds for more
+# information.
+thresholds:
+  # By default Anubis ships with the following thresholds:
+  - name: minimal-suspicion # This client is likely fine, its soul is lighter than a feather
+    expression: weight <= 0 # a feather weighs zero units
+    action: ALLOW # Allow the traffic through
+  # For clients that had some weight reduced through custom rules, give them a
+  # lightweight challenge.
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight > 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/metarefresh
+      algorithm: metarefresh
+      difficulty: 1
+      report_as: 1
+  # For clients that are browser-like but have either gained points from custom rules or
+  # report as a standard browser.
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
+      algorithm: fast
+      difficulty: 2 # two leading zeros, very fast for most clients
+      report_as: 2
+  # For clients that are browser like and have gained many points from custom rules
+  - name: extreme-suspicion
+    expression: weight >= 20
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
+      algorithm: fast
+      difficulty: 4
+      report_as: 4

@@ -1,0 +1,12 @@
+bots:
+  - name: everything
+    user_agent_regex: .*
+    action: DENY
+
+openGraph:
+  enabled: true
+  considerHost: false
+  ttl: 1h
+  default:
+    "og:title": "Xe's magic land of fun"
+    "og:description": "We're no strangers to love, you know the rules and so do I"

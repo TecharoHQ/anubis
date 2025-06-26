@@ -1,0 +1,11 @@
+bots:
+  - name: simple-weight-adjust
+    action: WEIGH
+    user_agent_regex: Mozilla
+    weight:
+      adjust: 5
+
+impressum:
+  page:
+    title: Test
+    body: <p>This is a test</p>

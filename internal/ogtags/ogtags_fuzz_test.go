@@ -6,6 +6,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"golang.org/x/net/html"
 )
 
@@ -45,7 +46,7 @@ func FuzzGetTarget(f *testing.F) {
 		}
 
 		// Create cache - should not panic
-		cache := NewOGTagCache(target, false, 0, false)
+		cache := NewOGTagCache(target, config.OpenGraph{})
 
 		// Create URL
 		u := &url.URL{
@@ -129,7 +130,7 @@ func FuzzExtractOGTags(f *testing.F) {
 			return
 		}
 
-		cache := NewOGTagCache("http://example.com", false, 0, false)
+		cache := NewOGTagCache("http://example.com", config.OpenGraph{})
 
 		// Should not panic
 		tags := cache.extractOGTags(doc)
@@ -185,7 +186,7 @@ func FuzzGetTargetRoundTrip(f *testing.F) {
 			t.Skip()
 		}
 
-		cache := NewOGTagCache(target, false, 0, false)
+		cache := NewOGTagCache(target, config.OpenGraph{})
 		u := &url.URL{Path: path, RawQuery: query}
 
 		result := cache.getTarget(u)
@@ -242,7 +243,7 @@ func FuzzExtractMetaTagInfo(f *testing.F) {
 			},
 		}
 
-		cache := NewOGTagCache("http://example.com", false, 0, false)
+		cache := NewOGTagCache("http://example.com", config.OpenGraph{})
 
 		// Should not panic
 		property, content := cache.extractMetaTagInfo(node)
@@ -295,7 +296,7 @@ func BenchmarkFuzzedGetTarget(b *testing.B) {
 
 	for _, input := range inputs {
 		b.Run(input.name, func(b *testing.B) {
-			cache := NewOGTagCache(input.target, false, 0, false)
+			cache := NewOGTagCache(input.target, config.OpenGraph{})
 			u := &url.URL{Path: input.path, RawQuery: input.query}
 
 			b.ResetTimer()

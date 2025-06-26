@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 func TestNewOGTagCache(t *testing.T) {
@@ -38,7 +40,11 @@ func TestNewOGTagCache(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache := NewOGTagCache(tt.target, tt.ogPassthrough, tt.ogTimeToLive, false)
+			cache := NewOGTagCache(tt.target, config.OpenGraph{
+				Enabled:      tt.ogPassthrough,
+				TimeToLive:   tt.ogTimeToLive,
+				ConsiderHost: false,
+			})
 
 			if cache == nil {
 				t.Fatal("expected non-nil cache, got nil")
@@ -74,7 +80,11 @@ func TestNewOGTagCache_UnixSocket(t *testing.T) {
 	socketPath := filepath.Join(tempDir, "test.sock")
 	target := "unix://" + socketPath
 
-	cache := NewOGTagCache(target, true, 5*time.Minute, false)
+	cache := NewOGTagCache(target, config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   5 * time.Minute,
+		ConsiderHost: false,
+	})
 
 	if cache == nil {
 		t.Fatal("expected non-nil cache, got nil")
@@ -155,7 +165,11 @@ func TestGetTarget(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cache := NewOGTagCache(tt.target, false, time.Minute, false)
+			cache := NewOGTagCache(tt.target, config.OpenGraph{
+				Enabled:      true,
+				TimeToLive:   time.Minute,
+				ConsiderHost: false,
+			})
 
 			u := &url.URL{
 				Path:     tt.path,
@@ -175,7 +189,9 @@ func TestGetTarget(t *testing.T) {
 func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 	tempDir := t.TempDir()
 
-	socketPath := filepath.Join(tempDir, "anubis-test.sock")
+	// XXX(Xe): if this is named longer, macOS fails with `bind: invalid argument`
+	// because the unix socket path is too long. I love computers.
+	socketPath := filepath.Join(tempDir, "t")
 
 	// Ensure the socket does not exist initially
 	_ = os.Remove(socketPath)
@@ -222,7 +238,11 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 
 	// Create cache instance pointing to the Unix socket
 	targetURL := "unix://" + socketPath
-	cache := NewOGTagCache(targetURL, true, 1*time.Minute, false)
+	cache := NewOGTagCache(targetURL, config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+	})
 
 	// Create a dummy URL for the request (path and query matter)
 	testReqURL, _ := url.Parse("/some/page?query=1")
