@@ -345,6 +345,7 @@ type fileConfig struct {
 	Bots        []BotOrImport       `json:"bots"`
 	DNSBL       bool                `json:"dnsbl"`
 	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
+	Impressum   *Impressum          `json:"impressum,omitempty"`
 	StatusCodes StatusCodes         `json:"status_codes"`
 	Thresholds  []Threshold         `json:"thresholds"`
 }
@@ -439,6 +440,14 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		}
 	}
 
+	if c.Impressum != nil {
+		if err := c.Impressum.Valid(); err != nil {
+			validationErrs = append(validationErrs, err)
+		}
+
+		result.Impressum = c.Impressum
+	}
+
 	if len(c.Thresholds) == 0 {
 		c.Thresholds = DefaultThresholds
 	}
@@ -463,6 +472,7 @@ type Config struct {
 	Bots        []BotConfig
 	Thresholds  []Threshold
 	DNSBL       bool
+	Impressum   *Impressum
 	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
 }

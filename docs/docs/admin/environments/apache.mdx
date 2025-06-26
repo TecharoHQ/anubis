@@ -34,27 +34,6 @@ These examples assume that you are using a setup where your nginx configuration 
 
 :::
 
-## Dependencies
-
-Install the following dependencies for proxying HTTP:
-
-<Tabs>
-  <TabItem value="rpm" label="Red Hat / RPM" default>
-
-```text
-dnf -y install mod_proxy_html
-```
-
-  </TabItem>
-  <TabItem value="deb" label="Debian / Ubuntu / apt">
-
-```text
-apt-get install -y libapache2-mod-proxy-html libxml2-dev
-```
-
-  </TabItem>
-</Tabs>
-
 ## Configuration
 
 Assuming you are protecting `anubistest.techaro.lol`, you need the following server configuration blocks:

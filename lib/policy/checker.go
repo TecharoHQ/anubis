@@ -17,20 +17,6 @@ var (
 	ErrMisconfiguration = errors.New("[unexpected] policy: administrator misconfiguration")
 )
 
-type staticHashChecker struct {
-	hash string
-}
-
-func (staticHashChecker) Check(r *http.Request) (bool, error) {
-	return true, nil
-}
-
-func (s staticHashChecker) Hash() string { return s.hash }
-
-func NewStaticHashChecker(hashable string) checker.Impl {
-	return staticHashChecker{hash: internal.FastHash(hashable)}
-}
-
 type RemoteAddrChecker struct {
 	prefixTable *bart.Lite
 	hash        string

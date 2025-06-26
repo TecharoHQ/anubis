@@ -67,6 +67,7 @@ distros
 dnf
 dnsbl
 dnserr
+domainhere
 dracula
 dronebl
 droneblresponse
@@ -74,6 +75,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+etld
 everyones
 evilbot
 evilsite
@@ -130,6 +132,7 @@ iat
 ifm
 Imagesift
 imgproxy
+impressum
 inp
 Iocaine
 IPTo
@@ -146,6 +149,7 @@ JWTs
 kagi
 kagibot
 keikaku
+Keyfunc
 keypair
 KHTML
 kinda
@@ -163,6 +167,7 @@ Linting
 linuxbrew
 LLU
 loadbalancer
+locahost
 lol
 LOMINSA
 maintainership
@@ -209,6 +214,7 @@ privkey
 promauto
 promhttp
 proofofwork
+publicsuffix
 pwcmd
 pwuser
 qualys
@@ -240,6 +246,7 @@ Seo
 setsebool
 shellcheck
 Sidetrade
+simprint
 sitemap
 sls
 sni
@@ -314,4 +321,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
+Zonbocom
 zos

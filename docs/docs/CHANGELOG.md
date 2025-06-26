@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Added `DENY_AND_REROUTE` action for redirecting denied requests to external AI tarpits ([#61](https://github.com/json-kyle/anubis/issues/61))
+- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
 
 ## v1.20.0: Thancred Waters
 
@@ -26,6 +27,8 @@ The big ticket items are as follows:
 - Add `robots2policy` CLI utility to convert robots.txt files to Anubis challenge policies using CEL expressions ([#409](https://github.com/TecharoHQ/anubis/issues/409))
 - Refactor challenge presentation logic to use a challenge registry
 - Allow challenge implementations to register HTTP routes
+- [Imprint/Impressum support](./admin/configuration/impressum.mdx) ([#362](https://github.com/TecharoHQ/anubis/issues/362))
+- Fix "invalid response" after "Success!" in Chromium ([#564](https://github.com/TecharoHQ/anubis/issues/564))
 
 A lot of performance improvements have been made:
 
@@ -43,6 +46,8 @@ And some cleanups/refactors were added:
 - Make progress bar styling more compatible (UXP, etc)
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
 - Fix an off-by-one in the default threshold config
+- Add functionality for HS512 JWT algorithm
+- Add support for dynamic cookie domains with the `--cookie-dynamic-domain`/`COOKIE_DYNAMIC_DOMAIN` flag/envvar
 
 Request weight is one of the biggest ticket features in Anubis. This enables Anubis to be much closer to a Web Application Firewall and when combined with custom thresholds allows administrators to have Anubis take advanced reactions. For more information about request weight, see [the request weight section](./admin/policies.mdx#request-weight) of the policy file documentation.
 
