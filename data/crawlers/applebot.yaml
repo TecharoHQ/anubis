@@ -1,6 +1,8 @@
 # Indexing for search and Siri
 # https://support.apple.com/en-us/119829
 - name: applebot
-  user_agent_regex: Applebot
-  domain_regex: \.applebot\.apple\.com$
+  expression:
+    all:
+      - userAgent.matches("Applebot")
+      - fcrdns.check("\\.applebot\\.apple\\.com$")
   action: ALLOW

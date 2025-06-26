@@ -1,5 +1,7 @@
 - name: qwantbot
-  user_agent_regex: \+https\://help\.qwant\.com/bot/
-  action: ALLOW
   # https://help.qwant.com/bot/
-  domain_regex: \.qwant\.com$
+  expression:
+    all:
+      - userAgent.matches("\\+https\\://help\\.qwant\\.com/bot/")
+      - fcrdns.check("\\.qwant\\.com$")
+  action: ALLOW

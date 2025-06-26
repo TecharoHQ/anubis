@@ -1,5 +1,7 @@
 - name: googlebot
-  user_agent_regex: \+http\://www\.google\.com/bot\.html
-  action: ALLOW
   # https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot
-  domain_regex: \.googlebot\.com$
+  expression:
+    all:
+      - userAgent.matches("\\+http\\://www\\.google\\.com/bot\\.html")
+      - fcrdns.check("\\.googlebot\\.com$")
+  action: ALLOW

@@ -110,15 +110,15 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		}
 
 		if b.Expression != nil {
-			c, err := NewCELChecker(b.Expression)
-			if err != nil {
+			if !hasFCrDNS {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s: no FCrDNS client in the context. This is a bug", b.Name))
+			} else if c, err := NewCELChecker(b.Expression, fcrdns); err != nil {
 				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s expressions: %w", b.Name, err))
 			} else {
 				cl = append(cl, c)
 			}
 		}
 
-		// These checkers may require network requests and should run last.
 		if b.ASNs != nil {
 			if !hasThothClient {
 				slog.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
