@@ -75,6 +75,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+etld
 everyones
 evilbot
 evilsite
@@ -164,6 +165,7 @@ Linting
 linuxbrew
 LLU
 loadbalancer
+locahost
 lol
 LOMINSA
 maintainership
@@ -210,6 +212,7 @@ privkey
 promauto
 promhttp
 proofofwork
+publicsuffix
 pwcmd
 pwuser
 qualys
