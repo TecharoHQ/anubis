@@ -346,13 +346,13 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-<<<<<<< HEAD
 		BasePrefix:        *basePrefix,
 		StripBasePrefix:   *stripBasePrefix,
 		Next:              rp,
 		Policy:            policy,
 		ServeRobotsTXT:    *robotsTxt,
-		PrivateKey:        priv,
+		ED25519PrivateKey: ed25519Priv,
+		HS512Secret:       []byte(*hs512Secret),
 		CookieDomain:      *cookieDomain,
 		CookieExpiration:  *cookieExpiration,
 		CookiePartitioned: *cookiePartitioned,
@@ -360,24 +360,6 @@ func main() {
 		Target:            *target,
 		WebmasterEmail:    *webmasterEmail,
 		OpenGraph:         policy.OpenGraph,
-=======
-		BasePrefix:           *basePrefix,
-		StripBasePrefix:      *stripBasePrefix,
-		Next:                 rp,
-		Policy:               policy,
-		ServeRobotsTXT:       *robotsTxt,
-		ED25519PrivateKey:    ed25519Priv,
-		HS512Secret:          []byte(*hs512Secret),
-		CookieDomain:         *cookieDomain,
-		CookieExpiration:     *cookieExpiration,
-		CookiePartitioned:    *cookiePartitioned,
-		OGPassthrough:        *ogPassthrough,
-		OGTimeToLive:         *ogTimeToLive,
-		RedirectDomains:      redirectDomainsList,
-		Target:               *target,
-		WebmasterEmail:       *webmasterEmail,
-		OGCacheConsidersHost: *ogCacheConsiderHost,
->>>>>>> 41b7881 (Add functionality for HS512 JWT tokens)
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
