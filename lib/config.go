@@ -30,7 +30,7 @@ import (
 
 type Options struct {
 	Next                http.Handler
-	FCrDNS            *fcrdns.FCrDNS
+	FCrDNS              *fcrdns.FCrDNS
 	Policy              *policy.ParsedConfig
 	Target              string
 	CookieDynamicDomain bool
@@ -117,7 +117,7 @@ func New(opts Options) (*Server, error) {
 		opts:        opts,
 		DNSBLCache:  decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
-		FCrDNS:     opts.FCrDNS,
+		FCrDNS:      opts.FCrDNS,
 		cookieName:  cookieName,
 	}
 

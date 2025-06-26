@@ -84,7 +84,7 @@ func New(opts ...cel.EnvOption) (*cel.Env, error) {
 var fcrdnsRegexOptimization = &interpreter.RegexOptimization{
 	Function:   "check",
 	RegexIndex: 1,
-	Factory:    func(call interpreter.InterpretableCall, regexPattern string) (interpreter.InterpretableCall, error) {
+	Factory: func(call interpreter.InterpretableCall, regexPattern string) (interpreter.InterpretableCall, error) {
 		compiledRegex, err := regexp.Compile(regexPattern)
 		if err != nil {
 			return nil, err

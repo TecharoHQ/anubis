@@ -69,7 +69,7 @@ type Server struct {
 	policy      *policy.ParsedConfig
 	DNSBLCache  *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags      *ogtags.OGTagCache
-	FCrDNS     *fcrdns.FCrDNS
+	FCrDNS      *fcrdns.FCrDNS
 	cookieName  string
 	ed25519Priv ed25519.PrivateKey
 	hs512Secret []byte
