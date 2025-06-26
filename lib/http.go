@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -15,21 +16,40 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/net/publicsuffix"
 )
 
-func (s *Server) SetCookie(w http.ResponseWriter, name, value, path string) {
+var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+
+func (s *Server) SetCookie(w http.ResponseWriter, name, value, path, host string) {
+	var domain = s.opts.CookieDomain
+	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(host) {
+		if etld, err := publicsuffix.EffectiveTLDPlusOne(host); err == nil {
+			domain = etld
+			name = anubis.WithDomainCookieName + etld
+		}
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       value,
 		Expires:     time.Now().Add(s.opts.CookieExpiration),
 		SameSite:    http.SameSiteLaxMode,
-		Domain:      s.opts.CookieDomain,
+		Domain:      domain,
 		Partitioned: s.opts.CookiePartitioned,
 		Path:        path,
 	})
 }
 
-func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
+func (s *Server) ClearCookie(w http.ResponseWriter, name, path, host string) {
+	var domain = s.opts.CookieDomain
+	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(host) {
+		if etld, err := publicsuffix.EffectiveTLDPlusOne(host); err == nil {
+			domain = etld
+			name = anubis.WithDomainCookieName + etld
+		}
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       "",
@@ -37,7 +57,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, name, path string) {
 		Expires:     time.Now().Add(-1 * time.Minute),
 		SameSite:    http.SameSiteLaxMode,
 		Partitioned: s.opts.CookiePartitioned,
-		Domain:      s.opts.CookieDomain,
+		Domain:      domain,
 		Path:        path,
 	})
 }

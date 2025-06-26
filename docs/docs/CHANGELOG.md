@@ -46,6 +46,7 @@ And some cleanups/refactors were added:
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
 - Fix an off-by-one in the default threshold config
 - Add functionality for HS512 JWT algorithm
+- Add support for dynamic cookie domains with the `--cookie-dynamic-domain`/`COOKIE_DYNAMIC_DOMAIN` flag/envvar
 
 Request weight is one of the biggest ticket features in Anubis. This enables Anubis to be much closer to a Web Application Firewall and when combined with custom thresholds allows administrators to have Anubis take advanced reactions. For more information about request weight, see [the request weight section](./admin/policies.mdx#request-weight) of the policy file documentation.
 
