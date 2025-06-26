@@ -22,6 +22,9 @@ func (l List) Check(r *http.Request) (bool, error) {
 		if err != nil {
 			return ok, err
 		}
+		if ok {
+			return ok, nil
+		}
 	}
 
 	return false, nil
