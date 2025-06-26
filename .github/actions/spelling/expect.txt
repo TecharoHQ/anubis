@@ -67,6 +67,7 @@ distros
 dnf
 dnsbl
 dnserr
+domainhere
 dracula
 dronebl
 droneblresponse
@@ -129,6 +130,7 @@ iat
 ifm
 Imagesift
 imgproxy
+impressum
 inp
 IPTo
 iptoasn
@@ -144,6 +146,7 @@ JWTs
 kagi
 kagibot
 keikaku
+Keyfunc
 keypair
 KHTML
 kinda
@@ -183,7 +186,6 @@ NONINFRINGEMENT
 nosleep
 OCOB
 ogtags
-ogtitle
 omgili
 omgilibot
 openai
@@ -218,6 +220,7 @@ rawler
 rcvar
 redir
 redirectscheme
+refactors
 relayd
 reputational
 reqmeta
@@ -238,6 +241,7 @@ Seo
 setsebool
 shellcheck
 Sidetrade
+simprint
 sitemap
 SLDs
 sls
@@ -262,6 +266,7 @@ techarohq
 templ
 templruntime
 testarea
+Thancred
 thoth
 thothmock
 Tik
@@ -311,4 +316,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
+Zonbocom
 zos

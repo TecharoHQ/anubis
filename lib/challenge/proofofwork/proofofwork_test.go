@@ -124,7 +124,12 @@ func TestBasic(t *testing.T) {
 		t.Run(cs.name, func(t *testing.T) {
 			lg := slog.With()
 
-			if _, err := i.Issue(cs.req, lg, bot, cs.challengeStr, nil); err != nil {
+			inp := &challenge.IssueInput{
+				Rule:      bot,
+				Challenge: cs.challengeStr,
+			}
+
+			if _, err := i.Issue(cs.req, lg, inp); err != nil {
 				t.Errorf("can't issue challenge: %v", err)
 			}
 

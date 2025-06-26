@@ -63,28 +63,40 @@ var (
 )
 
 type Server struct {
-	next       http.Handler
-	mux        *http.ServeMux
-	policy     *policy.ParsedConfig
-	DNSBLCache *decaymap.Impl[string, dnsbl.DroneBLResponse]
-	OGTags     *ogtags.OGTagCache
-	cookieName string
-	priv       ed25519.PrivateKey
-	pub        ed25519.PublicKey
-	opts       Options
+	next        http.Handler
+	mux         *http.ServeMux
+	policy      *policy.ParsedConfig
+	DNSBLCache  *decaymap.Impl[string, dnsbl.DroneBLResponse]
+	OGTags      *ogtags.OGTagCache
+	cookieName  string
+	ed25519Priv ed25519.PrivateKey
+	hs512Secret []byte
+	opts        Options
+}
+
+func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
+	// return ED25519 key if HS512 is not set
+	if len(s.hs512Secret) == 0 {
+		return func(token *jwt.Token) (interface{}, error) {
+			return s.ed25519Priv.Public().(ed25519.PublicKey), nil
+		}
+	} else {
+		return func(token *jwt.Token) (interface{}, error) {
+			return s.hs512Secret, nil
+		}
+	}
 }
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
-	fp := sha256.Sum256(s.pub[:])
-
-	acceptLanguage := r.Header.Get("Accept-Language")
-	if len(acceptLanguage) > 5 {
-		acceptLanguage = acceptLanguage[:5]
+	var fp [32]byte
+	if len(s.hs512Secret) == 0 {
+		fp = sha256.Sum256(s.ed25519Priv.Public().(ed25519.PublicKey)[:])
+	} else {
+		fp = sha256.Sum256(s.hs512Secret)
 	}
 
 	challengeData := fmt.Sprintf(
-		"Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
-		acceptLanguage,
+		"X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%x,Difficulty=%d",
 		r.Header.Get("X-Real-Ip"),
 		r.UserAgent(),
 		time.Now().UTC().Round(24*7*time.Hour).Format(time.RFC3339),
@@ -156,9 +168,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return s.pub, nil
-	}, jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
+	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)

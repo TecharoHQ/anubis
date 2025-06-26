@@ -28,8 +28,8 @@ func (i *Impl) Setup(mux *http.ServeMux) {
 	/* no implementation required */
 }
 
-func (i *Impl) Issue(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string, ogTags map[string]string) (templ.Component, error) {
-	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), challenge, rule.Challenge, ogTags)
+func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
+	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags)
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
 	}

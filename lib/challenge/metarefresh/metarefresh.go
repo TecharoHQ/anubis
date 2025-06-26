@@ -23,7 +23,7 @@ type Impl struct{}
 
 func (i *Impl) Setup(mux *http.ServeMux) {}
 
-func (i *Impl) Issue(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string, ogTags map[string]string) (templ.Component, error) {
+func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *challenge.IssueInput) (templ.Component, error) {
 	u, err := r.URL.Parse(anubis.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
@@ -31,10 +31,10 @@ func (i *Impl) Issue(r *http.Request, lg *slog.Logger, rule *policy.Bot, challen
 
 	q := u.Query()
 	q.Set("redir", r.URL.String())
-	q.Set("challenge", challenge)
+	q.Set("challenge", in.Challenge)
 	u.RawQuery = q.Encode()
 
-	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", page(challenge, u.String(), rule.Challenge.Difficulty), challenge, rule.Challenge, ogTags)
+	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", page(in.Challenge, u.String(), in.Rule.Challenge.Difficulty), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags)
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
 	}

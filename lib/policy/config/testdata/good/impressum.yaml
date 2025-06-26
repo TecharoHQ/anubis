@@ -1,0 +1,10 @@
+bots:
+  - name: simple
+    action: CHALLENGE
+    user_agent_regex: Mozilla
+
+impressum:
+  footer: "Hi these are WORDS on the INTERNET."
+  page:
+    title: Test
+    body: <p>This is a test</p>

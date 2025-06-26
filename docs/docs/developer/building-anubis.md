@@ -58,7 +58,9 @@ This will build all static assets (CSS, JavaScript) for distribution.
 make build
 ```
 
-From this point it is up to you to make sure that `./var/anubis` ends up in the right place. You may want to consult the `./run` folder for useful files such as a systemd unit and `anubis.env.default` file.
+From this point it is up to you to make sure that `./var/anubis` and `./var/robots2policy` end up in
+the right place. You may want to consult the `./run` folder for useful files such as a systemd unit
+and `anubis.env.default` file.
 
 ## "Pre-baked" tarball
 
@@ -75,7 +77,7 @@ When using this tarball, all you need to do is build `./cmd/anubis`:
 make prebaked-build
 ```
 
-Anubis will be built to `./var/anubis`.
+Anubis will be built to `./var/anubis` and the robots2policy tool to `./var/robots2policy`.
 
 ## Development dependencies
 

@@ -125,7 +125,14 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		return
 	}
 
-	component, err := impl.Issue(r, lg, rule, challengeStr, ogTags)
+	in := &challenge.IssueInput{
+		Impressum: s.policy.Impressum,
+		Rule:      rule,
+		Challenge: challengeStr,
+		OGTags:    ogTags,
+	}
+
+	component, err := impl.Issue(r, lg, in)
 	if err != nil {
 		lg.Error("[unexpected] render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, "Internal Server Error: please contact the administrator and ask them to look for the logs around \"RenderIndex\"")
@@ -141,7 +148,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	templ.Handler(
-		web.Base("Benchmarking Anubis!", web.Bench()),
+		web.Base("Benchmarking Anubis!", web.Bench(), s.policy.Impressum),
 	).ServeHTTP(w, r)
 }
 
@@ -150,7 +157,7 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 }
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail)), templ.WithStatus(status)).ServeHTTP(w, r)
+	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail), s.policy.Impressum), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +210,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		}
 
 		templ.Handler(
-			web.Base("You are not a bot!", web.StaticHappy()),
+			web.Base("You are not a bot!", web.StaticHappy(), s.policy.Impressum),
 		).ServeHTTP(w, r)
 	} else {
 		requestsProxied.WithLabelValues(r.Host).Inc()
@@ -217,5 +224,9 @@ func (s *Server) signJWT(claims jwt.MapClaims) (string, error) {
 	claims["nbf"] = time.Now().Add(-1 * time.Minute).Unix()
 	claims["exp"] = time.Now().Add(s.opts.CookieExpiration).Unix()
 
-	return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.priv)
+	if len(s.hs512Secret) == 0 {
+		return jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims).SignedString(s.ed25519Priv)
+	} else {
+		return jwt.NewWithClaims(jwt.SigningMethodHS512, claims).SignedString(s.hs512Secret)
+	}
 }
