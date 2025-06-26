@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -54,5 +55,42 @@ func TestClearCookieWithDomain(t *testing.T) {
 
 	if ckie.MaxAge != -1 {
 		t.Errorf("wanted cookie max age of -1, got: %d", ckie.MaxAge)
+	}
+}
+
+func TestGetCookieScope(t *testing.T) {
+	for _, tt := range []struct {
+		hostHeader               string
+		cookieDomain, cookieName string
+	}{
+		{
+			hostHeader:   "xeiaso.net",
+			cookieDomain: "xeiaso.net",
+			cookieName:   "techaro.lol-anubis-auth",
+		},
+		{
+			hostHeader:   "blog.xeiaso.net",
+			cookieDomain: "xeiaso.net",
+			cookieName:   "techaro.lol-anubis-auth",
+		},
+		{
+			hostHeader:   "foo.shark-harmonic.ts.net",
+			cookieDomain: "shark-harmonic.ts.net",
+			cookieName:   "techaro.lol-anubis-auth",
+		},
+	} {
+		t.Run(fmt.Sprint(tt.hostHeader, tt.cookieDomain, tt.cookieName), func(t *testing.T) {
+			srv := spawnAnubis(t, Options{
+				CookieDomain: "DYNAMIC_SECOND_LEVEL_DOMAIN",
+			})
+			cookieDomain, cookieName := srv.GetCookieScope(tt.hostHeader)
+
+			if cookieDomain != tt.cookieDomain {
+				t.Errorf("wanted cookie domain %q but got: %q", tt.cookieDomain, cookieDomain)
+			}
+			if cookieName != tt.cookieName {
+				t.Errorf("wanted cookie name %q but got: %q", tt.cookieName, cookieName)
+			}
+		})
 	}
 }
