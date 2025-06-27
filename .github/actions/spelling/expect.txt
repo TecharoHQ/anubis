@@ -87,6 +87,11 @@ extldflags
 facebookgo
 Factset
 fastcgi
+FCr
+fcrdns
+fcrdnscheck
+fdc
+fdns
 fediverse
 finfos
 Firecrawl
@@ -136,6 +141,7 @@ impressum
 inp
 IPTo
 iptoasn
+isp
 iss
 isset
 ivh
@@ -227,6 +233,7 @@ redir
 redirectscheme
 refactors
 relayd
+remotehost
 reputational
 reqmeta
 risc
