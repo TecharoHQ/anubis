@@ -32,6 +32,10 @@ THE SOFTWARE.
 for the JavaScript code in this page.
 */'
 
+# Copy localization files to static directory
+mkdir -p static/locales
+cp ../lib/localization/locales/*.json static/locales/
+
 esbuild js/main.mjs --sourcemap --bundle --minify --outfile=static/js/main.mjs "--banner:js=${LICENSE}"
 gzip -f -k -n static/js/main.mjs
 zstd -f -k --ultra -22 static/js/main.mjs

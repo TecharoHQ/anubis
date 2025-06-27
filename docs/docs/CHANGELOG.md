@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement a [forward-confirming reverse DNS-based check method](./admin/policies.mdx#reverse-dns-based-filtering) and [expression method](./admin/configuration/expressions.mdx#fcrdnscheck) ([#431](https://github.com/TecharoHQ/anubis/issues/431))
 - Add default rules for increasing the weight of clients that pretend to be search engines but are not valid
 - Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
+- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677))
+- Implement localization system. Find locale files in lib/localization/locales/.
 
 ## v1.20.0: Thancred Waters
 
@@ -40,6 +42,7 @@ A lot of performance improvements have been made:
 
 And some cleanups/refactors were added:
 
+- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not
