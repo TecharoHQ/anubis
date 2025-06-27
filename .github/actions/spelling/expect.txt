@@ -33,7 +33,7 @@ Caddyfile
 caninetools
 Cardyb
 celchecker
-CELPHASE
+celphase
 cerr
 certresolver
 cespare
@@ -42,6 +42,7 @@ cgr
 chainguard
 chall
 challengemozilla
+Chargement
 checkpath
 checkresult
 chibi
@@ -183,6 +184,7 @@ mozilla
 nbf
 netsurf
 nginx
+nicksnyder
 nobots
 NONINFRINGEMENT
 nosleep

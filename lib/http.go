@@ -12,6 +12,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
@@ -83,9 +84,11 @@ func randomChance(n int) bool {
 }
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
+	localizer := localization.GetLocalizer(r)
+
 	if returnHTTPStatusOnly {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Authorization required"))
+		w.Write([]byte(localizer.T("authorization_required")))
 		return
 	}
 
@@ -93,7 +96,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") && randomChance(64) {
 		lg.Error("client was given a challenge but does not in fact support gzip compression")
-		s.respondWithError(w, r, "Client Error: Please ensure your browser is up to date and try again later.")
+		s.respondWithError(w, r, localizer.T("client_error_browser"))
 	}
 
 	challengesIssued.WithLabelValues("embedded").Add(1)
@@ -118,7 +121,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	impl, ok := challenge.Get(rule.Challenge.Algorithm)
 	if !ok {
 		lg.Error("check failed", "err", "can't get algorithm", "algorithm", rule.Challenge.Algorithm)
-		s.respondWithError(w, r, fmt.Sprintf("Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to file a bug as Anubis is trying to use challenge method %s but it does not exist in the challenge registry", rule.Challenge.Algorithm))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
 		return
 	}
 
@@ -132,7 +135,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	component, err := impl.Issue(r, lg, in)
 	if err != nil {
 		lg.Error("[unexpected] render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
-		s.respondWithError(w, r, "Internal Server Error: please contact the administrator and ask them to look for the logs around \"RenderIndex\"")
+		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")))
 		return
 	}
 
@@ -144,8 +147,10 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
+	localizer := localization.GetLocalizer(r)
+
 	templ.Handler(
-		web.Base("Benchmarking Anubis!", web.Bench(), s.policy.Impressum),
+		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, localizer),
 	).ServeHTTP(w, r)
 }
 
@@ -154,7 +159,9 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 }
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
-	templ.Handler(web.Base("Oh noes!", web.ErrorPage(msg, s.opts.WebmasterEmail), s.policy.Impressum), templ.WithStatus(status)).ServeHTTP(w, r)
+	localizer := localization.GetLocalizer(r)
+
+	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -189,15 +196,17 @@ func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
 
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
+		localizer := localization.GetLocalizer(r)
+
 		redir := r.FormValue("redir")
 		urlParsed, err := r.URL.Parse(redir)
 		if err != nil {
-			s.respondWithStatus(w, r, "Redirect URL not parseable", http.StatusBadRequest)
+			s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), http.StatusBadRequest)
 			return
 		}
 
 		if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
-			s.respondWithStatus(w, r, "Redirect domain not allowed", http.StatusBadRequest)
+			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), http.StatusBadRequest)
 			return
 		}
 
@@ -207,7 +216,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		}
 
 		templ.Handler(
-			web.Base("You are not a bot!", web.StaticHappy(), s.policy.Impressum),
+			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
 		).ServeHTTP(w, r)
 	} else {
 		requestsProxied.WithLabelValues(r.Host).Inc()

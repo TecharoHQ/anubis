@@ -20,6 +20,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
@@ -155,7 +156,7 @@ func New(opts Options) (*Server, error) {
 	if opts.Policy.Impressum != nil {
 		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
-				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum),
+				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
 		}), "GET")
 	}
