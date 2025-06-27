@@ -27,7 +27,7 @@
   "static_check_endpoint": "Este é apenas um ponto de verificação para seu proxy reverso usar.",
   "authorization_required": "Autorização necessária",
   "cookies_disabled": "Seu navegador está configurado para desabilitar cookies. O Anubis requer cookies para o interesse legítimo de garantir que você seja um cliente válido. Habilite os cookies para este domínio.",
-  "access_denied": "ACesso negado: código de errado",
+  "access_denied": "Acesso negado: código de errado",
   "dronebl_entry": "DroneBL relatou uma entrada",
   "see_dronebl_lookup": "consulte",
   "internal_server_error": "Erro interno do servidor: o administrador configurou incorretamente o Anubis. Entre em contato com o administrador e peça para ele procurar os logs em torno dele.",
