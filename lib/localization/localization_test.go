@@ -58,6 +58,27 @@ func TestLocalizationService(t *testing.T) {
 	})
 }
 
+type manifest struct {
+	SupportedLanguages []string `json:"supported_languages"`
+}
+
+func loadManifest(t *testing.T) manifest {
+	t.Helper()
+
+	fin, err := localeFS.Open("locales/manifest.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close()
+
+	var result manifest
+	if err := json.NewDecoder(fin).Decode(&result); err != nil {
+		t.Fatal(err)
+	}
+
+	return result
+}
+
 func TestComprehensiveTranslations(t *testing.T) {
 	service := NewLocalizationService()
 
@@ -79,7 +100,7 @@ func TestComprehensiveTranslations(t *testing.T) {
 
 	sort.Strings(keys)
 
-	for _, lang := range []string{"en", "es", "fr"} {
+	for _, lang := range loadManifest(t).SupportedLanguages {
 		t.Run(lang, func(t *testing.T) {
 			loc := service.GetLocalizer(lang)
 			sl := SimpleLocalizer{Localizer: loc}
