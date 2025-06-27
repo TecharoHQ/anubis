@@ -5,3 +5,12 @@
       - userAgent.matches("\\+https\\://help\\.qwant\\.com/bot/")
       - fcrdns.check("\\.qwant\\.com$")
   action: ALLOW
+- name: not-qwantbot
+  # https://help.qwant.com/bot/
+  expression:
+    all:
+      - userAgent.matches("\\+https\\://help\\.qwant\\.com/bot/")
+      - '!(fcrdns.check("\\.qwant\\.com$"))'
+  action: WEIGH
+  weight:
+    adjust: 5

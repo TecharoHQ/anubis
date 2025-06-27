@@ -6,3 +6,11 @@
       - userAgent.matches("Applebot")
       - fcrdns.check("\\.applebot\\.apple\\.com$")
   action: ALLOW
+- name: not-applebot
+  expression:
+    all:
+      - userAgent.matches("Applebot")
+      - '!(fcrdns.check("\\.applebot\\.apple\\.com$"))'
+  action: WEIGH
+  weight:
+    adjust: 5

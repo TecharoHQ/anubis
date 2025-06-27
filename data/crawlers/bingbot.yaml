@@ -5,3 +5,11 @@
       - userAgent.matches("\\+http\\://www\\.bing\\.com/bingbot\\.htm")
       - fcrdns.check("\\.search\\.msn\\.com$")
   action: ALLOW
+- name: not-bingbot
+  expression:
+    all:
+      - userAgent.matches("\\+http\\://www\\.bing\\.com/bingbot\\.htm")
+      - '!(fcrdns.check("\\.search\\.msn\\.com$"))'
+  action: WEIGH
+  weight:
+    adjust: 5

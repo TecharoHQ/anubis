@@ -5,3 +5,11 @@
       - userAgent.matches("\\+https\\://www\\.mojeek\\.com/bot\\.html")
       - fcrdns.check("\\.mojeek\\.com$")
   action: ALLOW
+- name: not-mojeekbot
+  expression:
+    all:
+      - userAgent.matches("\\+https\\://www\\.mojeek\\.com/bot\\.html")
+      - '!(fcrdns.check("\\.mojeek\\.com$"))'
+  action: WEIGH
+  weight:
+    adjust: 5
