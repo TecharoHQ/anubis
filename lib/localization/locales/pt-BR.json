@@ -32,7 +32,7 @@
   "see_dronebl_lookup": "consulte",
   "internal_server_error": "Erro interno do servidor: o administrador configurou incorretamente o Anubis. Entre em contato com o administrador e peça para ele procurar os logs em torno dele.",
   "invalid_redirect": "Redirecionamento inválido",
-  "redirect_not_parseable": "URL de redirect não analisável",
+  "redirect_not_parseable": "URL de redirecionamento não analisável",
   "redirect_domain_not_allowed": "Domínio de redirecionamento não permitido",
   "failed_to_sign_jwt": "falha ao assinar JWT",
   "invalid_invocation": "Invocação inválida de MakeChallenge",
