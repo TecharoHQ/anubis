@@ -1,14 +1,15 @@
-package localization_test
+package localization
 
 import (
+	"encoding/json"
+	"sort"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/lib/localization"	
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 func TestLocalizationService(t *testing.T) {
-	service := localization.NewLocalizationService()
+	service := NewLocalizationService()
 
 	t.Run("English localization", func(t *testing.T) {
 		localizer := service.GetLocalizer("en")
@@ -55,4 +56,40 @@ func TestLocalizationService(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestComprehensiveTranslations(t *testing.T) {
+	service := NewLocalizationService()
+
+	var translations = map[string]any{}
+	fin, err := localeFS.Open("locales/en.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close()
+
+	if err := json.NewDecoder(fin).Decode(&translations); err != nil {
+		t.Fatal(err)
+	}
+
+	var keys []string
+	for k := range translations {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	for _, lang := range []string{"en", "es", "fr"} {
+		t.Run(lang, func(t *testing.T) {
+			loc := service.GetLocalizer(lang)
+			sl := SimpleLocalizer{Localizer: loc}
+			for _, key := range keys {
+				t.Run(key, func(t *testing.T) {
+					if result := sl.T(key); result == "" {
+						t.Error("key not defined")
+					}
+				})
+			}
+		})
+	}
 }
