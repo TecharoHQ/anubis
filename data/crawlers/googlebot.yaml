@@ -9,7 +9,7 @@
   expression:
     all:
       - userAgent.matches("\\+http\\://www\\.google\\.com/bot\\.html")
-      - fcrdns.check("\\.googlebot\\.com$")
+      - '!(fcrdns.check("\\.googlebot\\.com$"))'
   action: WEIGH
   weight:
     adjust: 5
