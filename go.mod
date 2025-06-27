@@ -134,6 +134,7 @@ require (
 tool (
 	github.com/TecharoHQ/yeet/cmd/yeet
 	github.com/a-h/templ/cmd/templ
+	github.com/nicksnyder/go-i18n/v2/goi18n
 	github.com/suzuki-shunsuke/pinact/cmd/pinact
 	golang.org/x/tools/cmd/deadcode
 	golang.org/x/tools/cmd/goimports
