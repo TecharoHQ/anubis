@@ -23,7 +23,7 @@ const getAvailableLanguages = async () => {
   const basePrefix = JSON.parse(
     document.getElementById("anubis_base_prefix").textContent,
   );
-  
+
   try {
     const response = await fetch(`${basePrefix}/.within.website/x/cmd/anubis/static/locales/manifest.json`);
     if (response.ok) {
@@ -33,7 +33,7 @@ const getAvailableLanguages = async () => {
   } catch (error) {
     console.warn('Failed to load language manifest, falling back to default languages');
   }
-  
+
   // Fallback to default languages if manifest loading fails
   return ['en'];
 };
@@ -42,11 +42,11 @@ const getAvailableLanguages = async () => {
 const getBrowserLanguage = async () => {
   const lang = navigator.language || navigator.userLanguage;
   const availableLanguages = await getAvailableLanguages();
-  
+
   // Extract the language code (first 2 characters)
   const langCode = lang.substring(0, 2).toLowerCase();
-  
-  // Return the language if supported, otherwise fallback to English
+
+  // Return the language if supported, or use English
   return availableLanguages.includes(langCode) ? langCode : 'en';
 };
 
