@@ -156,6 +156,7 @@ lcj
 ldflags
 letsencrypt
 Lexentale
+lftp
 lgbt
 licend
 licstart
@@ -208,6 +209,7 @@ pki
 podkova
 podman
 prebaked
+prefixtable
 privkey
 promauto
 promhttp
