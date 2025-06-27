@@ -85,7 +85,7 @@ func randomChance(n int) bool {
 
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
 	localizer := localization.GetLocalizer(r)
-	
+
 	if returnHTTPStatusOnly {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(localizer.T("authorization_required")))
@@ -148,9 +148,9 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
-	
+
 	templ.Handler(
-		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer.Localizer), s.policy.Impressum, localizer.Localizer),
+		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, localizer),
 	).ServeHTTP(w, r)
 }
 
@@ -160,8 +160,8 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
 	localizer := localization.GetLocalizer(r)
-	
-	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, localizer.Localizer), s.policy.Impressum, localizer.Localizer), templ.WithStatus(status)).ServeHTTP(w, r)
+
+	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -197,7 +197,7 @@ func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
 		localizer := localization.GetLocalizer(r)
-		
+
 		redir := r.FormValue("redir")
 		urlParsed, err := r.URL.Parse(redir)
 		if err != nil {
@@ -214,9 +214,9 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, redir, http.StatusFound)
 			return
 		}
-		
+
 		templ.Handler(
-			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer.Localizer), s.policy.Impressum, localizer.Localizer),
+			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
 		).ServeHTTP(w, r)
 	} else {
 		requestsProxied.WithLabelValues(r.Host).Inc()

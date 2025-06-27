@@ -36,7 +36,7 @@ func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *challenge.IssueInput)
 	u.RawQuery = q.Encode()
 
 	loc := localization.GetLocalizer(r)
-	component, err := web.BaseWithChallengeAndOGTags(loc.T("making_sure_not_bot"), page(in.Challenge, u.String(), in.Rule.Challenge.Difficulty, loc), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags, loc.Localizer)
+	component, err := web.BaseWithChallengeAndOGTags(loc.T("making_sure_not_bot"), page(in.Challenge, u.String(), in.Rule.Challenge.Difficulty, loc), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags, loc)
 
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)

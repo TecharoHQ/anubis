@@ -3,12 +3,12 @@ package web
 import (
 	"fmt"
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/xess"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-templ base(title string, body templ.Component, impressum *config.Impressum, challenge any, ogTags map[string]string, localizer *i18n.Localizer) {
+templ base(title string, body templ.Component, impressum *config.Impressum, challenge any, ogTags map[string]string, localizer *localization.SimpleLocalizer) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -72,14 +72,16 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 				<footer>
 					<center>
 						<p>
-							{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "protected_by"}) } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
+							{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
 	href="https://techaro.lol"
->Techaro</a>. { localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "made_with"}) }.
+>Techaro</a>. { localizer.T("made_with") }.
 						</p>
-						<p>{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "mascot_design"}) } <a href="https://bsky.app/profile/celphase.bsky.social">CELPHASE</a>.</p>
+						<p>{ localizer.T("mascot_design") } <a href="https://bsky.app/profile/celphase.bsky.social">{ localizer.T("celphase") }</a>.</p>
 						if impressum != nil {
-							<p>@templ.Raw(impressum.Footer)
--- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a></p>
+							<p>
+								@templ.Raw(impressum.Footer)
+								-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
+							</p>
 						}
 					</center>
 				</footer>
@@ -88,59 +90,59 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 	</html>
 }
 
-templ index(localizer *i18n.Localizer) {
+templ index(localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
 		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
-		<p id="status">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"}) }</p>
+		<p id="status">{ localizer.T("loading") }</p>
 		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
 		<div id="progress" role="progressbar" aria-labelledby="status">
 			<div class="bar-inner"></div>
 		</div>
 		<details>
-			<summary>{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "why_am_i_seeing"}) }</summary>
+			<summary>{ localizer.T("why_am_i_seeing") }</summary>
 			<p>
-				{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "ai_companies_explanation"}) }
+				{ localizer.T("ai_companies_explanation") }
 			</p>
 			<p>
-				{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "anubis_compromise"}) }
+				{ localizer.T("anubis_compromise") }
 			</p>
 			<p>
-				{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "hack_purpose"}) }
+				{ localizer.T("hack_purpose") }
 			</p>
 			<p>
-				{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "jshelter_note"}) }
+				{ localizer.T("jshelter_note") }
 			</p>
-			<p>{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "version_info"}) } <code>{ anubis.Version }</code>.</p>
+			<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
 		</details>
 		<noscript>
 			<p>
-				{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "javascript_required"}) }
+				{ localizer.T("javascript_required") }
 			</p>
 		</noscript>
 		<div id="testarea"></div>
 	</div>
 }
 
-templ errorPage(message string, mail string, localizer *i18n.Localizer) {
+templ errorPage(message string, mail string, localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
-		<button onClick="window.location.reload();">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "try_again"}) }</button>
+		<button onClick="window.location.reload();">{ localizer.T("try_again") }</button>
 		if mail != "" {
 			<p>
-				<a href="/">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "go_home"}) }</a> { localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "contact_webmaster"}) }
+				<a href="/">{ localizer.T("go_home") }</a> { localizer.T("contact_webmaster") }
 				<a href={ "mailto:" + templ.SafeURL(mail) }>
 					{ mail }
 				</a>
 			</p>
 		} else {
-			<p><a href="/">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "go_home"}) }</a></p>
+			<p><a href="/">{ localizer.T("go_home") }</a></p>
 		}
 	</div>
 }
 
-templ StaticHappy(localizer *i18n.Localizer) {
+templ StaticHappy(localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img
 			style="display:none;"
@@ -148,25 +150,25 @@ templ StaticHappy(localizer *i18n.Localizer) {
 			src={ "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" +
     anubis.Version }
 		/>
-		<p>{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "static_check_endpoint"}) }</p>
+		<p>{ localizer.T("static_check_endpoint") }</p>
 	</div>
 }
 
-templ bench(localizer *i18n.Localizer) {
+templ bench(localizer *localization.SimpleLocalizer) {
 	<div style="height:20rem;display:flex">
 		<table style="margin-top:1rem;display:grid;grid-template:auto 1fr/auto auto;gap:0 0.5rem">
 			<thead
 				style="border-bottom:1px solid black;padding:0.25rem 0;display:grid;grid-template:1fr/subgrid;grid-column:1/-1"
 			>
 				<tr id="table-header" style="display:contents">
-					<th style="width:4.5rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "time"}) }</th>
-					<th style="width:4rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "iters"}) }</th>
+					<th style="width:4.5rem">{ localizer.T("time") }</th>
+					<th style="width:4rem">{ localizer.T("iters") }</th>
 				</tr>
 				<tr id="table-header-compare" style="display:none">
-					<th style="width:4.5rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "time_a"}) }</th>
-					<th style="width:4rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "iters_a"}) }</th>
-					<th style="width:4.5rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "time_b"}) }</th>
-					<th style="width:4rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "iters_b"}) }</th>
+					<th style="width:4.5rem">{ localizer.T("time_a") }</th>
+					<th style="width:4rem">{ localizer.T("iters_a") }</th>
+					<th style="width:4.5rem">{ localizer.T("time_b") }</th>
+					<th style="width:4rem">{ localizer.T("iters_b") }</th>
 				</tr>
 			</thead>
 			<tbody
@@ -176,25 +178,25 @@ templ bench(localizer *i18n.Localizer) {
 		</table>
 		<div class="centered-div">
 			<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
-			<p id="status" style="max-width:256px">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"}) }</p>
+			<p id="status" style="max-width:256px">{ localizer.T("loading") }</p>
 			<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/bench.mjs?cacheBuster=" + anubis.Version }></script>
 			<div id="sparkline"></div>
 			<noscript>
-				<p>{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "benchmark_requires_js"}) }</p>
+				<p>{ localizer.T("benchmark_requires_js") }</p>
 			</noscript>
 		</div>
 	</div>
 	<form id="controls" style="position:fixed;top:0.5rem;right:0.5rem">
 		<div style="display:flex;justify-content:end">
-			<label for="difficulty-input" style="margin-right:0.5rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "difficulty"}) }</label>
+			<label for="difficulty-input" style="margin-right:0.5rem">{ localizer.T("difficulty") }</label>
 			<input id="difficulty-input" type="number" name="difficulty" style="width:3rem"/>
 		</div>
 		<div style="margin-top:0.25rem;display:flex;justify-content:end">
-			<label for="algorithm-select" style="margin-right:0.5rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "algorithm"}) }</label>
+			<label for="algorithm-select" style="margin-right:0.5rem">{ localizer.T("algorithm") }</label>
 			<select id="algorithm-select" name="algorithm"></select>
 		</div>
 		<div style="margin-top:0.25rem;display:flex;justify-content:end">
-			<label for="compare-select" style="margin-right:0.5rem">{ localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "compare"}) }</label>
+			<label for="compare-select" style="margin-right:0.5rem">{ localizer.T("compare") }</label>
 			<select id="compare-select" name="compare">
 				<option value="NONE">-</option>
 			</select>

@@ -41,6 +41,7 @@
   "benchmarking_anubis": "¡Benchmarking de Anubis!",
   "you_are_not_a_bot": "¡No eres un robot!",
   "making_sure_not_bot": "¡Asegurándonos de que no eres un robot!",
+  "celphase": "CELPHASE",
   "js_web_crypto_error": "Tu navegador no tiene un elemento web.crypto funcional. ¿Estás viendo esta página en un contexto seguro?",
   "js_web_workers_error": "Tu navegador no soporta web workers (Anubis los usa para evitar bloquear tu navegador). ¿Tienes un plugin como JShelter instalado?",
   "js_cookies_error": "Tu navegador no almacena cookies. Anubis usa cookies para determinar qué clientes han pasado los desafíos almacenando un token firmado en una cookie. Por favor habilita el almacenamiento de cookies para este dominio. Los nombres de las cookies que Anubis almacena pueden variar sin previo aviso. Los nombres y valores de las cookies no son parte de la API pública.",
