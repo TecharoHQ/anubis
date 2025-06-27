@@ -15,6 +15,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -28,6 +29,9 @@ func loadPolicies(t *testing.T, fname string, difficulty int) *policy.ParsedConf
 	t.Helper()
 
 	ctx := thothmock.WithMockThoth(t)
+
+	fdns := fcrdns.NewFCrDNS()
+	ctx = fcrdns.With(ctx, fdns)
 
 	if fname == "" {
 		fname = "./testdata/test_config.yaml"
@@ -175,7 +179,10 @@ func TestLoadPolicies(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := policy.ParseConfig(t.Context(), fin, fname, 4); err != nil {
+			fdns := fcrdns.NewFCrDNS()
+			ctx := fcrdns.With(t.Context(), fdns)
+
+			if _, err := policy.ParseConfig(ctx, fin, fname, 4); err != nil {
 				t.Fatal(err)
 			}
 		})
