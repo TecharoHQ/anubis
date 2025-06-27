@@ -3,7 +3,9 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 )
 
 var (
@@ -16,6 +18,32 @@ type ExpressionOrList struct {
 	Expression string   `json:"-" yaml:"-"`
 	All        []string `json:"all,omitempty" yaml:"all,omitempty"`
 	Any        []string `json:"any,omitempty" yaml:"any,omitempty"`
+}
+
+func (eol ExpressionOrList) String() string {
+	switch {
+	case len(eol.Expression) != 0:
+		return eol.Expression
+	case len(eol.All) != 0:
+		var sb strings.Builder
+		for i, pred := range eol.All {
+			if i != 0 {
+				fmt.Fprintf(&sb, " && ")
+			}
+			fmt.Fprintf(&sb, "( %s )", pred)
+		}
+		return sb.String()
+	case len(eol.Any) != 0:
+		var sb strings.Builder
+		for i, pred := range eol.Any {
+			if i != 0 {
+				fmt.Fprintf(&sb, " || ")
+			}
+			fmt.Fprintf(&sb, "( %s )", pred)
+		}
+		return sb.String()
+	}
+	panic("this should not happen")
 }
 
 func (eol ExpressionOrList) Equal(rhs *ExpressionOrList) bool {

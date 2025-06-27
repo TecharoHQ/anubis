@@ -44,7 +44,6 @@ chall
 challengemozilla
 checkpath
 checkresult
-chen
 chibi
 cidranger
 ckie
@@ -61,7 +60,6 @@ DDOS
 Debian
 debrpm
 decaymap
-decompiling
 Diffbot
 discordapp
 discordbot
@@ -69,6 +67,7 @@ distros
 dnf
 dnsbl
 dnserr
+domainhere
 dracula
 dronebl
 droneblresponse
@@ -76,6 +75,7 @@ duckduckbot
 eerror
 ellenjoe
 enbyware
+etld
 everyones
 evilbot
 evilsite
@@ -132,6 +132,7 @@ iat
 ifm
 Imagesift
 imgproxy
+impressum
 inp
 IPTo
 iptoasn
@@ -147,6 +148,7 @@ JWTs
 kagi
 kagibot
 keikaku
+Keyfunc
 keypair
 KHTML
 kinda
@@ -164,6 +166,7 @@ Linting
 linuxbrew
 LLU
 loadbalancer
+locahost
 lol
 LOMINSA
 maintainership
@@ -189,6 +192,7 @@ ogtags
 omgili
 omgilibot
 openai
+opengraph
 openrc
 pag
 palemoon
@@ -209,6 +213,7 @@ privkey
 promauto
 promhttp
 proofofwork
+publicsuffix
 pwcmd
 pwuser
 qualys
@@ -219,6 +224,7 @@ rawler
 rcvar
 redir
 redirectscheme
+refactors
 relayd
 reputational
 reqmeta
@@ -239,6 +245,7 @@ Seo
 setsebool
 shellcheck
 Sidetrade
+simprint
 sitemap
 sls
 sni
@@ -262,6 +269,7 @@ techarohq
 templ
 templruntime
 testarea
+Thancred
 thoth
 thothmock
 Tik
@@ -301,6 +309,7 @@ xess
 xff
 XForwarded
 XNG
+XOB
 XReal
 yae
 YAMLTo
@@ -310,4 +319,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
+Zonbocom
 zos

@@ -83,7 +83,9 @@
 ^\Q.github/FUNDING.yml\E$
 ^\Q.github/workflows/spelling.yml\E$
 ^data/crawlers/
+^docs/blog/tags\.yml$
 ^docs/manifest/.*$
 ^docs/static/\.nojekyll$
+^lib/policy/config/testdata/bad/unparseable\.json$
 ignore$
 robots.txt

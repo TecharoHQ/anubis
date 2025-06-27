@@ -213,3 +213,54 @@ func TestExpressionOrListUnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestExpressionOrListString(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		in   ExpressionOrList
+		out  string
+	}{
+		{
+			name: "single expression",
+			in: ExpressionOrList{
+				Expression: "true",
+			},
+			out: "true",
+		},
+		{
+			name: "all",
+			in: ExpressionOrList{
+				All: []string{"true"},
+			},
+			out: "( true )",
+		},
+		{
+			name: "all with &&",
+			in: ExpressionOrList{
+				All: []string{"true", "true"},
+			},
+			out: "( true ) && ( true )",
+		},
+		{
+			name: "any",
+			in: ExpressionOrList{
+				All: []string{"true"},
+			},
+			out: "( true )",
+		},
+		{
+			name: "any with ||",
+			in: ExpressionOrList{
+				Any: []string{"true", "true"},
+			},
+			out: "( true ) || ( true )",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.in.String()
+			if result != tt.out {
+				t.Errorf("wanted %q, got: %q", tt.out, result)
+			}
+		})
+	}
+}

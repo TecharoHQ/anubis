@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"sync/atomic"
 
 	"github.com/TecharoHQ/anubis/internal/thoth"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -21,13 +22,17 @@ var (
 	}, []string{"rule", "action"})
 
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
+	warnedAboutThresholds             = &atomic.Bool{}
 )
 
 type ParsedConfig struct {
 	orig *config.Config
 
 	Bots              []Bot
+	Thresholds        []*Threshold
 	DNSBL             bool
+	Impressum         *config.Impressum
+	OpenGraph         config.OpenGraph
 	DefaultDifficulty int
 	StatusCodes       config.StatusCodes
 }
@@ -35,6 +40,7 @@ type ParsedConfig struct {
 func NewParsedConfig(orig *config.Config) *ParsedConfig {
 	return &ParsedConfig{
 		orig:        orig,
+		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
 	}
 }
@@ -145,9 +151,31 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			parsedBot.Weight = b.Weight
 		}
 
+		result.Impressum = c.Impressum
+
 		parsedBot.Rules = cl
 
 		result.Bots = append(result.Bots, parsedBot)
+	}
+
+	for _, t := range c.Thresholds {
+		if t.Name == "legacy-anubis-behaviour" && t.Expression.String() == "true" {
+			if !warnedAboutThresholds.Load() {
+				slog.Warn("configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")
+				warnedAboutThresholds.Store(true)
+			}
+
+			t.Challenge.Difficulty = defaultDifficulty
+			t.Challenge.ReportAs = defaultDifficulty
+		}
+
+		threshold, err := ParsedThresholdFromConfig(t)
+		if err != nil {
+			validationErrs = append(validationErrs, fmt.Errorf("can't compile threshold config for %s: %w", t.Name, err))
+			continue
+		}
+
+		result.Thresholds = append(result.Thresholds, threshold)
 	}
 
 	if len(validationErrs) > 0 {
