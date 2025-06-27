@@ -31,7 +31,7 @@ func BotEnvironment() (*cel.Env, error) {
 			cel.BinaryBinding(func(lhs, rhs ref.Val) ref.Val {
 				f, ok := lhs.Value().(FCrDNS)
 				if !ok {
-					return types.ValOrErr(types.False, "receiver is not an fcrdns instance, but is %T", lhs)
+					return types.ValOrErr(types.False, "receiver is not a fcrdns instance, but is %T", lhs)
 				}
 				pattern, ok := rhs.Value().(string)
 				if !ok {
