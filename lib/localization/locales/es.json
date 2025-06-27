@@ -12,6 +12,7 @@
   "try_again": "Intentar de nuevo",
   "go_home": "Inicio",
   "contact_webmaster": "o si crees que no deberías estar bloqueado, por favor contacta al webmaster en",
+  "connection_security": "Espere un momento mientras garantizamos la seguridad de su conexión.",
   "javascript_required": "Desafortunadamente, necesitas habilitar JavaScript para pasar este desafío. Esto es requerido porque las empresas de IA han cambiado el contrato social sobre cómo funciona el alojamiento de sitios web. Una solución sin JS está en desarrollo.",
   "benchmark_requires_js": "Ejecutar la herramienta de benchmark requiere que JavaScript esté habilitado.",
   "difficulty": "Dificultad:",
