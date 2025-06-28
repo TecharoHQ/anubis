@@ -30,6 +30,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/thoth"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
@@ -278,7 +279,8 @@ func main() {
 		log.Fatalf("you can't set COOKIE_DOMAIN and COOKIE_DYNAMIC_DOMAIN at the same time")
 	}
 
-	ctx := context.Background()
+	fdns := fcrdns.NewFCrDNS()
+	ctx := fcrdns.With(context.Background(), fdns)
 
 	// Thoth configuration
 	switch {
@@ -384,6 +386,7 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
+		FCrDNS:            fdns,
 		BasePrefix:        *basePrefix,
 		StripBasePrefix:   *stripBasePrefix,
 		Next:              rp,

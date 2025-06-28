@@ -24,6 +24,7 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
@@ -69,6 +70,7 @@ type Server struct {
 	policy      *policy.ParsedConfig
 	DNSBLCache  *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags      *ogtags.OGTagCache
+	FCrDNS      *fcrdns.FCrDNS
 	cookieName  string
 	ed25519Priv ed25519.PrivateKey
 	hs512Secret []byte
@@ -500,4 +502,5 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 func (s *Server) CleanupDecayMap() {
 	s.DNSBLCache.Cleanup()
 	s.OGTags.Cleanup()
+	s.FCrDNS.Cleanup()
 }

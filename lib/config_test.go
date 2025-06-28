@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
 	"github.com/TecharoHQ/anubis/lib/policy"
 )
@@ -26,7 +27,10 @@ func TestBadConfigs(t *testing.T) {
 	for _, st := range finfos {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
-			if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("policy", "config", "testdata", "bad", st.Name()), anubis.DefaultDifficulty); err == nil {
+			fdns := fcrdns.NewFCrDNS()
+			ctx := fcrdns.With(t.Context(), fdns)
+
+			if _, err := LoadPoliciesOrDefault(ctx, filepath.Join("policy", "config", "testdata", "bad", st.Name()), anubis.DefaultDifficulty); err == nil {
 				t.Fatal(err)
 			} else {
 				t.Log(err)
@@ -46,13 +50,17 @@ func TestGoodConfigs(t *testing.T) {
 		t.Run(st.Name(), func(t *testing.T) {
 			t.Run("with-thoth", func(t *testing.T) {
 				ctx := thothmock.WithMockThoth(t)
+				fdns := fcrdns.NewFCrDNS()
+				ctx = fcrdns.With(ctx, fdns)
 				if _, err := LoadPoliciesOrDefault(ctx, filepath.Join("policy", "config", "testdata", "good", st.Name()), anubis.DefaultDifficulty); err != nil {
 					t.Fatal(err)
 				}
 			})
 
 			t.Run("without-thoth", func(t *testing.T) {
-				if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("policy", "config", "testdata", "good", st.Name()), anubis.DefaultDifficulty); err != nil {
+				fdns := fcrdns.NewFCrDNS()
+				ctx := fcrdns.With(t.Context(), fdns)
+				if _, err := LoadPoliciesOrDefault(ctx, filepath.Join("policy", "config", "testdata", "good", st.Name()), anubis.DefaultDifficulty); err != nil {
 					t.Fatal(err)
 				}
 			})

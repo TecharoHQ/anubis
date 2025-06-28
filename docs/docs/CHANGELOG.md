@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Implement a [forward-confirming reverse DNS-based check method](./admin/policies.mdx#reverse-dns-based-filtering) and [expression method](./admin/configuration/expressions.mdx#fcrdnscheck) ([#431](https://github.com/TecharoHQ/anubis/issues/431))
+- Add default rules for increasing the weight of clients that pretend to be search engines but are not valid
+- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
 - Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677))
 - Implement localization system. Find locale files in lib/localization/locales/.
 

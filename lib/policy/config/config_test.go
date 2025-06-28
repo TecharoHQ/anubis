@@ -168,6 +168,16 @@ func TestBotValid(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "reverse dns",
+			bot: BotConfig{
+				Name:           "search-bot",
+				Action:         RuleChallenge,
+				UserAgentRegex: p("SearchBot"),
+				DomainRegex:    p("example.com"),
+			},
+			err: nil,
+		},
+		{
 			name: "weight rule without weight",
 			bot: BotConfig{
 				Name:           "weight-adjust-if-mozilla",

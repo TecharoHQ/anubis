@@ -108,6 +108,7 @@ Anubis exposes the following variables to expressions:
 | `query`         | `map[string, string]` | The [query parameters](https://web.dev/articles/url-parts#query) of the request being processed.                                          | `?foo=bar` -> `{"foo": "bar"}`                               |
 | `remoteAddress` | `string`              | The IP address of the client.                                                                                                             | `1.1.1.1`                                                    |
 | `userAgent`     | `string`              | The [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) string in the request being processed. | `Mozilla/5.0 Gecko/20100101 Firefox/137.0`                   |
+| `fcrdns`        | `fcrdns`              | Custom object for performing the forward-confirmed reverse DNS check.                                                                     | `fcrdns.check("\\.qwant\\.com$")`                            |
 
 Of note: in many languages when you look up a key in a map and there is nothing there, the language will return some "falsy" value like `undefined` in JavaScript, `None` in Python, or the zero value of the type in Go. In CEL, if you try to look up a value that does not exist, execution of the expression will fail and Anubis will return an error.
 
@@ -166,6 +167,26 @@ This is best applied when doing explicit block rules, eg:
 ```
 
 It seems counter-intuitive to allow known bad clients through sometimes, but this allows you to confuse attackers by making Anubis' behavior random. Adjust the thresholds and numbers as facts and circumstances demand.
+
+### `fcrdns.check`
+
+```ts
+function check(pattern: string): bool;
+```
+
+`fcrdns.check` accepts a regex string and performs the same check as the `domain_regex` field. For more details, read [Reverse DNS based filtering](../policies#reverse-dns-based-filtering).
+
+Example for search engine bots:
+
+```yaml
+- name: qwantbot
+  # https://help.qwant.com/bot/
+  expression:
+    all:
+      - userAgent.matches("\\+https\\://help\\.qwant\\.com/bot/")
+      - fcrdns.check("\\.qwant\\.com$")
+  action: ALLOW
+```
 
 ## Life advice
 

@@ -1,5 +1,16 @@
 - name: qwantbot
-  user_agent_regex: \+https\://help\.qwant\.com/bot/
+  # https://help.qwant.com/bot/
+  expression:
+    all:
+      - userAgent.matches("\\+https\\://help\\.qwant\\.com/bot/")
+      - fcrdns.check("\\.qwant\\.com$")
   action: ALLOW
-  # https://help.qwant.com/wp-content/uploads/sites/2/2025/01/qwantbot.json
-  remote_addresses: [ "91.242.162.0/24" ]
+- name: not-qwantbot
+  # https://help.qwant.com/bot/
+  expression:
+    all:
+      - userAgent.matches("\\+https\\://help\\.qwant\\.com/bot/")
+      - '!(fcrdns.check("\\.qwant\\.com$"))'
+  action: WEIGH
+  weight:
+    adjust: 5

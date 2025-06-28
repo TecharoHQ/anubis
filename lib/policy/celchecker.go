@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/lib/policy/expressions"
 	"github.com/google/cel-go/cel"
@@ -13,10 +14,11 @@ import (
 
 type CELChecker struct {
 	program cel.Program
+	fcrdns  *fcrdns.FCrDNS
 	src     string
 }
 
-func NewCELChecker(cfg *config.ExpressionOrList) (*CELChecker, error) {
+func NewCELChecker(cfg *config.ExpressionOrList, fcrdns *fcrdns.FCrDNS) (*CELChecker, error) {
 	env, err := expressions.BotEnvironment()
 	if err != nil {
 		return nil, err
@@ -28,8 +30,9 @@ func NewCELChecker(cfg *config.ExpressionOrList) (*CELChecker, error) {
 	}
 
 	return &CELChecker{
-		src:     cfg.String(),
-		program: program,
+		program,
+		fcrdns,
+		cfg.String(),
 	}, nil
 }
 
@@ -38,7 +41,7 @@ func (cc *CELChecker) Hash() string {
 }
 
 func (cc *CELChecker) Check(r *http.Request) (bool, error) {
-	result, _, err := cc.program.ContextEval(r.Context(), &CELRequest{r})
+	result, _, err := cc.program.ContextEval(r.Context(), &CELRequest{r, cc.fcrdns})
 
 	if err != nil {
 		return false, err
@@ -53,6 +56,7 @@ func (cc *CELChecker) Check(r *http.Request) (bool, error) {
 
 type CELRequest struct {
 	*http.Request
+	fcrdns *fcrdns.FCrDNS
 }
 
 func (cr *CELRequest) Parent() cel.Activation { return nil }
@@ -73,6 +77,8 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 		return expressions.URLValues{Values: cr.URL.Query()}, true
 	case "headers":
 		return expressions.HTTPHeaders{Header: cr.Header}, true
+	case "fcrdns":
+		return expressions.FCrDNS{FCrDNS: cr.fcrdns, Ip: cr.Header.Get("X-Real-Ip")}, true
 	default:
 		return nil, false
 	}

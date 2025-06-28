@@ -18,6 +18,7 @@ import (
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
+	"github.com/TecharoHQ/anubis/internal/fcrdns"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
@@ -30,6 +31,7 @@ import (
 
 type Options struct {
 	Next                http.Handler
+	FCrDNS              *fcrdns.FCrDNS
 	Policy              *policy.ParsedConfig
 	Target              string
 	CookieDynamicDomain bool
@@ -116,6 +118,7 @@ func New(opts Options) (*Server, error) {
 		opts:        opts,
 		DNSBLCache:  decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
+		FCrDNS:      opts.FCrDNS,
 		cookieName:  cookieName,
 	}
 
