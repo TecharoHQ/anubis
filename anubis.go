@@ -13,6 +13,8 @@ var Version = "devel"
 // access.
 var CookieName = ""
 
+// TestCookieName is the name of the cookie that Anubis uses in order to check
+// if cookies are enabled on the client's browser.
 var TestCookieName = ""
 
 // CookieDefaultExpirationTime is the amount of time before the cookie/JWT expires.
