@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -31,22 +32,25 @@ var (
 	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
 	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
 	ErrStatusCodeNotValid                = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
+	ErrRerouteURLRequired                = errors.New("config.Bot: reroute_to URL is required when using DENY_AND_REROUTE action")
+	ErrInvalidRerouteURL                 = errors.New("config.Bot: invalid reroute_to URL")
 )
 
 type Rule string
 
 const (
-	RuleUnknown   Rule = ""
-	RuleAllow     Rule = "ALLOW"
-	RuleDeny      Rule = "DENY"
-	RuleChallenge Rule = "CHALLENGE"
-	RuleWeigh     Rule = "WEIGH"
-	RuleBenchmark Rule = "DEBUG_BENCHMARK"
+	RuleUnknown        Rule = ""
+	RuleAllow          Rule = "ALLOW"
+	RuleDeny           Rule = "DENY"
+	RuleDenyAndReroute Rule = "DENY_AND_REROUTE"
+	RuleChallenge      Rule = "CHALLENGE"
+	RuleWeigh          Rule = "WEIGH"
+	RuleBenchmark      Rule = "DEBUG_BENCHMARK"
 )
 
 func (r Rule) Valid() error {
 	switch r {
-	case RuleAllow, RuleDeny, RuleChallenge, RuleWeigh, RuleBenchmark:
+	case RuleAllow, RuleDeny, RuleDenyAndReroute, RuleChallenge, RuleWeigh, RuleBenchmark:
 		return nil
 	default:
 		return ErrUnknownAction
@@ -65,6 +69,7 @@ type BotConfig struct {
 	Name           string            `json:"name" yaml:"name"`
 	Action         Rule              `json:"action" yaml:"action"`
 	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+	RerouteTo      *string           `json:"reroute_to,omitempty" yaml:"reroute_to,omitempty"`
 
 	// Thoth features
 	GeoIP *GeoIP `json:"geoip,omitempty"`
@@ -80,6 +85,7 @@ func (b BotConfig) Zero() bool {
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
 		b.Challenge != nil,
+		b.RerouteTo != nil,
 		b.GeoIP != nil,
 		b.ASNs != nil,
 	} {
@@ -163,8 +169,8 @@ func (b *BotConfig) Valid() error {
 		}
 	}
 
-	switch b.Action {
-	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny, RuleWeigh:
+	switch b.Action { // todo(json) refactor to use method above
+	case RuleAllow, RuleBenchmark, RuleChallenge, RuleDeny, RuleDenyAndReroute, RuleWeigh:
 		// okay
 	default:
 		errs = append(errs, fmt.Errorf("%w: %q", ErrUnknownAction, b.Action))
@@ -178,6 +184,18 @@ func (b *BotConfig) Valid() error {
 
 	if b.Action == RuleWeigh && b.Weight == nil {
 		b.Weight = &Weight{Adjust: 5}
+	}
+
+	if b.Action == RuleDenyAndReroute {
+		if b.RerouteTo == nil || *b.RerouteTo == "" {
+			errs = append(errs, ErrRerouteURLRequired)
+		} else {
+			if u, err := url.Parse(*b.RerouteTo); err != nil {
+				errs = append(errs, fmt.Errorf("%w: %v", ErrInvalidRerouteURL, err))
+			} else if !u.IsAbs() {
+				errs = append(errs, fmt.Errorf("%w: URL must be absolute (include scheme)", ErrInvalidRerouteURL))
+			}
+		}
 	}
 
 	if len(errs) != 0 {

@@ -122,6 +122,7 @@ healthcheck
 hebis
 hec
 hmc
+honeypots
 hostable
 htmlc
 htmx
@@ -135,6 +136,7 @@ Imagesift
 imgproxy
 impressum
 inp
+Iocaine
 IPTo
 iptoasn
 iss
@@ -264,6 +266,7 @@ subrequest
 SVCNAME
 tagline
 tarballs
+tarpit
 tarrif
 techaro
 techarohq

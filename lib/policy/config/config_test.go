@@ -186,6 +186,65 @@ func TestBotValid(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "deny and reroute with valid URL",
+			bot: BotConfig{
+				Name:           "reroute-bot",
+				Action:         RuleDenyAndReroute,
+				UserAgentRegex: p("BadBot"),
+				RerouteTo:      p("https://example.com/tarpit"),
+			},
+			err: nil,
+		},
+		{
+			name: "deny and reroute with localhost URL",
+			bot: BotConfig{
+				Name:           "reroute-localhost",
+				Action:         RuleDenyAndReroute,
+				UserAgentRegex: p("SpamBot"),
+				RerouteTo:      p("http://localhost:8080/poison"),
+			},
+			err: nil,
+		},
+		{
+			name: "deny and reroute missing URL",
+			bot: BotConfig{
+				Name:           "reroute-missing-url",
+				Action:         RuleDenyAndReroute,
+				UserAgentRegex: p("BadBot"),
+			},
+			err: ErrRerouteURLRequired,
+		},
+		{
+			name: "deny and reroute with empty URL",
+			bot: BotConfig{
+				Name:           "reroute-empty-url",
+				Action:         RuleDenyAndReroute,
+				UserAgentRegex: p("BadBot"),
+				RerouteTo:      p(""),
+			},
+			err: ErrRerouteURLRequired,
+		},
+		{
+			name: "deny and reroute with invalid URL",
+			bot: BotConfig{
+				Name:           "reroute-invalid-url",
+				Action:         RuleDenyAndReroute,
+				UserAgentRegex: p("BadBot"),
+				RerouteTo:      p("not-a-valid-url"),
+			},
+			err: ErrInvalidRerouteURL,
+		},
+		{
+			name: "deny and reroute with malformed URL",
+			bot: BotConfig{
+				Name:           "reroute-malformed-url",
+				Action:         RuleDenyAndReroute,
+				UserAgentRegex: p("BadBot"),
+				RerouteTo:      p("http://[invalid-ipv6"),
+			},
+			err: ErrInvalidRerouteURL,
+		},
 	}
 
 	for _, cs := range tests {
@@ -365,5 +424,10 @@ func TestBotConfigZero(t *testing.T) {
 	}
 	if b.Zero() {
 		t.Error("BotConfig with challenge rules is zero value")
+	}
+
+	b.RerouteTo = p("https://example.com/tarpit")
+	if b.Zero() {
+		t.Error("BotConfig with reroute URL is zero value")
 	}
 }

@@ -1,0 +1,33 @@
+bots:
+  - name: "reroute-scrapers"
+    action: "DENY_AND_REROUTE"
+    user_agent_regex: "ScrapingBot"
+    reroute_to: "http://localhost:8080/poison"
+  
+  - name: "block-bad-actors"
+    action: "DENY"
+    user_agent_regex: "BadActor"
+  
+  - name: "challenge-suspicious"
+    action: "CHALLENGE"
+    user_agent_regex: "SuspiciousBot"
+    challenge:
+      algorithm: "fast"
+      difficulty: 6
+  
+  - name: "allow-good"
+    action: "ALLOW"
+    user_agent_regex: "GoodBot"
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
+
+thresholds:
+  - name: "legacy-anubis-behaviour"
+    expression: "true"
+    action: "CHALLENGE"
+    challenge:
+      algorithm: "fast"
+      difficulty: 5
+      report_as: 5

@@ -14,6 +14,7 @@ type Bot struct {
 	Weight    *config.Weight
 	Name      string
 	Action    config.Rule
+	RerouteTo *string
 }
 
 func (b Bot) Hash() string {
