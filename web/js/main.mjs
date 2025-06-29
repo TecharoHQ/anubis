@@ -18,25 +18,87 @@ const imageURL = (mood, cacheBuster, basePrefix) =>
     cacheBuster,
   });
 
-const dependencies = [
-  {
-    name: "WebCrypto",
-    msg: "Your browser doesn't have a functioning web.crypto element. Are you viewing this over a secure context?",
-    value: window.crypto,
-  },
-  {
-    name: "Web Workers",
-    msg: "Your browser doesn't support web workers (Anubis uses this to avoid freezing your browser). Do you have a plugin like JShelter installed?",
-    value: window.Worker,
-  },
-  {
-    name: "Cookies",
-    msg: "Your browser doesn't store cookies. Anubis uses cookies to determine which clients have passed challenges by storing a signed token in a cookie. Please enable storing cookies for this domain. The names of the cookies Anubis stores may vary without notice. Cookie names and values are not part of the public API.",
-    value: navigator.cookieEnabled,
-  },
-];
+// Detect available languages by loading the manifest
+const getAvailableLanguages = async () => {
+  const basePrefix = JSON.parse(
+    document.getElementById("anubis_base_prefix").textContent,
+  );
+
+  try {
+    const response = await fetch(`${basePrefix}/.within.website/x/cmd/anubis/static/locales/manifest.json`);
+    if (response.ok) {
+      const manifest = await response.json();
+      return manifest.supportedLanguages || ['en'];
+    }
+  } catch (error) {
+    console.warn('Failed to load language manifest, falling back to default languages');
+  }
+
+  // Fallback to default languages if manifest loading fails
+  return ['en'];
+};
+
+// Detect browser language
+const getBrowserLanguage = async () => {
+  const lang = navigator.language || navigator.userLanguage;
+  const availableLanguages = await getAvailableLanguages();
+
+  // Extract the language code (first 2 characters)
+  const langCode = lang.substring(0, 2).toLowerCase();
+
+  // Return the language if supported, or use English
+  return availableLanguages.includes(langCode) ? langCode : 'en';
+};
+
+// Load translations from JSON files
+const loadTranslations = async (lang) => {
+  const basePrefix = JSON.parse(
+    document.getElementById("anubis_base_prefix").textContent,
+  );
+  try {
+    const response = await fetch(`${basePrefix}/.within.website/x/cmd/anubis/static/locales/${lang}.json`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`Failed to load translations for ${lang}, falling back to English`);
+    if (lang !== 'en') {
+      return await loadTranslations('en');
+    }
+    throw error;
+  }
+};
+
+let translations = {};
+let currentLang;
+
+// Initialize translations
+const initTranslations = async () => {
+  currentLang = await getBrowserLanguage();
+  translations = await loadTranslations(currentLang);
+};
+
+const t = (key) => translations[`js_${key}`] || translations[key] || key;
 
 (async () => {
+  // Initialize translations first
+  await initTranslations();
+
+  const dependencies = [
+    {
+      name: "WebCrypto",
+      msg: t('web_crypto_error'),
+      value: window.crypto,
+    },
+    {
+      name: "Web Workers",
+      msg: t('web_workers_error'),
+      value: window.Worker,
+    },
+    {
+      name: "Cookies",
+      msg: t('cookies_error'),
+      value: navigator.cookieEnabled,
+    },
+  ];
   const status = document.getElementById("status");
   const image = document.getElementById("image");
   const title = document.getElementById("title");
@@ -67,19 +129,19 @@ const dependencies = [
 
   if (!window.isSecureContext) {
     ohNoes({
-      titleMsg: "Your context is not secure!",
-      statusMsg: `Try connecting over HTTPS or let the admin know to set up HTTPS. For more information, see <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure">MDN</a>.`,
+      titleMsg: t('context_not_secure'),
+      statusMsg: t('context_not_secure_msg'),
       imageSrc: imageURL("reject", anubisVersion, basePrefix),
     });
     return;
   }
 
-  status.innerHTML = "Calculating...";
+  status.innerHTML = t('calculating');
 
   for (const { value, name, msg } of dependencies) {
     if (!value) {
       ohNoes({
-        titleMsg: `Missing feature ${name}`,
+        titleMsg: `${t('missing_feature')} ${name}`,
         statusMsg: msg,
         imageSrc: imageURL("reject", anubisVersion, basePrefix),
       });
@@ -94,20 +156,20 @@ const dependencies = [
   const process = algorithms[rules.algorithm];
   if (!process) {
     ohNoes({
-      titleMsg: "Challenge error!",
-      statusMsg: `Failed to resolve check algorithm. You may want to reload the page.`,
+      titleMsg: t('challenge_error'),
+      statusMsg: t('challenge_error_msg'),
       imageSrc: imageURL("reject", anubisVersion, basePrefix),
     });
     return;
   }
 
-  status.innerHTML = `Calculating...<br/>Difficulty: ${rules.report_as}, `;
+  status.innerHTML = `${t('calculating_difficulty')} ${rules.report_as}, `;
   progress.style.display = "inline-block";
 
   // the whole text, including "Speed:", as a single node, because some browsers
   // (Firefox mobile) present screen readers with each node as a separate piece
   // of text.
-  const rateText = document.createTextNode("Speed: 0kH/s");
+  const rateText = document.createTextNode(`${t('speed')} 0kH/s`);
   status.appendChild(rateText);
 
   let lastSpeedUpdate = 0;
@@ -125,7 +187,7 @@ const dependencies = [
         // only update the speed every second so it's less visually distracting
         if (delta - lastSpeedUpdate > 1000) {
           lastSpeedUpdate = delta;
-          rateText.data = `Speed: ${(iters / delta).toFixed(3)}kH/s`;
+          rateText.data = `${t('speed')} ${(iters / delta).toFixed(3)}kH/s`;
         }
         // the probability of still being on the page is (1 - likelihood) ^ iters.
         // by definition, half of the time the progress bar only gets to half, so
@@ -141,9 +203,7 @@ const dependencies = [
         if (probability < 0.1 && !showingApology) {
           status.append(
             document.createElement("br"),
-            document.createTextNode(
-              "Verification is taking longer than expected. Please do not refresh the page.",
-            ),
+            document.createTextNode(t('verification_longer')),
           );
           showingApology = true;
         }
@@ -152,8 +212,8 @@ const dependencies = [
     const t1 = Date.now();
     console.log({ hash, nonce });
 
-    title.innerHTML = "Success!";
-    status.innerHTML = `Done! Took ${t1 - t0}ms, ${nonce} iterations`;
+    title.innerHTML = t('success');
+    status.innerHTML = `${t('done_took')} ${t1 - t0}ms, ${nonce} ${t('iterations')}`;
     image.src = imageURL("happy", anubisVersion, basePrefix);
     progress.style.display = "none";
 
@@ -174,7 +234,7 @@ const dependencies = [
       container.style.outlineOffset = "2px";
       container.style.width = "min(20rem, 90%)";
       container.style.margin = "1rem auto 2rem";
-      container.innerHTML = "I've finished reading, continue →";
+      container.innerHTML = t('finished_reading');
 
       function onDetailsExpand() {
         const redir = window.location.href;
@@ -205,8 +265,8 @@ const dependencies = [
     }
   } catch (err) {
     ohNoes({
-      titleMsg: "Calculation error!",
-      statusMsg: `Failed to calculate challenge: ${err.message}`,
+      titleMsg: t('calculation_error'),
+      statusMsg: `${t('calculation_error_msg')} ${err.message}`,
       imageSrc: imageURL("reject", anubisVersion, basePrefix),
     });
   }
