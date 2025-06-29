@@ -42,7 +42,6 @@ cgr
 chainguard
 chall
 challengemozilla
-Chargement
 checkpath
 checkresult
 chibi
@@ -168,7 +167,6 @@ Linting
 linuxbrew
 LLU
 loadbalancer
-locahost
 lol
 LOMINSA
 maintainership
@@ -323,5 +321,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
-Zombocom
+zombocom
 zos
