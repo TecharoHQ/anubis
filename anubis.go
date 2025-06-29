@@ -13,9 +13,6 @@ var Version = "devel"
 // access.
 const CookieName = "techaro.lol-anubis-auth"
 
-// WithDomainCookieName is the name that is prepended to the per-domain cookie used when COOKIE_DOMAIN is set.
-const WithDomainCookieName = "techaro.lol-anubis-auth-for-"
-
 const TestCookieName = "techaro.lol-anubis-cookie-test-if-you-block-this-anubis-wont-work"
 
 // CookieDefaultExpirationTime is the amount of time before the cookie/JWT expires.

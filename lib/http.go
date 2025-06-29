@@ -22,18 +22,32 @@ import (
 
 var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
 
-func (s *Server) SetCookie(w http.ResponseWriter, name, value, path, host string) {
+type CookieOpts struct {
+	Value string
+	Host  string
+	Path  string
+	Name  string
+}
+
+func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
-	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(host) {
-		if etld, err := publicsuffix.EffectiveTLDPlusOne(host); err == nil {
+	var name = anubis.CookieName
+	var path = "/"
+	if cookieOpts.Name != "" {
+		name = cookieOpts.Name
+	}
+	if cookieOpts.Path != "" {
+		path = cookieOpts.Path
+	}
+	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(cookieOpts.Host) {
+		if etld, err := publicsuffix.EffectiveTLDPlusOne(cookieOpts.Host); err == nil {
 			domain = etld
-			name = anubis.WithDomainCookieName + etld
 		}
 	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
-		Value:       value,
+		Value:       cookieOpts.Value,
 		Expires:     time.Now().Add(s.opts.CookieExpiration),
 		SameSite:    http.SameSiteLaxMode,
 		Domain:      domain,
@@ -42,12 +56,19 @@ func (s *Server) SetCookie(w http.ResponseWriter, name, value, path, host string
 	})
 }
 
-func (s *Server) ClearCookie(w http.ResponseWriter, name, path, host string) {
+func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
-	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(host) {
-		if etld, err := publicsuffix.EffectiveTLDPlusOne(host); err == nil {
+	var name = anubis.CookieName
+	var path = "/"
+	if cookieOpts.Name != "" {
+		name = cookieOpts.Name
+	}
+	if cookieOpts.Path != "" {
+		path = cookieOpts.Path
+	}
+	if s.opts.CookieDynamicDomain && domainMatchRegexp.MatchString(cookieOpts.Host) {
+		if etld, err := publicsuffix.EffectiveTLDPlusOne(cookieOpts.Host); err == nil {
 			domain = etld
-			name = anubis.WithDomainCookieName + etld
 		}
 	}
 

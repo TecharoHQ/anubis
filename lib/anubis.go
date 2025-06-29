@@ -69,7 +69,6 @@ type Server struct {
 	policy      *policy.ParsedConfig
 	DNSBLCache  *decaymap.Impl[string, dnsbl.DroneBLResponse]
 	OGTags      *ogtags.OGTagCache
-	cookieName  string
 	ed25519Priv ed25519.PrivateKey
 	hs512Secret []byte
 	opts        Options
@@ -87,8 +86,6 @@ func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 		}
 	}
 }
-
-
 
 func (s *Server) challengeFor(r *http.Request, difficulty int) string {
 	var fp [32]byte
@@ -149,24 +146,24 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	ckie, err := r.Cookie(s.cookieName)
+	ckie, err := r.Cookie(anubis.CookieName)
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -175,7 +172,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -183,7 +180,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -191,14 +188,14 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	policyRule, ok := claims["policyRule"].(string)
 	if !ok {
 		lg.Debug("policyRule claim is not a string")
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
 
 	if policyRule != rule.Hash() {
 		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, rule, httpStatusOnly)
 		return
 	}
@@ -222,7 +219,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		s.ServeHTTPNext(w, r)
 		return true
 	case config.RuleDeny:
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
@@ -241,7 +238,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		s.RenderBench(w, r)
 		return true
 	default:
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.Rules\"", localizer.T("internal_server_error")))
 		return true
@@ -265,10 +262,10 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 		if resp != dnsbl.AllGood {
 			lg.Info("DNSBL hit", "status", resp.String())
 			localizer := localization.GetLocalizer(r)
-			s.respondWithStatus(w, r, fmt.Sprintf("%s: %s, %s https://dronebl.org/lookup?ip=%s", 
-				localizer.T("dronebl_entry"), 
-				resp.String(), 
-				localizer.T("see_dronebl_lookup"), 
+			s.respondWithStatus(w, r, fmt.Sprintf("%s: %s, %s https://dronebl.org/lookup?ip=%s",
+				localizer.T("dronebl_entry"),
+				resp.String(),
+				localizer.T("see_dronebl_lookup"),
 				ip), s.policy.StatusCodes.Deny)
 			return true
 		}
@@ -314,7 +311,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	lg = lg.With("check_result", cr)
 	chal := s.challengeFor(r, rule.Challenge.Difficulty)
 
-	s.SetCookie(w, anubis.TestCookieName, chal, "/", r.Host)
+	s.SetCookie(w, CookieOpts{Host: r.Host, Name: anubis.TestCookieName, Value: chal})
 
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
@@ -343,14 +340,14 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
-		s.ClearCookie(w, anubis.TestCookieName, "/", r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 		lg.Warn("user has cookies disabled, this is not an anubis bug")
 		s.respondWithError(w, r, localizer.T("cookies_disabled"))
 		return
 	}
 
-	s.ClearCookie(w, anubis.TestCookieName, "/", r.Host)
+	s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 
 	redir := r.FormValue("redir")
 	redirURL, err := url.ParseRequestURI(redir)
@@ -392,7 +389,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err := impl.Validate(r, lg, rule, challengeStr); err != nil {
 		failedValidations.WithLabelValues(rule.Challenge.Algorithm).Inc()
 		var cerr *challenge.Error
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		lg.Debug("challenge validate call failed", "err", err)
 
 		switch {
@@ -415,12 +412,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
-		s.ClearCookie(w, s.cookieName, cookiePath, r.Host)
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.respondWithError(w, r, localizer.T("failed_to_sign_jwt"))
 		return
 	}
 
-	s.SetCookie(w, s.cookieName, tokenString, cookiePath, r.Host)
+	s.SetCookie(w, CookieOpts{Path: cookiePath, Host: r.Host, Value: tokenString})
 
 	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
 	lg.Debug("challenge passed, redirecting to app")

@@ -35,7 +35,6 @@ type Options struct {
 	CookieDynamicDomain bool
 	CookieDomain        string
 	CookieExpiration    time.Duration
-	CookieName          string
 	CookiePartitioned   bool
 	BasePrefix          string
 	WebmasterEmail      string
@@ -102,12 +101,6 @@ func New(opts Options) (*Server, error) {
 
 	anubis.BasePrefix = opts.BasePrefix
 
-	cookieName := anubis.CookieName
-
-	if opts.CookieDomain != "" {
-		cookieName = anubis.WithDomainCookieName + opts.CookieDomain
-	}
-
 	result := &Server{
 		next:        opts.Next,
 		ed25519Priv: opts.ED25519PrivateKey,
@@ -116,7 +109,6 @@ func New(opts Options) (*Server, error) {
 		opts:        opts,
 		DNSBLCache:  decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
-		cookieName:  cookieName,
 	}
 
 	mux := http.NewServeMux()
