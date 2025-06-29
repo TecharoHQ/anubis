@@ -26,5 +26,9 @@
         "redhat.vscode-yaml"
       ]
     }
-  }
+  },
+  "forwardPorts": [
+    8923,
+    3000
+  ]
 }
