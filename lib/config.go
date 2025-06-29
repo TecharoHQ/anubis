@@ -20,6 +20,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
@@ -34,7 +35,6 @@ type Options struct {
 	CookieDynamicDomain bool
 	CookieDomain        string
 	CookieExpiration    time.Duration
-	CookieName          string
 	CookiePartitioned   bool
 	BasePrefix          string
 	WebmasterEmail      string
@@ -101,12 +101,6 @@ func New(opts Options) (*Server, error) {
 
 	anubis.BasePrefix = opts.BasePrefix
 
-	cookieName := anubis.CookieName
-
-	if opts.CookieDomain != "" {
-		cookieName = anubis.WithDomainCookieName + opts.CookieDomain
-	}
-
 	result := &Server{
 		next:        opts.Next,
 		ed25519Priv: opts.ED25519PrivateKey,
@@ -115,7 +109,6 @@ func New(opts Options) (*Server, error) {
 		opts:        opts,
 		DNSBLCache:  decaymap.New[string, dnsbl.DroneBLResponse](),
 		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
-		cookieName:  cookieName,
 	}
 
 	mux := http.NewServeMux()
@@ -155,7 +148,7 @@ func New(opts Options) (*Server, error) {
 	if opts.Policy.Impressum != nil {
 		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
-				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum),
+				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
 		}), "GET")
 	}

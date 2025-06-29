@@ -33,7 +33,7 @@ Caddyfile
 caninetools
 Cardyb
 celchecker
-CELPHASE
+celphase
 cerr
 certresolver
 cespare
@@ -53,6 +53,7 @@ containerbuild
 coreutils
 Cotoyogi
 CRDs
+Cromite
 crt
 Cscript
 daemonizing
@@ -74,6 +75,7 @@ droneblresponse
 duckduckbot
 eerror
 ellenjoe
+emacs
 enbyware
 etld
 everyones
@@ -165,7 +167,6 @@ linting
 linuxbrew
 LLU
 loadbalancer
-locahost
 lol
 LOMINSA
 maintainership
@@ -183,6 +184,7 @@ mozilla
 nbf
 netsurf
 nginx
+nicksnyder
 nobots
 NONINFRINGEMENT
 nosleep
@@ -281,6 +283,7 @@ unparseable
 uuidgen
 uvx
 UXP
+Valkey
 Varis
 Velen
 vendored
@@ -318,5 +321,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
-Zonbocom
+zombocom
 zos
