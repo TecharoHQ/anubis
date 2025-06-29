@@ -376,7 +376,7 @@ func main() {
 	}
 
 	anubis.CookieName = *cookiePrefix + "-auth"
-	anubis.TestCookieName = *cookiePrefix + "-cookie-enable-verification"
+	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
 
 	// If OpenGraph configuration values are not set in the config file, use the
 	// values from flags / envvars.
