@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677))
 - Implement localization system. Find locale files in lib/localization/locales/.
+- Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
 
 ## v1.20.0: Thancred Waters
 
