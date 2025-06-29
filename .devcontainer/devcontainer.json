@@ -1,0 +1,16 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+  "name": "Dev",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "cacheFrom": [
+      "type=registry,ref=ghcr.io/techarohq/anubis/devcontainer"
+    ]
+  },
+  "postStartCommand": "npm ci && go mod download",
+  "features": {
+    "ghcr.io/xe/devcontainer-features/ko:latest": {}
+  }
+}
