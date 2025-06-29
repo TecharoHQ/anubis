@@ -88,7 +88,7 @@ dnsbl: false
 # impressum:
 #   # Displayed at the bottom of every page rendered by Anubis.
 #   footer: >-
-#     This website is hosted by Zonbocom. If you have any complaints or notes
+#     This website is hosted by Zombocom. If you have any complaints or notes
 #     about the service, please contact
 #     <a href="mailto:contact@domainhere.example">contact@domainhere.example</a>
 #     and we will assist you as soon as possible.

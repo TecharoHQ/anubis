@@ -54,6 +54,7 @@ containerbuild
 coreutils
 Cotoyogi
 CRDs
+Cromite
 crt
 Cscript
 daemonizing
@@ -75,6 +76,7 @@ droneblresponse
 duckduckbot
 eerror
 ellenjoe
+emacs
 enbyware
 etld
 everyones
@@ -283,6 +285,7 @@ unparseable
 uuidgen
 uvx
 UXP
+Valkey
 Varis
 Velen
 vendored
@@ -320,5 +323,5 @@ yourdomain
 yoursite
 Zenos
 zizmor
-Zonbocom
+Zombocom
 zos
