@@ -189,8 +189,6 @@ func TestCVE2025_24369(t *testing.T) {
 	srv := spawnAnubis(t, Options{
 		Next:   http.NewServeMux(),
 		Policy: pol,
-
-		CookieName: t.Name(),
 	})
 
 	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
@@ -235,13 +233,13 @@ func TestCookieCustomExpiration(t *testing.T) {
 	var ckie *http.Cookie
 	for _, cookie := range resp.Cookies() {
 		t.Logf("%#v", cookie)
-		if cookie.Name == srv.cookieName {
+		if cookie.Name == anubis.CookieName {
 			ckie = cookie
 			break
 		}
 	}
 	if ckie == nil {
-		t.Errorf("Cookie %q not found", srv.cookieName)
+		t.Errorf("Cookie %q not found", anubis.CookieName)
 		return
 	}
 
@@ -264,7 +262,6 @@ func TestCookieSettings(t *testing.T) {
 
 		CookieDomain:      "127.0.0.1",
 		CookiePartitioned: true,
-		CookieName:        t.Name(),
 		CookieExpiration:  anubis.CookieDefaultExpirationTime,
 	})
 
@@ -286,13 +283,13 @@ func TestCookieSettings(t *testing.T) {
 	var ckie *http.Cookie
 	for _, cookie := range resp.Cookies() {
 		t.Logf("%#v", cookie)
-		if cookie.Name == srv.cookieName {
+		if cookie.Name == anubis.CookieName {
 			ckie = cookie
 			break
 		}
 	}
 	if ckie == nil {
-		t.Errorf("Cookie %q not found", srv.cookieName)
+		t.Errorf("Cookie %q not found", anubis.CookieName)
 		return
 	}
 
@@ -619,7 +616,6 @@ func TestRuleChange(t *testing.T) {
 		Policy: pol,
 
 		CookieDomain:     "127.0.0.1",
-		CookieName:       t.Name(),
 		CookieExpiration: ckieExpiration,
 	})
 

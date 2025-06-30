@@ -170,7 +170,6 @@ Linting
 linuxbrew
 LLU
 loadbalancer
-locahost
 lol
 LOMINSA
 maintainership
