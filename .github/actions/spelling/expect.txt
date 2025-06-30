@@ -13,6 +13,8 @@ asnc
 asnchecker
 asns
 aspirational
+atuin
+azuretools
 badregexes
 bdba
 berr
@@ -48,6 +50,7 @@ chibi
 cidranger
 ckie
 cloudflare
+Codespaces
 confd
 containerbuild
 coreutils
@@ -223,6 +226,7 @@ qwantbot
 rac
 rawler
 rcvar
+redhat
 redir
 redirectscheme
 refactors
@@ -248,6 +252,7 @@ shellcheck
 Sidetrade
 simprint
 sitemap
+skopeo
 sls
 sni
 Sourceware
@@ -277,6 +282,7 @@ Tik
 Timpibot
 traefik
 uberspace
+unifiedjs
 unixhttpd
 unmarshal
 unparseable
@@ -322,4 +328,5 @@ yoursite
 Zenos
 zizmor
 zombocom
+Zonbocom
 zos

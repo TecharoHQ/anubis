@@ -23,10 +23,11 @@ import (
 var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
 
 type CookieOpts struct {
-	Value string
-	Host  string
-	Path  string
-	Name  string
+	Value  string
+	Host   string
+	Path   string
+	Name   string
+	Expiry time.Duration
 }
 
 func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
@@ -45,12 +46,17 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		}
 	}
 
+	if cookieOpts.Expiry == 0 {
+		cookieOpts.Expiry = s.opts.CookieExpiration
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       cookieOpts.Value,
-		Expires:     time.Now().Add(s.opts.CookieExpiration),
-		SameSite:    http.SameSiteLaxMode,
+		Expires:     time.Now().Add(cookieOpts.Expiry),
+		SameSite:    http.SameSiteNoneMode,
 		Domain:      domain,
+		Secure:      s.opts.CookieSecure,
 		Partitioned: s.opts.CookiePartitioned,
 		Path:        path,
 	})
@@ -77,9 +83,10 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		Value:       "",
 		MaxAge:      -1,
 		Expires:     time.Now().Add(-1 * time.Minute),
-		SameSite:    http.SameSiteLaxMode,
+		SameSite:    http.SameSiteNoneMode,
 		Partitioned: s.opts.CookiePartitioned,
 		Domain:      domain,
+		Secure:      s.opts.CookieSecure,
 		Path:        path,
 	})
 }
@@ -132,11 +139,12 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		}
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:    anubis.TestCookieName,
-		Value:   challengeStr,
-		Expires: time.Now().Add(30 * time.Minute),
-		Path:    "/",
+	s.SetCookie(w, CookieOpts{
+		Value:  challengeStr,
+		Host:   r.Host,
+		Path:   "/",
+		Name:   anubis.TestCookieName,
+		Expiry: 30 * time.Minute,
 	})
 
 	impl, ok := challenge.Get(rule.Challenge.Algorithm)

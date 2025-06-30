@@ -262,6 +262,7 @@ func TestCookieSettings(t *testing.T) {
 
 		CookieDomain:      "127.0.0.1",
 		CookiePartitioned: true,
+		CookieSecure:      true,
 		CookieExpiration:  anubis.CookieDefaultExpirationTime,
 	})
 
@@ -308,6 +309,10 @@ func TestCookieSettings(t *testing.T) {
 
 	if ckie.Partitioned != srv.opts.CookiePartitioned {
 		t.Errorf("wanted partitioned flag %v, got: %v", srv.opts.CookiePartitioned, ckie.Partitioned)
+	}
+
+	if ckie.Secure != srv.opts.CookieSecure {
+		t.Errorf("wanted secure flag %v, got: %v", srv.opts.CookieSecure, ckie.Secure)
 	}
 }
 

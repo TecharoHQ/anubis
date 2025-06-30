@@ -11,9 +11,11 @@ var Version = "devel"
 
 // CookieName is the name of the cookie that Anubis uses in order to validate
 // access.
-const CookieName = "techaro.lol-anubis-auth"
+var CookieName = "techaro.lol-anubis-auth"
 
-const TestCookieName = "techaro.lol-anubis-cookie-test-if-you-block-this-anubis-wont-work"
+// TestCookieName is the name of the cookie that Anubis uses in order to check
+// if cookies are enabled on the client's browser.
+var TestCookieName = "techaro.lol-anubis-cookie-verification"
 
 // CookieDefaultExpirationTime is the amount of time before the cookie/JWT expires.
 const CookieDefaultExpirationTime = 7 * 24 * time.Hour
