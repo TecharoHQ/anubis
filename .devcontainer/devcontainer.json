@@ -12,7 +12,7 @@
   },
   "postStartCommand": "npm ci && go mod download",
   "features": {
-    "ghcr.io/xe/devcontainer-features/ko:latest": {}
+    "ghcr.io/xe/devcontainer-features/ko:1.1.0": {}
   },
   "initializeCommand": "mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.local/share/atuin",
   "customizations": {
