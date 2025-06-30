@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677))
+- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677)).
 - Implement localization system. Find locale files in lib/localization/locales/.
+- Implement a [development container](https://containers.dev/) manifest to make contributions easier.
 
 ## v1.20.0: Thancred Waters
 
