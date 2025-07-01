@@ -6,7 +6,7 @@
   "mascot_design": "Maskottchen erstellt von",
   "ai_companies_explanation": "Diese Seite wird angezeigt, da der Betreiber der Webseite Anubis eingerichtet hat, um sie vor aggressiven KI-Website-Scrapern zu schützen. Diese können Ausfälle der Webseite verursachen, wodurch die Webseite für jeden nicht erreichbar ist.",
   "anubis_compromise": "Anubis ist eine Art Kompromiss. Es verwendet die sogenannte Proof-of-Work Methode nach Hashcash, ein Mechanismus, der ursprünglich zur E-Mail-Spam-Bekämpfung entwickelt wurde. Die Idee dahinter ist, dass ein einziger User nur eine kleine Verzögerung hat, auf die Webseite zu gelangen; bei Scrapern kann das allerdings große Auswirkungen haben.",
-  "hack_purpose": "Man könnte dies als eine Lösung bezeichnen, die gut genug ist, einem etwas Zeit zu verschaffen für Fingerprintung und dem Identifizieren von Headless Browsers, sodass im besten Fall normale User diese Seite garnicht erst zu sehen bekommen.",
+  "hack_purpose": "Man könnte dies als eine Lösung bezeichnen, die gut genug ist, einem etwas Zeit zu verschaffen für Fingerprinting und dem Identifizieren von Headless Browsern, sodass im besten Fall normale User diese Seite garnicht erst zu sehen bekommen.",
   "jshelter_note": "Anubis benötigt moderne JavaScript-Features, welche von Plugins wie zB JShelter deaktiviert werden. Bitte deaktiviere also JShelter oder ähnliche Plugins für diese Domain.",
   "version_info": "Diese Webseite läuft mit Anubis version",
   "try_again": "Nochmal probieren",
