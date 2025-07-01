@@ -57,7 +57,7 @@
   "js_success": "Erfolgreich!",
   "js_done_took": "Fertig! Dauer:",
   "js_iterations": "Iterationen",
-  "js_finished_reading": "Fertig gelesen, weiter zur eigentlichen Seite →",
+  "js_finished_reading": "Fertig gelesen, weiter zur Seite →",
   "js_calculation_error": "Fehler bei der Berechnung!",
   "js_calculation_error_msg": "Fehler bei der Berechnung des Checks:"
 }
