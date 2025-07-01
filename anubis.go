@@ -33,6 +33,6 @@ const APIPrefix = "/.within.website/x/cmd/anubis/api/"
 // that must be met by the client in order to pass the challenge.
 const DefaultDifficulty = 4
 
-// ForcedLanguage is the language being used instead of the language determined by the browser language
+// ForcedLanguage is the language being used instead of the one of the request's Accept-Language header
 // if being set.
 var ForcedLanguage = ""

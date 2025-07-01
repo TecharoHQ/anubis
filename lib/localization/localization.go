@@ -94,7 +94,7 @@ func (sl *SimpleLocalizer) T(messageID string) string {
 	return sl.Localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: messageID})
 }
 
-// GetLocalizer creates a localizer based on the request's Accept-Language header
+// GetLocalizer creates a localizer based on the request's Accept-Language header or forcedLanguage option
 func GetLocalizer(r *http.Request) *SimpleLocalizer {
 	var localizer *i18n.Localizer
 	if anubis.ForcedLanguage == "" {
