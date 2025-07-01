@@ -13,7 +13,7 @@
   "go_home": "Zur Hauptseite",
   "contact_webmaster": "oder wenn es sich hier um einen Fehler handelt, kontaktiere bitte den Administrator der Webseite unter",
   "connection_security": "Bitte warte einen Moment während wir sicherstellen, dass eine sichere Verbindung verwendet wird.",
-  "javascript_required": "Es muss leider JavaScript aktiviert werden, um den Check durchführen zu können. Dies ist leider notwendig weil Firmen im KI-Sektor leider die sozialen Verhältnisse geändert haben, wie Website-Hosting funktioniert. Eine Lösung ohne JavaScript ist in Entwicklung.",
+  "javascript_required": "Es muss leider JavaScript aktiviert werden, um den Check durchführen zu können. Dies ist leider notwendig weil Firmen im KI-Sektor die sozialen Verhältnisse geändert haben, wie Website-Hosting funktioniert. Eine Lösung ohne JavaScript ist in Entwicklung.",
   "benchmark_requires_js": "Das Benchmark-Tool benötigt das Aktivieren von JavaScript.",
   "difficulty": "Schwierigkeit:",
   "algorithm": "Algorithmus:",
