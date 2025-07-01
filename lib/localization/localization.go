@@ -3,6 +3,7 @@ package localization
 import (
 	"embed"
 	"encoding/json"
+	"github.com/TecharoHQ/anubis"
 	"net/http"
 	"strings"
 	"sync"
@@ -57,14 +58,14 @@ func NewLocalizationService() *LocalizationService {
 
 		globalService = &LocalizationService{bundle: bundle}
 	})
-	
+
 	// Safety check - if globalService is still nil, create a minimal one
 	if globalService == nil {
 		bundle := i18n.NewBundle(language.English)
 		bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 		globalService = &LocalizationService{bundle: bundle}
 	}
-	
+
 	return globalService
 }
 
@@ -95,6 +96,11 @@ func (sl *SimpleLocalizer) T(messageID string) string {
 
 // GetLocalizer creates a localizer based on the request's Accept-Language header
 func GetLocalizer(r *http.Request) *SimpleLocalizer {
-	localizer := NewLocalizationService().GetLocalizerFromRequest(r)
+	var localizer *i18n.Localizer
+	if anubis.ForcedLanguage == "" {
+		localizer = NewLocalizationService().GetLocalizerFromRequest(r)
+	} else {
+		localizer = NewLocalizationService().GetLocalizer(anubis.ForcedLanguage)
+	}
 	return &SimpleLocalizer{Localizer: localizer}
 }

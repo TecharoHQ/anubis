@@ -50,6 +50,7 @@ var (
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
 	cookiePrefix             = flag.String("cookie-prefix", "techaro.lol-anubis", "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the automatically determined one by browser language")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
@@ -378,6 +379,7 @@ func main() {
 
 	anubis.CookieName = *cookiePrefix + "-auth"
 	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
+	anubis.ForcedLanguage = *forcedLanguage
 
 	// If OpenGraph configuration values are not set in the config file, use the
 	// values from flags / envvars.
