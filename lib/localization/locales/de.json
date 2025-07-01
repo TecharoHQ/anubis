@@ -42,7 +42,7 @@
   "you_are_not_a_bot": "Sie sind kein Bot!",
   "making_sure_not_bot": "Ihr Browser wird geprüft!",
   "celphase": "CELPHASE",
-  "js_web_crypto_error": "Ihr Browser kat leider keine funktionierende web.crypto element. Wird eine sichere Verbindung verwendet?",
+  "js_web_crypto_error": "Ihr Browser hat leider kein funktionierendes web.crypto Element. Wird eine sichere Verbindung verwendet?",
   "js_web_workers_error": "Ihr Browser unterstützt keine Web-Worker (Anubis verwendet diese, damit der Browser nicht unresponsive wird). Ist eventuell ein Plugin wie zB JShelter installiert?",
   "js_cookies_error": "Ihr Browser speichert keine Cookies. Anubis verwendet Cookies um ein gültiges Token zu speichern damit es wissen kann, welche Browser bereits geprüft wurden. Bitte aktiviere Cookies für diese Domain. Die Cookie-Namen von Anubis könnten sich jederzeit ändern. Cookie-Namen sind kein Teil der öffentlichen API.",
   "js_context_not_secure": "Diese Verbindung ist nicht sicher!",
