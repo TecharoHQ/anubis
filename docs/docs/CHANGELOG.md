@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement a [development container](https://containers.dev/) manifest to make contributions easier.
 - Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
 - Add option for custom cookie prefix ([#732](https://github.com/TecharoHQ/anubis/pull/732))
+- Add translation for German language ([#741](https://github.com/TecharoHQ/anubis/pull/741))
 
 ## v1.20.0: Thancred Waters
 
