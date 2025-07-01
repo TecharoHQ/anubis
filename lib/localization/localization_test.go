@@ -27,6 +27,14 @@ func TestLocalizationService(t *testing.T) {
 		}
 	})
 
+	t.Run("German localization", func(t *testing.T) {
+		localizer := service.GetLocalizer("de")
+		result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
+		if result != "Ladevorgang..." {
+			t.Errorf("Expected 'Ladevorgang...', got '%s'", result)
+		}
+	})
+
 	t.Run("All required keys exist in English", func(t *testing.T) {
 		localizer := service.GetLocalizer("en")
 		requiredKeys := []string{
