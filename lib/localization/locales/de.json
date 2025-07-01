@@ -26,7 +26,7 @@
   "iters_b": "Iterationen B",
   "static_check_endpoint": "Dies ist nur ein Check-Endpunkt, der von beispielsweise einem Reverse-Proxy geprüft werden kann.",
   "authorization_required": "Zugriffserlaubnis benötigt",
-  "cookies_disabled": "Es sind Cookies für Ihren Browser deaktiviert. Anubis benötigt Cookies um sicherzustellen, dass es sich hierbei um einen validen Zugriff handelt. Bitte aktiviere Cookies für diese Domain.",
+  "cookies_disabled": "Cookies sind in Ihrem Browser deaktiviert. Anubis benötigt Cookies um sicherzustellen, dass es sich hierbei um einen validen Zugriff handelt. Bitte aktiviere Cookies für diese Domain.",
   "access_denied": "Zugriff verweigert: Fehlercode",
   "dronebl_entry": "Eintrag in DroneBL",
   "see_dronebl_lookup": "anzeigen",
