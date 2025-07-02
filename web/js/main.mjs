@@ -212,11 +212,6 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
     const t1 = Date.now();
     console.log({ hash, nonce });
 
-    title.innerHTML = t('success');
-    status.innerHTML = `${t('done_took')} ${t1 - t0}ms, ${nonce} ${t('iterations')}`;
-    image.src = imageURL("happy", anubisVersion, basePrefix);
-    progress.style.display = "none";
-
     if (userReadDetails) {
       const container = document.getElementById("progress");
 
@@ -251,17 +246,15 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       container.onclick = onDetailsExpand;
       setTimeout(onDetailsExpand, 30000);
     } else {
-      setTimeout(() => {
-        const redir = window.location.href;
-        window.location.replace(
-          u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
-            response: hash,
-            nonce,
-            redir,
-            elapsedTime: t1 - t0,
-          }),
-        );
-      }, 250);
+      const redir = window.location.href;
+      window.location.replace(
+        u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
+          response: hash,
+          nonce,
+          redir,
+          elapsedTime: t1 - t0,
+        }),
+      );
     }
   } catch (err) {
     ohNoes({
