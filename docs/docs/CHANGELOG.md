@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web Workers are stored as dedicated JavaScript files in `static/js/workers/*.mjs`.
 - Pave the way for non-SHA256 solver methods and eventually one that uses WebAssembly (or WebAssembly code compiled to JS for those that disable WebAssembly).
 - Legacy JavaScript code has been eliminated.
+- Add option for replacing the default explanation text with a custom one ([#747](https://github.com/TecharoHQ/anubis/pull/747))
 - The contact email in the LibreJS header has been changed.
 - The hard dependency on WebCrypto has been removed, allowing a proof of work challenge to work over plain (unencrypted) HTTP.
 - Firefox for Android support has been fixed by embedding the challenge ID into the pass-challenge route. This also fixes some inconsistent issues with other mobile browsers.
