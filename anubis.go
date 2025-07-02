@@ -36,3 +36,6 @@ const DefaultDifficulty = 4
 // ForcedLanguage is the language being used instead of the one of the request's Accept-Language header
 // if being set.
 var ForcedLanguage = ""
+
+// CustomExplanationText contains a custom text which can be shown when clicking "Why am I seeing this?" if set
+var CustomExplanationText = ""
