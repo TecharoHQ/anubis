@@ -1,13 +1,85 @@
 package expressions
 
 import (
+	"fmt"
 	"math/rand/v2"
+	"net/netip"
+	"strings"
 
+	"github.com/TecharoHQ/anubis/internal"
+	"github.com/gaissmai/bart"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
+	"github.com/google/cel-go/common/types/traits"
 	"github.com/google/cel-go/ext"
 )
+
+// pre-parsed CIDR bart tables map. Hash of CIDR IP list is key
+var CIDRMap = make(map[string]*bart.Lite)
+
+// buildCacheKey creates a deterministic cache key from the IP list
+func buildCacheKey(ipList traits.Lister) string {
+	var cidrs []string
+	it := ipList.Iterator()
+	for it.HasNext() == types.True {
+		item := it.Next()
+		cidr, ok := item.(types.String)
+		if !ok {
+			continue
+		}
+		cidrs = append(cidrs, string(cidr))
+	}
+	// Join them to create a unique key
+	return internal.FastHash(strings.Join(cidrs, "|"))
+}
+
+// getCachedPrefixTable returns a cached bart table or builds a new one
+func getCachedPrefixTable(ipList traits.Lister) (*bart.Lite, error) {
+	// Build cache key
+	cacheKey := buildCacheKey(ipList)
+
+	// Check cache
+	if prefixtable, ok := CIDRMap[cacheKey]; ok {
+		return prefixtable, nil
+	}
+
+	// Build new bart table
+	prefixtable := new(bart.Lite)
+
+	it := ipList.Iterator()
+	for it.HasNext() == types.True {
+		item := it.Next()
+		cidr, ok := item.(types.String)
+		if !ok {
+			continue
+		}
+		prefix, err := netip.ParsePrefix(string(cidr))
+		if err != nil {
+			return nil, fmt.Errorf("address %s CIDR parse error: %w", cidr, err)
+		}
+		prefixtable.Insert(prefix)
+	}
+
+	// Store in map
+	CIDRMap[cacheKey] = prefixtable
+	return prefixtable, nil
+}
+
+func remoteAddrInList(remoteAddr types.String, ipList traits.Lister) (bool, error) {
+	ipAddr, err := netip.ParseAddr(string(remoteAddr))
+	if err != nil {
+		return false, fmt.Errorf("remoteAddrInList: %s is not a valid IP address", remoteAddr)
+	}
+
+	prefixtable, err := getCachedPrefixTable(ipList)
+	if err != nil {
+		return false, fmt.Errorf("remoteAddrInList: %v", err)
+	}
+
+	ok := prefixtable.Contains(ipAddr)
+	return ok, nil
+}
 
 // BotEnvironment creates a new CEL environment, this is the set of
 // variables and functions that are passed into the CEL scope so that
@@ -55,6 +127,22 @@ func New(opts ...cel.EnvOption) (*cel.Env, error) {
 					}
 
 					return types.Int(rand.IntN(int(n)))
+				}),
+			),
+		),
+		cel.Function("remoteAddrInList",
+			cel.Overload(
+				"remoteAddrInList_bool",
+				[]*cel.Type{cel.StringType, cel.ListType(cel.StringType)},
+				cel.BoolType,
+				cel.FunctionBinding(func(args ...ref.Val) ref.Val {
+					val, err := remoteAddrInList(args[0].(types.String), args[1].(traits.Lister))
+					if err != nil {
+						// CEL expects errors to be returned as types.Err
+						return types.NewErr("%s", err.Error())
+					}
+
+					return types.Bool(val)
 				}),
 			),
 		),

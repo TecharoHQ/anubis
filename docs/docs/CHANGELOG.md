@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove the "Success" interstitial after a proof of work challenge is concluded.
 - Add option for forcing a specific language ([#742](https://github.com/TecharoHQ/anubis/pull/742))
 
+- Add internal function `remoteAddrInList` to expressions. Tests for remoteAddress in list of CIDR ip ranges.
+
 ## v1.20.0: Thancred Waters
 
 The big ticket items are as follows:
