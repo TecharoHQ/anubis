@@ -75,6 +75,7 @@ domainhere
 dracula
 dronebl
 droneblresponse
+dropin
 duckduckbot
 eerror
 ellenjoe
@@ -237,6 +238,7 @@ risc
 ruleset
 runlevels
 RUnlock
+runtimedir
 sas
 sasl
 Scumm
@@ -328,5 +330,4 @@ yoursite
 Zenos
 zizmor
 zombocom
-Zonbocom
 zos

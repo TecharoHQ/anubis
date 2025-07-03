@@ -11,12 +11,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<!-- This changes the project to: -->
+
+- Add `COOKIE_SECURE` option to set the cookie [Secure flag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#block_access_to_your_cookies)
+- Sets cookie defaults to use [SameSite: None](https://web.dev/articles/samesite-cookies-explained)
 - Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677)).
 - Implement localization system. Find locale files in lib/localization/locales/.
 - Implement a [development container](https://containers.dev/) manifest to make contributions easier.
 - Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
 - Add option for custom cookie prefix ([#732](https://github.com/TecharoHQ/anubis/pull/732))
 - Add translation for German language ([#741](https://github.com/TecharoHQ/anubis/pull/741))
+- Remove the "Success" interstitial after a proof of work challenge is concluded.
+- Add option for forcing a specific language ([#742](https://github.com/TecharoHQ/anubis/pull/742))
+
+### Potentially breaking changes
+
+The following potentially breaking change applies to native installs with systemd only:
+
+Each instance of systemd service template now has a unique `RuntimeDirectory`, as opposed to each instance of the service sharing a `RuntimeDirectory`. This change was made to avoid [the `RuntimeDirectory` getting nuked any time one of the Anubis instances restarts](https://github.com/TecharoHQ/anubis/issues/748).
+
+If you configured Anubis' unix sockets to listen on `/run/anubis/foo.sock` for instance `anubis@foo`, you will need to configure Anubis to listen on `/run/anubis/foo/sock` and additionally configure your HTTP load balancer as appropriate.
+
+If you need the legacy behaviour, install this [systemd unit dropin](https://www.flatcar.org/docs/latest/setup/systemd/drop-in-units/):
+
+```systemd
+# /etc/systemd/system/anubis@.service.d/50-runtimedir.conf
+[Service]
+RuntimeDirectory=anubis
+```
 
 ## v1.20.0: Thancred Waters
 

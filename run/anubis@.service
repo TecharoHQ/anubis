@@ -12,7 +12,7 @@ CacheDirectory=anubis/%i
 CacheDirectoryMode=0755
 StateDirectory=anubis/%i
 StateDirectoryMode=0755
-RuntimeDirectory=anubis
+RuntimeDirectory=anubis/%i
 RuntimeDirectoryMode=0755
 ReadWritePaths=/run
 
