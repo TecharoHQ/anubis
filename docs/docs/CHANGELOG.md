@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add translation for German language ([#741](https://github.com/TecharoHQ/anubis/pull/741))
 - Remove the "Success" interstitial after a proof of work challenge is concluded.
 - Add option for forcing a specific language ([#742](https://github.com/TecharoHQ/anubis/pull/742))
+- Add translation for Turkish language ([#751](https://github.com/TecharoHQ/anubis/pull/751))
 
 ### Potentially breaking changes
 

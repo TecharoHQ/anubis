@@ -35,6 +35,14 @@ func TestLocalizationService(t *testing.T) {
 		}
 	})
 
+	t.Run("Turkish localization", func(t *testing.T) {
+		localizer := service.GetLocalizer("tr")
+		result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
+		if result != "Yükleniyor..." {
+			t.Errorf("Expected 'Yükleniyor...', got '%s'", result)
+		}
+	})
+
 	t.Run("All required keys exist in English", func(t *testing.T) {
 		localizer := service.GetLocalizer("en")
 		requiredKeys := []string{
@@ -52,6 +60,21 @@ func TestLocalizationService(t *testing.T) {
 
 	t.Run("All required keys exist in French", func(t *testing.T) {
 		localizer := service.GetLocalizer("fr")
+		requiredKeys := []string{
+			"loading", "why_am_i_seeing", "protected_by", "made_with",
+			"mascot_design", "try_again", "go_home", "javascript_required",
+		}
+
+		for _, key := range requiredKeys {
+			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: key})
+			if result == "" {
+				t.Errorf("Key '%s' returned empty string", key)
+			}
+		}
+	})
+
+	t.Run("All required keys exist in Turkish", func(t *testing.T) {
+		localizer := service.GetLocalizer("tr")
 		requiredKeys := []string{
 			"loading", "why_am_i_seeing", "protected_by", "made_with",
 			"mascot_design", "try_again", "go_home", "javascript_required",
