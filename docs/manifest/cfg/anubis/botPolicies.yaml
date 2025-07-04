@@ -11,6 +11,7 @@
 ## /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
 
 bots:
+  - import: (data)/crawlers/commoncrawl.yaml
   # Pathological bots to deny
   - # This correlates to data/bots/deny-pathological.yaml in the source tree
     # https://github.com/TecharoHQ/anubis/blob/main/data/bots/deny-pathological.yaml

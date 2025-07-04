@@ -20,11 +20,13 @@ bdba
 berr
 bingbot
 bitcoin
+bitrate
 blogging
 Bluesky
 blueskybot
 boi
 botnet
+botstopper
 BPort
 Brightbot
 broked
@@ -52,6 +54,7 @@ ckie
 cloudflare
 Codespaces
 confd
+connnection
 containerbuild
 coreutils
 Cotoyogi
@@ -93,6 +96,7 @@ facebookgo
 Factset
 fastcgi
 fediverse
+ffprobe
 finfos
 Firecrawl
 flagenv
@@ -199,6 +203,7 @@ omgilibot
 openai
 opengraph
 openrc
+oswald
 pag
 palemoon
 Pangu
@@ -272,6 +277,8 @@ SVCNAME
 tagline
 tarballs
 tarrif
+tbn
+tbr
 techaro
 techarohq
 templ
