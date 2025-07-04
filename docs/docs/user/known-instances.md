@@ -45,6 +45,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://gitlab.postmarketos.org/
 - https://wiki.koha-community.org/
 - https://extensions.typo3.org/
+- https://ebird.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
