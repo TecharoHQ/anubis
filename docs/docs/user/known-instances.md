@@ -47,6 +47,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://extensions.typo3.org/
 - https://ebird.org/
 - https://fabulous.systems/
+- https://coinhoards.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
