@@ -46,6 +46,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://wiki.koha-community.org/
 - https://extensions.typo3.org/
 - https://ebird.org/
+- https://fabulous.systems/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
