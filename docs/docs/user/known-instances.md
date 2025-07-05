@@ -83,3 +83,10 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://karla.hds.hebis.de/
   - and many more (see https://www.hebis.de/dienste/hebis-discovery-system/)
   </details>
+- <details>
+  <summary>Duke University</summary>
+  - https://repository.duke.edu/
+  - https://archives.lib.duke.edu/
+  - https://find.library.duke.edu/
+  - https://nicholas.duke.edu/
+  </details>
