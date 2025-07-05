@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add translation for Turkish language ([#751](https://github.com/TecharoHQ/anubis/pull/751))
 - Allow [Common Crawl](https://commoncrawl.org/) by default so scrapers have less incentive to scrape
 - The [bbolt storage backend](./admin/policies.mdx#bbolt) now runs its cleanup every hour instead of every five minutes.
-- Add translation for Traditional Chinese
+- Add translation for Traditional Chinese ([#759](https://github.com/TecharoHQ/anubis/pull/759))
 
 ### Potentially breaking changes
 
