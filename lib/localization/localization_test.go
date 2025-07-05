@@ -88,8 +88,6 @@ func TestLocalizationService(t *testing.T) {
 			"mascot_design", "try_again", "go_home", "javascript_required",
 		}
 
-
-
 		for _, key := range requiredKeys {
 			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: key})
 			if result == "" {
