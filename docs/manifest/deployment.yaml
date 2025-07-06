@@ -15,6 +15,8 @@ spec:
         - name: anubis
           configMap:
             name: anubis-cfg
+        - name: temporary-data
+          emptyDir: {}
       containers:
         - name: anubis-docs
           image: ghcr.io/techarohq/anubis/docs:main
@@ -51,6 +53,8 @@ spec:
           volumeMounts:
             - name: anubis
               mountPath: /xe/cfg/anubis
+            - name: temporary-data
+              mountPath: /xe/data/anubis
           resources:
             limits:
               cpu: 500m

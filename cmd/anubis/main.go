@@ -48,8 +48,11 @@ var (
 	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
 	cookieDynamicDomain      = flag.Bool("cookie-dynamic-domain", false, "if set, automatically set the cookie Domain value based on the request domain")
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
+	cookiePrefix             = flag.String("cookie-prefix", "techaro.lol-anubis", "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
+	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
 	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
@@ -108,8 +111,41 @@ func doHealthCheck() error {
 	return nil
 }
 
+// parseBindNetFromAddr determine bind network and address based on the given network and address.
+func parseBindNetFromAddr(address string) (string, string) {
+	defaultScheme := "http://"
+	if !strings.Contains(address, "://") {
+		if strings.HasPrefix(address, ":") {
+			address = defaultScheme + "localhost" + address
+		} else {
+			address = defaultScheme + address
+		}
+	}
+
+	bindUri, err := url.Parse(address)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to parse bind URL: %w", err))
+	}
+
+	switch bindUri.Scheme {
+	case "unix":
+		return "unix", bindUri.Path
+	case "tcp", "http", "https":
+		return "tcp", bindUri.Host
+	default:
+		log.Fatal(fmt.Errorf("unsupported network scheme %s in address %s", bindUri.Scheme, address))
+	}
+	return "", address
+}
+
 func setupListener(network string, address string) (net.Listener, string) {
 	formattedAddress := ""
+
+	if network == "" {
+		// keep compatibility
+		network, address = parseBindNetFromAddr(address)
+	}
+
 	switch network {
 	case "unix":
 		formattedAddress = "unix:" + address
@@ -194,20 +230,6 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 	}
 
 	return rp, nil
-}
-
-func startDecayMapCleanup(ctx context.Context, s *libanubis.Server) {
-	ticker := time.NewTicker(1 * time.Hour)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			s.CleanupDecayMap()
-		case <-ctx.Done():
-			return
-		}
-	}
 }
 
 func main() {
@@ -342,6 +364,10 @@ func main() {
 		slog.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
+	anubis.CookieName = *cookiePrefix + "-auth"
+	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
+	anubis.ForcedLanguage = *forcedLanguage
+
 	// If OpenGraph configuration values are not set in the config file, use the
 	// values from flags / envvars.
 	if !policy.OpenGraph.Enabled {
@@ -352,21 +378,23 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		BasePrefix:        *basePrefix,
-		StripBasePrefix:   *stripBasePrefix,
-		Next:              rp,
-		Policy:            policy,
-		ServeRobotsTXT:    *robotsTxt,
-		ED25519PrivateKey: ed25519Priv,
-		HS512Secret:       []byte(*hs512Secret),
-		CookieDomain:      *cookieDomain,
-		CookieExpiration:  *cookieExpiration,
-		CookiePartitioned: *cookiePartitioned,
-		RedirectDomains:   redirectDomainsList,
-		Target:            *target,
-		WebmasterEmail:    *webmasterEmail,
-		OpenGraph:         policy.OpenGraph,
-		PublicUrl:         *publicUrl,
+		BasePrefix:          *basePrefix,
+		StripBasePrefix:     *stripBasePrefix,
+		Next:                rp,
+		Policy:              policy,
+		ServeRobotsTXT:      *robotsTxt,
+		ED25519PrivateKey:   ed25519Priv,
+		HS512Secret:         []byte(*hs512Secret),
+		CookieDomain:        *cookieDomain,
+		CookieDynamicDomain: *cookieDynamicDomain,
+		CookieExpiration:    *cookieExpiration,
+		CookiePartitioned:   *cookiePartitioned,
+		RedirectDomains:     redirectDomainsList,
+		Target:              *target,
+		WebmasterEmail:      *webmasterEmail,
+		OpenGraph:           policy.OpenGraph,
+		CookieSecure:        *cookieSecure,
+		PublicUrl:           *publicUrl,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -381,7 +409,6 @@ func main() {
 		wg.Add(1)
 		go metricsServer(ctx, wg.Done)
 	}
-	go startDecayMapCleanup(ctx, s)
 
 	var h http.Handler
 	h = s

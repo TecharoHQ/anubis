@@ -237,6 +237,114 @@ remote_addresses:
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.
 
+## Storage backends
+
+Anubis needs to store temporary data in order to determine if a user is legitimate or not. Administrators should choose a storage backend based on their infrastructure needs. Each backend has its own advantages and disadvantages.
+
+Anubis offers the following storage backends:
+
+- [`memory`](#memory) -- A simple in-memory hashmap
+- [`bbolt`](#bbolt) -- An on-disk key/value store backed by [bbolt](https://github.com/etcd-io/bbolt), an embedded key/value database for Go programs
+- [`valkey`](#valkey) -- A remote in-memory key/value database backed by [Valkey](https://valkey.io/) (or another database compatible with the [RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) protocol)
+
+If no storage backend is set in the policy file, Anubis will use the [`memory`](#memory) backend by default. This is equivalent to the following in the policy file:
+
+```yaml
+store:
+  backend: memory
+  parameters: {}
+```
+
+### `memory`
+
+The memory backend is an in-memory cache. This backend works best if you don't use multiple instances of Anubis or don't have mutable storage in the environment you're running Anubis in.
+
+| Should I use this backend?                                    | Yes/no |
+| :------------------------------------------------------------ | :----- |
+| Are you running only one instance of Anubis for this service? | ✅ Yes |
+| Does your service get a lot of traffic?                       | 🚫 No  |
+| Do you want to store data persistently when Anubis restarts?  | 🚫 No  |
+| Do you run Anubis without mutable filesystem storage?         | ✅ Yes |
+
+The biggest downside is that there is not currently a limit to how much data can be stored in memory. This will be addressed at a later time.
+
+#### Configuration
+
+The memory backend does not require any configuration to use.
+
+### `bbolt`
+
+An on-disk storage layer powered by [bbolt](https://github.com/etcd-io/bbolt), a high performance embedded key/value database used by containerd, etcd, Kubernetes, and NATS. This backend works best if you're running Anubis on a single host and get a lot of traffic.
+
+| Should I use this backend?                                    | Yes/no |
+| :------------------------------------------------------------ | :----- |
+| Are you running only one instance of Anubis for this service? | ✅ Yes |
+| Does your service get a lot of traffic?                       | ✅ Yes |
+| Do you want to store data persistently when Anubis restarts?  | ✅ Yes |
+| Do you run Anubis without mutable filesystem storage?         | 🚫 No  |
+
+When Anubis opens a bbolt database, it takes an exclusive lock on that database. Other instances of Anubis or other tools cannot view the bbolt database while it is locked by another instance of Anubis. If you run multiple instances of Anubis for different services, give each its own `bbolt` configuration.
+
+#### Configuration
+
+The `bbolt` backend takes the following configuration options:
+
+| Name   | Type | Example            | Description                                                                                                                  |
+| :----- | :--- | :----------------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| `path` | path | `/data/anubis.bdb` | The filesystem path for the Anubis bbolt database. Anubis requires write access to the folder containing the bbolt database. |
+
+Example:
+
+If you have persistent storage mounted to `/data`, then your store configuration could look like this:
+
+```yaml
+store:
+  backend: bbolt
+  parameters:
+    path: /data/anubis.bdb
+```
+
+### `valkey`
+
+[Valkey](https://valkey.io/) is an in-memory key/value store that clients access over the network. This allows multiple instances of Anubis to share information and does not require each instance of Anubis to have persistent filesystem storage.
+
+:::note
+
+You can also use [Redis](http://redis.io/) with Anubis.
+
+:::
+
+This backend is ideal if you are running multiple instances of Anubis in a worker pool (eg: Kubernetes Deployments with a copy of Anubis in each Pod).
+
+| Should I use this backend?                                    | Yes/no |
+| :------------------------------------------------------------ | :----- |
+| Are you running only one instance of Anubis for this service? | 🚫 No  |
+| Does your service get a lot of traffic?                       | ✅ Yes |
+| Do you want to store data persistently when Anubis restarts?  | ✅ Yes |
+| Do you run Anubis without mutable filesystem storage?         | ✅ Yes |
+| Do you have Redis or Valkey installed?                        | ✅ Yes |
+
+#### Configuration
+
+The `valkey` backend takes the following configuration options:
+
+| Name  | Type   | Example                 | Description                                                                                                                                      |
+| :---- | :----- | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url` | string | `redis://valkey:6379/0` | The URL for the instance of Redis or Valkey that Anubis should store data in. This is in the same format as `REDIS_URL` in many cloud providers. |
+
+Example:
+
+If you have an instance of Valkey running with the hostname `valkey.int.techaro.lol`, then your store configuration could look like this:
+
+```yaml
+store:
+  backend: valkey
+  parameters:
+    url: "redis://valkey.int.techaro.lol:6379/0"
+```
+
+This would have the Valkey client connect to host `valkey.int.techaro.lol` on port `6379` with database `0` (the default database).
+
 ## Risk calculation for downstream services
 
 In case your service needs it for risk calculation reasons, Anubis exposes information about the rules that any requests match using a few headers:

@@ -11,12 +11,11 @@ var Version = "devel"
 
 // CookieName is the name of the cookie that Anubis uses in order to validate
 // access.
-const CookieName = "techaro.lol-anubis-auth"
+var CookieName = "techaro.lol-anubis-auth"
 
-// WithDomainCookieName is the name that is prepended to the per-domain cookie used when COOKIE_DOMAIN is set.
-const WithDomainCookieName = "techaro.lol-anubis-auth-for-"
-
-const TestCookieName = "techaro.lol-anubis-cookie-test-if-you-block-this-anubis-wont-work"
+// TestCookieName is the name of the cookie that Anubis uses in order to check
+// if cookies are enabled on the client's browser.
+var TestCookieName = "techaro.lol-anubis-cookie-verification"
 
 // CookieDefaultExpirationTime is the amount of time before the cookie/JWT expires.
 const CookieDefaultExpirationTime = 7 * 24 * time.Hour
@@ -33,3 +32,7 @@ const APIPrefix = "/.within.website/x/cmd/anubis/api/"
 // DefaultDifficulty is the default "difficulty" (number of leading zeroes)
 // that must be met by the client in order to pass the challenge.
 const DefaultDifficulty = 4
+
+// ForcedLanguage is the language being used instead of the one of the request's Accept-Language header
+// if being set.
+var ForcedLanguage = ""

@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-containers",
+    "golang.go",
+    "unifiedjs.vscode-mdx",
+    "a-h.templ",
+    "redhat.vscode-yaml"
+  ]
+}

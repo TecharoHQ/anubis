@@ -329,6 +329,7 @@ type fileConfig struct {
 	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
 	Impressum   *Impressum          `json:"impressum,omitempty"`
 	StatusCodes StatusCodes         `json:"status_codes"`
+	Store       *Store              `json:"store"`
 	Thresholds  []Threshold         `json:"thresholds"`
 }
 
@@ -361,6 +362,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.Store != nil {
+		if err := c.Store.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -373,6 +380,9 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		StatusCodes: StatusCodes{
 			Challenge: http.StatusOK,
 			Deny:      http.StatusOK,
+		},
+		Store: &Store{
+			Backend: "memory",
 		},
 	}
 
@@ -392,6 +402,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			Override:     c.OpenGraph.Override,
 		},
 		StatusCodes: c.StatusCodes,
+		Store:       c.Store,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -457,6 +468,7 @@ type Config struct {
 	Impressum   *Impressum
 	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
+	Store       *Store
 }
 
 func (c Config) Valid() error {

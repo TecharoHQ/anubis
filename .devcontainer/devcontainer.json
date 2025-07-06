@@ -1,0 +1,26 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+  "name": "Dev",
+  "dockerComposeFile": ["./docker-compose.yaml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspace/anubis",
+  "postStartCommand": "npm ci && go mod download",
+  "features": {
+    "ghcr.io/xe/devcontainer-features/ko:1.1.0": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "initializeCommand": "mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.local/share/atuin",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-containers",
+        "golang.go",
+        "unifiedjs.vscode-mdx",
+        "a-h.templ",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}

@@ -11,7 +11,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
+<!-- This changes the project to: -->
+
+- Add `COOKIE_SECURE` option to set the cookie [Secure flag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#block_access_to_your_cookies)
+- Sets cookie defaults to use [SameSite: None](https://web.dev/articles/samesite-cookies-explained)
+- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677)).
+- Implement localization system. Find locale files in lib/localization/locales/.
+- Implement a [development container](https://containers.dev/) manifest to make contributions easier.
+- Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
+- Add option for custom cookie prefix ([#732](https://github.com/TecharoHQ/anubis/pull/732))
+- Add translation for German language ([#741](https://github.com/TecharoHQ/anubis/pull/741))
+- Remove the "Success" interstitial after a proof of work challenge is concluded.
+- Anubis now has the concept of [storage backends](./admin/policies.mdx#storage-backends). These allow you to change how Anubis stores temporary data (in memory, on the disk, or in Valkey). If you run Anubis in an environment where you have a low amount of memory available for Anubis (eg: less than 64 megabytes), be sure to configure the [`bbolt`](./admin/policies.mdx#bbolt) storage backend.
+- The challenge issuance and validation process has been rewritten from scratch. Instead of generating challenge strings from request metadata (under the assumption that the values being compared against are stable), Anubis now generates random data for each challenge. This data is stored in the active [storage backend](./admin/policies.mdx#storage-backends) for up to 30 minutes. Fixes [#564](https://github.com/TecharoHQ/anubis/issues/564), [#746](https://github.com/TecharoHQ/anubis/issues/746), and other similar instances of this issue.
+- Make the [Open Graph](./admin/configuration/open-graph.mdx) subsystem and DNSBL subsystem use [storage backends](./admin/policies.mdx#storage-backends) instead of storing everything in memory by default.
+- Add option for forcing a specific language ([#742](https://github.com/TecharoHQ/anubis/pull/742))
+- Add translation for Turkish language ([#751](https://github.com/TecharoHQ/anubis/pull/751))
+- Allow [Common Crawl](https://commoncrawl.org/) by default so scrapers have less incentive to scrape
+- The [bbolt storage backend](./admin/policies.mdx#bbolt) now runs its cleanup every hour instead of every five minutes.
+
+### Potentially breaking changes
+
+The following potentially breaking change applies to native installs with systemd only:
+
+Each instance of systemd service template now has a unique `RuntimeDirectory`, as opposed to each instance of the service sharing a `RuntimeDirectory`. This change was made to avoid [the `RuntimeDirectory` getting nuked any time one of the Anubis instances restarts](https://github.com/TecharoHQ/anubis/issues/748).
+
+If you configured Anubis' unix sockets to listen on `/run/anubis/foo.sock` for instance `anubis@foo`, you will need to configure Anubis to listen on `/run/anubis/foo/sock` and additionally configure your HTTP load balancer as appropriate.
+
+If you need the legacy behaviour, install this [systemd unit dropin](https://www.flatcar.org/docs/latest/setup/systemd/drop-in-units/):
+
+```systemd
+# /etc/systemd/system/anubis@.service.d/50-runtimedir.conf
+[Service]
+RuntimeDirectory=anubis
+```
 
 ## v1.20.0: Thancred Waters
 
@@ -38,6 +71,7 @@ A lot of performance improvements have been made:
 
 And some cleanups/refactors were added:
 
+- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
 - Remove the unused `/test-error` endpoint and update the testing endpoint `/make-challenge` to only be enabled in
   development
 - Add `--xff-strip-private` flag/envvar to toggle skipping X-Forwarded-For private addresses or not

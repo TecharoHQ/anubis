@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 	"golang.org/x/net/html"
 )
 
@@ -17,7 +18,7 @@ func TestExtractOGTags(t *testing.T) {
 		Enabled:      false,
 		ConsiderHost: false,
 		TimeToLive:   time.Minute,
-	})
+	}, memory.New(t.Context()))
 	// Manually set approved tags/prefixes based on the user request for clarity
 	testCache.approvedTags = []string{"description"}
 	testCache.approvedPrefixes = []string{"og:"}
@@ -198,7 +199,7 @@ func TestExtractMetaTagInfo(t *testing.T) {
 		Enabled:      false,
 		ConsiderHost: false,
 		TimeToLive:   time.Minute,
-	})
+	}, memory.New(t.Context()))
 	testCache.approvedTags = []string{"description"}
 	testCache.approvedPrefixes = []string{"og:"}
 
