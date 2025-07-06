@@ -50,6 +50,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://coinhoards.org/
 - https://pluralpedia.org/
 - https://git.aya.so/
+- https://marginalia-search.com/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
@@ -93,4 +94,8 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://archives.lib.duke.edu/
   - https://find.library.duke.edu/
   - https://nicholas.duke.edu/
+  </details>
+- <details>
+  <summary>Forschungszentrum Jülich</summary>
+  - https://juser.fz-juelich.de/
   </details>
