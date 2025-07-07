@@ -51,6 +51,8 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://pluralpedia.org/
 - https://git.aya.so/
 - https://marginalia-search.com/
+- https://repositorio.ufrn.br/home/
+- https://mozillazine.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
