@@ -11,7 +11,6 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	chall "github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
-	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
 )
@@ -31,7 +30,7 @@ func (i *Impl) Setup(mux *http.ServeMux) {
 
 func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)
-	component, err := web.BaseWithChallengeAndOGTags(loc.T("making_sure_not_bot"), web.Index(loc), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags, loc)
+	component, err := web.BaseWithChallengeAndOGTags(loc.T("making_sure_not_bot"), web.Index(loc), in.Impressum, in.Challenge.RandomData, in.Rule.Challenge, in.OGTags, loc)
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
 	}
@@ -39,7 +38,10 @@ func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *chall.IssueInput) (te
 	return component, nil
 }
 
-func (i *Impl) Validate(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string) error {
+func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInput) error {
+	rule := in.Rule
+	challenge := in.Challenge.RandomData
+
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w nonce", chall.ErrMissingField))

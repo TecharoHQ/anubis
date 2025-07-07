@@ -7,7 +7,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/localization"
 )
 
-templ page(challenge, redir string, difficulty int, loc *localization.SimpleLocalizer) {
+templ page(redir string, difficulty int, loc *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
 		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>

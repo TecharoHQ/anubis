@@ -15,9 +15,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
-	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
@@ -108,8 +106,8 @@ func New(opts Options) (*Server, error) {
 		hs512Secret: opts.HS512Secret,
 		policy:      opts.Policy,
 		opts:        opts,
-		DNSBLCache:  decaymap.New[string, dnsbl.DroneBLResponse](),
-		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
+		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store),
+		store:       opts.Policy.Store,
 	}
 
 	mux := http.NewServeMux()

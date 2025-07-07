@@ -128,19 +128,24 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	}
 
 	challengesIssued.WithLabelValues("embedded").Add(1)
-	challengeStr := s.challengeFor(r, rule.Challenge.Difficulty)
+	chall, err := s.challengeFor(r)
+	if err != nil {
+		lg.Error("can't get challenge", "err", "err")
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
+		return
+	}
 
 	var ogTags map[string]string = nil
 	if s.opts.OpenGraph.Enabled {
 		var err error
-		ogTags, err = s.OGTags.GetOGTags(r.URL, r.Host)
+		ogTags, err = s.OGTags.GetOGTags(r.Context(), r.URL, r.Host)
 		if err != nil {
 			lg.Error("failed to get OG tags", "err", err)
 		}
 	}
 
 	s.SetCookie(w, CookieOpts{
-		Value:  challengeStr,
+		Value:  chall.ID,
 		Host:   r.Host,
 		Path:   "/",
 		Name:   anubis.TestCookieName,
@@ -157,8 +162,9 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	in := &challenge.IssueInput{
 		Impressum: s.policy.Impressum,
 		Rule:      rule,
-		Challenge: challengeStr,
+		Challenge: chall,
 		OGTags:    ogTags,
+		Store:     s.store,
 	}
 
 	component, err := impl.Issue(r, lg, in)

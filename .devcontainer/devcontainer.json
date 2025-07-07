@@ -2,17 +2,13 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
   "name": "Dev",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "build": {
-    "dockerfile": "./Dockerfile",
-    "context": "..",
-    "cacheFrom": [
-      "type=registry,ref=ghcr.io/techarohq/anubis/devcontainer"
-    ]
-  },
+  "dockerComposeFile": ["./docker-compose.yaml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspace/anubis",
   "postStartCommand": "npm ci && go mod download",
   "features": {
-    "ghcr.io/xe/devcontainer-features/ko:1.1.0": {}
+    "ghcr.io/xe/devcontainer-features/ko:1.1.0": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "initializeCommand": "mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.local/share/atuin",
   "customizations": {
@@ -26,9 +22,5 @@
         "redhat.vscode-yaml"
       ]
     }
-  },
-  "forwardPorts": [
-    8923,
-    3000
-  ]
+  }
 }

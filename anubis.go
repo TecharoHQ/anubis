@@ -32,3 +32,7 @@ const APIPrefix = "/.within.website/x/cmd/anubis/api/"
 // DefaultDifficulty is the default "difficulty" (number of leading zeroes)
 // that must be met by the client in order to pass the challenge.
 const DefaultDifficulty = 4
+
+// ForcedLanguage is the language being used instead of the one of the request's Accept-Language header
+// if being set.
+var ForcedLanguage = ""

@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Anubis',
-  tagline: 'Weigh the soul of incoming HTTP requests using proof-of-work to stop AI crawlers',
+  tagline: 'Weigh the soul of incoming HTTP requests to protect your website!',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -40,27 +40,20 @@ const config: Config = {
     [
       'classic',
       {
-        docs: {
-          sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/TecharoHQ/anubis/tree/main/docs/',
-        },
         blog: {
           showReadingTime: true,
           feedOptions: {
             type: ['rss', 'atom', "json"],
             xslt: true,
           },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-          // Useful options to enforce blogging best practices
+          editUrl: 'https://github.com/TecharoHQ/anubis/tree/main/docs/',
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
-          onUntruncatedBlogPosts: 'warn',
+          onUntruncatedBlogPosts: 'throw',
+        },
+        docs: {
+          sidebarPath: './sidebars.ts',
+          editUrl: 'https://github.com/TecharoHQ/anubis/tree/main/docs/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -74,7 +67,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
+    image: 'img/social-card.jpg',
     navbar: {
       title: 'Anubis',
       logo: {
@@ -82,22 +75,27 @@ const config: Config = {
         src: 'img/favicon.webp',
       },
       items: [
+        { to: '/blog', label: 'Blog', position: 'left' },
         {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
           label: 'Docs',
         },
-        { to: '/blog', label: 'Blog', position: 'left' },
         {
-          href: 'https://github.com/sponsors/Xe',
-          label: "Sponsorship",
-          position: 'left'
+          to: '/docs/admin/botstopper',
+          label: "Unbranded Version",
+          position: "left"
         },
         {
           href: 'https://github.com/TecharoHQ/anubis',
           label: 'GitHub',
           position: 'right',
+        },
+        {
+          href: 'https://github.com/sponsors/Xe',
+          label: "Sponsor the Project",
+          position: 'right'
         },
       ],
     },

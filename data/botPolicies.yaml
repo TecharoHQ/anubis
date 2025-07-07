@@ -74,6 +74,25 @@ bots:
     weight:
       adjust: 10
 
+  ## System load based checks.
+  # If the system is under high load, add weight.
+  - name: high-load-average
+    action: WEIGH
+    expression: load_1m >= 10.0 # make sure to end the load comparison in a .0
+    weight:
+      adjust: 20
+
+  ## If your backend service is running on the same operating system as Anubis,
+  ## you can uncomment this rule to make the challenge easier when the system is
+  ## under low load.
+  ##
+  ## If it is not, remove weight.
+  # - name: low-load-average
+  #   action: WEIGH
+  #   expression: load_15m <= 4.0 # make sure to end the load comparison in a .0
+  #   weight:
+  #     adjust: -10
+
   # Generic catchall rule
   - name: generic-browser
     user_agent_regex: >-
@@ -144,6 +163,14 @@ openGraph:
 status_codes:
   CHALLENGE: 200
   DENY: 200
+
+# Anubis can store temporary data in one of a few backends. See the storage
+# backends section of the docs for more information:
+#
+# https://anubis.techaro.lol/docs/admin/policies#storage-backends
+store:
+  backend: memory
+  parameters: {}
 
 # The weight thresholds for when to trigger individual challenges. Any
 # CHALLENGE will take precedence over this.

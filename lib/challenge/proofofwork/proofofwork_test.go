@@ -124,16 +124,25 @@ func TestBasic(t *testing.T) {
 		t.Run(cs.name, func(t *testing.T) {
 			lg := slog.With()
 
+			i.Setup(http.NewServeMux())
+
 			inp := &challenge.IssueInput{
-				Rule:      bot,
-				Challenge: cs.challengeStr,
+				Rule: bot,
+				Challenge: &challenge.Challenge{
+					RandomData: cs.challengeStr,
+				},
 			}
 
 			if _, err := i.Issue(cs.req, lg, inp); err != nil {
 				t.Errorf("can't issue challenge: %v", err)
 			}
 
-			if err := i.Validate(cs.req, lg, bot, cs.challengeStr); !errors.Is(err, cs.err) {
+			if err := i.Validate(cs.req, lg, &challenge.ValidateInput{
+				Rule: bot,
+				Challenge: &challenge.Challenge{
+					RandomData: cs.challengeStr,
+				},
+			}); !errors.Is(err, cs.err) {
 				t.Errorf("got wrong error from Validate, got %v but wanted %v", err, cs.err)
 			}
 		})

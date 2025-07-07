@@ -99,15 +99,18 @@ For this rule, if a request comes in matching [the signature of the `go get` com
 
 Anubis exposes the following variables to expressions:
 
-| Name            | Type                  | Explanation                                                                                                                               | Example                                                      |
-| :-------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
-| `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                        | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
-| `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                  | `anubis.techaro.lol`                                         |
-| `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                    | `GET`, `POST`, `DELETE`, etc.                                |
-| `path`          | `string`              | The [path](https://web.dev/articles/url-parts#pathname) of the request being processed.                                                   | `/`, `/api/memes/create`                                     |
-| `query`         | `map[string, string]` | The [query parameters](https://web.dev/articles/url-parts#query) of the request being processed.                                          | `?foo=bar` -> `{"foo": "bar"}`                               |
-| `remoteAddress` | `string`              | The IP address of the client.                                                                                                             | `1.1.1.1`                                                    |
-| `userAgent`     | `string`              | The [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) string in the request being processed. | `Mozilla/5.0 Gecko/20100101 Firefox/137.0`                   |
+| Name            | Type                  | Explanation                                                                                                                                   | Example                                                      |
+| :-------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                            | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
+| `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                      | `anubis.techaro.lol`                                         |
+| `load_1m`       | `double`              | The current system load average over the last one minute. This is useful for making [load-based checks](#using-the-system-load-average).      |
+| `load_5m`       | `double`              | The current system load average over the last five minutes. This is useful for making [load-based checks](#using-the-system-load-average).    |
+| `load_15m`      | `double`              | The current system load average over the last fifteen minutes. This is useful for making [load-based checks](#using-the-system-load-average). |
+| `method`        | `string`              | The [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) in the request being processed.                        | `GET`, `POST`, `DELETE`, etc.                                |
+| `path`          | `string`              | The [path](https://web.dev/articles/url-parts#pathname) of the request being processed.                                                       | `/`, `/api/memes/create`                                     |
+| `query`         | `map[string, string]` | The [query parameters](https://web.dev/articles/url-parts#query) of the request being processed.                                              | `?foo=bar` -> `{"foo": "bar"}`                               |
+| `remoteAddress` | `string`              | The IP address of the client.                                                                                                                 | `1.1.1.1`                                                    |
+| `userAgent`     | `string`              | The [`User-Agent`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) string in the request being processed.     | `Mozilla/5.0 Gecko/20100101 Firefox/137.0`                   |
 
 Of note: in many languages when you look up a key in a map and there is nothing there, the language will return some "falsy" value like `undefined` in JavaScript, `None` in Python, or the zero value of the type in Go. In CEL, if you try to look up a value that does not exist, execution of the expression will fail and Anubis will return an error.
 
@@ -140,6 +143,44 @@ X-Real-Ip: 8.8.8.8
 ```
 
 Anubis would return a challenge because all of those conditions are true.
+
+### Using the system load average
+
+In Unix-like systems (such as Linux), every process on the system has to wait its turn to be able to run. This means that as more processes on the system are running, they need to wait longer to be able to execute. The [load average](<https://en.wikipedia.org/wiki/Load_(computing)>) represents the number of processes that want to be able to run but can't run yet. This metric isn't the most reliable to identify a cause, but is great at helping to identify symptoms.
+
+Anubis lets you use the system load average as an input to expressions so that you can make dynamic rules like "when the system is under a low amount of load, dial back the protection, but when it's under a lot of load, crank it up to the mix". This lets you get all of the blocking features of Anubis in the background but only really expose Anubis to users when the system is actively being attacked.
+
+This is best combined with the [weight](../policies.mdx#request-weight) and [threshold](./thresholds.mdx) systems so that you can have Anubis dynamically respond to attacks. Consider these rules in the default configuration file:
+
+```yaml
+## System load based checks.
+# If the system is under high load for the last minute, add weight.
+- name: high-load-average
+  action: WEIGH
+  expression: load_1m >= 10.0 # make sure to end the load comparison in a .0
+  weight:
+    adjust: 20
+
+# If it is not for the last 15 minutes, remove weight.
+- name: low-load-average
+  action: WEIGH
+  expression: load_15m <= 4.0 # make sure to end the load comparison in a .0
+  weight:
+    adjust: -10
+```
+
+This combination of rules makes Anubis dynamically react to the system load and only kick in when the system is under attack.
+
+Something to keep in mind about system load average is that it is not aware of the number of cores the system has. If you have a 16 core system that has 16 processes running but none of them is hogging the CPU, then you will get a load average below 16. If you are in doubt, make your "high load" metric at least two times the number of CPU cores and your "low load" metric at least half of the number of CPU cores. For example:
+
+|      Kind | Core count | Load threshold |
+| --------: | :--------- | :------------- |
+| high load | 4          | `8.0`          |
+|  low load | 4          | `2.0`          |
+| high load | 16         | `32.0`         |
+|  low load | 16         | `8`            |
+
+Also keep in mind that this does not account for other kinds of latency like I/O latency. A system can have its web applications unresponsive due to high latency from a MySQL server but still have that web application server report a load near or at zero.
 
 ## Functions exposed to Anubis expressions
 

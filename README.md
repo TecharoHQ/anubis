@@ -41,6 +41,13 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://wildbase.xyz/">
   <img src="./docs/static/img/sponsors/wildbase-logo.webp" alt="Wildbase" height="64">
 </a>
+<a href="https://emma.pet">
+  <img
+    src="./docs/static/img/sponsors/nepeat-logo.webp"
+    alt="Cat eyes over the word Emma in a serif font"
+    height="64"
+  />
+</a>
 
 ## Overview
 
