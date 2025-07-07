@@ -82,7 +82,7 @@ jobs:
       run: npm run test
 
     - name: Lint with staticcheck
-      uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6 # v1.3.1
+      uses: dominikh/staticcheck-action@024238d2898c874f26d723e7d0ff4308c35589a2 # v1.4.0
       with:
         version: "latest"
 
