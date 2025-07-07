@@ -31,7 +31,6 @@
   "access_denied": "Tinanggihan ang Access: error code",
   "dronebl_entry": "Nag-ulat ang DroneBL ng entry",
   "see_dronebl_lookup": "tignan ang",
-  "internal_server_error": "Internal Server Error: administrator has misconfigured Anubis. Please contact the administrator and ask them to look for the logs around",
   "internal_server_error": "Internal Server Error: hindi na-configure nang mabuti ng tagapangasiwa ang Anubis. Makipag-ugnayan sa tagapangasiwa at sabihin sa kanila na tumingin sa mga log sa paligid ng",
   "invalid_redirect": "Hindi wastong redirect",
   "redirect_not_parseable": "Hindi ma-parse ang redirect URL",
