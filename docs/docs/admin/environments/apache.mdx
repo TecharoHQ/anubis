@@ -56,6 +56,7 @@ Assuming you are protecting `anubistest.techaro.lol`, you need the following ser
 </VirtualHost>
 
 # HTTPS listener that forwards to Anubis
+<IfModule mod_proxy.c>
 <VirtualHost *:443>
        ServerAdmin your@email.here
        ServerName anubistest.techaro.lol
