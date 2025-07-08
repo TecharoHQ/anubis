@@ -36,6 +36,7 @@ Anubis now supports localized responses. Locales can be added in [lib/localizati
 - [Brazilian Portugese](https://github.com/TecharoHQ/anubis/pull/726)
 - [Chinese (Traditional)](https://github.com/TecharoHQ/anubis/pull/759)
 - English
+- [Estonian](https://github.com/TecharoHQ/anubis/pull/783) 
 - [French](https://github.com/TecharoHQ/anubis/pull/716)
 - [German](https://github.com/TecharoHQ/anubis/pull/741)
 - [Spanish](https://github.com/TecharoHQ/anubis/pull/716)
