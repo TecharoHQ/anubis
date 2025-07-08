@@ -48,7 +48,7 @@
   "js_context_not_secure": "Sinu brauserikontekst ei ole turvaline!",
   "js_context_not_secure_msg": "Proovi ühendada HTTPS aadressiga või anna administraatorile teada, et HTTPS on vajalik seadistada. Lisainfot vaata <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDNist</a>.",
   "js_calculating": "Arvutan...",
-  "js_missing_feature": "Puuduv osa",
+  "js_missing_feature": "Puuduv brauseri omadus",
   "js_challenge_error": "Kontrolli viga!",
   "js_challenge_error_msg": "Ei suutnud tuvastada kontrollalgoritmi. Võiksid proovida lehe uuesti laadida.",
   "js_calculating_difficulty": "Arvutan...<br/>Raskus:",
