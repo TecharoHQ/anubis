@@ -3,11 +3,11 @@ package localization
 import (
 	"embed"
 	"encoding/json"
-	"github.com/TecharoHQ/anubis"
 	"net/http"
 	"strings"
 	"sync"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
@@ -92,6 +92,15 @@ type SimpleLocalizer struct {
 // T provides a concise way to localize messages
 func (sl *SimpleLocalizer) T(messageID string) string {
 	return sl.Localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: messageID})
+}
+
+// Get the language that is used by the localizer by retrieving a well-known string that is required to be present
+func (sl *SimpleLocalizer) GetLang() string {
+	_, tag, err := sl.Localizer.LocalizeWithTag(&i18n.LocalizeConfig{MessageID: "loading"})
+	if err != nil {
+		return "en"
+	}
+	return tag.String()
 }
 
 // GetLocalizer creates a localizer based on the request's Accept-Language header or forcedLanguage option

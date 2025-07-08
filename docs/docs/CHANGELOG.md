@@ -39,10 +39,10 @@ Anubis now supports localized responses. Locales can be added in [lib/localizati
 - [Spanish](https://github.com/TecharoHQ/anubis/pull/716)
 - [Turkish](https://github.com/TecharoHQ/anubis/pull/751)
 
-If facts or local regulations demand, you can set Anubis default language with the `FORCE_LANGUAGE` environment variable:
+If facts or local regulations demand, you can set Anubis default language with the `FORCED_LANGUAGE` environment variable or the `--forced-language` command line argument:
 
 ```sh
-FORCE_LANGUAGE=de
+FORCED_LANGUAGE=de
 ```
 
 Anubis can dynamically take action [based on the system load average](./admin/configuration/expressions.mdx#using-the-system-load-average), allowing you to write rules like this:
