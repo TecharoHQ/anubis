@@ -1,13 +1,13 @@
 {
   "supportedLanguages": [
-    "en",
-    "fr",
-    "es",
-    "pt-BR",
-    "ja",
     "de",
+    "en",
+    "es",
+    "et",
+    "fr",
+    "ja",
+    "pt-BR",
     "tr",
-    "zh-CN",
     "zh-TW"
   ]
 }
