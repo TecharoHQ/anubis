@@ -158,6 +158,10 @@ func TestComprehensiveTranslations(t *testing.T) {
 		t.Run(lang, func(t *testing.T) {
 			loc := service.GetLocalizer(lang)
 			sl := SimpleLocalizer{Localizer: loc}
+			service_lang := sl.GetLang()
+			if service_lang != lang {
+				t.Error("Localizer language not same as specified")
+			}
 			for _, key := range keys {
 				t.Run(key, func(t *testing.T) {
 					if result := sl.T(key); result == "" {
