@@ -29,6 +29,8 @@ In order to reduce confusion, the "Success" interstitial that shows up when you 
 
 Anubis now is able to store things persistently [in memory](./admin/policies.mdx#memory), [on the disk](./admin/policies.mdx#bbolt), or [in Valkey](./admin/policies.mdx#valkey) (this includes other compatible software). By default Anubis uses the in-memory backend. If you have an environment with mutable storage (even if it is temporary), be sure to configure the [`bbolt`](./admin/policies.mdx#bbolt) storage backend.
 
+#### Localization
+
 Anubis now supports localized responses. Locales can be added in [lib/localization/locales/](https://github.com/TecharoHQ/anubis/tree/main/lib/localization/locales). This release includes support for the following languages:
 
 - [Brazilian Portugese](https://github.com/TecharoHQ/anubis/pull/726)
@@ -44,6 +46,8 @@ If facts or local regulations demand, you can set Anubis default language with t
 ```sh
 FORCED_LANGUAGE=de
 ```
+
+#### Load average
 
 Anubis can dynamically take action [based on the system load average](./admin/configuration/expressions.mdx#using-the-system-load-average), allowing you to write rules like this:
 
