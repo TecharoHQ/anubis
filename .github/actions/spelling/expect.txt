@@ -176,7 +176,7 @@ licend
 licstart
 lightpanda
 LIMSA
-Linting
+linting
 linuxbrew
 LLU
 loadbalancer
