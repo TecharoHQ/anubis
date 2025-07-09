@@ -19,6 +19,7 @@ func TestLocalizationService(t *testing.T) {
 		"et":    "Laadin...",
 		"fr":    "Chargement...",
 		"ja":    "ロード中...",
+		"is":    "Hleður...",
 		"pt-BR": "Carregando...",
 		"tr":    "Yükleniyor...",
 		"zh-CN": "加载中...",
