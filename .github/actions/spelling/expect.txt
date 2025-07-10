@@ -344,6 +344,7 @@ yeet
 yeetfile
 yourdomain
 yoursite
+yyz
 Zenos
 zizmor
 zombocom
