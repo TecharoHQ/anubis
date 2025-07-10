@@ -56,6 +56,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://clew.se/
 - https://tumfatig.net/
 - https://rpmfusion.org/
+- https://wiki.freepascal.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
