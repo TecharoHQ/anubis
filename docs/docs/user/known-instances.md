@@ -54,6 +54,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://repositorio.ufrn.br/home/
 - https://mozillazine.org/
 - https://clew.se/
+- https://tumfatig.net/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
