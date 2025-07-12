@@ -204,6 +204,63 @@ func TestCVE2025_24369(t *testing.T) {
 	}
 }
 
+func TestDoubleSlashes(t *testing.T) {
+	pol := loadPolicies(t, "", 0)
+
+	path := ""
+
+	srv := spawnAnubis(t, Options{
+		Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path = r.URL.Path
+		}),
+		Policy: pol,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := httpClient(t)
+	chall := makeChallenge(t, ts, cli)
+	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+
+	if resp.StatusCode != http.StatusFound {
+		t.Fatal("can't solve challenge, see logs")
+	}
+
+	for _, tt := range []struct {
+		name, path string
+	}{
+		{
+			name: "basic",
+			path: "/foo",
+		},
+		{
+			name: "leading slashes",
+			path: "//foo",
+		},
+		{
+			name: "mid slashes",
+			path: "/foo//bar///baz",
+		},
+		{
+			name: "trailing slashes",
+			path: "/foo/bar///",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := cli.Get(ts.URL + tt.path); err != nil {
+				t.Errorf("can't make request to %s: %v", tt.path, err)
+			}
+
+			if path != tt.path {
+				t.Logf("want: %s", tt.path)
+				t.Logf("got:  %s", path)
+				t.Error("invalid path sent to server")
+			}
+		})
+	}
+}
+
 func TestCookieCustomExpiration(t *testing.T) {
 	pol := loadPolicies(t, "", 0)
 	ckieExpiration := 10 * time.Minute

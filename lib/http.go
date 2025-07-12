@@ -200,7 +200,12 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg s
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	switch strings.HasPrefix(r.URL.Path, s.internalPath) {
+	case true:
+		s.mux.ServeHTTP(w, r)
+	case false:
+		s.maybeReverseProxyOrPage(w, r)
+	}
 }
 
 func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {

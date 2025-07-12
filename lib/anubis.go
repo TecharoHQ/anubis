@@ -67,14 +67,15 @@ var (
 )
 
 type Server struct {
-	next        http.Handler
-	mux         *http.ServeMux
-	policy      *policy.ParsedConfig
-	OGTags      *ogtags.OGTagCache
-	ed25519Priv ed25519.PrivateKey
-	hs512Secret []byte
-	opts        Options
-	store       store.Interface
+	next         http.Handler
+	mux          *http.ServeMux
+	policy       *policy.ParsedConfig
+	OGTags       *ogtags.OGTagCache
+	ed25519Priv  ed25519.PrivateKey
+	hs512Secret  []byte
+	opts         Options
+	store        store.Interface
+	internalPath string
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
