@@ -60,5 +60,6 @@
   "js_iterations": "iteraties",
   "js_finished_reading": "Ik ben klaar met lezen, ga verder →",
   "js_calculation_error": "Rekenfout!",
-  "js_calculation_error_msg": "Uitdaging niet berekend:"
+  "js_calculation_error_msg": "Uitdaging niet berekend:",
+  "simplified_explanation": "Dit is een maatregel tegen bots en kwaadwillende verzoeken, vergelijkbaar met een CAPTCHA. In plaats van dat u zelf werk moet verrichten, krijgt uw browser een rekentaak die hij moet oplossen om ervoor te zorgen dat het een geldige client is. Dit concept wordt <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a> genoemd. De taak wordt in een paar seconden berekend en u krijgt toegang tot de website. Bedankt voor uw begrip en geduld."
 }

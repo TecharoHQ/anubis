@@ -60,5 +60,6 @@
   "js_iterations": "oppattakingar",
   "js_finished_reading": "Eg har slutta å lesa, hald fram →",
   "js_calculation_error": "Rekningsfeil!",
-  "js_calculation_error_msg": "Mislukkast i å rekne utfordring:"
+  "js_calculation_error_msg": "Mislukkast i å rekne utfordring:",
+  "simplified_explanation": "Dette er eit tiltak mot robotar og vondsinna førespurnader som liknar på ein CAPTCHA. Men i staden for å måtte gjere arbeidet sjølv, får nettlesaren din ei utrekningsoppgåve som han må løyse for å sikre at han er ein gyldig klient. Dette konseptet blir kalla <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Arbeidsbevis</a>. Oppgåva blir rekna ut på nokre få sekund, og du får tilgang til nettstaden. Takk for di forståing og tålmod."
 }

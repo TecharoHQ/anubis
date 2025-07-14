@@ -60,5 +60,6 @@
   "js_iterations": "kordust",
   "js_finished_reading": "Lugesin ära, edasi →",
   "js_calculation_error": "Arvutamise viga!",
-  "js_calculation_error_msg": "Ei suutnud kontrolli arvutada:"
+  "js_calculation_error_msg": "Ei suutnud kontrolli arvutada:",
+  "simplified_explanation": "See on meede robotite ja pahatahtlike päringute vastu, mis sarnaneb CAPTCHA-le. Kuid selle asemel, et peaksite ise tööd tegema, antakse teie brauserile arvutusülesanne, mille see peab lahendama, et tagada selle kehtivus kliendina. Seda kontseptsiooni nimetatakse <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Töötõendiks</a>. Ülesanne arvutatakse mõne sekundiga ja teile antakse juurdepääs veebisaidile. Täname teid mõistva suhtumise ja kannatlikkuse eest."
 }

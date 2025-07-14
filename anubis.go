@@ -37,5 +37,5 @@ const DefaultDifficulty = 4
 // if being set.
 var ForcedLanguage = ""
 
-// CustomExplanationText contains a custom text which can be shown when clicking "Why am I seeing this?" if set
-var CustomExplanationText = ""
+// UseSimplifiedExplanation can be set to true for using the simplified explanation
+var UseSimplifiedExplanation = false

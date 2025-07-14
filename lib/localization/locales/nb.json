@@ -60,5 +60,6 @@
   "js_iterations": "gjentakelser",
   "js_finished_reading": "Jeg har sluttet å lese, fortsett →",
   "js_calculation_error": "Beregningsfeil!",
-  "js_calculation_error_msg": "Mislyktes i å beregne utfordring:"
+  "js_calculation_error_msg": "Mislyktes i å beregne utfordring:",
+  "simplified_explanation": "Dette er et tiltak mot roboter og ondsinnede forespørsler som ligner på en CAPTCHA. Men i stedet for å måtte gjøre arbeidet selv, får nettleseren din en beregningsoppgave som den må løse for å sikre at den er en gyldig klient. Dette konseptet kalles <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Oppgaven beregnes på noen få sekunder, og du får tilgang til nettstedet. Takk for din forståelse og tålmodighet."
 }

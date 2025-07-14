@@ -60,5 +60,6 @@
   "js_iterations": "迭代",
   "js_finished_reading": "我读完了，继续 →",
   "js_calculation_error": "计算错误！",
-  "js_calculation_error_msg": "计算挑战失败："
+  "js_calculation_error_msg": "计算挑战失败：",
+  "simplified_explanation": "这是一种类似于验证码的措施，用于防止机器人和恶意请求。但是，您无需自己动手，您的浏览器会收到一个计算任务，必须解决该任务以确保它是有效的客户端。这个概念称为<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">工作量证明</a>。该任务在几秒钟内计算完毕，您将被授予访问网站的权限。感谢您的理解和耐心。"
 }

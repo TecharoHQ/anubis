@@ -60,5 +60,6 @@
   "js_iterations": "iterazioni.",
   "js_finished_reading": "Ho finito di leggere, continua →",
   "js_calculation_error": "Errore nel calcolo!",
-  "js_calculation_error_msg": "Impossibile superare il test:"
+  "js_calculation_error_msg": "Impossibile superare il test:",
+  "simplified_explanation": "Questa è una misura contro bot e richieste dannose simile a un CAPTCHA. Tuttavia, invece di dover lavorare tu stesso, al tuo browser viene assegnato un compito di calcolo che deve risolvere per garantire che sia un client valido. Questo concetto è chiamato <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Il compito viene calcolato in pochi secondi e ti viene concesso l'accesso al sito web. Grazie per la tua comprensione e pazienza."
 }

@@ -60,5 +60,6 @@
   "js_iterations": "iterationer",
   "js_finished_reading": "Jag har läst klart, fortsätt →",
   "js_calculation_error": "Beräkningsfel!",
-  "js_calculation_error_msg": "Misslyckades att kalkylera utmaning:"
+  "js_calculation_error_msg": "Misslyckades att kalkylera utmaning:",
+  "simplified_explanation": "Detta är en åtgärd mot botar och skadliga förfrågningar som liknar en CAPTCHA. Men i stället för att du själv måste göra jobbet får din webbläsare en beräkningsuppgift som den måste lösa för att säkerställa att den är en giltig klient. Detta koncept kallas <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Arbetsbevis</a>. Uppgiften beräknas på några sekunder och du beviljas tillgång till webbplatsen. Tack för din förståelse och ditt tålamod."
 }

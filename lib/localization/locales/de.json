@@ -60,5 +60,6 @@
   "js_iterations": "Iterationen",
   "js_finished_reading": "Fertig gelesen, weiter zur Seite →",
   "js_calculation_error": "Berechnung fehlgeschlagen!",
-  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:"
+  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:",
+  "simplified_explanation": "Dies ist eine Maßnahme gegen Bots und bösartige Anfragen, ähnlich einem CAPTCHA. Anstatt jedoch selbst arbeiten zu müssen, erhält Ihr Browser eine Berechnungsaufgabe, die er lösen muss, um sicherzustellen, dass es sich um einen gültigen Client handelt. Dieses Konzept wird als <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a> bezeichnet. Die Aufgabe wird in wenigen Sekunden berechnet und Sie erhalten Zugriff auf die Website. Vielen Dank für Ihr Verständnis und Ihre Geduld."
 }

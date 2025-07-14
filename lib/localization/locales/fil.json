@@ -60,5 +60,6 @@
   "js_iterations": "mga iterasyon",
   "js_finished_reading": "Tapos na akong magbasa, magpatuloy →",
   "js_calculation_error": "Error sa pagkalkula!",
-  "js_calculation_error_msg": "Nabigong ikalkula ang hamon:"
+  "js_calculation_error_msg": "Nabigong ikalkula ang hamon:",
+  "simplified_explanation": "Ito ay isang panukala laban sa mga bot at malisyosong mga kahilingan na katulad ng isang CAPTCHA. Gayunpaman, sa halip na ikaw mismo ang gumawa ng trabaho, binibigyan ang iyong browser ng isang gawain sa pagkalkula na kailangan nitong lutasin upang matiyak na ito ay isang wastong kliyente. Ang konseptong ito ay tinatawag na <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Ang gawain ay kinakalkula sa loob ng ilang segundo at binibigyan ka ng access sa website. Salamat sa iyong pag-unawa at pasensya."
 }

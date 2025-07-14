@@ -60,5 +60,6 @@
   "js_iterations": "itérations",
   "js_finished_reading": "J'ai fini de lire, continuer →",
   "js_calculation_error": "Erreur de calcul !",
-  "js_calculation_error_msg": "Échec du calcul du défi :"
+  "js_calculation_error_msg": "Échec du calcul du défi :",
+  "simplified_explanation": "Il s'agit d'une mesure contre les robots et les requêtes malveillantes similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour s'assurer qu'il est un client valide. Ce concept s'appelle <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Preuve de travail</a>. La tâche est calculée en quelques secondes et vous avez accès au site Web. Merci de votre compréhension et de votre patience."
 }

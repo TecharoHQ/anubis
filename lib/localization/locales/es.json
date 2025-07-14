@@ -60,5 +60,6 @@
   "js_iterations": "iteraciones",
   "js_finished_reading": "He terminado de leer, continuar →",
   "js_calculation_error": "¡Error de cálculo!",
-  "js_calculation_error_msg": "Falló al calcular el desafío:"
+  "js_calculation_error_msg": "Falló al calcular el desafío:",
+  "simplified_explanation": "Esta es una medida contra bots y solicitudes maliciosas similar a un CAPTCHA. Sin embargo, en lugar de tener que hacer el trabajo usted mismo, a su navegador se le asigna una tarea de cálculo que debe resolver para garantizar que es un cliente válido. Este concepto se llama <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Prueba de trabajo</a>. La tarea se calcula en unos segundos y se le concede acceso al sitio web. Gracias por su comprensión y paciencia."
 }

@@ -60,5 +60,6 @@
   "js_iterations": "umferðir",
   "js_finished_reading": "Ég hef lokið lestrinum, höldum áfram →",
   "js_calculation_error": "Reiknivilla!",
-  "js_calculation_error_msg": "Mistókst að reikna áskorun:"
+  "js_calculation_error_msg": "Mistókst að reikna áskorun:",
+  "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illgjarnum beiðnum svipað og CAPTCHA. Hins vegar, í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Sönnun-á-vinnu</a>. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina."
 }

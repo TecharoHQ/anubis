@@ -60,5 +60,6 @@
   "js_iterations": "tekrar",
   "js_finished_reading": "Okumayı bitirdim, devam et →",
   "js_calculation_error": "Hesaplama hatası!",
-  "js_calculation_error_msg": "Zorluk hesaplaması başarısız oldu:"
+  "js_calculation_error_msg": "Zorluk hesaplaması başarısız oldu:",
+  "simplified_explanation": "Bu, botlara ve kötü niyetli isteklere karşı CAPTCHA'ya benzer bir önlemdir. Ancak, kendiniz çalışmak yerine, tarayıcınıza geçerli bir istemci olduğundan emin olmak için çözmesi gereken bir hesaplama görevi verilir. Bu kavrama <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">İş Kanıtı</a> denir. Görev birkaç saniye içinde hesaplanır ve web sitesine erişim hakkı kazanırsınız. Anlayışınız ve sabrınız için teşekkür ederiz."
 }

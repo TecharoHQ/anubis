@@ -60,5 +60,6 @@
   "js_iterations": "迭代",
   "js_finished_reading": "我讀完了，繼續 →",
   "js_calculation_error": "計算錯誤！",
-  "js_calculation_error_msg": "計算挑戰失敗："
+  "js_calculation_error_msg": "計算挑戰失敗：",
+  "simplified_explanation": "這是一種類似於驗證碼的措施，用於防止機器人和惡意請求。但是，您無需自己動手，您的瀏覽器會收到一個計算任務，必須解決該任務以確保它是有效的客戶端。這個概念稱為<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">工作量證明</a>。該任務在幾秒鐘內計算完畢，您將被授予訪問網站的權限。感謝您的理解和耐心。"
 }

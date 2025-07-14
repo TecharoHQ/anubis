@@ -15,7 +15,11 @@ templ page(localizer *localization.SimpleLocalizer) {
 			<div class="bar-inner"></div>
 		</div>
 		<details>
-			if anubis.CustomExplanationText == "" {
+			if anubis.UseSimplifiedExplanation {
+				<p>
+					{ localizer.T("simplified_explanation") }
+				</p>
+			} else {
 				<p>
 					{ localizer.T("ai_companies_explanation") }
 				</p>
@@ -27,10 +31,6 @@ templ page(localizer *localization.SimpleLocalizer) {
 				</p>
 				<p>
 					{ localizer.T("jshelter_note") }
-				</p>
-			} else {
-				<p>
-					{ anubis.CustomExplanationText }
 				</p>
 			}
 		</details>

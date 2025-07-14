@@ -60,5 +60,6 @@
   "js_iterations": "イテレーション数",
   "js_finished_reading": "読み終わりました。続行 →",
   "js_calculation_error": "計算エラー！",
-  "js_calculation_error_msg": "チャレンジの計算に失敗しました:"
+  "js_calculation_error_msg": "チャレンジの計算に失敗しました:",
+  "simplified_explanation": "これは、CAPTCHAと同様の、ボットや悪意のあるリクエストに対する対策です。ただし、自分で作業する代わりに、ブラウザに計算タスクが与えられ、それを解決して有効なクライアントであることを確認する必要があります。この概念は<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>と呼ばれます。タスクは数秒で計算され、ウェブサイトへのアクセスが許可されます。ご理解とご協力をお願いいたします。"
 }
