@@ -99,6 +99,7 @@ There are a bunch of other assorted features and fixes too:
 - Allow [Common Crawl](https://commoncrawl.org/) by default so scrapers have less incentive to scrape
 - The [bbolt storage backend](./admin/policies.mdx#bbolt) now runs its cleanup every hour instead of every five minutes.
 - Don't block Anubis starting up if [Thoth](./admin/thoth.mdx) health checks fail.
+- Multiple consecutive slashes are supported in upstream application URLs ([#754](https://github.com/TecharoHQ/anubis/issues/754)).
 
 ### Potentially breaking changes
 
