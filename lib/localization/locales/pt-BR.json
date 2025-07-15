@@ -2,6 +2,7 @@
   "loading": "Carregando...",
   "why_am_i_seeing": "Por que estou vendo isso?",
   "protected_by": "Protegido por",
+  "protected_from": "From",
   "made_with": "Feito com ❤️ no 🇨🇦",
   "mascot_design": "Design do mascote por",
   "ai_companies_explanation": "Você está vendo isso porque o administrador deste site configurou Anubis para proteger o servidor contra a praga de empresas de IA que realizam scraping agressivo em sites. Isso pode causar, e de fato causa, inoperância nos sites, o que torna seus recursos inacessíveis para todos.",

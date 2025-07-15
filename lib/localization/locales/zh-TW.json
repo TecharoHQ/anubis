@@ -1,7 +1,8 @@
 {
   "loading": "載入中...",
   "why_am_i_seeing": "為什麼我看到這個？",
-  "protected_by": "保護由",
+  "protected_by": "本網站由",
+  "protected_from": "保護，來自",
   "made_with": "在 🇨🇦 用 ❤️ 製作",
   "mascot_design": "吉祥物由",
   "ai_companies_explanation": "您會看到這個畫面，是因為網站管理員啟用了 Anubis 來保護伺服器，避免 AI 公司大量爬取網站內容。這類行為會導致網站當機，讓所有使用者都無法正常存取資源。",

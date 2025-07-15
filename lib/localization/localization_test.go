@@ -39,7 +39,7 @@ func TestLocalizationService(t *testing.T) {
 
 	// Test for requiredKeys localization
 	requiredKeys := []string{
-		"loading", "why_am_i_seeing", "protected_by", "made_with",
+		"loading", "why_am_i_seeing", "protected_by", "protected_from", "made_with",
 		"mascot_design", "try_again", "go_home", "javascript_required",
 	}
 
