@@ -1,0 +1,9 @@
+# Screaming Frog is a smaller actor in the SEO space and their crawler
+# occasionally attempts to access content despite being explicitly excluded via
+# robots.txt directives.
+#
+# Company website: https://www.screamingfrog.co.uk
+
+- name: screaming-frog
+  user_agent_regex: ^Screaming Frog SEO Spider/
+  action: DENY

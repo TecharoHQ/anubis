@@ -1,0 +1,8 @@
+# DataForSEO is a Ukraininan SEO company.
+#
+# Website: https://dataforseo.com
+# Crawler info: https://dataforseo.com/dataforseo-bot
+
+- name: dataforseo
+  user_agent_regex: DataForSeoBot
+  action: DENY

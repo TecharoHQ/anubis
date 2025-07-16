@@ -1,0 +1,10 @@
+# Majestic is a UK based specialist search engine and commercial SEO entity.
+# They claim to "spider the Web for the purpose of building a search engine"
+# with a distributed crawler.
+#
+# Website: https://majestic.com
+# Crawler info: https://mj12bot.com
+
+- name: mj12bot
+  user_agent_regex: MJ12bot/
+  action: DENY

@@ -1,0 +1,8 @@
+# Serpstat is a US-based SEO company.
+#
+# Website: https://serpstat.com
+# Crawler info: https://serpstatbot.com
+
+- name: serpstatbot
+  user_agent_regex: serpstatbot/
+  action: DENY

@@ -1,0 +1,8 @@
+# Checkmark Network is a brand and intellectual property protection company.
+#
+# Website: https://www.checkmarknetwork.com
+# Crawler info: https://www.checkmarknetwork.com/spider.html/
+
+- name: checkmark-network
+  user_agent_regex: ^CheckMarkNetwork/
+  action: DENY
