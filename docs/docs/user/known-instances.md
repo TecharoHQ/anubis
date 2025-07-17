@@ -57,6 +57,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://tumfatig.net/
 - https://rpmfusion.org/
 - https://wiki.freepascal.org/
+- https://azurlane.koumakan.jp/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
@@ -105,3 +106,10 @@ This page contains a non-exhaustive list with all websites using Anubis.
   <summary>Forschungszentrum Jülich</summary>
   - https://juser.fz-juelich.de/
   </details>
+- <details>
+  <summary>archlinux32.org</summary>
+  - https://www.archlinux32.org/packages/
+  - https://bbs.archlinux32.org/
+  - https://bugs.archlinux32.org/
+  </details>
+
