@@ -1,0 +1,8 @@
+# Twingly is a Danish social data mining and media monitoring company.
+#
+# Website: https://www.twingly.com
+# Crawler info: https://app.twingly.com/public-docs/crawler
+
+- name: twingly
+  user_agent_regex: Twingly Recon
+  action: DENY

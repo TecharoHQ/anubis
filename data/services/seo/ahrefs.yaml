@@ -1,0 +1,8 @@
+# Ahrefs is a large SEO company used by single bloggers to large enterprises.
+#
+# Website: https://ahrefs.com
+# Crawler info: https://ahrefs.com/robot
+
+- name: ahrefs
+  user_agent_regex: (AhrefsBot|AhrefsSiteAudit)/
+  action: DENY

@@ -1,0 +1,9 @@
+# The BuiltWith system visits a website to determine the technology profile it
+# is using by looking at the publicly visible code on a website.
+#
+# Website: https://builtwith.com
+# Bot info: https://builtwith.com/biup
+
+- name: builtwith
+  user_agent_regex: BW/\d+\.\d+; rb\.gy/
+  action: DENY
