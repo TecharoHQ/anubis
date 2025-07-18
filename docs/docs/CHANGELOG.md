@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix hanging on service restart ([#853](https://github.com/TecharoHQ/anubis/issues/853))
+
 ## v1.21.0: Minfilia Warde
 
 > Please, be at ease. You are among friends here.
