@@ -2,7 +2,7 @@ name: Docker image builds (pull requests)
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
@@ -11,7 +11,32 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  buildx-bake:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build and push
+        id: build
+        uses: docker/bake-action@76f9fa3a758507623da19f6092dc4089a7e61592 # v6.6.0
+        with:
+          source: .
+          push: true
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          set: |
+            osiris.tags=ttl.sh/techaro/pr-${{ github.event.number }}/osiris:24h
+
+  containerbuild:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
