@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix hanging on service restart ([#853](https://github.com/TecharoHQ/anubis/issues/853))
 
+### New locales
+
+This release adds the following new locales for localized responses:
+
+- [Norwegian Bokmål](https://github.com/TecharoHQ/anubis/pull/855)
+- [Norwegian Nynorsk](https://github.com/TecharoHQ/anubis/pull/855)
+
 ## v1.21.0: Minfilia Warde
 
 > Please, be at ease. You are among friends here.
