@@ -14,10 +14,12 @@ jobs:
     strategy:
       matrix:
         test:
+          - caddy
           - git-clone
           - git-push
           - healthcheck
           - i18n
+          - unix-socket-xff
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code

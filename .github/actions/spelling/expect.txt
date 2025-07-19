@@ -32,7 +32,7 @@ byteslice
 Bytespider
 cachebuster
 cachediptoasn
-Caddyfile
+caddyfile
 caninetools
 Cardyb
 celchecker
@@ -181,6 +181,7 @@ lol
 lominsa
 maintainership
 malware
+matthewpi
 mcr
 memes
 metarefresh

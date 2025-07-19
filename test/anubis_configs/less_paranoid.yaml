@@ -1,0 +1,10 @@
+bots:
+  - name: challenge
+    user_agent_regex: Mozilla
+    action: WEIGH
+    weight:
+      adjust: 10
+
+status_codes:
+  CHALLENGE: 401
+  DENY: 403
