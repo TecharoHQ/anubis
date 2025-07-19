@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Anubis now supports these new languages:
 
 - [Czech](https://github.com/TecharoHQ/anubis/pull/849)
+- [Finnish](https://github.com/TecharoHQ/anubis/pull/863)
 
 ## v1.21.0: Minfilia Warde
 
