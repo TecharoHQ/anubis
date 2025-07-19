@@ -103,6 +103,7 @@ Firecrawl
 flagenv
 Fordola
 forgejo
+forwardauth
 fsys
 fullchain
 gaissmai
