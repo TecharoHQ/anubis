@@ -81,7 +81,7 @@ services:
       # Should be the full external URL for Anubis (including scheme)
       - PUBLIC_URL=https://anubis.example.com
       # Should match your domain for proper cookie scoping
-      - COOKIE_NAME=example.com
+      - COOKIE_DOMAIN=example.com
     networks:
       - traefik
     labels:
