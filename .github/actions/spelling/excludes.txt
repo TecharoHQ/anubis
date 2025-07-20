@@ -92,3 +92,4 @@ ignore$
 robots.txt
 ^lib/localization/locales/.*\.json$
 ^lib/localization/.*_test.go$
+^test/.*$

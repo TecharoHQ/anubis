@@ -60,15 +60,6 @@ func New(ctx context.Context, thothURL, apiToken string, plaintext bool) (*Clien
 
 	hc := healthv1.NewHealthClient(conn)
 
-	resp, err := hc.Check(ctx, &healthv1.HealthCheckRequest{})
-	if err != nil {
-		return nil, fmt.Errorf("can't verify thoth health at %s: %w", thothURL, err)
-	}
-
-	if resp.Status != healthv1.HealthCheckResponse_SERVING {
-		return nil, fmt.Errorf("thoth is not healthy, wanted %s but got %s", healthv1.HealthCheckResponse_SERVING, resp.Status)
-	}
-
 	return &Client{
 		conn:    conn,
 		health:  hc,

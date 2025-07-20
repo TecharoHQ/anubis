@@ -12,31 +12,127 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
+- Expired records are now properly removed from bbolt databases ([#848](https://github.com/TecharoHQ/anubis/pull/848)).
+
+- Fix hanging on service restart ([#853](https://github.com/TecharoHQ/anubis/issues/853))
+
+### Added
+
+Anubis now supports these new languages:
+
+- [Czech](https://github.com/TecharoHQ/anubis/pull/849)
+
+## v1.21.0: Minfilia Warde
+
+> Please, be at ease. You are among friends here.
+
+In this release, Anubis becomes internationalized, gains the ability to use system load as input to issuing challenges, finally fixes the "invalid response" after "success" bug, and more! Please read these notes before upgrading as the changes are big enough that administrators should take action to ensure that the upgrade goes smoothly.
+
+### Big ticket changes
+
+The biggest change is that the ["invalid response" after "success" bug](https://github.com/TecharoHQ/anubis/issues/564) is now finally fixed for good by totally rewriting how Anubis' challenge issuance flow works. Instead of generating challenge strings from request metadata (under the assumption that the values being compared against are stable), Anubis now generates random data for each challenge. This data is stored in the active [storage backend](./admin/policies.mdx#storage-backends) for up to 30 minutes. This also fixes [#746](https://github.com/TecharoHQ/anubis/issues/746) and other similar instances of this issue.
+
+In order to reduce confusion, the "Success" interstitial that shows up when you pass a proof of work challenge has been removed.
+
+#### Storage
+
+Anubis now is able to store things persistently [in memory](./admin/policies.mdx#memory), [on the disk](./admin/policies.mdx#bbolt), or [in Valkey](./admin/policies.mdx#valkey) (this includes other compatible software). By default Anubis uses the in-memory backend. If you have an environment with mutable storage (even if it is temporary), be sure to configure the [`bbolt`](./admin/policies.mdx#bbolt) storage backend.
+
+#### Localization
+
+Anubis now supports localized responses. Locales can be added in [lib/localization/locales/](https://github.com/TecharoHQ/anubis/tree/main/lib/localization/locales). This release includes support for the following languages:
+
+- [Brazilian Portugese](https://github.com/TecharoHQ/anubis/pull/726)
+- [Chinese (Simplified)](https://github.com/TecharoHQ/anubis/pull/774)
+- [Chinese (Traditional)](https://github.com/TecharoHQ/anubis/pull/759)
+- English
+- [Estonian](https://github.com/TecharoHQ/anubis/pull/783)
+- [Filipino](https://github.com/TecharoHQ/anubis/pull/775)
+- [French](https://github.com/TecharoHQ/anubis/pull/716)
+- [German](https://github.com/TecharoHQ/anubis/pull/741)
+- [Icelandic](https://github.com/TecharoHQ/anubis/pull/780)
+- [Italian](https://github.com/TecharoHQ/anubis/pull/778)
+- [Japanese](https://github.com/TecharoHQ/anubis/pull/772)
+- [Spanish](https://github.com/TecharoHQ/anubis/pull/716)
+- [Turkish](https://github.com/TecharoHQ/anubis/pull/751)
+
+If facts or local regulations demand, you can set Anubis default language with the `FORCED_LANGUAGE` environment variable or the `--forced-language` command line argument:
+
+```sh
+FORCED_LANGUAGE=de
+```
+
+#### Load average
+
+Anubis can dynamically take action [based on the system load average](./admin/configuration/expressions.mdx#using-the-system-load-average), allowing you to write rules like this:
+
+```yaml
+## System load based checks.
+# If the system is under high load for the last minute, add weight.
+- name: high-load-average
+  action: WEIGH
+  expression: load_1m >= 10.0 # make sure to end the load comparison in a .0
+  weight:
+    adjust: 20
+
+# If it is not for the last 15 minutes, remove weight.
+- name: low-load-average
+  action: WEIGH
+  expression: load_15m <= 4.0 # make sure to end the load comparison in a .0
+  weight:
+    adjust: -10
+```
+
+Something to keep in mind about system load average is that it is not aware of the number of cores the system has. If you have a 16 core system that has 16 processes running but none of them is hogging the CPU, then you will get a load average below 16. If you are in doubt, make your "high load" metric at least two times the number of CPU cores and your "low load" metric at least half of the number of CPU cores. For example:
+
+|      Kind | Core count | Load threshold |
+| --------: | :--------- | :------------- |
+| high load | 4          | `8.0`          |
+|  low load | 4          | `2.0`          |
+| high load | 16         | `32.0`         |
+|  low load | 16         | `8`            |
+
+Also keep in mind that this does not account for other kinds of latency like I/O latency. A system can have its web applications unresponsive due to high latency from a MySQL server but still have that web application server report a load near or at zero.
+
+### Other features and fixes
+
+There are a bunch of other assorted features and fixes too:
 
 - Add `COOKIE_SECURE` option to set the cookie [Secure flag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#block_access_to_your_cookies)
 - Sets cookie defaults to use [SameSite: None](https://web.dev/articles/samesite-cookies-explained)
 - Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677)).
-- Implement localization system. Find locale files in lib/localization/locales/.
 - Implement a [development container](https://containers.dev/) manifest to make contributions easier.
 - Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
 - Add option for custom cookie prefix ([#732](https://github.com/TecharoHQ/anubis/pull/732))
-- Add translation for German language ([#741](https://github.com/TecharoHQ/anubis/pull/741))
-- Remove the "Success" interstitial after a proof of work challenge is concluded.
-- Anubis now has the concept of [storage backends](./admin/policies.mdx#storage-backends). These allow you to change how Anubis stores temporary data (in memory, on the disk, or in Valkey). If you run Anubis in an environment where you have a low amount of memory available for Anubis (eg: less than 64 megabytes), be sure to configure the [`bbolt`](./admin/policies.mdx#bbolt) storage backend.
-- The challenge issuance and validation process has been rewritten from scratch. Instead of generating challenge strings from request metadata (under the assumption that the values being compared against are stable), Anubis now generates random data for each challenge. This data is stored in the active [storage backend](./admin/policies.mdx#storage-backends) for up to 30 minutes. Fixes [#564](https://github.com/TecharoHQ/anubis/issues/564), [#746](https://github.com/TecharoHQ/anubis/issues/746), and other similar instances of this issue.
 - Make the [Open Graph](./admin/configuration/open-graph.mdx) subsystem and DNSBL subsystem use [storage backends](./admin/policies.mdx#storage-backends) instead of storing everything in memory by default.
-- Add option for forcing a specific language ([#742](https://github.com/TecharoHQ/anubis/pull/742))
-- Add translation for Turkish language ([#751](https://github.com/TecharoHQ/anubis/pull/751))
 - Allow [Common Crawl](https://commoncrawl.org/) by default so scrapers have less incentive to scrape
 - The [bbolt storage backend](./admin/policies.mdx#bbolt) now runs its cleanup every hour instead of every five minutes.
+- Don't block Anubis starting up if [Thoth](./admin/thoth.mdx) health checks fail.
+- A race condition involving [opening two challenge pages at once in different tabs](https://github.com/TecharoHQ/anubis/issues/832) causing one of them to fail has been fixed.
+- The "Try again" button on the error page has been fixed. Previously it meant "try the solution again" instead of "try the challenge again".
+- In certain cases, a user could be stuck with a test cookie that is invalid, locking them out of the service for up to half an hour. This has been fixed with better validation of this case and clearing the cookie.
+- Start exposing JA4H fingerprints for later use in CEL expressions.
+- Add `/healthz` route for use in platform-based health checks.
 
 ### Potentially breaking changes
+
+We try to introduce breaking changes as much as possible, but these are the changes that may be relevant for you as an administrator:
+
+#### Challenge format change
+
+Previously Anubis did no accounting for challenges that it issued. This means that if Anubis restarted during a client, the client would be able to proceed once Anubis came back online.
+
+During the upgrade to v1.21.0 and when v1.21.0 (or later) restarts with the [in-memory storage backend](./admin/policies.mdx#memory), you may see a higher rate of failed challenges than normal. If this persists beyond a few minutes, [open an issue](https://github.com/TecharoHQ/anubis/issues/new).
+
+If you are using the in-memory storage backend, please consider using [a different storage backend](./admin/policies.mdx#storage-backends).
+
+#### Systemd service changes
 
 The following potentially breaking change applies to native installs with systemd only:
 
 Each instance of systemd service template now has a unique `RuntimeDirectory`, as opposed to each instance of the service sharing a `RuntimeDirectory`. This change was made to avoid [the `RuntimeDirectory` getting nuked any time one of the Anubis instances restarts](https://github.com/TecharoHQ/anubis/issues/748).
 
-If you configured Anubis' unix sockets to listen on `/run/anubis/foo.sock` for instance `anubis@foo`, you will need to configure Anubis to listen on `/run/anubis/foo/sock` and additionally configure your HTTP load balancer as appropriate.
+If you configured Anubis' unix sockets to listen on `/run/anubis/foo.sock` for instance `anubis@foo`, you will need to configure Anubis to listen on `/run/anubis/foo/foo.sock` and additionally configure your HTTP load balancer as appropriate.
 
 If you need the legacy behaviour, install this [systemd unit dropin](https://www.flatcar.org/docs/latest/setup/systemd/drop-in-units/):
 
@@ -45,6 +141,8 @@ If you need the legacy behaviour, install this [systemd unit dropin](https://www
 [Service]
 RuntimeDirectory=anubis
 ```
+
+Just keep in mind that this will cause problems when Anubis restarts.
 
 ## v1.20.0: Thancred Waters
 

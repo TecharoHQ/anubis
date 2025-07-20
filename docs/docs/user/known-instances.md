@@ -50,6 +50,14 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://coinhoards.org/
 - https://pluralpedia.org/
 - https://git.aya.so/
+- https://marginalia-search.com/
+- https://repositorio.ufrn.br/home/
+- https://mozillazine.org/
+- https://clew.se/
+- https://tumfatig.net/
+- https://rpmfusion.org/
+- https://wiki.freepascal.org/
+- https://azurlane.koumakan.jp/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
@@ -94,3 +102,14 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://find.library.duke.edu/
   - https://nicholas.duke.edu/
   </details>
+- <details>
+  <summary>Forschungszentrum Jülich</summary>
+  - https://juser.fz-juelich.de/
+  </details>
+- <details>
+  <summary>archlinux32.org</summary>
+  - https://www.archlinux32.org/packages/
+  - https://bbs.archlinux32.org/
+  - https://bugs.archlinux32.org/
+  </details>
+

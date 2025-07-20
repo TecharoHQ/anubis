@@ -142,7 +142,7 @@ func (s *Store) cleanup(ctx context.Context) error {
 			}
 
 			if now.After(expiry) {
-				return valueBkt.DeleteBucket(key)
+				return tx.DeleteBucket(key)
 			}
 
 			return nil

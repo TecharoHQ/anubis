@@ -1,12 +1,10 @@
 acs
-aeacus
 Aibrew
 alrest
 amazonbot
 anthro
 anubis
 anubistest
-apk
 Applebot
 archlinux
 asnc
@@ -61,7 +59,6 @@ connnection
 containerbuild
 coreutils
 Cotoyogi
-CRDs
 Cromite
 crt
 Cscript
@@ -121,6 +118,7 @@ goland
 gomod
 goodbot
 googlebot
+gopsutil
 govulncheck
 goyaml
 GPG
@@ -132,6 +130,7 @@ Hashcash
 hashrate
 headermap
 healthcheck
+healthz
 hec
 hmc
 hostable
@@ -147,6 +146,7 @@ Imagesift
 imgproxy
 impressum
 inp
+internets
 IPTo
 iptoasn
 iss
@@ -160,7 +160,6 @@ jshelter
 JWTs
 kagi
 kagibot
-keikaku
 Keyfunc
 keypair
 KHTML
@@ -174,13 +173,13 @@ lgbt
 licend
 licstart
 lightpanda
-LIMSA
+limsa
 Linting
 linuxbrew
 LLU
 loadbalancer
 lol
-LOMINSA
+lominsa
 maintainership
 malware
 mcr
@@ -188,12 +187,13 @@ memes
 metarefresh
 metrix
 mimi
-minica
+Minfilia
 mistralai
 Mojeek
 mojeekbot
 mozilla
 nbf
+nepeat
 netsurf
 nginx
 nicksnyder
@@ -222,6 +222,7 @@ pipefail
 pki
 podkova
 podman
+poststart
 prebaked
 privkey
 promauto
@@ -241,9 +242,7 @@ redhat
 redir
 redirectscheme
 refactors
-relayd
 reputational
-reqmeta
 risc
 ruleset
 runlevels
@@ -255,11 +254,11 @@ searchbot
 searx
 sebest
 secretplans
-selfsigned
 Semrush
 Seo
 setsebool
 shellcheck
+shirou
 Sidetrade
 simprint
 sitemap
@@ -297,10 +296,8 @@ uberspace
 Unbreak
 unbreakdocker
 unifiedjs
-unixhttpd
 unmarshal
 unparseable
-uuidgen
 uvx
 UXP
 valkey
@@ -309,6 +306,8 @@ Velen
 vendored
 vhosts
 videotest
+VKE
+Vultr
 waitloop
 weblate
 webmaster
@@ -322,7 +321,6 @@ wordpress
 Workaround
 workdir
 wpbot
-xcaddy
 Xeact
 xeiaso
 xeserv
@@ -339,6 +337,7 @@ yeet
 yeetfile
 yourdomain
 yoursite
+yyz
 Zenos
 zizmor
 zombocom

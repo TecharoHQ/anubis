@@ -1,8 +1,9 @@
 name: Package builds (stable)
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+  # release:
+  #   types: [published]
 
 permissions:
   contents: write
@@ -13,67 +14,67 @@ jobs:
     #runs-on: alrest-techarohq
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      with:
-        persist-credentials: false
-        fetch-tags: true
-        fetch-depth: 0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-tags: true
+          fetch-depth: 0
 
-    - name: build essential
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential
+      - name: build essential
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
 
-    - name: Set up Homebrew
-      uses: Homebrew/actions/setup-homebrew@main
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
 
-    - name: Setup Homebrew cellar cache
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-      with:
-        path: |
-          /home/linuxbrew/.linuxbrew/Cellar
-          /home/linuxbrew/.linuxbrew/bin
-          /home/linuxbrew/.linuxbrew/etc
-          /home/linuxbrew/.linuxbrew/include
-          /home/linuxbrew/.linuxbrew/lib
-          /home/linuxbrew/.linuxbrew/opt
-          /home/linuxbrew/.linuxbrew/sbin
-          /home/linuxbrew/.linuxbrew/share
-          /home/linuxbrew/.linuxbrew/var
-        key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-homebrew-cellar-
+      - name: Setup Homebrew cellar cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            /home/linuxbrew/.linuxbrew/Cellar
+            /home/linuxbrew/.linuxbrew/bin
+            /home/linuxbrew/.linuxbrew/etc
+            /home/linuxbrew/.linuxbrew/include
+            /home/linuxbrew/.linuxbrew/lib
+            /home/linuxbrew/.linuxbrew/opt
+            /home/linuxbrew/.linuxbrew/sbin
+            /home/linuxbrew/.linuxbrew/share
+            /home/linuxbrew/.linuxbrew/var
+          key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-homebrew-cellar-
 
-    - name: Install Brew dependencies
-      run: |
-        brew bundle
+      - name: Install Brew dependencies
+        run: |
+          brew bundle
 
-    - name: Setup Golang caches
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-golang-
+      - name: Setup Golang caches
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
 
-    - name: install node deps
-      run: |
-        npm ci
+      - name: install node deps
+        run: |
+          npm ci
 
-    - name: Build Packages
-      run: |
-        go tool yeet
+      - name: Build Packages
+        run: |
+          go tool yeet
 
-    - name: Upload released artifacts
-      env:
-        GITHUB_TOKEN: ${{ github.TOKEN }}
-        RELEASE_VERSION: ${{github.event.release.tag_name}}
-      shell: bash
-      run: |
-        RELEASE="${RELEASE_VERSION}"
-        cd var
-        for file in *; do
-          gh release upload $RELEASE $file
-        done
+      - name: Upload released artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+          RELEASE_VERSION: ${{github.event.release.tag_name}}
+        shell: bash
+        run: |
+          RELEASE="${RELEASE_VERSION}"
+          cd var
+          for file in *; do
+            gh release upload $RELEASE $file
+          done

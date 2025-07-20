@@ -394,8 +394,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
-
 	redir := r.FormValue("redir")
 	redirURL, err := url.ParseRequestURI(redir)
 	if err != nil {

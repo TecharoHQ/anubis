@@ -38,17 +38,9 @@ const getAvailableLanguages = async () => {
   return ['en'];
 };
 
-// Detect browser language
-const getBrowserLanguage = async () => {
-  const lang = navigator.language || navigator.userLanguage;
-  const availableLanguages = await getAvailableLanguages();
-
-  // Extract the language code (first 2 characters)
-  const langCode = lang.substring(0, 2).toLowerCase();
-
-  // Return the language if supported, or use English
-  return availableLanguages.includes(langCode) ? langCode : 'en';
-};
+// Use the browser language from the HTML lang attribute which is set by the server settings or request headers
+const getBrowserLanguage = async () =>
+  document.documentElement.lang;
 
 // Load translations from JSON files
 const loadTranslations = async (lang) => {

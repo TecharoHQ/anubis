@@ -11,3 +11,8 @@ configMapGenerator:
     behavior: create
     files:
       - ./cfg/anubis/botPolicies.yaml
+  - name: nginx-cfg
+    behavior: create
+    files:
+      - ./cfg/nginx/mime.types
+      - ./cfg/nginx/nginx.conf

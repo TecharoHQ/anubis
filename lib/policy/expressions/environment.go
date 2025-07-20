@@ -23,6 +23,9 @@ func BotEnvironment() (*cel.Env, error) {
 		cel.Variable("path", cel.StringType),
 		cel.Variable("query", cel.MapType(cel.StringType, cel.StringType)),
 		cel.Variable("headers", cel.MapType(cel.StringType, cel.StringType)),
+		cel.Variable("load_1m", cel.DoubleType),
+		cel.Variable("load_5m", cel.DoubleType),
+		cel.Variable("load_15m", cel.DoubleType),
 	)
 }
 

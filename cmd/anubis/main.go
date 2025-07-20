@@ -38,6 +38,7 @@ import (
 	"github.com/facebookgo/flagenv"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
@@ -98,7 +99,7 @@ func keyFromHex(value string) (ed25519.PrivateKey, error) {
 }
 
 func doHealthCheck() error {
-	resp, err := http.Get("http://localhost" + *metricsBind + anubis.BasePrefix + "/metrics")
+	resp, err := http.Get("http://localhost" + *metricsBind + "/healthz")
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
@@ -242,6 +243,15 @@ func main() {
 	}
 
 	internal.InitSlog(*slogLevel)
+	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
+
+	if *healthcheck {
+		log.Println("running healthcheck")
+		if err := doHealthCheck(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	if *extractResources != "" {
 		if err := extractEmbedFS(data.BotPolicies, ".", *extractResources); err != nil {
@@ -252,6 +262,17 @@ func main() {
 		}
 		fmt.Printf("Extracted embedded static files to %s\n", *extractResources)
 		return
+	}
+
+	// install signal handler
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	wg := new(sync.WaitGroup)
+
+	if *metricsBind != "" {
+		wg.Add(1)
+		go metricsServer(ctx, wg.Done)
 	}
 
 	var rp http.Handler
@@ -267,8 +288,6 @@ func main() {
 	if *cookieDomain != "" && *cookieDynamicDomain {
 		log.Fatalf("you can't set COOKIE_DOMAIN and COOKIE_DYNAMIC_DOMAIN at the same time")
 	}
-
-	ctx := context.Background()
 
 	// Thoth configuration
 	switch {
@@ -400,21 +419,12 @@ func main() {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
-	wg := new(sync.WaitGroup)
-	// install signal handler
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	if *metricsBind != "" {
-		wg.Add(1)
-		go metricsServer(ctx, wg.Done)
-	}
-
 	var h http.Handler
 	h = s
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
+	h = internal.JA4H(h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
@@ -444,6 +454,8 @@ func main() {
 		}
 	}()
 
+	internal.SetHealth("anubis", healthv1.HealthCheckResponse_SERVING)
+
 	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
@@ -454,19 +466,29 @@ func metricsServer(ctx context.Context, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
-	mux.Handle(anubis.BasePrefix+"/metrics", promhttp.Handler())
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		st, ok := internal.GetHealth("anubis")
+		if !ok {
+			slog.Error("health service anubis does not exist, file a bug")
+		}
+
+		switch st {
+		case healthv1.HealthCheckResponse_NOT_SERVING:
+			http.Error(w, "NOT OK", http.StatusInternalServerError)
+			return
+		case healthv1.HealthCheckResponse_SERVING:
+			fmt.Fprintln(w, "OK")
+			return
+		default:
+			http.Error(w, "UNKNOWN", http.StatusFailedDependency)
+			return
+		}
+	})
 
 	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
-
-	if *healthcheck {
-		log.Println("running healthcheck")
-		if err := doHealthCheck(); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
 
 	go func() {
 		<-ctx.Done()

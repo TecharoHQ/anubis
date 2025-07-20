@@ -2,7 +2,7 @@ name: Docs test build
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -24,7 +24,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
-          images: ghcr.io/${{ github.repository }}/docs
+          images: ghcr.io/techarohq/anubis/docs
+          tags: |
+            type=sha,enable=true,priority=100,prefix=,suffix=,format=long
+            main
 
       - name: Build and push
         id: build

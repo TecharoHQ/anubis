@@ -10,7 +10,7 @@ import (
 
 templ base(title string, body templ.Component, impressum *config.Impressum, challenge any, ogTags map[string]string, localizer *localization.SimpleLocalizer) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang={ localizer.GetLang() }>
 		<head>
 			<title>{ title }</title>
 			<link rel="stylesheet" href={ anubis.BasePrefix + xess.URL }/>
@@ -65,14 +65,12 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 		</head>
 		<body id="top">
 			<main>
-				<center>
-					<h1 id="title" class=".centered-div">{ title }</h1>
-				</center>
+				<h1 id="title" class="centered-div">{ title }</h1>
 				@body
 				<footer>
-					<center>
+					<div class="centered-div">
 						<p>
-							{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
+							{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> { localizer.T("protected_from") } <a
 	href="https://techaro.lol"
 >Techaro</a>. { localizer.T("made_with") }.
 						</p>
@@ -83,7 +81,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 								-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
 							</p>
 						}
-					</center>
+					</div>
 				</footer>
 			</main>
 		</body>
@@ -124,11 +122,18 @@ templ index(localizer *localization.SimpleLocalizer) {
 	</div>
 }
 
-templ errorPage(message string, mail string, localizer *localization.SimpleLocalizer) {
+script reload(redirect string) {
+	if (redirect === "") {
+		redirect = "/";
+	}
+	window.location = redirect;
+}
+
+templ errorPage(message, mail, redirect string, localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
-		<button onClick="window.location.reload();">{ localizer.T("try_again") }</button>
+		<button onClick={ reload(redirect) }>{ localizer.T("try_again") }</button>
 		if mail != "" {
 			<p>
 				<a href="/">{ localizer.T("go_home") }</a> { localizer.T("contact_webmaster") }

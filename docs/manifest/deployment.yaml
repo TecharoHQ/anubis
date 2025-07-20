@@ -15,6 +15,9 @@ spec:
         - name: anubis
           configMap:
             name: anubis-cfg
+        - name: nginx
+          configMap:
+            name: nginx-cfg
         - name: temporary-data
           emptyDir: {}
       containers:
@@ -28,8 +31,23 @@ spec:
             requests:
               cpu: 250m
               memory: 128Mi
+          volumeMounts:
+            - name: nginx
+              mountPath: /conf
           ports:
             - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 1
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 20
         - name: anubis
           image: ghcr.io/techarohq/anubis:main
           imagePullPolicy: Always
@@ -75,3 +93,15 @@ spec:
           envFrom:
             - secretRef:
                 name: anubis-docs-thoth
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 1
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 20
