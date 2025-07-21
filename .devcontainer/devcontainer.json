@@ -21,7 +21,9 @@
         "golang.go",
         "unifiedjs.vscode-mdx",
         "a-h.templ",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "hashicorp.hcl",
+        "fredwangwang.vscode-hcl-format"
       ]
     }
   }
