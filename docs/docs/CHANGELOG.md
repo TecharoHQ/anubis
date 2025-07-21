@@ -26,6 +26,7 @@ Anubis now supports these new languages:
 - [Finnish](https://github.com/TecharoHQ/anubis/pull/863)
 - [Norwegian Bokmål](https://github.com/TecharoHQ/anubis/pull/855)
 - [Norwegian Nynorsk](https://github.com/TecharoHQ/anubis/pull/855)
+- [Russian](https://github.com/TecharoHQ/anubis/pull/882)
 
 Anubis now supports the [`missingHeader`](./admin/configuration/expressions.mdx#missingHeader) to assert the absence of headers in requests.
 
