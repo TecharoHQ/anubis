@@ -17,6 +17,7 @@ jobs:
           - git-clone
           - git-push
           - healthcheck
+          - i18n
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -34,7 +35,11 @@ jobs:
 
       - uses: ko-build/setup-ko@d006021bd0c28d1ce33a07e7943d48b079944c8d # v0.9
 
+      - name: Install utils
+        run: |
+          go install ./utils/cmd/...
+
       - name: Run test
         run: |
           cd test/${{ matrix.test }}
-          ./test.sh
+          backoff-retry --try-count 10 ./test.sh

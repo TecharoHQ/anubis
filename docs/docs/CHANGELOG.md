@@ -13,12 +13,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
-### New locales
+- Expired records are now properly removed from bbolt databases ([#848](https://github.com/TecharoHQ/anubis/pull/848)).
+- Fix hanging on service restart ([#853](https://github.com/TecharoHQ/anubis/issues/853))
 
-This release adds the following new locales for localized responses:
+### Added
 
+#### New locales
+
+Anubis now supports these new languages:
+
+- [Czech](https://github.com/TecharoHQ/anubis/pull/849)
+- [Finnish](https://github.com/TecharoHQ/anubis/pull/863)
 - [Norwegian Bokmål](https://github.com/TecharoHQ/anubis/pull/855)
 - [Norwegian Nynorsk](https://github.com/TecharoHQ/anubis/pull/855)
+
+Anubis now supports the [`missingHeader`](./admin/configuration/expressions.mdx#missingHeader) to assert the absence of headers in requests.
+
+### Fixes
+
+#### Fix ["error: can't get challenge"](https://github.com/TecharoHQ/anubis/issues/869) when details about a challenge can't be found in the server side state
+
+v1.21.0 changed the core challenge flow to maintain information about challenges on the server side instead of only doing them via stateless idempotent generation functions and relying on details to not change. There was a subtle bug introduced in this change: if a client has an unknown challenge ID set in its test cookie, Anubis will clear that cookie and then throw an HTTP 500 error.
+
+This has been fixed by making Anubis throw a new challenge page instead.
+
+#### Fix event loop thrashing when solving a proof of work challenge
+
+Previously the "fast" proof of work solver had a fragment of JavaScript that attempted to only post an update about proof of work progress to the main browser window every 1024 iterations. This fragment of JavaScript was subtly incorrect in a way that passed review but actually made the workers send an update back to the main thread every iteration. This caused a pileup of unhandled async calls (similar to a socket accept() backlog pileup in Unix) that caused stack space exhaustion.
+
+This has been fixed in the following ways:
+
+1. The complicated boolean logic has been totally removed in favour of a worker-local iteration counter.
+2. The progress bar is updated by worker `0` instead of all workers.
+
+Hopefully this should limit the event loop thrashing and let ia32 browsers (as well as any environment with a smaller stack size than amd64 and aarch64 seem to have) function normally when processing Anubis proof of work challenges.
+
+#### Fix potential memory leak when discovering a solution
+
+In some cases, the parallel solution finder in Anubis could cause all of the worker promises to leak due to the fact the promises were being improperly terminated. This was fixed by having Anubis debounce worker termination instead of allowing it to potentially recurse infinitely.
 
 ## v1.21.0: Minfilia Warde
 

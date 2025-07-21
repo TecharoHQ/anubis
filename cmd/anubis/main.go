@@ -263,7 +263,10 @@ func main() {
 		return
 	}
 
-	ctx := context.Background()
+	// install signal handler
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	wg := new(sync.WaitGroup)
 
 	if *metricsBind != "" {
@@ -413,10 +416,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
 	}
-
-	// install signal handler
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	var h http.Handler
 	h = s

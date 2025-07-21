@@ -25,13 +25,19 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           persist-credentials: false
+
       - name: Install CI target SSH key
         uses: shimataro/ssh-key-action@d4fffb50872869abe2d9a9098a6d9c5aa7d16be4 # v2.7.0
         with:
           key: ${{ secrets.CI_SSH_KEY }}
           name: id_rsa
           known_hosts: ${{ secrets.CI_SSH_KNOWN_HOSTS }}
+
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+
       - name: Run CI
-        run: bash test/ssh-ci/rigging.sh ${{ matrix.host }}
+        run: go run ./utils/cmd/backoff-retry bash test/ssh-ci/rigging.sh ${{ matrix.host }}
         env:
           GITHUB_RUN_ID: ${{ github.run_id }}

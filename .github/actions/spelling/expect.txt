@@ -5,7 +5,6 @@ amazonbot
 anthro
 anubis
 anubistest
-apk
 Applebot
 archlinux
 asnc
@@ -60,7 +59,6 @@ connnection
 containerbuild
 coreutils
 Cotoyogi
-CRDs
 Cromite
 crt
 Cscript
@@ -161,7 +159,6 @@ jshelter
 JWTs
 kagi
 kagibot
-keikaku
 Keyfunc
 keypair
 KHTML
@@ -190,7 +187,6 @@ metarefresh
 metrix
 mimi
 Minfilia
-minica
 mistralai
 Mojeek
 mojeekbot
@@ -225,6 +221,7 @@ pipefail
 pki
 podkova
 podman
+poststart
 prebaked
 privkey
 promauto
@@ -244,9 +241,7 @@ redhat
 redir
 redirectscheme
 refactors
-relayd
 reputational
-reqmeta
 risc
 ruleset
 runlevels
@@ -258,7 +253,6 @@ searchbot
 searx
 sebest
 secretplans
-selfsigned
 Semrush
 Seo
 setsebool
@@ -301,10 +295,8 @@ uberspace
 Unbreak
 unbreakdocker
 unifiedjs
-unixhttpd
 unmarshal
 unparseable
-uuidgen
 uvx
 UXP
 valkey
@@ -328,7 +320,6 @@ wordpress
 Workaround
 workdir
 wpbot
-xcaddy
 Xeact
 xeiaso
 xeserv

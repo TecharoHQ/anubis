@@ -102,6 +102,10 @@ func (s *Server) challengeFor(r *http.Request) (*challenge.Challenge, error) {
 	ckie := ckies[0]
 	chall, err := j.Get(r.Context(), "challenge:"+ckie.Value)
 	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return s.issueChallenge(r.Context(), r)
+		}
+
 		return nil, err
 	}
 

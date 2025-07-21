@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -735,4 +736,68 @@ func TestStripBasePrefixFromRequest(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestChallengeFor_ErrNotFound makes sure that users with invalid challenge IDs
+// in the test cookie don't get rejected by the database lookup failing.
+func TestChallengeFor_ErrNotFound(t *testing.T) {
+	pol := loadPolicies(t, "testdata/aggressive_403.yaml", 0)
+	ckieExpiration := 10 * time.Minute
+	const wrongCookie = "wrong cookie"
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:     "127.0.0.1",
+		CookieExpiration: ckieExpiration,
+	})
+
+	req := httptest.NewRequest("GET", "http://example.com/", nil)
+	req.Header.Set("X-Real-IP", "127.0.0.1")
+	req.Header.Set("User-Agent", "CHALLENGE")
+	req.AddCookie(&http.Cookie{Name: anubis.TestCookieName, Value: wrongCookie})
+
+	w := httptest.NewRecorder()
+	srv.maybeReverseProxyOrPage(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	body := new(strings.Builder)
+	_, err := io.Copy(body, resp.Body)
+	if err != nil {
+		t.Fatalf("reading body should not fail: %v", err)
+	}
+
+	t.Run("make sure challenge page is issued", func(t *testing.T) {
+		if !strings.Contains(body.String(), "anubis_challenge") {
+			t.Error("should get a challenge page")
+		}
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("should get a 401 Unauthorized, got: %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("make sure that the body is not an error page", func(t *testing.T) {
+		if strings.Contains(body.String(), "reject.webp") {
+			t.Error("should not get an internal server error")
+		}
+	})
+
+	t.Run("make sure new test cookie is issued", func(t *testing.T) {
+		found := false
+		for _, cookie := range resp.Cookies() {
+			if cookie.Name == anubis.TestCookieName {
+				if cookie.Value == wrongCookie {
+					t.Error("a new challenge cookie should be issued")
+				}
+				found = true
+			}
+		}
+		if !found {
+			t.Error("a new test cookie should be set")
+		}
+	})
 }

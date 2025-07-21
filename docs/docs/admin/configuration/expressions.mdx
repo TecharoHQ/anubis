@@ -77,7 +77,7 @@ For example, consider this rule:
 
 For this rule, if a request comes in from `8.8.8.8` or `1.1.1.1`, Anubis will deny the request and return an error page.
 
-#### `all` blocks
+### `all` blocks
 
 An `all` block that contains a list of expressions. If all expressions in the list return `true`, then the action specified in the rule will be taken. If any of the expressions in the list returns `false`, Anubis will move on to the next rule.
 
@@ -186,7 +186,31 @@ Also keep in mind that this does not account for other kinds of latency like I/O
 
 Anubis expressions can be augmented with the following functions:
 
+### `missingHeader`
+
+Available in `bot` expressions.
+
+```ts
+function missingHeader(headers: Record<string, string>, key: string) bool
+```
+
+`missingHeader` returns `true` if the request does not contain a header. This is useful when you are trying to assert behavior such as:
+
+```yaml
+# Adds weight to old versions of Chrome
+- name: old-chrome
+  action: WEIGH
+  weight:
+    adjust: 10
+  expression:
+    all:
+      - userAgent.matches("Chrome/[1-9][0-9]?\\.0\\.0\\.0")
+      - missingHeader(headers, "Sec-Ch-Ua")
+```
+
 ### `randInt`
+
+Available in all expressions.
 
 ```ts
 function randInt(n: int): int;

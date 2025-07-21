@@ -2,10 +2,12 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
   "name": "Dev",
-  "dockerComposeFile": ["./docker-compose.yaml"],
+  "dockerComposeFile": [
+    "./docker-compose.yaml"
+  ],
   "service": "workspace",
   "workspaceFolder": "/workspace/anubis",
-  "postStartCommand": "npm ci && go mod download",
+  "postStartCommand": "bash ./.devcontainer/poststart.sh",
   "features": {
     "ghcr.io/xe/devcontainer-features/ko:1.1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
