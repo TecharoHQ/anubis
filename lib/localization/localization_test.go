@@ -29,7 +29,16 @@ func TestLocalizationService(t *testing.T) {
 		"zh-TW": "載入中...",
 	}
 
-	for lang, expected := range loadingStrMap {
+	var keys []string
+
+	for lang := range loadingStrMap {
+		keys = append(keys, lang)
+	}
+
+	sort.Strings(keys)
+
+	for _, lang := range keys {
+		expected := loadingStrMap[lang]
 		t.Run(fmt.Sprintf("%s localization", lang), func(t *testing.T) {
 			localizer := service.GetLocalizer(lang)
 			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
@@ -45,7 +54,7 @@ func TestLocalizationService(t *testing.T) {
 		"mascot_design", "try_again", "go_home", "javascript_required",
 	}
 
-	for lang := range loadingStrMap {
+	for _, lang := range keys {
 		t.Run(fmt.Sprintf("All required keys exist in %s", lang), func(t *testing.T) {
 			loc := service.GetLocalizer(lang)
 			for _, key := range requiredKeys {
