@@ -166,19 +166,19 @@ func setupListener(network string, address string) (net.Listener, string) {
 
 	// additional permission handling for unix sockets
 	if network == "unix" {
+		slog.Debug("parsing socket mode", "mode_string", *socketMode, "address", address)
+
 		mode, err := strconv.ParseUint(*socketMode, 8, 0)
 		if err != nil {
 			listener.Close()
-			log.Fatal(fmt.Errorf("could not parse socket mode %s: %w", *socketMode, err))
+			slog.Error("could not parse socket mode", "mode", *socketMode, "err", err)
+			os.Exit(1)
 		}
 
-		err = os.Chmod(address, os.FileMode(mode))
-		if err != nil {
-			err := listener.Close()
-			if err != nil {
-				log.Printf("failed to close listener: %v", err)
-			}
-			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
+		if err := os.Chmod(address, os.FileMode(mode)); err != nil {
+			// Ignore chmod errors on Unix domain sockets - this is expected behavior
+			// on many systems/containers where socket permissions cannot be changed
+			slog.Debug("chmod failed on socket (ignoring)", "path", address, "err", err)
 		}
 	}
 
