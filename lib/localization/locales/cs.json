@@ -58,7 +58,7 @@
   "js_success": "Úspěch!",
   "js_done_took": "Hotovo! Trvalo to",
   "js_iterations": "iterací",
-  "js_finished_reading": "Čtení dokončeno, pokračujte →",
+  "js_finished_reading": "Čtení dokončeno, pokračovat →",
   "js_calculation_error": "Chyba výpočtu!",
   "js_calculation_error_msg": "Nepodařilo se vypočítat výzvu:"
 }
