@@ -52,7 +52,7 @@
   "js_missing_feature": "Eksik özellik",
   "js_challenge_error": "Hesaplama hatası!",
   "js_challenge_error_msg": "Algoritma çözümlemesi başarısız oldu. Sayfayı yeniden yüklemeyi deneyebilirsiniz.",
-  "js_calculating_difficulty": "Hesaplanıyor…<br/>Zorluk:",
+  "js_calculating_difficulty": "Hesaplanıyor...<br/>Zorluk:",
   "js_speed": "Hız:",
   "js_verification_longer": "Doğrulama beklenenden uzun sürüyor. Lütfen sayfayı yenilemeyin.",
   "js_success": "Başarılı!",
