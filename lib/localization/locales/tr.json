@@ -48,7 +48,7 @@
   "js_cookies_error": "Tarayıcınız çerezleri kaydetmiyor. Anubis, kullanıcıların zorlukları geçtiğini belirlemek için imzalı bir belirteci çerezde saklar. Lütfen bu alan adı için çerezleri etkinleştirin. Anubis’in kullandığı çerez adları önceden bildirilmeksizin değişebilir. Çerez adları ve değerleri resmi API’nin bir parçası değildir.",
   "js_context_not_secure": "Bağlantınız güvenli değil!",
   "js_context_not_secure_msg": "HTTPS üzerinden bağlanmayı deneyin veya yöneticiden HTTPS kurulumu yapmasını isteyin. Daha fazla bilgi için bkz. <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
-  "js_calculating": "Hesaplanıyor…",
+  "js_calculating": "Hesaplanıyor...",
   "js_missing_feature": "Eksik özellik",
   "js_challenge_error": "Hesaplama hatası!",
   "js_challenge_error_msg": "Algoritma çözümlemesi başarısız oldu. Sayfayı yeniden yüklemeyi deneyebilirsiniz.",
