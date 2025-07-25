@@ -17,9 +17,9 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
 func init() {
@@ -925,4 +925,43 @@ func TestPassChallengeXSS(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestXForwardedForNoDoubleComma(t *testing.T) {
+	var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Forwarded-For", r.Header.Get("X-Forwarded-For"))
+		fmt.Fprintln(w, "OK")
+	})
+
+	h = internal.XForwardedForToXRealIP(h)
+	h = internal.XForwardedForUpdate(false, h)
+
+	pol := loadPolicies(t, "testdata/permissive.yaml", 4)
+
+	srv := spawnAnubis(t, Options{
+		Next:   h,
+		Policy: pol,
+	})
+	ts := httptest.NewServer(srv)
+	t.Cleanup(ts.Close)
+
+	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("X-Real-Ip", "10.0.0.1")
+
+	resp, err := ts.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("response status is wrong, wanted %d but got: %s", http.StatusOK, resp.Status)
+	}
+
+	if xff := resp.Header.Get("X-Forwarded-For"); strings.HasPrefix(xff, ",,") {
+		t.Errorf("X-Forwarded-For has two leading commas: %q", xff)
+	}
 }

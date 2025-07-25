@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/internal/thoth"
-	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
+	"github.com/TecharoHQ/anubis/lib/thoth"
+	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 	"github.com/joho/godotenv"
 )
 
