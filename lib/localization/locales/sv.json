@@ -36,7 +36,7 @@
   "redirect_not_parseable": "Omdirigeringsurl icke tolkbar",
   "redirect_domain_not_allowed": "Omdirigeringsdomän icke tillåten",
   "failed_to_sign_jwt": "misslyckades att signera JWT",
-  "invalid_invocation": "Ogiltig anropan av MakeChallenge",
+  "invalid_invocation": "Ogiltigt anrop av MakeChallenge",
   "client_error_browser": "Klientfel: Dubbelkolla att din webbläsare är uppdaterad och försök igen senare.",
   "oh_noes": "Aj då!",
   "benchmarking_anubis": "Prestandamäter Anubis!",
