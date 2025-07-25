@@ -27,7 +27,7 @@
   "iters_b": "Iterationer B",
   "static_check_endpoint": "Detta är bara en kontrollendpunkt för användning av din reverse-proxy.",
   "authorization_required": "Tillstånd krävs",
-  "cookies_disabled": "Din webbläsare är konfigurerad för att inaktivera cookies. Anubis kräver cookies för att säkerställa att du är en giltig klient. Var vänlig och aktivera cookies för den här domänen.",
+  "cookies_disabled": "Din webbläsare är konfigurerad för att inaktivera cookies. Anubis kräver cookies för att säkerställa att du är en giltig klient. Var vänlig och aktivera cookies för den här domänen",
   "access_denied": "Tillstånd nekat: felkod",
   "dronebl_entry": "DroneBL rapporterade en post",
   "see_dronebl_lookup": "visa",
