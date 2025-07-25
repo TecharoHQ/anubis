@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis/data"
+	"github.com/TecharoHQ/anubis/lib/checker/remoteaddress"
 	. "github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
@@ -137,7 +138,7 @@ func TestBotValid(t *testing.T) {
 				Action:     RuleAllow,
 				RemoteAddr: []string{"0.0.0.0/33"},
 			},
-			err: ErrInvalidCIDR,
+			err: remoteaddress.ErrInvalidCIDR,
 		},
 		{
 			name: "only filter by IP range",

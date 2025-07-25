@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/TecharoHQ/anubis/lib/checker/expression"
 )
 
 func TestThresholdValid(t *testing.T) {
@@ -18,7 +20,7 @@ func TestThresholdValid(t *testing.T) {
 			name: "basic allow",
 			input: &Threshold{
 				Name:       "basic-allow",
-				Expression: &ExpressionOrList{Expression: "true"},
+				Expression: &expression.Config{Expression: "true"},
 				Action:     RuleAllow,
 			},
 			err: nil,
@@ -27,7 +29,7 @@ func TestThresholdValid(t *testing.T) {
 			name: "basic challenge",
 			input: &Threshold{
 				Name:       "basic-challenge",
-				Expression: &ExpressionOrList{Expression: "true"},
+				Expression: &expression.Config{Expression: "true"},
 				Action:     RuleChallenge,
 				Challenge: &ChallengeRules{
 					Algorithm:  "fast",
@@ -50,9 +52,9 @@ func TestThresholdValid(t *testing.T) {
 		{
 			name: "invalid expression",
 			input: &Threshold{
-				Expression: &ExpressionOrList{},
+				Expression: &expression.Config{},
 			},
-			err: ErrExpressionEmpty,
+			err: expression.ErrExpressionEmpty,
 		},
 		{
 			name:  "invalid action",

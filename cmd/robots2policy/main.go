@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/TecharoHQ/anubis/lib/checker/expression"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 
 	"sigs.k8s.io/yaml"
@@ -37,11 +38,11 @@ type RobotsRule struct {
 }
 
 type AnubisRule struct {
-	Expression *config.ExpressionOrList `yaml:"expression,omitempty" json:"expression,omitempty"`
-	Challenge  *config.ChallengeRules   `yaml:"challenge,omitempty" json:"challenge,omitempty"`
-	Weight     *config.Weight           `yaml:"weight,omitempty" json:"weight,omitempty"`
-	Name       string                   `yaml:"name" json:"name"`
-	Action     string                   `yaml:"action" json:"action"`
+	Expression *expression.Config     `yaml:"expression,omitempty" json:"expression,omitempty"`
+	Challenge  *config.ChallengeRules `yaml:"challenge,omitempty" json:"challenge,omitempty"`
+	Weight     *config.Weight         `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Name       string                 `yaml:"name" json:"name"`
+	Action     string                 `yaml:"action" json:"action"`
 }
 
 func init() {
@@ -224,11 +225,11 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			}
 
 			if userAgent == "*" {
-				rule.Expression = &config.ExpressionOrList{
+				rule.Expression = &expression.Config{
 					All: []string{"true"}, // Always applies
 				}
 			} else {
-				rule.Expression = &config.ExpressionOrList{
+				rule.Expression = &expression.Config{
 					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
 				}
 			}
@@ -249,11 +250,11 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 				rule.Name = fmt.Sprintf("%s-global-restriction-%d", *policyName, ruleCounter)
 				rule.Action = "WEIGH"
 				rule.Weight = &config.Weight{Adjust: 20} // Increase difficulty significantly
-				rule.Expression = &config.ExpressionOrList{
+				rule.Expression = &expression.Config{
 					All: []string{"true"}, // Always applies
 				}
 			} else {
-				rule.Expression = &config.ExpressionOrList{
+				rule.Expression = &expression.Config{
 					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
 				}
 			}
@@ -285,7 +286,7 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			pathCondition := buildPathCondition(disallow)
 			conditions = append(conditions, pathCondition)
 
-			rule.Expression = &config.ExpressionOrList{
+			rule.Expression = &expression.Config{
 				All: conditions,
 			}
 

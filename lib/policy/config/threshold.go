@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/checker/expression"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 	DefaultThresholds = []Threshold{
 		{
 			Name: "legacy-anubis-behaviour",
-			Expression: &ExpressionOrList{
+			Expression: &expression.Config{
 				Expression: "weight > 0",
 			},
 			Action: RuleChallenge,
@@ -31,10 +32,10 @@ var (
 )
 
 type Threshold struct {
-	Name       string            `json:"name" yaml:"name"`
-	Expression *ExpressionOrList `json:"expression" yaml:"expression"`
-	Action     Rule              `json:"action" yaml:"action"`
-	Challenge  *ChallengeRules   `json:"challenge" yaml:"challenge"`
+	Name       string             `json:"name" yaml:"name"`
+	Expression *expression.Config `json:"expression" yaml:"expression"`
+	Action     Rule               `json:"action" yaml:"action"`
+	Challenge  *ChallengeRules    `json:"challenge" yaml:"challenge"`
 }
 
 func (t Threshold) Valid() error {

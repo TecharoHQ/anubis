@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -13,6 +12,10 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/data"
+	"github.com/TecharoHQ/anubis/lib/checker/expression"
+	"github.com/TecharoHQ/anubis/lib/checker/headermatches"
+	"github.com/TecharoHQ/anubis/lib/checker/path"
+	"github.com/TecharoHQ/anubis/lib/checker/remoteaddress"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -25,12 +28,12 @@ var (
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
 	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
 	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
-	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
 	ErrRegexEndsWithNewline              = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
 	ErrInvalidImportStatement            = errors.New("config.ImportStatement: invalid source file")
 	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
 	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
 	ErrStatusCodeNotValid                = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
+	ErrUnparseableConfig                 = errors.New("config: can't parse configuration file")
 )
 
 type Rule string
@@ -56,15 +59,15 @@ func (r Rule) Valid() error {
 const DefaultAlgorithm = "fast"
 
 type BotConfig struct {
-	UserAgentRegex *string           `json:"user_agent_regex,omitempty" yaml:"user_agent_regex,omitempty"`
-	PathRegex      *string           `json:"path_regex,omitempty" yaml:"path_regex,omitempty"`
-	HeadersRegex   map[string]string `json:"headers_regex,omitempty" yaml:"headers_regex,omitempty"`
-	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
-	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
-	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
-	Name           string            `json:"name" yaml:"name"`
-	Action         Rule              `json:"action" yaml:"action"`
-	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+	UserAgentRegex *string            `json:"user_agent_regex,omitempty" yaml:"user_agent_regex,omitempty"`
+	PathRegex      *string            `json:"path_regex,omitempty" yaml:"path_regex,omitempty"`
+	HeadersRegex   map[string]string  `json:"headers_regex,omitempty" yaml:"headers_regex,omitempty"`
+	Expression     *expression.Config `json:"expression,omitempty" yaml:"expression,omitempty"`
+	Challenge      *ChallengeRules    `json:"challenge,omitempty" yaml:"challenge,omitempty"`
+	Weight         *Weight            `json:"weight,omitempty" yaml:"weight,omitempty"`
+	Name           string             `json:"name" yaml:"name"`
+	Action         Rule               `json:"action" yaml:"action"`
+	RemoteAddr     []string           `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
 
 	// Thoth features
 	GeoIP *GeoIP `json:"geoip,omitempty"`
@@ -118,7 +121,7 @@ func (b *BotConfig) Valid() error {
 			errs = append(errs, fmt.Errorf("%w: user agent regex: %q", ErrRegexEndsWithNewline, *b.UserAgentRegex))
 		}
 
-		if _, err := regexp.Compile(*b.UserAgentRegex); err != nil {
+		if err := headermatches.ValidUserAgent(*b.UserAgentRegex); err != nil {
 			errs = append(errs, ErrInvalidUserAgentRegex, err)
 		}
 	}
@@ -128,7 +131,7 @@ func (b *BotConfig) Valid() error {
 			errs = append(errs, fmt.Errorf("%w: path regex: %q", ErrRegexEndsWithNewline, *b.PathRegex))
 		}
 
-		if _, err := regexp.Compile(*b.PathRegex); err != nil {
+		if err := path.Valid(*b.PathRegex); err != nil {
 			errs = append(errs, ErrInvalidPathRegex, err)
 		}
 	}
@@ -150,10 +153,8 @@ func (b *BotConfig) Valid() error {
 	}
 
 	if len(b.RemoteAddr) > 0 {
-		for _, cidr := range b.RemoteAddr {
-			if _, _, err := net.ParseCIDR(cidr); err != nil {
-				errs = append(errs, ErrInvalidCIDR, err)
-			}
+		if err := remoteaddress.Valid(b.RemoteAddr); err != nil {
+			errs = append(errs, err)
 		}
 	}
 

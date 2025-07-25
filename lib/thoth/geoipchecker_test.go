@@ -5,11 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/lib/policy/checker"
+	"github.com/TecharoHQ/anubis/lib/checker"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 )
 
-var _ checker.Impl = &thoth.GeoIPChecker{}
+var _ checker.Interface = &thoth.GeoIPChecker{}
 
 func TestGeoIPChecker(t *testing.T) {
 	cli := loadSecrets(t)

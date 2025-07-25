@@ -1,8 +1,8 @@
 package policy
 
 import (
+	"github.com/TecharoHQ/anubis/lib/checker/expression/environment"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
-	"github.com/TecharoHQ/anubis/lib/policy/expressions"
 	"github.com/google/cel-go/cel"
 )
 
@@ -16,12 +16,12 @@ func ParsedThresholdFromConfig(t config.Threshold) (*Threshold, error) {
 		Threshold: t,
 	}
 
-	env, err := expressions.ThresholdEnvironment()
+	env, err := environment.Threshold()
 	if err != nil {
 		return nil, err
 	}
 
-	program, err := expressions.Compile(env, t.Expression.String())
+	program, err := environment.Compile(env, t.Expression.String())
 	if err != nil {
 		return nil, err
 	}

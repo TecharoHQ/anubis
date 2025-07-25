@@ -31,6 +31,7 @@ import (
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
+	"github.com/TecharoHQ/anubis/lib/checker/headerexists"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/lib/thoth"
@@ -323,7 +324,7 @@ func main() {
 	if *debugBenchmarkJS {
 		policy.Bots = []botPolicy.Bot{{
 			Name:   "",
-			Rules:  botPolicy.NewHeaderExistsChecker("User-Agent"),
+			Rules:  headerexists.New("User-Agent"),
 			Action: config.RuleBenchmark,
 		}}
 	}
