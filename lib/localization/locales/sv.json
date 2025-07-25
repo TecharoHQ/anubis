@@ -59,6 +59,6 @@
   "js_done_took": "Klart! tog",
   "js_iterations": "iterationer",
   "js_finished_reading": "Jag har läst klart, fortsätt →",
-  "js_calculation_error": "Kalkylfel!",
+  "js_calculation_error": "Beräkningsfel!",
   "js_calculation_error_msg": "Misslyckades att kalkylera utmaning:"
 }
