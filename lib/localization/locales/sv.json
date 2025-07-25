@@ -47,7 +47,7 @@
   "js_web_workers_error": "Din webbläsare stödjer inte webbworkers-teknik (Anubis använder sig av detta för att undvika att din webbläsare fryser). Har du ett tillägg såsom JShelter installerat?",
   "js_cookies_error": "Din webbläsare lagrar inte cookies. Anubis använder sig av cookies för att avgöra vilka klienter som har klarat utmaningar genom att lagra en signerad token i en cookie. Vänligen aktivera lagring av cookies för den här domänen. Namnen på de cookies som Anubis lagrar kan variera utan varsel då cookienamn och värden inte ingår i det publika API:et.",
   "js_context_not_secure": "Din webbläsarkontext är ej säker!",
-  "js_context_not_secure_msg": "Försök att ansluta via HTTPS eller kontakta administratören och be de konfigurera HTTPS. För mer information, se <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Försök att ansluta via HTTPS eller kontakta administratören och be dem att konfigurera HTTPS. För mer information, se <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
   "js_calculating": "Kalkylerar...",
   "js_missing_feature": "Funktion saknas",
   "js_challenge_error": "Utmaningsfel!",
