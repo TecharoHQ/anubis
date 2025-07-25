@@ -52,7 +52,7 @@
   "js_missing_feature": "Funktion saknas",
   "js_challenge_error": "Utmaningsfel!",
   "js_challenge_error_msg": "Misslyckades att lösa kontrollalgoritm. Du bör ladda om sidan.",
-  "js_calculating_difficulty": "Kalkylerar...<br/>Svårighetsgrad:",
+  "js_calculating_difficulty": "Beräknar...<br/>Svårighetsgrad:",
   "js_speed": "Hastighet:",
   "js_verification_longer": "Verifikation tar längre än förväntat. Ladda ej om sidan.",
   "js_success": "Lyckades!",
