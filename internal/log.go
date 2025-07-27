@@ -26,8 +26,8 @@ func InitSlog(level string) {
 	slog.SetDefault(slog.New(h))
 }
 
-func GetRequestLogger(r *http.Request) *slog.Logger {
-	return slog.With(
+func GetRequestLogger(base *slog.Logger, r *http.Request) *slog.Logger {
+	return base.With(
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),

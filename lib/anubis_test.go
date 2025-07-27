@@ -343,7 +343,7 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 			req.Header.Add("X-Real-Ip", "127.0.0.1")
 
-			cr, bot, err := s.check(req)
+			cr, bot, err := s.check(req, s.logger)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -583,7 +583,7 @@ func TestCloudflareWorkersRule(t *testing.T) {
 				req.Header.Add("X-Real-Ip", "127.0.0.1")
 				req.Header.Add("Cf-Worker", "true")
 
-				cr, _, err := s.check(req)
+				cr, _, err := s.check(req, s.logger)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -601,7 +601,7 @@ func TestCloudflareWorkersRule(t *testing.T) {
 
 				req.Header.Add("X-Real-Ip", "127.0.0.1")
 
-				cr, _, err := s.check(req)
+				cr, _, err := s.check(req, s.logger)
 				if err != nil {
 					t.Fatal(err)
 				}
