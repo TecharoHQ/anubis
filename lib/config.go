@@ -43,6 +43,7 @@ type Options struct {
 	OpenGraph           config.OpenGraph
 	ServeRobotsTXT      bool
 	CookieSecure        bool
+	PublicUrl           string
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
