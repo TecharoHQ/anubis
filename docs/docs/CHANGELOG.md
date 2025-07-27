@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
 - The [`segments`](./admin/configuration/expressions.mdx#segments) function was added for splitting a path into its slash-separated segments.
 
+### Added
+
+Anubis now supports these new languages:
+
+- Vietnamese [#926](https://github.com/TecharoHQ/anubis/pull/926)
+
 ## v1.21.3: Minfilia Warde - Echo 3
 
 ### Fixes
