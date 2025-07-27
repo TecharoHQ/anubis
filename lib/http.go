@@ -111,7 +111,7 @@ func randomChance(n int) bool {
 	return rand.Intn(n) == 0
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, rule *policy.Bot, returnHTTPStatusOnly bool) {
 	localizer := localization.GetLocalizer(r)
 
 	if returnHTTPStatusOnly {
@@ -125,16 +125,19 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") && randomChance(64) {
 		lg.Error("client was given a challenge but does not in fact support gzip compression")
 		s.respondWithError(w, r, localizer.T("client_error_browser"))
+		return
 	}
 
 	challengesIssued.WithLabelValues("embedded").Add(1)
-	chall, err := s.challengeFor(r)
+	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
 	if err != nil {
-		lg.Error("can't get challenge", "err", "err")
+		lg.Error("can't get challenge", "err", err)
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
 		return
 	}
+
+	lg = lg.With("challenge", chall.ID)
 
 	var ogTags map[string]string = nil
 	if s.opts.OpenGraph.Enabled {
@@ -153,7 +156,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		Expiry: 30 * time.Minute,
 	})
 
-	impl, ok := challenge.Get(rule.Challenge.Algorithm)
+	impl, ok := challenge.Get(chall.Method)
 	if !ok {
 		lg.Error("check failed", "err", "can't get algorithm", "algorithm", rule.Challenge.Algorithm)
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})

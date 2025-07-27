@@ -28,6 +28,9 @@ func InitSlog(level string) {
 
 func GetRequestLogger(r *http.Request) *slog.Logger {
 	return slog.With(
+		"host", r.Host,
+		"method", r.Method,
+		"path", r.URL.Path,
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),
