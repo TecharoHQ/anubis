@@ -7,7 +7,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
-	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
+	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
 func TestDefaultPolicyMustParse(t *testing.T) {

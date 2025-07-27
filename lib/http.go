@@ -227,7 +227,7 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg string, status int) {
 	localizer := localization.GetLocalizer(r)
 
-	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, r.FormValue("redir"), localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
+	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

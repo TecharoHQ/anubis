@@ -1,3 +1,4 @@
 - import: (data)/bots/cloudflare-workers.yaml
 - import: (data)/bots/headless-browsers.yaml
 - import: (data)/bots/us-ai-scraper.yaml
+- import: (data)/bots/custom-async-http-client.yaml

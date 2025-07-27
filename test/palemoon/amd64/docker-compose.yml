@@ -1,0 +1,50 @@
+services:
+  display:
+    image: ghcr.io/techarohq/ci-images/xserver:latest
+    pull_policy: always
+    ports:
+      - 5900:5900
+
+  anubis:
+    image: ko.local/anubis
+    environment:
+      BIND: ":3000"
+      TARGET: http://$TARGET
+      POLICY_FNAME: /cfg/anubis.yaml
+      SLOG_LEVEL: DEBUG
+    volumes:
+      - ../anubis:/cfg
+    depends_on:
+      - relayd
+
+  relayd:
+    image: ghcr.io/xe/x/relayd
+    environment:
+      BIND: :443
+      CERT_DIR: /techaro/pki
+      CERT_FNAME: cert.pem
+      KEY_FNAME: key.pem
+      PROXY_TO: http://anubis:3000
+    volumes:
+      - ../../pki/relayd:/techaro/pki:ro
+
+  # novnc:
+  #   image: geek1011/easy-novnc
+  #   command: -a :5800 -h display --no-url-password
+  #   ports:
+  #     - 5800:5800
+
+  palemoon:
+    platform: linux/amd64
+    init: true
+    image: ghcr.io/techarohq/ci-images/palemoon:latest
+    command: sleep inf
+    environment:
+      DISPLAY: display:0
+    volumes:
+      - ../../pki:/usr/local/share/ca-certificates/minica:ro
+      - ../scripts:/hack/scripts:ro
+    depends_on:
+      - anubis
+      - relayd
+      - display

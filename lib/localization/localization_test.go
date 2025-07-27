@@ -21,13 +21,25 @@ func TestLocalizationService(t *testing.T) {
 		"fr":    "Chargement...",
 		"ja":    "ロード中...",
 		"is":    "Hleður...",
+		"nb":    "Laster inn...",
+		"nn":    "Lastar inn...",
 		"pt-BR": "Carregando...",
 		"tr":    "Yükleniyor...",
+		"ru":    "Загрузка...",
 		"zh-CN": "加载中...",
 		"zh-TW": "載入中...",
 	}
 
-	for lang, expected := range loadingStrMap {
+	var keys []string
+
+	for lang := range loadingStrMap {
+		keys = append(keys, lang)
+	}
+
+	sort.Strings(keys)
+
+	for _, lang := range keys {
+		expected := loadingStrMap[lang]
 		t.Run(fmt.Sprintf("%s localization", lang), func(t *testing.T) {
 			localizer := service.GetLocalizer(lang)
 			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
@@ -43,7 +55,7 @@ func TestLocalizationService(t *testing.T) {
 		"mascot_design", "try_again", "go_home", "javascript_required",
 	}
 
-	for lang := range loadingStrMap {
+	for _, lang := range keys {
 		t.Run(fmt.Sprintf("All required keys exist in %s", lang), func(t *testing.T) {
 			loc := service.GetLocalizer(lang)
 			for _, key := range requiredKeys {
@@ -57,7 +69,7 @@ func TestLocalizationService(t *testing.T) {
 }
 
 type manifest struct {
-	SupportedLanguages []string `json:"supported_languages"`
+	SupportedLanguages []string `json:"supportedLanguages"`
 }
 
 func loadManifest(t *testing.T) manifest {
@@ -97,6 +109,11 @@ func TestComprehensiveTranslations(t *testing.T) {
 	}
 
 	sort.Strings(keys)
+
+	manifest := loadManifest(t)
+	if len(manifest.SupportedLanguages) == 0 {
+		t.Fatal("no languages loaded")
+	}
 
 	for _, lang := range loadManifest(t).SupportedLanguages {
 		t.Run(lang, func(t *testing.T) {

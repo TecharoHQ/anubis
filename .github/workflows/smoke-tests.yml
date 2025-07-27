@@ -18,7 +18,9 @@ jobs:
           - git-push
           - healthcheck
           - i18n
-    runs-on: ubuntu-24.04
+          - palemoon/amd64
+          #- palemoon/i386
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -43,3 +45,14 @@ jobs:
         run: |
           cd test/${{ matrix.test }}
           backoff-retry --try-count 10 ./test.sh
+
+      - name: Sanitize artifact name
+        if: always()
+        run: echo "ARTIFACT_NAME=${{ matrix.test }}" | sed 's|/|-|g' >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: test/${{ matrix.test }}/var

@@ -23,6 +23,7 @@ bitrate
 Bluesky
 blueskybot
 boi
+Bokm
 botnet
 botstopper
 BPort
@@ -149,6 +150,7 @@ inp
 internets
 IPTo
 iptoasn
+isp
 iss
 isset
 ivh
@@ -248,6 +250,7 @@ ruleset
 runlevels
 RUnlock
 runtimedir
+runtimedirectory
 sas
 sasl
 searchbot
@@ -317,6 +320,7 @@ websites
 Webzio
 wildbase
 withthothmock
+wolfbeast
 wordpress
 Workaround
 workdir

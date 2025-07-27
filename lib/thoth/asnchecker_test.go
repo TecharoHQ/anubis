@@ -5,16 +5,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/internal/thoth"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
+	"github.com/TecharoHQ/anubis/lib/thoth"
+	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 )
 
-var _ checker.Impl = &thoth.GeoIPChecker{}
+var _ checker.Impl = &thoth.ASNChecker{}
 
-func TestGeoIPChecker(t *testing.T) {
+func TestASNChecker(t *testing.T) {
 	cli := loadSecrets(t)
 
-	asnc := cli.GeoIPCheckerFor([]string{"us"})
+	asnc := cli.ASNCheckerFor([]uint32{13335})
 
 	for _, cs := range []struct {
 		ipAddress string
@@ -59,5 +60,22 @@ func TestGeoIPChecker(t *testing.T) {
 				t.Error("Wanted error but got none")
 			}
 		})
+	}
+}
+
+func BenchmarkWithCache(b *testing.B) {
+	cli := loadSecrets(b)
+	req := &iptoasnv1.LookupRequest{IpAddress: "1.1.1.1"}
+
+	_, err := cli.IPToASN.Lookup(b.Context(), req)
+	if err != nil {
+		b.Error(err)
+	}
+
+	for b.Loop() {
+		_, err := cli.IPToASN.Lookup(b.Context(), req)
+		if err != nil {
+			b.Error(err)
+		}
 	}
 }

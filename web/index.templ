@@ -122,18 +122,10 @@ templ index(localizer *localization.SimpleLocalizer) {
 	</div>
 }
 
-script reload(redirect string) {
-	if (redirect === "") {
-		redirect = "/";
-	}
-	window.location = redirect;
-}
-
-templ errorPage(message, mail, redirect string, localizer *localization.SimpleLocalizer) {
+templ errorPage(message, mail string, localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
-		<button onClick={ reload(redirect) }>{ localizer.T("try_again") }</button>
 		if mail != "" {
 			<p>
 				<a href="/">{ localizer.T("go_home") }</a> { localizer.T("contact_webmaster") }

@@ -25,8 +25,8 @@ func Index(localizer *localization.SimpleLocalizer) templ.Component {
 	return index(localizer)
 }
 
-func ErrorPage(msg, mail, redirect string, localizer *localization.SimpleLocalizer) templ.Component {
-	return errorPage(msg, mail, redirect, localizer)
+func ErrorPage(msg, mail string, localizer *localization.SimpleLocalizer) templ.Component {
+	return errorPage(msg, mail, localizer)
 }
 
 func Bench(localizer *localization.SimpleLocalizer) templ.Component {

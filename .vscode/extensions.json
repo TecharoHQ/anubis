@@ -5,6 +5,7 @@
     "golang.go",
     "unifiedjs.vscode-mdx",
     "a-h.templ",
-    "redhat.vscode-yaml"
+    "redhat.vscode-yaml",
+    "streetsidesoftware.code-spell-checker"
   ]
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/internal/thoth"
+	"github.com/TecharoHQ/anubis/lib/thoth"
 )
 
 func WithMockThoth(t *testing.T) context.Context {

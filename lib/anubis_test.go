@@ -1,8 +1,10 @@
 package lib
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,9 +17,9 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/internal/thoth/thothmock"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
 func init() {
@@ -734,5 +736,232 @@ func TestStripBasePrefixFromRequest(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestChallengeFor_ErrNotFound makes sure that users with invalid challenge IDs
+// in the test cookie don't get rejected by the database lookup failing.
+func TestChallengeFor_ErrNotFound(t *testing.T) {
+	pol := loadPolicies(t, "testdata/aggressive_403.yaml", 0)
+	ckieExpiration := 10 * time.Minute
+	const wrongCookie = "wrong cookie"
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:     "127.0.0.1",
+		CookieExpiration: ckieExpiration,
+	})
+
+	req := httptest.NewRequest("GET", "http://example.com/", nil)
+	req.Header.Set("X-Real-IP", "127.0.0.1")
+	req.Header.Set("User-Agent", "CHALLENGE")
+	req.AddCookie(&http.Cookie{Name: anubis.TestCookieName, Value: wrongCookie})
+
+	w := httptest.NewRecorder()
+	srv.maybeReverseProxyOrPage(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	body := new(strings.Builder)
+	_, err := io.Copy(body, resp.Body)
+	if err != nil {
+		t.Fatalf("reading body should not fail: %v", err)
+	}
+
+	t.Run("make sure challenge page is issued", func(t *testing.T) {
+		if !strings.Contains(body.String(), "anubis_challenge") {
+			t.Error("should get a challenge page")
+		}
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("should get a 401 Unauthorized, got: %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("make sure that the body is not an error page", func(t *testing.T) {
+		if strings.Contains(body.String(), "reject.webp") {
+			t.Error("should not get an internal server error")
+		}
+	})
+
+	t.Run("make sure new test cookie is issued", func(t *testing.T) {
+		found := false
+		for _, cookie := range resp.Cookies() {
+			if cookie.Name == anubis.TestCookieName {
+				if cookie.Value == wrongCookie {
+					t.Error("a new challenge cookie should be issued")
+				}
+				found = true
+			}
+		}
+		if !found {
+			t.Error("a new test cookie should be set")
+		}
+	})
+}
+
+func TestPassChallengeXSS(t *testing.T) {
+	pol := loadPolicies(t, "", anubis.DefaultDifficulty)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := httpClient(t)
+	chall := makeChallenge(t, ts, cli)
+
+	testCases := []struct {
+		name  string
+		redir string
+	}{
+		{
+			name:  "javascript alert",
+			redir: "javascript:alert('xss')",
+		},
+		{
+			name:  "vbscript",
+			redir: "vbscript:msgbox(\"XSS\")",
+		},
+		{
+			name:  "data url",
+			redir: "data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=",
+		},
+	}
+
+	t.Run("with test cookie", func(t *testing.T) {
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				nonce := 0
+				elapsedTime := 420
+				calculated := ""
+				calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
+				calculated = internal.SHA256sum(calcString)
+
+				req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+				if err != nil {
+					t.Fatalf("can't make request: %v", err)
+				}
+
+				q := req.URL.Query()
+				q.Set("response", calculated)
+				q.Set("nonce", fmt.Sprint(nonce))
+				q.Set("redir", tc.redir)
+				q.Set("elapsedTime", fmt.Sprint(elapsedTime))
+				req.URL.RawQuery = q.Encode()
+
+				u, err := url.Parse(ts.URL)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				for _, ckie := range cli.Jar.Cookies(u) {
+					if ckie.Name == anubis.TestCookieName {
+						req.AddCookie(ckie)
+					}
+				}
+
+				resp, err := cli.Do(req)
+				if err != nil {
+					t.Fatalf("can't do request: %v", err)
+				}
+
+				body, _ := io.ReadAll(resp.Body)
+
+				if bytes.Contains(body, []byte(tc.redir)) {
+					t.Log(string(body))
+					t.Error("found XSS in HTML body")
+				}
+
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("wanted status %d, got %d. body: %s", http.StatusBadRequest, resp.StatusCode, body)
+				}
+			})
+		}
+	})
+
+	t.Run("no test cookie", func(t *testing.T) {
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				nonce := 0
+				elapsedTime := 420
+				calculated := ""
+				calcString := fmt.Sprintf("%s%d", chall.Challenge, nonce)
+				calculated = internal.SHA256sum(calcString)
+
+				req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+				if err != nil {
+					t.Fatalf("can't make request: %v", err)
+				}
+
+				q := req.URL.Query()
+				q.Set("response", calculated)
+				q.Set("nonce", fmt.Sprint(nonce))
+				q.Set("redir", tc.redir)
+				q.Set("elapsedTime", fmt.Sprint(elapsedTime))
+				req.URL.RawQuery = q.Encode()
+
+				resp, err := cli.Do(req)
+				if err != nil {
+					t.Fatalf("can't do request: %v", err)
+				}
+
+				body, _ := io.ReadAll(resp.Body)
+
+				if bytes.Contains(body, []byte(tc.redir)) {
+					t.Log(string(body))
+					t.Error("found XSS in HTML body")
+				}
+
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("wanted status %d, got %d. body: %s", http.StatusBadRequest, resp.StatusCode, body)
+				}
+			})
+		}
+	})
+}
+
+func TestXForwardedForNoDoubleComma(t *testing.T) {
+	var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Forwarded-For", r.Header.Get("X-Forwarded-For"))
+		fmt.Fprintln(w, "OK")
+	})
+
+	h = internal.XForwardedForToXRealIP(h)
+	h = internal.XForwardedForUpdate(false, h)
+
+	pol := loadPolicies(t, "testdata/permissive.yaml", 4)
+
+	srv := spawnAnubis(t, Options{
+		Next:   h,
+		Policy: pol,
+	})
+	ts := httptest.NewServer(srv)
+	t.Cleanup(ts.Close)
+
+	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("X-Real-Ip", "10.0.0.1")
+
+	resp, err := ts.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("response status is wrong, wanted %d but got: %s", http.StatusOK, resp.Status)
+	}
+
+	if xff := resp.Header.Get("X-Forwarded-For"); strings.HasPrefix(xff, ",,") {
+		t.Errorf("X-Forwarded-For has two leading commas: %q", xff)
 	}
 }

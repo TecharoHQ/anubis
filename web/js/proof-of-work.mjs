@@ -3,7 +3,7 @@ export default function process(
   difficulty = 5,
   signal = null,
   progressCallback = null,
-  threads = navigator.hardwareConcurrency || 1,
+  threads = Math.max(navigator.hardwareConcurrency / 2, 1),
 ) {
   console.debug("fast algo");
   return new Promise((resolve, reject) => {
@@ -12,19 +12,31 @@ export default function process(
     );
 
     const workers = [];
-    const terminate = () => {
+    let settled = false;
+
+    const cleanup = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
       workers.forEach((w) => w.terminate());
       if (signal != null) {
-        // clean up listener to avoid memory leak
-        signal.removeEventListener("abort", terminate);
-        if (signal.aborted) {
-          console.log("PoW aborted");
-          reject(false);
-        }
+        signal.removeEventListener("abort", onAbort);
       }
+      URL.revokeObjectURL(webWorkerURL);
     };
+
+    const onAbort = () => {
+      console.log("PoW aborted");
+      cleanup();
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+
     if (signal != null) {
-      signal.addEventListener("abort", terminate, { once: true });
+      if (signal.aborted) {
+        return onAbort();
+      }
+      signal.addEventListener("abort", onAbort, { once: true });
     }
 
     for (let i = 0; i < threads; i++) {
@@ -34,13 +46,13 @@ export default function process(
         if (typeof event.data === "number") {
           progressCallback?.(event.data);
         } else {
-          terminate();
+          cleanup();
           resolve(event.data);
         }
       };
 
       worker.onerror = (event) => {
-        terminate();
+        cleanup();
         reject(event);
       };
 
@@ -53,8 +65,6 @@ export default function process(
 
       workers.push(worker);
     }
-
-    URL.revokeObjectURL(webWorkerURL);
   });
 }
 
@@ -79,6 +89,7 @@ function processTask() {
       let threads = event.data.threads;
 
       const threadId = nonce;
+      let localIterationCount = 0;
 
       while (true) {
         const currentHash = await sha256(data + nonce);
@@ -104,21 +115,15 @@ function processTask() {
           break;
         }
 
-        const oldNonce = nonce;
         nonce += threads;
 
-        // send a progress update every 1024 iterations. since each thread checks
-        // separate values, one simple way to do this is by bit masking the
-        // nonce for multiples of 1024. unfortunately, if the number of threads
-        // is not prime, only some of the threads will be sending the status
-        // update and they will get behind the others. this is slightly more
-        // complicated but ensures an even distribution between threads.
-        if (
-          (nonce > oldNonce) | 1023 && // we've wrapped past 1024
-          (nonce >> 10) % threads === threadId // and it's our turn
-        ) {
+        // send a progress update every 1024 iterations so that the user can be informed of
+        // the state of the challenge.
+        if (threadId == 0 && localIterationCount === 1024) {
           postMessage(nonce);
+          localIterationCount = 0;
         }
+        localIterationCount++;
       }
 
       postMessage({

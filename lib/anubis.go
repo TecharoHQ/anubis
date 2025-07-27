@@ -102,6 +102,10 @@ func (s *Server) challengeFor(r *http.Request) (*challenge.Challenge, error) {
 	ckie := ckies[0]
 	chall, err := j.Get(r.Context(), "challenge:"+ckie.Value)
 	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return s.issueChallenge(r.Context(), r)
+		}
+
 		return nil, err
 	}
 
@@ -380,6 +384,23 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	lg := internal.GetRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
+	redir := r.FormValue("redir")
+	redirURL, err := url.ParseRequestURI(redir)
+	if err != nil {
+		lg.Error("invalid redirect", "err", err)
+		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), http.StatusBadRequest)
+		return
+	}
+
+	switch redirURL.Scheme {
+	case "", "http", "https":
+		// allowed
+	default:
+		lg.Error("XSS attempt blocked, invalid redirect scheme", "scheme", redirURL.Scheme)
+		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), http.StatusBadRequest)
+		return
+	}
+
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
 	if anubis.BasePrefix != "" {
@@ -394,13 +415,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redir := r.FormValue("redir")
-	redirURL, err := url.ParseRequestURI(redir)
-	if err != nil {
-		lg.Error("invalid redirect", "err", err)
-		s.respondWithError(w, r, localizer.T("invalid_redirect"))
-		return
-	}
 	// used by the path checker rule
 	r.URL = redirURL
 

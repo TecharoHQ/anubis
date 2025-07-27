@@ -1,0 +1,5 @@
+- name: "custom-async-http-client"
+  user_agent_regex: "Custom-AsyncHttpClient"
+  action: WEIGH
+  weight:
+    adjust: 10
