@@ -26,6 +26,7 @@ func TestLocalizationService(t *testing.T) {
 		"pt-BR": "Carregando...",
 		"tr":    "Yükleniyor...",
 		"ru":    "Загрузка...",
+		"vi":    "Đang nạp...",
 		"zh-CN": "加载中...",
 		"zh-TW": "載入中...",
 	}
