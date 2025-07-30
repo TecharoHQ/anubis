@@ -112,6 +112,7 @@ Galvus
 geoip
 geoipchecker
 gha
+GHSA
 gipc
 gitea
 godotenv
@@ -156,6 +157,7 @@ isset
 ivh
 Jenomis
 JGit
+jhjj
 joho
 journalctl
 jshelter
