@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.21.3: Minfilia Warde - Echo 3
 
+### Added
+
+#### New locales
+
+Anubis now supports these new languages:
+
+- [Swedish](https://github.com/TecharoHQ/anubis/pull/913)
+
 ### Fixes
 
 #### Fixes a problem with nonstandard URLs and redirects
