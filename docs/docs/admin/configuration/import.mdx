@@ -7,25 +7,6 @@ Anubis has the ability to let you import snippets of configuration into the main
 
 EG:
 
-<Tabs>
-<TabItem value="json" label="JSON">
-
-```json
-{
-  "bots": [
-    {
-      "import": "(data)/bots/ai-catchall.yaml"
-    },
-    {
-      "import": "(data)/bots/cloudflare-workers.yaml"
-    }
-  ]
-}
-```
-
-</TabItem>
-<TabItem value="yaml" label="YAML" default>
-
 ```yaml
 bots:
   # Pathological bots to deny
@@ -34,29 +15,7 @@ bots:
   - import: (data)/bots/cloudflare-workers.yaml
 ```
 
-</TabItem>
-</Tabs>
-
 Of note, a bot rule can either have inline bot configuration or import a bot config snippet. You cannot do both in a single bot rule.
-
-<Tabs>
-<TabItem value="json" label="JSON">
-
-```json
-{
-  "bots": [
-    {
-      "import": "(data)/bots/ai-catchall.yaml",
-      "name": "generic-browser",
-      "user_agent_regex": "Mozilla|Opera\n",
-      "action": "CHALLENGE"
-    }
-  ]
-}
-```
-
-</TabItem>
-<TabItem value="yaml" label="YAML" default>
 
 ```yaml
 bots:
@@ -66,9 +25,6 @@ bots:
       Mozilla|Opera
     action: CHALLENGE
 ```
-
-</TabItem>
-</Tabs>
 
 This will return an error like this:
 
@@ -83,29 +39,10 @@ Paths can either be prefixed with `(data)` to import from the [the data folder i
 
 You can also import from an imported file in case you want to import an entire folder of rules at once.
 
-<Tabs>
-<TabItem value="json" label="JSON">
-
-```json
-{
-  "bots": [
-    {
-      "import": "(data)/bots/_deny-pathological.yaml"
-    }
-  ]
-}
-```
-
-</TabItem>
-<TabItem value="yaml" label="YAML" default>
-
 ```yaml
 bots:
   - import: (data)/bots/_deny-pathological.yaml
 ```
-
-</TabItem>
-</Tabs>
 
 This lets you import an entire ruleset at once:
 
@@ -124,31 +61,12 @@ Snippets can be written in either JSON or YAML, with a preference for YAML. When
 
 Here is an example snippet that allows [IPv6 Unique Local Addresses](https://en.wikipedia.org/wiki/Unique_local_address) through Anubis:
 
-<Tabs>
-<TabItem value="json" label="JSON">
-
-```json
-[
-  {
-    "name": "ipv6-ula",
-    "action": "ALLOW",
-    "remote_addresses": ["fc00::/7"]
-  }
-]
-```
-
-</TabItem>
-<TabItem value="yaml" label="YAML" default>
-
 ```yaml
 - name: ipv6-ula
   action: ALLOW
   remote_addresses:
     - fc00::/7
 ```
-
-</TabItem>
-</Tabs>
 
 ## Extracting Anubis' embedded filesystem
 
