@@ -116,4 +116,4 @@ This page contains a non-exhaustive list with all websites using Anubis.
   <summary>HackLab.TO</summary>
   - https://hacklab.to/
   - https://knowledge.hacklab.to/
-</details>
+  </details>
