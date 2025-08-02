@@ -11,9 +11,10 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	chall "github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
-	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
 )
+
+//go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
 	chall.Register("fast", &Impl{Algorithm: "fast"})
@@ -24,18 +25,11 @@ type Impl struct {
 	Algorithm string
 }
 
-func (i *Impl) Setup(mux *http.ServeMux) {
-	/* no implementation required */
-}
+func (i *Impl) Setup(mux *http.ServeMux) {}
 
 func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)
-	component, err := web.BaseWithChallengeAndOGTags(loc.T("making_sure_not_bot"), web.Index(loc), in.Impressum, in.Challenge.RandomData, in.Rule.Challenge, in.OGTags, loc)
-	if err != nil {
-		return nil, fmt.Errorf("can't render page: %w", err)
-	}
-
-	return component, nil
+	return page(loc), nil
 }
 
 func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInput) error {
