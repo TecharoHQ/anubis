@@ -7,8 +7,8 @@ require (
 	github.com/a-h/templ v0.3.924
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
-	github.com/gaissmai/bart v0.23.0
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/gaissmai/bart v0.23.1
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/cel-go v0.26.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
@@ -17,10 +17,10 @@ require (
 	github.com/lum8rjack/go-ja4h v0.0.0-20250606032308-3a989c6635be
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/playwright-community/playwright-go v0.5200.0
-	github.com/prometheus/client_golang v1.22.0
+	github.com/prometheus/client_golang v1.23.0
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
-	github.com/shirou/gopsutil/v4 v4.25.6
+	github.com/shirou/gopsutil/v4 v4.25.7
 	github.com/testcontainers/testcontainers-go v0.38.0
 	go.etcd.io/bbolt v1.4.2
 	golang.org/x/net v0.42.0
