@@ -326,6 +326,7 @@ func (sc StatusCodes) Valid() error {
 type fileConfig struct {
 	Bots        []BotOrImport       `json:"bots"`
 	DNSBL       bool                `json:"dnsbl"`
+	Logging     *Logging            `json:"logging"`
 	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
 	Impressum   *Impressum          `json:"impressum,omitempty"`
 	StatusCodes StatusCodes         `json:"status_codes"`
@@ -368,6 +369,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.Logging != nil {
+		if err := c.Logging.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -401,6 +408,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			ConsiderHost: c.OpenGraph.ConsiderHost,
 			Override:     c.OpenGraph.Override,
 		},
+		Logging:     c.Logging,
 		StatusCodes: c.StatusCodes,
 		Store:       c.Store,
 	}
@@ -441,6 +449,12 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		result.Impressum = c.Impressum
 	}
 
+	if c.Logging != nil {
+		if err := c.Logging.Valid(); err != nil {
+			validationErrs = append(validationErrs, err)
+		}
+	}
+
 	if len(c.Thresholds) == 0 {
 		c.Thresholds = DefaultThresholds
 	}
@@ -465,6 +479,7 @@ type Config struct {
 	Bots        []BotConfig
 	Thresholds  []Threshold
 	DNSBL       bool
+	Logging     *Logging
 	Impressum   *Impressum
 	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
