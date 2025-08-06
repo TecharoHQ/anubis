@@ -3,7 +3,7 @@
   path_regex: ^/.well-known/.*$
   action: ALLOW
 - name: favicon
-  path_regex: ^/favicon.ico$
+  path_regex: ^/favicon.(?:ico|png|gif|jpg|jpeg|svg)$
   action: ALLOW
 - name: robots-txt
   path_regex: ^/robots.txt$
