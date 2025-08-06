@@ -52,7 +52,6 @@ checkresult
 chibi
 cidranger
 ckie
-ckies
 cloudflare
 Codespaces
 confd
@@ -297,6 +296,7 @@ thoth
 thothmock
 Tik
 Timpibot
+TLog
 traefik
 uberspace
 Unbreak
@@ -313,7 +313,6 @@ vendored
 vhosts
 VKE
 Vultr
-waitloop
 weblate
 webmaster
 webpage

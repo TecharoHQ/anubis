@@ -152,7 +152,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
     const t0 = Date.now();
     const { hash, nonce } = await process(
       { basePrefix, version: anubisVersion },
-      challenge,
+      challenge.randomData,
       rules.difficulty,
       null,
       (iters) => {
@@ -208,6 +208,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
         const redir = window.location.href;
         window.location.replace(
           u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
+            id: challenge.id,
             response: hash,
             nonce,
             redir,
@@ -222,6 +223,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       const redir = window.location.href;
       window.location.replace(
         u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
+          id: challenge.id,
           response: hash,
           nonce,
           redir,

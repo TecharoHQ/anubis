@@ -92,15 +92,10 @@ func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 }
 
 func (s *Server) getChallenge(r *http.Request) (*challenge.Challenge, error) {
-	ckies := r.CookiesNamed(anubis.TestCookieName)
-	if len(ckies) == 0 {
-		return nil, store.ErrNotFound
-	}
-
+	id := r.FormValue("id")
 	j := store.JSON[challenge.Challenge]{Underlying: s.store}
 
-	ckie := ckies[0]
-	chall, err := j.Get(r.Context(), "challenge:"+ckie.Value)
+	chall, err := j.Get(r.Context(), "challenge:"+id)
 
 	return &chall, err
 }
@@ -374,9 +369,11 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
+		ID        string                 `json:"id"`
 	}{
-		Challenge: chall.RandomData,
 		Rules:     rule.Challenge,
+		Challenge: chall.RandomData,
+		ID:        chall.ID,
 	})
 	if err != nil {
 		lg.Error("failed to encode challenge", "err", err)

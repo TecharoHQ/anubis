@@ -70,7 +70,7 @@ func TestThresholdValid(t *testing.T) {
 			name: "challenge invalid",
 			input: &Threshold{
 				Action:    RuleChallenge,
-				Challenge: &ChallengeRules{Difficulty: 0, ReportAs: 0},
+				Challenge: &ChallengeRules{Difficulty: -1, ReportAs: -1},
 			},
 			err: ErrChallengeDifficultyTooLow,
 		},

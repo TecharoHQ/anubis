@@ -58,9 +58,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
         }
     	</style>
 			@templ.JSONScript("anubis_version", anubis.Version)
-			if challenge != nil {
-				@templ.JSONScript("anubis_challenge", challenge)
-			}
+			@templ.JSONScript("anubis_challenge", challenge)
 			@templ.JSONScript("anubis_base_prefix", anubis.BasePrefix)
 		</head>
 		<body id="top">
@@ -81,45 +79,12 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 								-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
 							</p>
 						}
+						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
 					</div>
 				</footer>
 			</main>
 		</body>
 	</html>
-}
-
-templ index(localizer *localization.SimpleLocalizer) {
-	<div class="centered-div">
-		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
-		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
-		<p id="status">{ localizer.T("loading") }</p>
-		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
-		<div id="progress" role="progressbar" aria-labelledby="status">
-			<div class="bar-inner"></div>
-		</div>
-		<details>
-			<summary>{ localizer.T("why_am_i_seeing") }</summary>
-			<p>
-				{ localizer.T("ai_companies_explanation") }
-			</p>
-			<p>
-				{ localizer.T("anubis_compromise") }
-			</p>
-			<p>
-				{ localizer.T("hack_purpose") }
-			</p>
-			<p>
-				{ localizer.T("jshelter_note") }
-			</p>
-			<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
-		</details>
-		<noscript>
-			<p>
-				{ localizer.T("javascript_required") }
-			</p>
-		</noscript>
-		<div id="testarea"></div>
-	</div>
 }
 
 templ errorPage(message, mail string, localizer *localization.SimpleLocalizer) {

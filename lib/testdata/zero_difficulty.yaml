@@ -41,5 +41,5 @@ thresholds:
     action: CHALLENGE
     challenge:
       algorithm: fast
-      difficulty: 1
-      report_as: 1
+      difficulty: 0
+      report_as: 0
