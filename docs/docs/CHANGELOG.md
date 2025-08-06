@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The legacy JSON based policy file example has been removed and all documentation for how to write a policy file in JSON has been deleted. JSON based policy files will still work, but YAML is the superior option for Anubis configuration.
 - A standard library HTTP server log message about HTTP pipelining not working has been filtered out of Anubis' logs. There is no action that can be taken about it.
 - The default `favicon` pattern in `data/common/keep-internet-working.yaml` has been updated to permit requests for png/gif/jpg/svg files as well as ico.
+- The default patterns in `data/common/keep-internet-working.yaml` have been updated to appropriately escape the '.' character in the regular expression patterns.
 
 ### Breaking changes
 
