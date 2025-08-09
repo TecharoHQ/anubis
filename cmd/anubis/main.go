@@ -77,6 +77,7 @@ var (
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
+	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
 
 	thothInsecure = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
@@ -412,6 +413,7 @@ func main() {
 		WebmasterEmail:      *webmasterEmail,
 		OpenGraph:           policy.OpenGraph,
 		CookieSecure:        *cookieSecure,
+		PublicUrl:           *publicUrl,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -440,6 +442,7 @@ func main() {
 		"base-prefix", *basePrefix,
 		"cookie-expiration-time", *cookieExpiration,
 		"rule-error-ids", ruleErrorIDs,
+		"public-url", *publicUrl,
 	)
 
 	go func() {

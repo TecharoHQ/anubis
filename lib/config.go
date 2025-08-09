@@ -44,6 +44,7 @@ type Options struct {
 	ServeRobotsTXT      bool
 	CookieSecure        bool
 	Logger              *slog.Logger
+	PublicUrl           string
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {

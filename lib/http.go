@@ -1,9 +1,11 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"regexp"
 	"slices"
 	"strings"
@@ -115,8 +117,17 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	localizer := localization.GetLocalizer(r)
 
 	if returnHTTPStatusOnly {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(localizer.T("authorization_required")))
+		if s.opts.PublicUrl == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(localizer.T("authorization_required")))
+		} else {
+			redirectURL, err := s.constructRedirectURL(r)
+			if err != nil {
+				s.respondWithStatus(w, r, err.Error(), http.StatusBadRequest)
+				return
+			}
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+		}
 		return
 	}
 
@@ -196,6 +207,24 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	handler.ServeHTTP(w, r)
 }
 
+func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	host := r.Header.Get("X-Forwarded-Host")
+	uri := r.Header.Get("X-Forwarded-Uri")
+
+	if proto == "" || host == "" || uri == "" {
+		return "", errors.New("missing required X-Forwarded-* headers")
+	}
+	// Check if host is allowed in RedirectDomains
+	if len(s.opts.RedirectDomains) > 0 && !slices.Contains(s.opts.RedirectDomains, host) {
+		return "", errors.New("redirect domain not allowed")
+	}
+
+	redir := proto + "://" + host + uri
+	escapedURL := url.QueryEscape(redir)
+	return fmt.Sprintf("%s/.within.website/?redir=%s", s.opts.PublicUrl, escapedURL), nil
+}
+
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
 
@@ -255,7 +284,12 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		hostNotAllowed := len(urlParsed.Host) > 0 &&
+			len(s.opts.RedirectDomains) != 0 &&
+			!slices.Contains(s.opts.RedirectDomains, urlParsed.Host)
+		hostMismatch := r.URL.Host != "" && urlParsed.Host != r.URL.Host
+
+		if hostNotAllowed || hostMismatch {
 			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), http.StatusBadRequest)
 			return
 		}
