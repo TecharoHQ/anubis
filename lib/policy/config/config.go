@@ -194,7 +194,7 @@ type ChallengeRules struct {
 }
 
 var (
-	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 1)")
+	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 0)")
 	ErrChallengeDifficultyTooHigh = errors.New("config.ChallengeRules: difficulty is too high (must be <= 64)")
 	ErrChallengeMustHaveAlgorithm = errors.New("config.ChallengeRules: must have algorithm name set")
 )
@@ -206,7 +206,7 @@ func (cr ChallengeRules) Valid() error {
 		errs = append(errs, ErrChallengeMustHaveAlgorithm)
 	}
 
-	if cr.Difficulty < 1 {
+	if cr.Difficulty < 0 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
 	}
 

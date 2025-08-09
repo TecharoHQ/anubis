@@ -43,6 +43,7 @@ type Options struct {
 	OpenGraph           config.OpenGraph
 	ServeRobotsTXT      bool
 	CookieSecure        bool
+	Logger              *slog.Logger
 	PublicUrl           string
 }
 
@@ -90,8 +91,12 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 }
 
 func New(opts Options) (*Server, error) {
+	if opts.Logger == nil {
+		opts.Logger = slog.With("subsystem", "anubis")
+	}
+
 	if opts.ED25519PrivateKey == nil && opts.HS512Secret == nil {
-		slog.Debug("opts.PrivateKey not set, generating a new one")
+		opts.Logger.Debug("opts.PrivateKey not set, generating a new one")
 		_, priv, err := ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			return nil, fmt.Errorf("lib: can't generate private key: %v", err)
@@ -109,6 +114,7 @@ func New(opts Options) (*Server, error) {
 		opts:        opts,
 		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store),
 		store:       opts.Policy.Store,
+		logger:      opts.Logger,
 	}
 
 	mux := http.NewServeMux()

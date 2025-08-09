@@ -1,6 +1,7 @@
 package ogtags
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
 
@@ -166,8 +168,13 @@ func TestGetOGTags(t *testing.T) {
 		if !ok || initialValue != cachedValue {
 			t.Errorf("Cache does not line up: expected %s: %s, got: %s", key, initialValue, cachedValue)
 		}
-
 	}
+
+	t.Run("ensure image is cached as allow", func(t *testing.T) {
+		if _, err := cache.cache.Underlying.Get(t.Context(), "ogtags:allow:example.com/image.jpg"); errors.Is(err, store.ErrNotFound) {
+			t.Fatal("ogtags allow caching for example.com/image.jpg did not work")
+		}
+	})
 }
 
 // TestGetOGTagsWithHostConsideration tests the behavior of the cache with and without host consideration and for multiple hosts in a theoretical setup.

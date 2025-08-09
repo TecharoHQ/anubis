@@ -13,6 +13,11 @@ function capture_vnc_snapshots() {
   done
 }
 
+function timeout() {
+  sleep 180
+  exit 1
+}
+
 source ../../lib/lib.sh
 
 if [ "$GITHUB_ACTIONS" = "true" ]; then
@@ -24,6 +29,7 @@ set -euo pipefail
 build_anubis_ko
 mint_cert relayd
 
+timeout &
 go run ../../cmd/cipra/ --compose-name $(basename $(pwd))
 
 docker compose down -t 1 || :

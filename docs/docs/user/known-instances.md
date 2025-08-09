@@ -112,4 +112,8 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://bbs.archlinux32.org/
   - https://bugs.archlinux32.org/
   </details>
-
+- <details>
+  <summary>HackLab.TO</summary>
+  - https://hacklab.to/
+  - https://knowledge.hacklab.to/
+  </details>

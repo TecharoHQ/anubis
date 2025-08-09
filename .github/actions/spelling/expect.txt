@@ -52,7 +52,6 @@ checkresult
 chibi
 cidranger
 ckie
-ckies
 cloudflare
 Codespaces
 confd
@@ -142,6 +141,7 @@ httpdebug
 Huawei
 hypertext
 iaskspider
+iaso
 iat
 ifm
 Imagesift
@@ -205,7 +205,7 @@ nobots
 NONINFRINGEMENT
 nosleep
 OCOB
-ogtags
+ogtag
 omgili
 omgilibot
 openai
@@ -233,6 +233,7 @@ promauto
 promhttp
 proofofwork
 publicsuffix
+purejs
 pwcmd
 pwuser
 qualys
@@ -296,6 +297,7 @@ thoth
 thothmock
 Tik
 Timpibot
+TLog
 traefik
 uberspace
 Unbreak
@@ -310,10 +312,8 @@ Varis
 Velen
 vendored
 vhosts
-videotest
 VKE
 Vultr
-waitloop
 weblate
 webmaster
 webpage

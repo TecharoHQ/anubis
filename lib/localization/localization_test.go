@@ -22,12 +22,14 @@ func TestLocalizationService(t *testing.T) {
 		"ja":    "ロード中...",
 		"is":    "Hleður...",
 		"nb":    "Laster inn...",
+		"nl":    "Laden...",
 		"nn":    "Lastar inn...",
 		"pt-BR": "Carregando...",
 		"tr":    "Yükleniyor...",
 		"ru":    "Загрузка...",
 		"zh-CN": "加载中...",
 		"zh-TW": "載入中...",
+		"sv" : "Laddar...",
 	}
 
 	var keys []string

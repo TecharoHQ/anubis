@@ -75,6 +75,7 @@ type Server struct {
 	hs512Secret []byte
 	opts        Options
 	store       store.Interface
+	logger      *slog.Logger
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
@@ -91,15 +92,10 @@ func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 }
 
 func (s *Server) getChallenge(r *http.Request) (*challenge.Challenge, error) {
-	ckies := r.CookiesNamed(anubis.TestCookieName)
-	if len(ckies) == 0 {
-		return nil, store.ErrNotFound
-	}
-
+	id := r.FormValue("id")
 	j := store.JSON[challenge.Challenge]{Underlying: s.store}
 
-	ckie := ckies[0]
-	chall, err := j.Get(r.Context(), "challenge:"+ckie.Value)
+	chall, err := j.Get(r.Context(), "challenge:"+id)
 
 	return &chall, err
 }
@@ -150,7 +146,13 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
+
+	if val, _ := s.store.Get(r.Context(), fmt.Sprintf("ogtags:allow:%s%s", r.Host, r.URL.String())); val != nil {
+		lg.Debug("serving opengraph tag asset")
+		s.ServeHTTPNext(w, r)
+		return
+	}
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
@@ -158,7 +160,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		localizer := localization.GetLocalizer(r)
@@ -274,7 +276,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		return true
 	default:
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
+		lg.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.Rules\"", localizer.T("internal_server_error")))
 		return true
 	}
@@ -310,7 +312,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
@@ -329,7 +331,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = redir
 
 	encoder := json.NewEncoder(w)
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -367,9 +369,11 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
+		ID        string                 `json:"id"`
 	}{
-		Challenge: chall.RandomData,
 		Rules:     rule.Challenge,
+		Challenge: chall.RandomData,
+		ID:        chall.ID,
 	})
 	if err != nil {
 		lg.Error("failed to encode challenge", "err", err)
@@ -381,7 +385,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
@@ -428,7 +432,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")))
@@ -509,7 +513,7 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 }
 
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
+func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
@@ -533,7 +537,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
 			case config.RuleWeigh:
-				slog.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
+				lg.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
 				weight += b.Weight.Adjust
 			}
 		}
@@ -542,7 +546,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 	for _, t := range s.policy.Thresholds {
 		result, _, err := t.Program.ContextEval(r.Context(), &policy.ThresholdRequest{Weight: weight})
 		if err != nil {
-			slog.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
+			lg.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
 			continue
 		}
 
