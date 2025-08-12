@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/policy"
 )
 
 func TestSetCookie(t *testing.T) {
@@ -144,7 +145,7 @@ func TestRenderIndexRedirect(t *testing.T) {
 	req.Header.Set("X-Forwarded-Uri", "/foo")
 
 	rr := httptest.NewRecorder()
-	s.RenderIndex(rr, req, nil, true)
+	s.RenderIndex(rr, req, policy.CheckResult{}, nil, true)
 
 	if rr.Code != http.StatusTemporaryRedirect {
 		t.Errorf("expected status %d, got %d", http.StatusTemporaryRedirect, rr.Code)
@@ -181,7 +182,7 @@ func TestRenderIndexUnauthorized(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	rr := httptest.NewRecorder()
 
-	s.RenderIndex(rr, req, nil, true)
+	s.RenderIndex(rr, req, policy.CheckResult{}, nil, true)
 
 	if rr.Code != http.StatusUnauthorized {
 		t.Errorf("expected status %d, got %d", http.StatusUnauthorized, rr.Code)
