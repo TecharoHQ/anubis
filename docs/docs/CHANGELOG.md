@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The "slow" frontend solver has been removed in order to reduce maintenance burden. Any existing uses of it will still work, but issue a warning upon startup asking administrators to upgrade to the "fast" frontend solver.
 
+### New Locales
+
+- [Lithuanian](https://github.com/TecharoHQ/anubis/pull/972)
+
 ## v1.21.3: Minfilia Warde - Echo 3
 
 ### Added
