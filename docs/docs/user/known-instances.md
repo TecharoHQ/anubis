@@ -58,6 +58,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://rpmfusion.org/
 - https://wiki.freepascal.org/
 - https://azurlane.koumakan.jp/
+- https://lab.civicrm.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
