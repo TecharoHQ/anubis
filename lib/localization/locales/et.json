@@ -7,7 +7,7 @@
   "mascot_design": "Maskoti disainis",
   "ai_companies_explanation": "Seda näidatakse selle pärast, et selle lehe administraator on paigaldanud Anubise, et kaitsta serverit selle nuhtluse eest, mida kujutab endast AI firmade agressiivne veebikraapimine. Selle tagajärjeks võib olla ja tihti ongi see, et veebilehed lakkavad töötamast ja keegi ei saa nendele ligi.",
   "anubis_compromise": "Anubis on kompromisslahendus. Anubis kasutab nö. töötõendi skeemi, mille sarnane oli <em>Hashcash</em>, mis oli mõeldud spämmikaitseks. Põhimõte on selles, et üksiku kasutaja tasemel on lisakoormus tajumatu, aga massiivse kraapimise tasemel see koormus läheb kõik arvesse ja muudab andmete töötluse palju kallimaks.",
-  "hack_purpose": "Lõppudelõpuks on see siiski rutuga tehtud lahendus, mille tegelik eesmärk on olla \"piisavalt hea\", et oleks rohkem aega leida viise, kuidas saaks tuvastada brauseriautomaate (näiteks sellest, kuidas nad fonte joonistavad), et saavutada olukord, kus kontrollekraani ei olegi vaja näidata kasutajatele, kes on suurema tõenäosusega päriselt inimesed.",
+  "hack_purpose": "Lõppkokkuvõttes on see ajutine lahendus, et saaks rohkem aega kulutada peata brauserite (nt nende fondi renderdamise viisi kaudu) sõrmejälgede võtmisele ja tuvastamisele, nii et töö tõendamise lehte ei peaks esitama kasutajatele, kes on palju tõenäolisemalt legitiimsed.",
   "jshelter_note": "NB! Anubis vajab töötamiseks kaasaegseid JavaScripti võimalusi, mida teatud pluginad nagu JShelter ära keelavad. Palun lülita JShelter või teised sellised veebilehitseja laiendused välja.",
   "version_info": "Sellel lehel jookseb Anubis, versioon",
   "try_again": "Proovi uuesti",

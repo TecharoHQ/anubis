@@ -7,7 +7,7 @@
   "mascot_design": "Design do mascote por",
   "ai_companies_explanation": "Você está vendo isso porque o administrador deste site configurou Anubis para proteger o servidor contra a praga de empresas de IA que realizam captura agressiva dos dados de páginas da Web. Isso pode causar, e de fato causa, indisponibilidade nos sites, o que os torna inacessíveis para todos.",
   "anubis_compromise": "O Anubis é um meio-termo. Ele utiliza um mecanismo de prova de validação semelhante ao Hashcash, proposto para reduzir spam de e-mail. A ideia é que, para acessos individuais, a carga adicional seja insignificante, mas acessos para captura em massa, ela se acumula e torna esse processo muito mais oneroso.",
-  "hack_purpose": "Por fim, essa é uma solução \"boa o suficiente\" cujo propósito real é gastar mais tempo na identificação de navegadores sem interface (por exemplo: como eles renderizam fontes), para que a página de validação não precise ser apresentada a usuários que têm muito mais probabilidade de serem legítimos.",
+  "hack_purpose": "Em última análise, esta é uma solução provisória para que mais tempo possa ser gasto na identificação e reconhecimento de navegadores sem interface (por exemplo, através de como eles renderizam fontes), para que a página de prova de trabalho do desafio não precise ser apresentada a usuários que são muito mais propensos a serem legítimos.",
   "jshelter_note": "Lembrando que o Anubis requer o uso de recursos JavaScript modernos, que plugins como o JShelter desabilitarão. Desabilite o JShelter ou similares para este domínio.",
   "version_info": "Este site está usando o Anubis versão",
   "try_again": "Tente novamente",

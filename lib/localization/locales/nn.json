@@ -7,7 +7,7 @@
   "mascot_design": "Maskotdesign av",
   "ai_companies_explanation": "Du ser dette av di administratoren av denne nettstaden har sett opp Anubis for å verne sørvaren mot plaga av KI-selskap som aggressivt skrapar nettstader. Dette kan, og held frem med å, forårsake driftstans for nettstadene, som gjer ressursane deira utilgjengelege for alle.",
   "anubis_compromise": "Anubis er eit kompromiss. Anubis brukar eit «Proof-of-Work»-skjema som liknar på Hashcash, eit liknande skjema for å redusere søppel-e-post. Idéen er at ved småstilte tilfelle er den ytterlegare lastinga ignorerbar, men ved storstilt skraping samlar ho på seg fart og gjer det å skrapa mykje meir dyrt.",
-  "hack_purpose": "Til sjuande og sist er dette ein hack som har som formål å gje ei «god nok» plasshaldarløysing slik at meir tid kan brukast på å fingeravtrykkje og attkjenne hovudlause nettlesarar (f.eks. korleis dei attgjev skrifttypar) slik at utfordringssida ikkje må verte synt til brukarar som er meir sannsynlegvis ekte.",
+  "hack_purpose": "Til sjuande og sist er dette ei plasshaldarløysing slik at meir tid kan brukast på fingeravtrykk og identifisering av hovudlause nettlesarar (t.d. via korleis dei attgjev skrifttypar) slik at utfordringssida for arbeidsprosessen ikkje treng å presenterast for brukarar som er mykje meir sannsynleg å vera legitime.",
   "jshelter_note": "NB: Anubis krev bruk av moderne JavaScript-funksjonar som tillegg som JShelter slår av. Venlegast slå av JShelter eller liknande tillegg for dette domenet.",
   "version_info": "Denne nettstaden køyrer Anubis-utgåve",
   "try_again": "Prøv att",

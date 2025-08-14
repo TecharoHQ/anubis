@@ -7,7 +7,7 @@
   "mascot_design": "Maskotdesign av",
   "ai_companies_explanation": "Du ser dette fordi administratoren av dette nettstedet har satt opp Anubis for å beskytte sørveren mot plagen av KI-selskaper som aggressivt skraper nettsteder. Dette kan, og fortsetter med å, forårsake driftstans for nettstedene, som gjør ressursene deres utilgjengelige for alle.",
   "anubis_compromise": "Anubis er et kompromiss. Anubis bruker et «Proof-of-Work»-skjema som ligner på Hashcash, et lignende skjema for å redusere søppel-e-post. Idéen er at ved småstilte tilfeller er den ytterligere belastningen ignorerbar, men ved storstilt skraping samler den på seg fart og gjør det å skrape mye mer dyrt.",
-  "hack_purpose": "Til syvende og sist er dette en hack som har som formål å gi en «god nok» plassholderløsning slik at mer tid kan brukes på å fingeravtrykke og gjenkjenne hodeløse nettlesere (f.eks. hvordan de gjengir skrifttyper) slik at utfordringssiden ikke må bli vist til brukere som er mer sannsynligvis ekte.",
+  "hack_purpose": "Til syvende og sist er dette en plassholderløsning slik at mer tid kan brukes på fingeravtrykk og identifisering av hodeløse nettlesere (f.eks. via hvordan de gjengir skrifttyper) slik at utfordringssiden for arbeidsprosessen ikke trenger å presenteres for brukere som er mye mer sannsynlig å være legitime.",
   "jshelter_note": "NB: Anubis krever bruk av moderne JavaScript-funksjoner som tillegg som JShelter slår av. Vennligst slå av JShelter eller lignende tillegg for dette domenet.",
   "version_info": "Dette nettstedet kjører Anubis-utgave",
   "try_again": "Prøv igjen",

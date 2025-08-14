@@ -7,7 +7,7 @@
   "mascot_design": "Mascotte ontwerp door",
   "ai_companies_explanation": "Je ziet dit omdat de beheerder van deze website Anubis heeft ingesteld om de server te beschermen tegen de plaag van AI-bedrijven die agressief websites scrapen. Dit kan downtime veroorzaken voor de websites, waardoor hun bronnen voor iedereen ontoegankelijk worden.",
   "anubis_compromise": "Anubis is een compromis. Anubis gebruikt een Proef-van-Taak schema in de geest van Hashcash, een voorgesteld proef-van-taak schema voor het verminderen van e-mailspam. Het idee is dat op individuele schalen de extra belasting niet waarneembaar is, maar op het niveau van massascrapers telt het op en maakt het scrapen veel duurder.",
-  "hack_purpose": "Uiteindelijk is dit een hack waarvan het echte doel is om een \"goed genoeg\" plekhouder oplossing te geven zodat er meer tijd kan worden besteed aan vingerafdrukking en het identificeren van koploze browsers (BIJV: via de manier waarop ze lettertypen renderen) zodat de uitdagende werkpagina niet hoeft te worden getoond aan gebruikers waarvan het veel waarschijnlijker is dat ze legitiem zijn.",
+  "hack_purpose": "Uiteindelijk is dit een tijdelijke oplossing, zodat er meer tijd kan worden besteed aan het identificeren en herkennen van headless browsers (bijv. via de manier waarop ze lettertypen renderen), zodat de proof-of-work-pagina niet hoeft te worden gepresenteerd aan gebruikers die veel waarschijnlijker legitiem zijn.",
   "jshelter_note": "Anubis vereist het gebruik van moderne JavaScript-functies die worden uitgeschakeld door plugins zoals JShelter. Schakel JShelter of andere dergelijke plugins uit voor dit domein.",
   "version_info": "Deze website draait op de Anubis-versie",
   "try_again": "Probeer opnieuw",

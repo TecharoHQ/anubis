@@ -7,7 +7,7 @@
   "mascot_design": "Maskot tasarımı:",
   "ai_companies_explanation": "Bunu görüyorsunuz; çünkü bu web sitesinin yöneticisi, yapay zekâ şirketlerinin web sitelerini agresif şekilde kazımasına karşı sunucuyu korumak için Anubis’i kurdu. Bu tarz kazımalar sitelerin erişilemez olmasına ve kesintilere neden olabiliyor.",
   "anubis_compromise": "Anubis bir uzlaşmadır. Anubis, istenmeyen e-postaları azaltmak için önerilen bir iş kanıtı sistemi olan Hashcash benzeri bir sistemi kullanır. Bireysel kullanımda bu ek yük göz ardı edilebilir olsa da, büyük ölçekli kazıyıcılarda birikerek kazımayı oldukça maliyetli hale getirir.",
-  "hack_purpose": "Bu geçici bir çözümdür. Esas amacı, başsız tarayıcıları parmak iziyle tanımlamak için daha fazla zaman kazandırmak ve bu sayede meşru kullanıcıların bu zorluk sayfasını görmesini önlemektir.",
+  "hack_purpose": "Nihayetinde, bu bir yer tutucu çözümdür, böylece başsız tarayıcıların parmak izi alma ve tanımlama (örneğin, yazı tipi oluşturma şekilleri aracılığıyla) için daha fazla zaman harcanabilir, böylece iş kanıtı sayfası meşru olma olasılığı çok daha yüksek olan kullanıcılara sunulmak zorunda kalmaz.",
   "jshelter_note": "Lütfen dikkat: Anubis, JShelter gibi eklentilerin devre dışı bıraktığı modern JavaScript özelliklerini gerektirir. Lütfen bu alan adı için JShelter veya benzeri eklentileri devre dışı bırakın.",
   "version_info": "Bu web sitesi şu Anubis sürümünü çalıştırıyor:",
   "try_again": "Tekrar dene",

@@ -27,24 +27,25 @@ import (
 )
 
 type Options struct {
-	Next                http.Handler
-	Policy              *policy.ParsedConfig
-	Target              string
-	CookieDynamicDomain bool
-	CookieDomain        string
-	CookieExpiration    time.Duration
-	CookiePartitioned   bool
-	BasePrefix          string
-	WebmasterEmail      string
-	RedirectDomains     []string
-	ED25519PrivateKey   ed25519.PrivateKey
-	HS512Secret         []byte
-	StripBasePrefix     bool
-	OpenGraph           config.OpenGraph
-	ServeRobotsTXT      bool
-	CookieSecure        bool
-	Logger              *slog.Logger
-	PublicUrl           string
+	Next                 http.Handler
+	Policy               *policy.ParsedConfig
+	Target               string
+	CookieDynamicDomain  bool
+	CookieDomain         string
+	CookieExpiration     time.Duration
+	CookiePartitioned    bool
+	BasePrefix           string
+	WebmasterEmail       string
+	RedirectDomains      []string
+	ED25519PrivateKey    ed25519.PrivateKey
+	HS512Secret          []byte
+	StripBasePrefix      bool
+	OpenGraph            config.OpenGraph
+	ServeRobotsTXT       bool
+	CookieSecure         bool
+	Logger               *slog.Logger
+	PublicUrl            string
+	JWTRestrictionHeader string
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {

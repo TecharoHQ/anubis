@@ -7,7 +7,7 @@
   "mascot_design": "Maskotin suunnitellut",
   "ai_companies_explanation": "Sivustolla on käytössä Anubis. Anubis estää robotteja lataamasta sivustoa ylettömästi. Tämä voi aiheuttaa palvelimen ylikuormituksen, joka estää ketään pääsemästä sivustolle.",
   "anubis_compromise": "Anubis on kompromissi. Anubis käyttää roskapostin vähentämiseen ehdotettua, Hashcash-järjestelmän mukaista työnnäytettä. Yksittäiselle käyttäjälle kuormitus on mitätön, mutta kasvattaa sivuston ylettömän lataamisen kuluja huomattavasti.",
-  "hack_purpose": "Tämä on \"riittävän hyvä\" väliaikainen ratkaisu, joka antaa aikaa tunnistaa robotit, ettei työnnäyte sivua tarvitsisi näyttää todellisille käyttäjille.",
+  "hack_purpose": "Viime kädessä tämä on paikkamerkkiratkaisu, jotta enemmän aikaa voidaan käyttää päättömien selainten sormenjälkien ottamiseen ja tunnistamiseen (esim. niiden fonttien renderöintitavan perusteella), jotta työnäytesivua ei tarvitse esittää käyttäjille, jotka ovat paljon todennäköisemmin laillisia.",
   "jshelter_note": "Anubis tarvitsee toimiakseen JavaScript-ominaisuuksia, jotka liitännäiset kuten jShelter estää. Otathan tällaiset liitännäiset pois käytöstä tälle verkkotunnukselle.",
   "version_info": "Sivusto käyttää Anubis versiota",
   "try_again": "Yritä uudelleen",
