@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/logging"
 	"github.com/facebookgo/flagenv"
 )
 
@@ -28,7 +28,7 @@ func main() {
 	flagenv.Parse()
 	flag.Parse()
 
-	internal.InitSlog(*slogLevel)
+	slog.SetDefault(slog.New(logging.Init(*slogLevel)))
 
 	koDockerRepo := strings.TrimSuffix(*dockerRepo, "/"+filepath.Base(*dockerRepo))
 

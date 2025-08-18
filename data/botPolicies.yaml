@@ -132,6 +132,23 @@ dnsbl: false
 
 #       <!-- ... -->
 
+# Logging settings for Anubis
+logging:
+  # CEL log filters. Note that this is a very powerful feature and it is very easy to get
+  # yourself into trouble with this. Avoid using log filters unless you are running into
+  # circumstances like https://github.com/TecharoHQ/anubis/issues/942. This has a nonzero
+  # impact on logging, which spirals out into a more than zero impact on Anubis'
+  # performance and memory usage.
+  filters:
+    # Every filter must have a name and an expression. You can use the same expression
+    # syntax as you can with bots or thresholds.
+    - name: "http-stdlib"
+      expression: msg.startsWith("http:")
+    - name: "context-canceled"
+      expression: msg.contains("context canceled")
+    - name: "http-pipelining"
+      expression: msg.contains("Unsolicited response received on idle HTTP channel")
+
 # Open Graph passthrough configuration, see here for more information:
 # https://anubis.techaro.lol/docs/admin/configuration/open-graph/
 openGraph:

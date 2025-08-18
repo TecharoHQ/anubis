@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Fix lock convoy problem in decaymap ([#1103](https://github.com/TecharoHQ/anubis/issues/1103))
+- [Log filtering](./admin/configuration/expressions.mdx#log-filtering) rules have been added. This allows users to write custom log filtering logic.
 - Document missing environment variables in installation guide: `SLOG_LEVEL`, `COOKIE_PREFIX`, `FORCED_LANGUAGE`, and `TARGET_DISABLE_KEEPALIVE` ([#1086](https://github.com/TecharoHQ/anubis/pull/1086))
 - Add validation warning when persistent storage is used without setting signing keys
 - Fixed `robots2policy` to properly group consecutive user agents into `any:` instead of only processing the last one ([#925](https://github.com/TecharoHQ/anubis/pull/925))

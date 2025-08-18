@@ -14,16 +14,11 @@ import (
 )
 
 var (
-	filterInvocations = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "techaro",
-		Subsystem: "anubis",
-		Name:      "slog_filter_invocations",
-	}, []string{"name"})
-
 	filterExecutionTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "techaro",
-		Subsystem: "anubis",
-		Name:      "slog_filter_execution_time_nanoseconds",
+		Namespace: "anubis",
+		Subsystem: "slog",
+		Name:      "filter_execution_time_nanoseconds",
+		Help:      "How long each log filter took to execute (nanoseconds)",
 		Buckets:   []float64{10, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000}, // 10 nanoseconds to 10 milliseconds
 	}, []string{"name"})
 )
@@ -76,7 +71,6 @@ func (f Filter) Filter(ctx context.Context, r slog.Record) bool {
 	}
 	dur := time.Since(t0)
 	filterExecutionTime.WithLabelValues(f.name).Observe(float64(dur.Nanoseconds()))
-	filterInvocations.WithLabelValues(f.name).Inc()
 	//f.log.Debug("filter execution", "dur", dur.Nanoseconds())
 
 	if val, ok := result.(types.Bool); ok {
