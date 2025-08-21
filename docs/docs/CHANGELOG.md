@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fix potential double-spend for challenges
 
-Anubis operates by issuing a challenge and having the client present a solution for that challenge. Challenges are identified by a unique UUID, which is tored in the database.
+Anubis operates by issuing a challenge and having the client present a solution for that challenge. Challenges are identified by a unique UUID, which is stored in the database.
 
 The problem is that a challenge could potentially be used twice by a dedicated attacker making a targeted attack against Anubis. Challenge records did not have a "spent" or "used" field. In total, a dedicated attacker could solve a challenge once and reuse that solution across multiple sessions in order to mint additional tokens.
 
