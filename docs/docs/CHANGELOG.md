@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump AI-robots.txt to version 1.39
 - Add a default block rule for Huawei Cloud.
 - Add a default block rule for Alibaba Cloud.
+- Add X-Request-URI support so that Subrequest Authentication has path support.
 
 ### Security-relevant changes
 
