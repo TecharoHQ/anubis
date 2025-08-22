@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	//go:embed *.css static
+	//go:embed *.css
 	Static embed.FS
 
 	URL = "/.within.website/x/xess/xess.css"

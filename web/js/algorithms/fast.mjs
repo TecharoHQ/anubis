@@ -16,9 +16,14 @@ export default function process(
   }
 
   return new Promise((resolve, reject) => {
-    let webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/sha256-${workerMethod}.mjs?cacheBuster=${version}`;
+    // Build the worker URL properly using URL constructor to avoid parsing issues
+    const workerPath = `/.within.website/x/cmd/anubis/static/js/worker/sha256-${workerMethod}.mjs`;
+    const searchParams = new URLSearchParams({ cacheBuster: version });
+    
+    // Use URL constructor to ensure proper URL formation
+    const webWorkerURL = new URL(workerPath + '?' + searchParams.toString(), window.location.origin).toString();
 
-    console.log(webWorkerURL);
+    console.log('Worker URL:', webWorkerURL);
 
     const workers = [];
     let settled = false;
