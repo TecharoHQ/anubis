@@ -129,6 +129,8 @@ server {
   listen unix:/run/nginx/nginx.sock;
 
   server_name mimi.techaro.lol;
+  
+  port_in_redirect off;
   root "/srv/http/mimi.techaro.lol";
   index index.html;
 
