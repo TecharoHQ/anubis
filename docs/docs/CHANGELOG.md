@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
-
+- Added a missing link to the Caddy installation environment in the installation documentation.
 - Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
 - The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
 - [Custom-AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)'s default User-Agent has an increased weight by default ([#852](https://github.com/TecharoHQ/anubis/issues/852)).
@@ -39,6 +39,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The word "hack" has been removed from the translation strings for Anubis due to incidents involving people misunderstanding that word and sending particularly horrible things to the project lead over email.
 - Bump AI-robots.txt to version 1.39
 - Anubis now supports `Korean` language([#1000])
+- Add a default block rule for Huawei Cloud.
+- Add a default block rule for Alibaba Cloud.
+- Add X-Request-URI support so that Subrequest Authentication has path support.
+
+### Security-relevant changes
+
+#### Fix potential double-spend for challenges
+
+Anubis operates by issuing a challenge and having the client present a solution for that challenge. Challenges are identified by a unique UUID, which is stored in the database.
+
+The problem is that a challenge could potentially be used twice by a dedicated attacker making a targeted attack against Anubis. Challenge records did not have a "spent" or "used" field. In total, a dedicated attacker could solve a challenge once and reuse that solution across multiple sessions in order to mint additional tokens.
+
+This was fixed by adding a "spent" field to challenges in the data store. When a challenge is solved, that "spent" field gets set to `true`. If a future attempt to solve this challenge is observed, it gets rejected.
+
+With the advent of store based challenge issuance in [#749](https://github.com/TecharoHQ/anubis/pull/749), this means that these challenge IDs are [only good for 30 minutes](https://github.com/TecharoHQ/anubis/blob/e8dfff635015d6c906dddd49cb0eaf591326092a/lib/anubis.go#L130-L135d). Websites using the most recent version of Anubis have limited exposure to this problem.
+
+Websites using older versions of Anubis have a much more increased exposure to this problem and are encouraged to keep this software updated as often and as frequently as possible.
+
+Thanks to [@taviso](https://github.com/taviso) for reporting this issue.
 
 ### Breaking changes
 

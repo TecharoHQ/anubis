@@ -1,5 +1,6 @@
 acs
 Aibrew
+alibaba
 alrest
 amazonbot
 anthro
@@ -141,6 +142,7 @@ htmlc
 htmx
 httpdebug
 Huawei
+huawei
 hypertext
 iaskspider
 iaso
@@ -287,6 +289,7 @@ SVCNAME
 tagline
 tarballs
 tarrif
+taviso
 tbn
 tbr
 techaro

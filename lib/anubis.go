@@ -454,6 +454,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if chall.Spent {
+		lg.Error("double spend prevented", "reason", "double_spend")
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"))
+		return
+	}
+
 	impl, ok := challenge.Get(chall.Method)
 	if !ok {
 		lg.Error("check failed", "err", err)
@@ -526,6 +532,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.SetCookie(w, CookieOpts{Path: cookiePath, Host: r.Host, Value: tokenString})
+
+	chall.Spent = true
+	j := store.JSON[challenge.Challenge]{Underlying: s.store}
+	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
+		lg.Debug("can't update information about challenge", "err", err)
+	}
 
 	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
 	lg.Debug("challenge passed, redirecting to app")

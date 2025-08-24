@@ -9,4 +9,5 @@ type Challenge struct {
 	RandomData string            `json:"randomData"` // The random data the client processes
 	IssuedAt   time.Time         `json:"issuedAt"`   // When the challenge was issued
 	Metadata   map[string]string `json:"metadata"`   // Challenge metadata such as IP address and user agent
+	Spent      bool              `json:"spent"`      // Has the challenge already been solved?
 }
