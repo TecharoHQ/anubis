@@ -341,6 +341,7 @@ xff
 XForwarded
 XNG
 XOB
+XOriginal
 XReal
 yae
 YAMLTo
