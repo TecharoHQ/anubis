@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
-- Added a missiling link to the Caddy installation environment in the installation documentation.
+- Added a missing link to the Caddy installation environment in the installation documentation.
 - Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
 - The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
 - [Custom-AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)'s default User-Agent has an increased weight by default ([#852](https://github.com/TecharoHQ/anubis/issues/852)).
@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fix potential double-spend for challenges
 
-Anubis operates by issuing a challenge and having the client present a solution for that challenge. Challenges are identified by a unique UUID, which is tored in the database.
+Anubis operates by issuing a challenge and having the client present a solution for that challenge. Challenges are identified by a unique UUID, which is stored in the database.
 
 The problem is that a challenge could potentially be used twice by a dedicated attacker making a targeted attack against Anubis. Challenge records did not have a "spent" or "used" field. In total, a dedicated attacker could solve a challenge once and reuse that solution across multiple sessions in order to mint additional tokens.
 
