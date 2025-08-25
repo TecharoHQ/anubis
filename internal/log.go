@@ -27,8 +27,13 @@ func InitSlog(level string) {
 }
 
 func GetRequestLogger(base *slog.Logger, r *http.Request) *slog.Logger {
+	host := r.Host
+	if host == "" {
+		host = r.Header.Get("X-Forwarded-Host")
+	}
+
 	return base.With(
-		"host", r.Host,
+		"host", host,
 		"method", r.Method,
 		"path", r.URL.Path,
 		"user_agent", r.UserAgent(),
