@@ -78,6 +78,10 @@ type Server struct {
 	logger      *slog.Logger
 }
 
+func (s *Server) GetLogger(subsystem string) *slog.Logger {
+	return s.logger.With("subsystem", subsystem)
+}
+
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 	// return ED25519 key if HS512 is not set
 	if len(s.hs512Secret) == 0 {

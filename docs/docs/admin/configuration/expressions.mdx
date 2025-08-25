@@ -99,6 +99,10 @@ For this rule, if a request comes in matching [the signature of the `go get` com
 
 Anubis exposes the following variables to expressions:
 
+### Bot expressions
+
+Bot expressions are used for evaluating [bot rules](../policies.mdx#bot-policies).
+
 | Name            | Type                  | Explanation                                                                                                                                   | Example                                                      |
 | :-------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
 | `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                            | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
@@ -181,6 +185,17 @@ Something to keep in mind about system load average is that it is not aware of t
 |  low load | 16         | `8`            |
 
 Also keep in mind that this does not account for other kinds of latency like I/O latency. A system can have its web applications unresponsive due to high latency from a MySQL server but still have that web application server report a load near or at zero.
+
+### Log filtering
+
+Log filters are run on every time Anubis logs data. These are high throughput filters and should be written with care.
+
+| Name    | Type                  | Explanation                                                                                            | Example                                 |
+| :------ | :-------------------- | :----------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `time`  | Timestamp             | The time that the log line was emitted.                                                                | `2025-08-18T06:45:38-04:00`             |
+| `msg`   | `string`              | The text-based message for the given log line.                                                         | `"invalid response"`                    |
+| `level` | `string`              | The [log level](https://pkg.go.dev/log/slog#Level) for the log message.                                | `"INFO"`                                |
+| `attrs` | `map[string, string]` | The key -> value attributes for the given log line. Note that this is an expensive variable to access. | `{"err": "internal: the sun exploded"}` |
 
 ## Functions exposed to Anubis expressions
 

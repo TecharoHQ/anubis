@@ -8,8 +8,10 @@ import (
 	"log/slog"
 	"sync/atomic"
 
+	"github.com/TecharoHQ/anubis/lib/logging"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/policy/expressions"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/prometheus/client_golang/prometheus"
@@ -35,10 +37,34 @@ type ParsedConfig struct {
 	Thresholds        []*Threshold
 	DNSBL             bool
 	Impressum         *config.Impressum
+	Logging           *config.Logging
 	OpenGraph         config.OpenGraph
 	DefaultDifficulty int
 	StatusCodes       config.StatusCodes
 	Store             store.Interface
+}
+
+func (pc *ParsedConfig) ApplyLogFilters(base *slog.Logger) (*slog.Logger, error) {
+	var errs []error
+	var filters []logging.Filterer
+
+	for _, f := range pc.Logging.Filters {
+		filter, err := expressions.NewFilter(base, f.Name, f.Expression.String())
+		if err != nil {
+			errs = append(errs, fmt.Errorf("filter %s invalid: %w", f.Name, err))
+			continue
+		}
+		filters = append(filters, filter)
+	}
+
+	result := slog.New(logging.NewFilterHandler(base.Handler(), filters...))
+	slog.SetDefault(result)
+
+	if len(errs) != 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return result, nil
 }
 
 func newParsedConfig(orig *config.Config) *ParsedConfig {
@@ -46,6 +72,7 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 		orig:        orig,
 		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
+		Logging:     orig.Logging,
 	}
 }
 

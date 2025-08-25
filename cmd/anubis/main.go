@@ -31,6 +31,7 @@ import (
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
+	"github.com/TecharoHQ/anubis/lib/logging"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/lib/thoth"
@@ -244,7 +245,7 @@ func main() {
 		return
 	}
 
-	internal.InitSlog(*slogLevel)
+	slog.SetDefault(slog.New(logging.Init(*slogLevel)))
 	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
 
 	if *healthcheck {
@@ -430,7 +431,10 @@ func main() {
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
 	h = internal.JA4H(h)
 
-	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
+	srv := http.Server{
+		Handler:  h,
+		ErrorLog: logging.StdlibLogger(s.GetLogger("http-server").Handler(), slog.LevelDebug),
+	}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
 	slog.Info(
 		"listening",
@@ -490,7 +494,10 @@ func metricsServer(ctx context.Context, done func()) {
 		}
 	})
 
-	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
+	srv := http.Server{
+		Handler:  mux,
+		ErrorLog: logging.StdlibLogger(slog.With("subsystem", "metrics-server").Handler(), slog.LevelDebug),
+	}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
 

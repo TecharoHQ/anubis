@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
+
+- [Log filtering](./admin/configuration/expressions.mdx#log-filtering) rules have been added. This allows users to write custom log filtering logic.
+- Added a missiling link to the Caddy installation environment in the installation documentation.
 - Added a missing link to the Caddy installation environment in the installation documentation.
 - Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
 - The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
