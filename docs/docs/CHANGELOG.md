@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow more OCI registry clients [based on feedback](https://github.com/TecharoHQ/anubis/pull/1253#issuecomment-3506744184).
 - Expose services directory in the embedded `(data)` filesystem.
+- Add Ukrainian locale ([#1044](https://github.com/TecharoHQ/anubis/pull/1044))
 
 ## v1.23.1: Lyse Hext - Echo 1
 
