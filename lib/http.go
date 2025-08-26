@@ -212,12 +212,16 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 	host := r.Header.Get("X-Forwarded-Host")
 	uri := r.Header.Get("X-Forwarded-Uri")
 
+	localizer := localization.GetLocalizer(r)
+
 	if proto == "" || host == "" || uri == "" {
-		return "", errors.New("missing required X-Forwarded-* headers")
+		return "", errors.New(localizer.T("missing_required_forwarded_headers"))
 	}
 	// Check if host is allowed in RedirectDomains
 	if len(s.opts.RedirectDomains) > 0 && !slices.Contains(s.opts.RedirectDomains, host) {
-		return "", errors.New("redirect domain not allowed")
+		lg := internal.GetRequestLogger(s.logger, r)
+		lg.Debug("domain not allowed", "domain", host)
+		return "", errors.New(localizer.T("redirect_domain_not_allowed"))
 	}
 
 	redir := proto + "://" + host + uri
@@ -290,6 +294,8 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		hostMismatch := r.URL.Host != "" && urlParsed.Host != r.URL.Host
 
 		if hostNotAllowed || hostMismatch {
+			lg := internal.GetRequestLogger(s.logger, r)
+			lg.Debug("domain not allowed", "domain", urlParsed.Host)
 			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), http.StatusBadRequest)
 			return
 		}

@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a default block rule for Huawei Cloud.
 - Add a default block rule for Alibaba Cloud.
 - Add X-Request-URI support so that Subrequest Authentication has path support.
+- Added support to use Traefik forwardAuth middleware.
 
 ### Security-relevant changes
 
@@ -286,7 +287,6 @@ And some cleanups/refactors were added:
 - Bump AI-robots.txt to version 1.37
 - Make progress bar styling more compatible (UXP, etc)
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
-- Added support to use Traefik forwardAuth middleware
 - Fix an off-by-one in the default threshold config
 - Add functionality for HS512 JWT algorithm
 - Add support for dynamic cookie domains with the `--cookie-dynamic-domain`/`COOKIE_DYNAMIC_DOMAIN` flag/envvar
