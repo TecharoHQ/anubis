@@ -62,6 +62,12 @@ Thanks to [@taviso](https://github.com/taviso) for reporting this issue.
 
 - The "slow" frontend solver has been removed in order to reduce maintenance burden. Any existing uses of it will still work, but issue a warning upon startup asking administrators to upgrade to the "fast" frontend solver.
 
+### Added
+
+Anubis now supports these new languages:
+
+- Vietnamese [#926](https://github.com/TecharoHQ/anubis/pull/926)
+
 ## v1.21.3: Minfilia Warde - Echo 3
 
 ### Added
