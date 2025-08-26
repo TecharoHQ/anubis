@@ -1,0 +1,9 @@
+# Domainsbot collects information on domains and website data for intellectual
+# property disputes.
+#
+# Website: https://domainsbot.com
+# Crawler info: https://domainsbot.com/pandalytics/
+
+- name: pandalytics
+  user_agent_regex: ^Pandalytics/
+  action: DENY
