@@ -59,7 +59,7 @@
   "js_success": "성공!",
   "js_done_took": "완료! 소요 시간",
   "js_iterations": "반복 횟수",
-  "js_finished_reading": "읽기 완료, 계속 →",
+  "js_finished_reading": "다 읽었으니 계속 →",
   "js_calculation_error": "계산 오류!",
   "js_calculation_error_msg": "검증 계산 실패:"
 }
