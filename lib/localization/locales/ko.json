@@ -42,7 +42,7 @@
   "oh_noes": "앗, 문제가 발생했습니다!",
   "benchmarking_anubis": "Anubis 벤치마크 실행 중!",
   "you_are_not_a_bot": "당신은 봇이 아닙니다!",
-  "making_sure_not_bot": "봇이 아님을 확인 중입니다!",
+  "making_sure_not_bot": "로봇이 아닌지 확인하는 중이에요!",
   "celphase": "CELPHASE",
   "js_web_crypto_error": "브라우저에 web.crypto 요소가 없습니다. 안전한 환경에서 접속 중인지, 최신 브라우저인지 확인해주세요.",
   "js_web_workers_error": "브라우저가 웹 워커를 지원하지 않습니다 (Anubis가 브라우저 멈춤 방지를 위해 웹 워커를 사용합니다). JShelter 같은 플러그인이 설치되어 있나요?",
