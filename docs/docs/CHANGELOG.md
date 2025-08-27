@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a default block rule for Huawei Cloud.
 - Add a default block rule for Alibaba Cloud.
 - Add X-Request-URI support so that Subrequest Authentication has path support.
+- Two of Slackware's community git repository servers are now poxied by Anubis.
 
 ### Security-relevant changes
 
