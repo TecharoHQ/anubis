@@ -13,7 +13,7 @@
   "version_info": "이 웹사이트는 Anubis를 사용 중입니다, 버전: ",
   "try_again": "다시 시도",
   "go_home": "홈으로 이동",
-  "contact_webmaster": "혹시 차단이 잘못된 경우, 웹마스터에게 문의하세요: ",
+  "contact_webmaster": "잘못된 차단이라고 생각되면 사이트 관리자에게 문의하세요: ",
   "connection_security": "연결 보안을 확인하는 중입니다. 잠시 기다려 주세요.",
   "javascript_required": "이 검증을 통과하려면 JavaScript를 활성화해야 합니다. AI 회사들로 인해 웹 서비스 보호 필요성이 대두되었기 때문입니다. JavaScript를 사용하지 않는 방식은 현재 개발 중입니다.",
   "benchmark_requires_js": "벤치마크 도구 실행에는 JavaScript가 필요합니다.",
