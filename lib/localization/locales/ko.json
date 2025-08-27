@@ -3,7 +3,7 @@
   "why_am_i_seeing": "이 화면이 표시되는 이유는 무엇인가요?",
   "protected_by": "Protected by",
   "protected_from": "From",
-  "made_with": "Made with ❤️ in 🇨🇦",
+  "made_with": "🇨🇦에서 ❤️을 담아 만듦",
   "mascot_design": "Mascot design by",
   "ai_companies_explanation": "이 화면이 보이는 이유는 웹사이트 관리자가 AI 회사들의 과도한 웹 스크래핑으로부터 서버를 보호하기 위해 Anubis를 설정했기 때문입니다. 이러한 스크래핑은 웹사이트 다운타임을 유발할 수 있으며, 모든 사용자가 사이트를 이용할 수 없게 만들 수 있습니다.",
   "anubis_compromise": "Anubis는 현실적으로 적용 가능한 타협점을 찾아 구현되었습니다. Anubis는 이메일 스팸을 줄이기 위해 제안된 Hashcash 방식의 Proof-of-Work 방식을 사용합니다. 개별 사용자 수준에서는 부하가 미미하지만, 대량 스크래핑에서는 비용이 크게 증가합니다.",
