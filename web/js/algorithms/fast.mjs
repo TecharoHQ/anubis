@@ -4,7 +4,7 @@ export default function process(
   difficulty = 5,
   signal = null,
   progressCallback = null,
-  threads = Math.max(navigator.hardwareConcurrency / 2, 1),
+  threads = Math.trunc(Math.max(navigator.hardwareConcurrency / 2, 1)),
 ) {
   console.debug("fast algo");
 

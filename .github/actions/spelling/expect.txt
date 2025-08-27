@@ -304,6 +304,7 @@ Tik
 Timpibot
 TLog
 traefik
+trunc
 uberspace
 Unbreak
 unbreakdocker
@@ -341,6 +342,7 @@ xff
 XForwarded
 XNG
 XOB
+XOriginal
 XReal
 yae
 YAMLTo
