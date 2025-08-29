@@ -435,6 +435,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		lg.Debug("domain not allowed", "domain", urlParsed.Host)
 		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"))
 		return
 	}

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Added possibility to disable HTTP keep-alive to support backends not properly
+  handling it
 - Added a missing link to the Caddy installation environment in the installation documentation.
 - Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
 - The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
@@ -44,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a default block rule for Alibaba Cloud.
 - Add X-Request-URI support so that Subrequest Authentication has path support.
 - Two of Slackware's community git repository servers are now poxied by Anubis.
+- Added support to use Traefik forwardAuth middleware.
 
 ### Security-relevant changes
 
@@ -287,7 +290,6 @@ And some cleanups/refactors were added:
 - Bump AI-robots.txt to version 1.37
 - Make progress bar styling more compatible (UXP, etc)
 - Add `--strip-base-prefix` flag/envvar to strip the base prefix from request paths when forwarding to target servers
-- Added support to use Traefik forwardAuth middleware
 - Fix an off-by-one in the default threshold config
 - Add functionality for HS512 JWT algorithm
 - Add support for dynamic cookie domains with the `--cookie-dynamic-domain`/`COOKIE_DYNAMIC_DOMAIN` flag/envvar

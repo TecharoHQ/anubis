@@ -36,6 +36,7 @@
   "invalid_redirect": "Invalid redirect",
   "redirect_not_parseable": "Redirect URL not parseable",
   "redirect_domain_not_allowed": "Redirect domain not allowed",
+  "missing_required_forwarded_headers": "Missing required X-Forwarded-* headers",
   "failed_to_sign_jwt": "failed to sign JWT",
   "invalid_invocation": "Invalid invocation of MakeChallenge",
   "client_error_browser": "Client Error: Please ensure your browser is up to date and try again later.",

@@ -18,6 +18,7 @@ badregexes
 bbolt
 bdba
 berr
+bezier
 bingbot
 Bitcoin
 bitrate
@@ -82,6 +83,7 @@ dracula
 dronebl
 droneblresponse
 dropin
+dsilence
 duckduckbot
 eerror
 ellenjoe
@@ -115,6 +117,7 @@ geoip
 geoipchecker
 gha
 GHSA
+Ghz
 gipc
 gitea
 godotenv
@@ -128,6 +131,7 @@ goyaml
 GPG
 GPT
 gptbot
+Graphene
 grpcprom
 grw
 Hashcash
@@ -137,6 +141,7 @@ healthcheck
 healthz
 hec
 hmc
+homelab
 hostable
 htmlc
 htmx
@@ -258,6 +263,7 @@ runlevels
 RUnlock
 runtimedir
 runtimedirectory
+Ryzen
 sas
 sasl
 searchbot
@@ -333,6 +339,7 @@ wordpress
 Workaround
 workdir
 wpbot
+XCircle
 Xeact
 xeiaso
 xeserv

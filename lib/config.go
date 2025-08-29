@@ -106,6 +106,7 @@ func New(opts Options) (*Server, error) {
 	}
 
 	anubis.BasePrefix = opts.BasePrefix
+	anubis.PublicUrl = opts.PublicUrl
 
 	result := &Server{
 		next:        opts.Next,
