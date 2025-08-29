@@ -62,5 +62,6 @@
   "js_iterations": "iteracijų",
   "js_finished_reading": "Viską perskaičiau, tęskime →",
   "js_calculation_error": "Skaičiavimo klaida!",
-  "js_calculation_error_msg": "Nepavyko įveikti iššūkio:"
+  "js_calculation_error_msg": "Nepavyko įveikti iššūkio:",
+  "missing_required_forwarded_headers": "Trūksta privalomų X-Forwarded-* antraščių"
 }
