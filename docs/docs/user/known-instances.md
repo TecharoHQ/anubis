@@ -118,3 +118,8 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://hacklab.to/
   - https://knowledge.hacklab.to/
   </details>
+- <details>
+  <summary>Slackware</summary>
+  - https://git.slackware.nl/
+  - https://git.liveslak.org/
+  </details>
