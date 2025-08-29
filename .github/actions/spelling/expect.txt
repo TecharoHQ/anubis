@@ -231,6 +231,7 @@ pki
 podkova
 podman
 poststart
+poxied
 prebaked
 privkey
 promauto
@@ -272,6 +273,7 @@ shirou
 Sidetrade
 simprint
 sitemap
+Slackware
 sls
 sni
 Spambot
