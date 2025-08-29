@@ -61,5 +61,6 @@
   "js_finished_reading": "Luettu, jatka →",
   "js_calculation_error": "Laskentavirhe!",
   "js_calculation_error_msg": "Haasteen laskenta ei onnistunut:",
+  "missing_required_forwarded_headers": "Puuttuvat vaaditut X-Forwarded-* otsikot",
   "simplified_explanation": "Tämä on toimenpide botteja ja haitallisia pyyntöjä vastaan, joka on samanlainen kuin CAPTCHA. Sen sijaan, että joutuisit tekemään työtä itse, selaimesi saa laskentatehtävän, joka sen on ratkaistava varmistaakseen, että se on kelvollinen asiakas. Tätä käsitettä kutsutaan nimellä <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Työtodistus</a>. Tehtävä lasketaan muutamassa sekunnissa ja saat pääsyn verkkosivustolle. Kiitos ymmärryksestäsi ja kärsivällisyydestäsi."
 }

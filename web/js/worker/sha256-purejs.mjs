@@ -53,6 +53,18 @@ addEventListener('message', async ({ data: eventData }) => {
     nonce += threads;
     iterations++;
 
+    /* Truncate the decimal portion of the nonce. This is a bit of an evil bit
+     * hack, but it works reliably enough. The core of why this works is:
+     * 
+     * > 13.4 % 1 !== 0
+     * true
+     * > 13 % 1 !== 0
+     * false
+     */
+    if (nonce % 1 !== 0) {
+      nonce = Math.trunc(nonce);
+    }
+
     // Send a progress update from the main thread every 1024 iterations.
     if (isMainThread && (iterations & 1023) === 0) {
       postMessage(nonce);

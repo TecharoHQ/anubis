@@ -18,6 +18,7 @@ badregexes
 bbolt
 bdba
 berr
+bezier
 bingbot
 Bitcoin
 bitrate
@@ -82,6 +83,7 @@ dracula
 dronebl
 droneblresponse
 dropin
+dsilence
 duckduckbot
 eerror
 ellenjoe
@@ -115,6 +117,7 @@ geoip
 geoipchecker
 gha
 GHSA
+Ghz
 gipc
 gitea
 godotenv
@@ -128,6 +131,7 @@ goyaml
 GPG
 GPT
 gptbot
+Graphene
 grpcprom
 grw
 Hashcash
@@ -137,6 +141,7 @@ healthcheck
 healthz
 hec
 hmc
+homelab
 hostable
 htmlc
 htmx
@@ -210,6 +215,7 @@ NONINFRINGEMENT
 nosleep
 OCOB
 ogtag
+oklch
 omgili
 omgilibot
 openai
@@ -231,6 +237,7 @@ pki
 podkova
 podman
 poststart
+poxied
 prebaked
 privkey
 promauto
@@ -258,8 +265,10 @@ runlevels
 RUnlock
 runtimedir
 runtimedirectory
+Ryzen
 sas
 sasl
+screenshots
 searchbot
 searx
 sebest
@@ -272,6 +281,7 @@ shirou
 Sidetrade
 simprint
 sitemap
+Slackware
 sls
 sni
 Spambot
@@ -304,6 +314,7 @@ Tik
 Timpibot
 TLog
 traefik
+trunc
 uberspace
 Unbreak
 unbreakdocker
@@ -330,8 +341,10 @@ withthothmock
 wolfbeast
 wordpress
 Workaround
+workaround
 workdir
 wpbot
+XCircle
 Xeact
 xeiaso
 xeserv
@@ -341,6 +354,7 @@ xff
 XForwarded
 XNG
 XOB
+XOriginal
 XReal
 yae
 YAMLTo
