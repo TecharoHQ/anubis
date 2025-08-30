@@ -10,7 +10,7 @@
   "hack_purpose": "归根结底，这只是个临时的解决方案，以便将更多时间用于指纹识别和识别无头浏览器（例如它们的字体渲染方式），从而无需向更可能是合法用户的访问者展现工作量证明页面。",
   "simplified_explanation": "这是一种类似于验证码的措施，用于防止机器人和恶意请求。但是，无需您亲自动手，您的浏览器会收到一项计算任务，必须求解该任务以确保其是有效的客户端。这个概念称为<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">工作量证明</a>。该任务通常在几秒钟内完成，随后您将被授予访问网站的权限。感谢您的理解和耐心。"
   "jshelter_note": "请注意，Anubis 需要使用现代 JavaScript 功能，而像 JShelter 这类插件可能会妨碍这些功能。请为此域名停用 JShelter 或其他类似插件。",
-  "version_info": "此网站正在运行的 Anubis 版本为",
+  "version_info": "此网站当前运行的 Anubis 版本是",
   "try_again": "重试",
   "go_home": "返回首页",
   "contact_webmaster": "或者您觉得您不应该被封锁，请联系网站管理员于",
