@@ -53,7 +53,7 @@
   "js_calculating": "正在计算...",
   "js_missing_feature": "缺少功能",
   "js_challenge_error": "验证失败！",
-  "js_challenge_error_msg": "无法解析验证算法。您可以尝试重新加载页面。",
+  "js_challenge_error_msg": "无法解析验证算法。您可以尝试刷新页面。",
   "js_calculating_difficulty": "正在计算...<br/>难度：",
   "js_speed": "速度：",
   "js_verification_longer": "验证所花的时间超过预期。请不要刷新页面。",
