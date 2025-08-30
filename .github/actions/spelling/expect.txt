@@ -250,6 +250,7 @@ pwuser
 qualys
 qwant
 qwantbot
+QWEN
 rac
 rawler
 rcvar
@@ -283,6 +284,7 @@ simprint
 sitemap
 Slackware
 sls
+Smartphone
 sni
 Spambot
 sparkline
@@ -322,6 +324,7 @@ unifiedjs
 unmarshal
 unparseable
 uvx
+uwu
 UXP
 valkey
 Varis
@@ -345,7 +348,6 @@ workaround
 workdir
 wpbot
 XCircle
-Xeact
 xeiaso
 xeserv
 xesite
