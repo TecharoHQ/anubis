@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add better logging when using Subrequest Authentication.
 - Two of Slackware's community git repository servers are now poxied by Anubis.
 - Added support to use Traefik forwardAuth middleware.
+- Improve the quality of Simplified Chinese translation ([#1066](https://github.com/TecharoHQ/anubis/pull/1066))
 
 ### Security-relevant changes
 
