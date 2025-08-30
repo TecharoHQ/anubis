@@ -9,10 +9,9 @@ set -u
 
 (
   cd ../.. && \
-  npm ci && \
-  npm run assets \
-  ko build --platform=all --base-import-paths --tags="latest" --image-user=1000 --image-annotation="" --image-label="" ./cmd/anubis -L
+  docker buildx bake
 )
+
 
 rm -rf ./var/repos ./var/foo
 mkdir -p ./var/repos

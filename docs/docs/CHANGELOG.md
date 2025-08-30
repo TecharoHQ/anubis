@@ -68,7 +68,13 @@ Thanks to [@taviso](https://github.com/taviso) for reporting this issue.
 
 ### Breaking changes
 
+We try to introduce breaking changes as much as possible, but these are the changes that may be relevant for you as an administrator:
+
 - The "slow" frontend solver has been removed in order to reduce maintenance burden. Any existing uses of it will still work, but issue a warning upon startup asking administrators to upgrade to the "fast" frontend solver.
+
+#### Docker image build process has been changed
+
+Previously Docker images were built with [ko](https://ko.build/), which put the Anubis binary at `/ko-app/anubis`. [#862](https://github.com/TecharoHQ/anubis/pull/862) changes this to build with [docker buildx bake](https://docs.docker.com/reference/cli/docker/buildx/bake/) instead. If this causes you problems, please [file an issue](https://github.com/TecharoHQ/anubis/issues/new).
 
 ### New Locales
 

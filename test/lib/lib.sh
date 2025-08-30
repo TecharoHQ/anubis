@@ -17,16 +17,7 @@ function build_anubis_ko() {
     cd $REPO_ROOT && npm ci && npm run assets
   )
   (
-    cd $REPO_ROOT &&
-      VERSION=devel ko build \
-        --platform=all \
-        --base-import-paths \
-        --tags="latest" \
-        --image-user=1000 \
-        --image-annotation="" \
-        --image-label="" \
-        ./cmd/anubis \
-        --local
+    cd $REPO_ROOT && docker buildx bake
   )
 }
 

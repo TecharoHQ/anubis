@@ -6,6 +6,7 @@ amazonbot
 anthro
 anubis
 anubistest
+apk
 Applebot
 archlinux
 asnc
@@ -113,6 +114,7 @@ fsys
 fullchain
 gaissmai
 Galvus
+gcflags
 geoip
 geoipchecker
 gha
@@ -268,6 +270,7 @@ runtimedirectory
 Ryzen
 sas
 sasl
+sbom
 screenshots
 searchbot
 searx

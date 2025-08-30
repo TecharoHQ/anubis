@@ -10,7 +10,7 @@ services:
       - ./var/repos:/srv/git
 
   anubis:
-    image: ko.local/anubis
+    image: ghcr.io/techarohq/anubis:devel-docker
     environment:
       BIND: ":8005"
       TARGET: http://cgit:80

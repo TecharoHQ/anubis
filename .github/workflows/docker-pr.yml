@@ -2,7 +2,7 @@ name: Docker image builds (pull requests)
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  buildx-bake:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -21,48 +21,17 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@main
-
-      - name: Setup Homebrew cellar cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: |
-            /home/linuxbrew/.linuxbrew/Cellar
-            /home/linuxbrew/.linuxbrew/bin
-            /home/linuxbrew/.linuxbrew/etc
-            /home/linuxbrew/.linuxbrew/include
-            /home/linuxbrew/.linuxbrew/lib
-            /home/linuxbrew/.linuxbrew/opt
-            /home/linuxbrew/.linuxbrew/sbin
-            /home/linuxbrew/.linuxbrew/share
-            /home/linuxbrew/.linuxbrew/var
-          key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-homebrew-cellar-
-
-      - name: Install Brew dependencies
-        run: |
-          brew bundle
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
-        with:
-          images: ghcr.io/${{ github.repository }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Build and push
         id: build
-        run: |
-          npm ci
-          npm run container
-        env:
-          PULL_REQUEST_ID: ${{ github.event.number }}
-          DOCKER_REPO: ghcr.io/${{ github.repository }}
-          SLOG_LEVEL: debug
-
-      - run: |
-          echo "Test this with:"
-          echo "docker pull ${DOCKER_IMAGE}"
-        env:
-          DOCKER_IMAGE: ${{ steps.build.outputs.docker_image }}
+        uses: docker/bake-action@76f9fa3a758507623da19f6092dc4089a7e61592 # v6.6.0
+        with:
+          source: .
+          push: true
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          set: |
+            anubis.tags=ttl.sh/techaro/pr-${{ github.event.number }}/anubis:24h
