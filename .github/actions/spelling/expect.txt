@@ -283,6 +283,7 @@ simprint
 sitemap
 Slackware
 sls
+Smartphone
 sni
 Spambot
 sparkline
