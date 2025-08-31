@@ -3,7 +3,7 @@
   "why_am_i_seeing": "为什么我会看到这个？",
   "protected_by": "本网站由",
   "protected_from": "保护，来自",
-  "made_with": "用 ❤️ 在加拿大制作",
+  "made_with": "用 ❤️ 在 🇨🇦 制作",
   "mascot_design": "吉祥物由",
   "ai_companies_explanation": "您之所以会看到本界面，是因为网站管理员启用了 Anubis 来保护服务器，避免 AI 公司大量爬取网站内容。上述行为会导致网站崩溃，让所有用户都无法正常访问。",
   "anubis_compromise": "Anubis 是一种折中做法。它采用了类似 Hashcash 的工作量证明机制（Proof-of-Work），该机制最初因减少垃圾邮件而提出。其核心概念是：对个人用户而言，额外的计算负担几乎可以忽略不计；但对大规模爬虫来说，累积成本将大幅攀升，从而让爬取行为变得更困难。",
