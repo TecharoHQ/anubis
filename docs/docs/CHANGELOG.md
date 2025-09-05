@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add optional restrictions for JWT based on the value of a header ([#697](https://github.com/TecharoHQ/anubis/pull/697))
 - The word "hack" has been removed from the translation strings for Anubis due to incidents involving people misunderstanding that word and sending particularly horrible things to the project lead over email.
 - Bump AI-robots.txt to version 1.39
+- Anubis now supports `Korean` language([#1000])
 - Add a default block rule for Huawei Cloud.
 - Add a default block rule for Alibaba Cloud.
 - Add X-Request-URI support so that Subrequest Authentication has path support.
