@@ -43,6 +43,7 @@ A new ["proof of React"](./admin/configuration/challenges/preact.mdx) has been a
 - Add a default block rule for Alibaba Cloud.
 - Added support to use Traefik forwardAuth middleware.
 - Add X-Request-URI support so that Subrequest Authentication has path support.
+- Added glob matching for `REDIRECT_DOMAINS`. You can pass `*.bugs.techaro.lol` to allow redirecting to anything ending with `.bugs.techaro.lol`. There is a limit of 4 wildcards.
 
 ### Fixes
 
