@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"slices"
 	"strings"
 	"time"
 
@@ -36,6 +35,7 @@ import (
 
 	// challenge implementations
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
+	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 )
 
@@ -75,6 +75,7 @@ type Server struct {
 	hs512Secret []byte
 	opts        Options
 	store       store.Interface
+	logger      *slog.Logger
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
@@ -90,41 +91,34 @@ func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 	}
 }
 
-func (s *Server) challengeFor(r *http.Request) (*challenge.Challenge, error) {
-	ckies := r.CookiesNamed(anubis.TestCookieName)
-
-	if len(ckies) == 0 {
-		return s.issueChallenge(r.Context(), r)
-	}
-
+func (s *Server) getChallenge(r *http.Request) (*challenge.Challenge, error) {
+	id := r.FormValue("id")
 	j := store.JSON[challenge.Challenge]{Underlying: s.store}
 
-	ckie := ckies[0]
-	chall, err := j.Get(r.Context(), "challenge:"+ckie.Value)
-	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			return s.issueChallenge(r.Context(), r)
-		}
+	chall, err := j.Get(r.Context(), "challenge:"+id)
 
-		return nil, err
-	}
-
-	return &chall, nil
+	return &chall, err
 }
 
-func (s *Server) issueChallenge(ctx context.Context, r *http.Request) (*challenge.Challenge, error) {
+func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.Logger, cr policy.CheckResult, rule *policy.Bot) (*challenge.Challenge, error) {
+	if cr.Rule != config.RuleChallenge {
+		slog.Error("this should be impossible, asked to issue a challenge but the rule is not a challenge rule", "cr", cr, "rule", rule)
+		//return nil, errors.New("[unexpected] this codepath should be impossible, asked to issue a challenge for a non-challenge rule")
+	}
+
 	id, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}
 
-	var randomData = make([]byte, 256)
+	var randomData = make([]byte, 64)
 	if _, err := rand.Read(randomData); err != nil {
 		return nil, err
 	}
 
 	chall := challenge.Challenge{
 		ID:         id.String(),
+		Method:     rule.Challenge.Algorithm,
 		RandomData: fmt.Sprintf("%x", randomData),
 		IssuedAt:   time.Now(),
 		Metadata: map[string]string{
@@ -138,6 +132,8 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request) (*challeng
 		return nil, err
 	}
 
+	lg.Info("new challenge issued", "challenge", id.String())
+
 	return &chall, err
 }
 
@@ -150,7 +146,13 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
+
+	if val, _ := s.store.Get(r.Context(), fmt.Sprintf("ogtags:allow:%s%s", r.Host, r.URL.String())); val != nil {
+		lg.Debug("serving opengraph tag asset")
+		s.ServeHTTPNext(w, r)
+		return
+	}
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
@@ -158,7 +160,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		localizer := localization.GetLocalizer(r)
@@ -185,21 +187,21 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	if err != nil {
 		lg.Debug("cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
 	if err := ckie.Valid(); err != nil {
 		lg.Debug("cookie is invalid", "err", err)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
 	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
 		lg.Debug("cookie expired", "path", r.URL.Path)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
@@ -208,7 +210,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	if err != nil || !token.Valid {
 		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
@@ -216,7 +218,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	if !ok {
 		lg.Debug("invalid token claims type", "path", r.URL.Path)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
@@ -224,14 +226,21 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	if !ok {
 		lg.Debug("policyRule claim is not a string")
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
 	if policyRule != rule.Hash() {
 		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, rule, httpStatusOnly)
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
+		return
+	}
+
+	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader)) {
+		lg.Debug("JWT restriction header is invalid")
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}
 
@@ -274,7 +283,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		return true
 	default:
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		slog.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
+		lg.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.Rules\"", localizer.T("internal_server_error")))
 		return true
 	}
@@ -310,7 +319,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
@@ -329,7 +338,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = redir
 
 	encoder := json.NewEncoder(w)
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -346,7 +355,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
-	chall, err := s.challengeFor(r)
+	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
 	if err != nil {
 		lg.Error("failed to fetch or issue challenge", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -367,9 +376,11 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	err = encoder.Encode(struct {
 		Rules     *config.ChallengeRules `json:"rules"`
 		Challenge string                 `json:"challenge"`
+		ID        string                 `json:"id"`
 	}{
-		Challenge: chall.RandomData,
 		Rules:     rule.Challenge,
+		Challenge: chall.RandomData,
+		ID:        chall.ID,
 	})
 	if err != nil {
 		lg.Error("failed to encode challenge", "err", err)
@@ -381,7 +392,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
@@ -423,12 +434,13 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.respondWithError(w, r, localizer.T("redirect_not_parseable"))
 		return
 	}
-	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		lg.Debug("domain not allowed", "domain", urlParsed.Host)
 		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"))
 		return
 	}
 
-	cr, rule, err := s.check(r)
+	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")))
@@ -436,19 +448,27 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
-	impl, ok := challenge.Get(rule.Challenge.Algorithm)
+	chall, err := s.getChallenge(r)
+	if err != nil {
+		lg.Error("getChallenge failed", "err", err)
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
+		return
+	}
+
+	if chall.Spent {
+		lg.Error("double spend prevented", "reason", "double_spend")
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"))
+		return
+	}
+
+	impl, ok := challenge.Get(chall.Method)
 	if !ok {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
 		return
 	}
 
-	chall, err := s.challengeFor(r)
-	if err != nil {
-		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
-		return
-	}
+	lg = lg.With("challenge", chall.ID)
 
 	in := &challenge.ValidateInput{
 		Challenge: chall,
@@ -466,20 +486,45 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		case errors.As(err, &cerr):
 			switch {
 			case errors.Is(err, challenge.ErrFailed):
+				lg.Error("challenge failed", "err", err)
 				s.respondWithStatus(w, r, cerr.PublicReason, cerr.StatusCode)
+				return
 			case errors.Is(err, challenge.ErrInvalidFormat), errors.Is(err, challenge.ErrMissingField):
+				lg.Error("invalid challenge format", "err", err)
 				s.respondWithError(w, r, cerr.PublicReason)
+				return
 			}
 		}
 	}
 
 	// generate JWT cookie
-	tokenString, err := s.signJWT(jwt.MapClaims{
-		"challenge":  chall.ID,
-		"method":     rule.Challenge.Algorithm,
-		"policyRule": rule.Hash(),
-		"action":     string(cr.Rule),
-	})
+	var tokenString string
+
+	// check if JWTRestrictionHeader is set and header is in request
+	if s.opts.JWTRestrictionHeader != "" {
+		if r.Header.Get(s.opts.JWTRestrictionHeader) == "" {
+			lg.Error("JWTRestrictionHeader is set in config but not found in request, please check your reverse proxy config.")
+			s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+			s.respondWithError(w, r, "failed to sign JWT")
+			return
+		} else {
+			tokenString, err = s.signJWT(jwt.MapClaims{
+				"challenge":   chall.ID,
+				"method":      rule.Challenge.Algorithm,
+				"policyRule":  rule.Hash(),
+				"action":      string(cr.Rule),
+				"restriction": internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader)),
+			})
+		}
+	} else {
+		tokenString, err = s.signJWT(jwt.MapClaims{
+			"challenge":  chall.ID,
+			"method":     rule.Challenge.Algorithm,
+			"policyRule": rule.Hash(),
+			"action":     string(cr.Rule),
+		})
+	}
+
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
@@ -488,6 +533,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.SetCookie(w, CookieOpts{Path: cookiePath, Host: r.Host, Value: tokenString})
+
+	chall.Spent = true
+	j := store.JSON[challenge.Challenge]{Underlying: s.store}
+	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
+		lg.Debug("can't update information about challenge", "err", err)
+	}
 
 	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
 	lg.Debug("challenge passed, redirecting to app")
@@ -503,7 +554,7 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 }
 
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error) {
+func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
@@ -527,7 +578,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
 			case config.RuleWeigh:
-				slog.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
+				lg.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
 				weight += b.Weight.Adjust
 			}
 		}
@@ -536,7 +587,7 @@ func (s *Server) check(r *http.Request) (policy.CheckResult, *policy.Bot, error)
 	for _, t := range s.policy.Thresholds {
 		result, _, err := t.Program.ContextEval(r.Context(), &policy.ThresholdRequest{Weight: weight})
 		if err != nil {
-			slog.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
+			lg.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
 			continue
 		}
 

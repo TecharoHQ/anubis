@@ -2,12 +2,12 @@
   "loading": "Hleður...",
   "why_am_i_seeing": "Af hverju er ég að sjá þetta?",
   "protected_by": "Verndað með",
-  "protected_from": "From",
+  "protected_from": "Frá",
   "made_with": "Gert í 🇨🇦 með ❤️",
   "mascot_design": "Lukkudýrið hannað af",
   "ai_companies_explanation": "Þú ert að sjá þetta vegna þess að kerfisstjóri þessa vefsvæðis hefur sett upp Anubis til að vernda vefþjóninn fyrir holskeflu beiðna frá svokölluðum gervigreindarfyrirtækjum sem samviskulaust eru að skrapa upplýsingar af vefsvæðum annarra. Þetta getur valdið og veldur töfum og truflunum á þessum vefsvæðum, sem aftur veldur því að efni þeirra verður öllum óaðgengilegt.",
   "anubis_compromise": "Anubis er millivegur. Anubis notar sönnun-á-vinnu (Proof-of-Work) skema í líkingu við Hashcash, sem er viðlíka skema til að minnka ruslpóst. Hugmyndin er að fyrir almennar heimsóknir verði viðbótarálagið vegna þessa ásættanlegt og valdi litlum truflunum, en við massaskröpun verði samlegðaráhrifin veruleg og geri slíka skröpun upplýsinga of dýra hvað varðar afköst og reiknigetu.",
-  "hack_purpose": "Hafa verður í huga að þetta er \"redding\" sem hefur þann tilgang að gefa \"nógu góða\" bráðabirgðalausn við þessu vandamáli, þannig að hægt sé á meðan að finna betri aðferðir við að auðkenna og gera fingraför til að þekkja viðmótslausa vafra (headless browsers - til dæmis með því hvernig þeir meðhöndla letur) þannig að í framtíðinni þurfi ekki að birta síðuna með sönnun-á-vinnu áskoruninni fyrir notendur sem líklegir eru til að vera löglegir/mennskir notendur.",
+  "hack_purpose": "Að lokum er þetta staðgengilslausn svo hægt sé að eyða meiri tíma í fingraför og auðkenningu höfuðlausra vafra (t.d. með því hvernig þeir birta leturgerðir) svo að áskorunarprófunarsíðan þurfi ekki að birtast notendum sem eru mun líklegri til að vera lögmætir.",
   "jshelter_note": "Athugaðu að Anubis krefst notkunar á ýmsum nútímalegum eiginleikum JavaScript sem viðbætur á borð við JShelter munu gera ávirka. Endilega gerðu JShelter eða álíka viðbætur óvirkar fyrir þetta lén.",
   "version_info": "Þetta vefsvæði er að keyra Anubis útgáfu",
   "try_again": "Prófaðu aftur",
@@ -60,5 +60,7 @@
   "js_iterations": "umferðir",
   "js_finished_reading": "Ég hef lokið lestrinum, höldum áfram →",
   "js_calculation_error": "Reiknivilla!",
-  "js_calculation_error_msg": "Mistókst að reikna áskorun:"
+  "js_calculation_error_msg": "Mistókst að reikna áskorun:",
+  "missing_required_forwarded_headers": "Vantar nauðsynleg X-Forwarded-* hausar",
+  "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illgjarnum beiðnum svipað og CAPTCHA. Hins vegar, í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Sönnun-á-vinnu</a>. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina."
 }

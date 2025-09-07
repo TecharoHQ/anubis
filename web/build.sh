@@ -8,7 +8,7 @@ LICENSE='/*
 @licstart  The following is the entire license notice for the
 JavaScript code in this page.
 
-Copyright (c) 2025 Xe Iaso <me@xeiaso.net>
+Copyright (c) 2025 Xe Iaso <xe.iaso@techaro.lol>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
+Includes code from https://github.com/aws/aws-sdk-js-crypto-helpers which is
+used under the terms of the Apache 2 license.
+
 @licend  The above is the entire license notice
 for the JavaScript code in this page.
 */'
@@ -36,9 +39,9 @@ for the JavaScript code in this page.
 mkdir -p static/locales
 cp ../lib/localization/locales/*.json static/locales/
 
-esbuild js/main.mjs --sourcemap --bundle --minify --outfile=static/js/main.mjs "--banner:js=${LICENSE}"
-gzip -f -k -n static/js/main.mjs
-zstd -f -k --ultra -22 static/js/main.mjs
-brotli -fZk static/js/main.mjs
-
-esbuild js/bench.mjs --sourcemap --bundle --minify --outfile=static/js/bench.mjs
+for file in js/*.mjs js/worker/*.mjs; do
+  esbuild "${file}" --sourcemap --bundle --minify --outfile=static/"${file}" --banner:js="${LICENSE}"
+  gzip -f -k -n static/${file}
+  zstd -f -k --ultra -22 static/${file}
+  brotli -fZk static/${file}
+done

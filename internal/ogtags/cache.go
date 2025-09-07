@@ -5,7 +5,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/url"
+	"strings"
 	"syscall"
+	"time"
 )
 
 // GetOGTags is the main function that retrieves Open Graph tags for a URL
@@ -44,6 +46,18 @@ func (c *OGTagCache) GetOGTags(ctx context.Context, url *url.URL, originalHost s
 
 	// Store in cache
 	c.cache.Set(ctx, cacheKey, ogTags, c.ogTimeToLive)
+
+	for k, v := range ogTags {
+		switch {
+		case strings.HasSuffix(k, "image"), strings.HasSuffix(k, "audio"), strings.HasSuffix(k, "secure_url"), strings.HasSuffix(k, "video"):
+			v, _ = strings.CutPrefix(v, "http://")
+			v, _ = strings.CutPrefix(v, "https://")
+			slog.Debug("setting ogtags allow for", "url", k)
+			if err := c.cache.Underlying.Set(ctx, "ogtags:allow:"+v, []byte(k), time.Hour); err != nil {
+				slog.Debug("can't set ogtag allow cache", "err", err)
+			}
+		}
+	}
 
 	return ogTags, nil
 }

@@ -7,7 +7,7 @@
   "mascot_design": "Maskotin suunnitellut",
   "ai_companies_explanation": "Sivustolla on käytössä Anubis. Anubis estää robotteja lataamasta sivustoa ylettömästi. Tämä voi aiheuttaa palvelimen ylikuormituksen, joka estää ketään pääsemästä sivustolle.",
   "anubis_compromise": "Anubis on kompromissi. Anubis käyttää roskapostin vähentämiseen ehdotettua, Hashcash-järjestelmän mukaista työnnäytettä. Yksittäiselle käyttäjälle kuormitus on mitätön, mutta kasvattaa sivuston ylettömän lataamisen kuluja huomattavasti.",
-  "hack_purpose": "Tämä on \"riittävän hyvä\" väliaikainen ratkaisu, joka antaa aikaa tunnistaa robotit, ettei työnnäyte sivua tarvitsisi näyttää todellisille käyttäjille.",
+  "hack_purpose": "Viime kädessä tämä on paikkamerkkiratkaisu, jotta enemmän aikaa voidaan käyttää päättömien selainten sormenjälkien ottamiseen ja tunnistamiseen (esim. niiden fonttien renderöintitavan perusteella), jotta työnäytesivua ei tarvitse esittää käyttäjille, jotka ovat paljon todennäköisemmin laillisia.",
   "jshelter_note": "Anubis tarvitsee toimiakseen JavaScript-ominaisuuksia, jotka liitännäiset kuten jShelter estää. Otathan tällaiset liitännäiset pois käytöstä tälle verkkotunnukselle.",
   "version_info": "Sivusto käyttää Anubis versiota",
   "try_again": "Yritä uudelleen",
@@ -60,5 +60,7 @@
   "js_iterations": "toistot",
   "js_finished_reading": "Luettu, jatka →",
   "js_calculation_error": "Laskentavirhe!",
-  "js_calculation_error_msg": "Haasteen laskenta ei onnistunut:"
+  "js_calculation_error_msg": "Haasteen laskenta ei onnistunut:",
+  "missing_required_forwarded_headers": "Puuttuvat vaaditut X-Forwarded-* otsikot",
+  "simplified_explanation": "Tämä on toimenpide botteja ja haitallisia pyyntöjä vastaan, joka on samanlainen kuin CAPTCHA. Sen sijaan, että joutuisit tekemään työtä itse, selaimesi saa laskentatehtävän, joka sen on ratkaistava varmistaakseen, että se on kelvollinen asiakas. Tätä käsitettä kutsutaan nimellä <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Työtodistus</a>. Tehtävä lasketaan muutamassa sekunnissa ja saat pääsyn verkkosivustolle. Kiitos ymmärryksestäsi ja kärsivällisyydestäsi."
 }

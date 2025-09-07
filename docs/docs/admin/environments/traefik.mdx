@@ -10,22 +10,12 @@ but it also applies to docker cli options.
 
 :::
 
-Currently, Anubis doesn't have any Traefik middleware,
-so you need to manually route it between Traefik and your target service.
-This routing is done per labels in Traefik.
-
 In this example, we will use 4 Containers:
 
 - `traefik` - the Traefik instance
 - `anubis` - the Anubis instance
 - `target` - our service to protect (`traefik/whoami` in this case)
 - `target2` - a second service that isn't supposed to be protected (`traefik/whoami` in this case)
-
-There are 3 steps we need to follow:
-
-1. Create a new exclusive Traefik endpoint for Anubis
-2. Pass all unspecified requests to Anubis
-3. Let Anubis pass all verified requests back to Traefik on its exclusive endpoint
 
 ## Diagram of Flow
 
@@ -40,74 +30,16 @@ anubis[Anubis]
 target[Target]
 
 user-->|:443 - Requesting Service|traefik
-traefik-->|:8080 - Passing to Anubis|anubis
-anubis-->|:3923 - Passing back to Traefik|traefik
+traefik-->|:8080 - Check authorization to Anubis|anubis
+anubis-->|redirect if failed|traefik
+user-->|:8080 - make the challenge|traefik
+anubis-->|redirect back to target|traefik
 traefik-->|:80 - Passing to the target|target
-```
-
-## Create an Exclusive Anubis Endpoint in Traefik
-
-There are 2 ways of registering a new endpoint in Traefik.
-Which one to use depends on how you configured your Traefik so far.
-
-**CLI Options:**
-
-```yml
---entrypoints.anubis.address=:3923
-```
-
-**traefik.yml:**
-
-```yml
-entryPoints:
-  anubis:
-    address: ":3923"
-```
-
-It is important that the specified port isn't actually reachable from the outside,
-but only exposed in the Docker network.
-Exposing the Anubis port on Traefik directly will allow direct unprotected access to all containers behind it.
-
-## Passing all unspecified Web Requests to Anubis
-
-There are cases where you want Traefik to still route some requests without protection, just like before.
-To achieve this, we can register Anubis as the default handler for non-protected requests.
-
-We also don't want users to get SSL Errors during the checking phase,
-thus we also need to let Traefik provide SSL Certs for our endpoint.
-This example expects an TLS cert resolver called `le`.
-
-We also expect there to be an endpoint called `websecure` for HTTPS in this example.
-
-This is an example of the required labels to configure Traefik on the Anubis container:
-
-```yml
-labels:
-  - traefik.enable=true # Enabling Traefik
-  - traefik.docker.network=traefik # Telling Traefik which network to use
-  - traefik.http.routers.anubis.priority=1 # Setting Anubis to the lowest priority, so it only takes the slack
-  - traefik.http.routers.anubis.rule=PathRegexp(`.*`) # Wildcard match every path
-  - traefik.http.routers.anubis.entrypoints=websecure # Listen on HTTPS
-  - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik to which port it should route requests
-  - traefik.http.routers.anubis.service=anubis # Telling Traefik to use the above specified port
-  - traefik.http.routers.anubis.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
-```
-
-## Passing all Verified Requests Back Correctly to Traefik
-
-To pass verified requests back to Traefik,
-we only need to configure Anubis using its environment variables:
-
-```yml
-environment:
-  - BIND=:8080
-  - TARGET=http://traefik:3923
 ```
 
 ## Full Example Config
 
-Now that we know how to pass all requests back and forth, here is the example.
-This example contains 2 services: one that is protected and the other one that is not.
+This example contains 3 services: anubis, one that is protected and the other one that is not.
 
 **compose.yml**
 
@@ -128,6 +60,8 @@ services:
       # Enable Traefik
       - traefik.enable=true
       - traefik.docker.network=traefik
+      # Anubis middleware
+      - traefik.http.middlewares.anubis.forwardauth.address=http://anubis:8080/.within.website/x/cmd/anubis/api/check
       # Redirect any HTTP to HTTPS
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.web.rule=PathPrefix(`/`)
@@ -140,17 +74,22 @@ services:
     environment:
       # Telling Anubis, where to listen for Traefik
       - BIND=:8080
-      # Telling Anubis to point to Traefik via the Docker network
-      - TARGET=http://traefik:3923
+      # Telling Anubis to do redirect — ensure there is a space after '='
+      - 'TARGET= '
+      # Specifies which domains Anubis is allowed to redirect to.
+      - REDIRECT_DOMAINS=example.com
+      # Should be the full external URL for Anubis (including scheme)
+      - PUBLIC_URL=https://anubis.example.com
+      # Should match your domain for proper cookie scoping
+      - COOKIE_DOMAIN=example.com
     networks:
       - traefik
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
-      - traefik.http.routers.anubis.priority=1 # Setting Anubis to the lowest priority, so it only takes the slack
-      - traefik.http.routers.anubis.rule=PathRegexp(`.*`) # wildcard match anything
+      - traefik.http.routers.anubis.rule=Host(`anubis.example.com`) # Only Matching Requests for example.com
       - traefik.http.routers.anubis.entrypoints=websecure # Listen on HTTPS
-      - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik to which port it should route requests
+      - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik where to receive requests
       - traefik.http.routers.anubis.service=anubis # Telling Traefik to use the above specified port
       - traefik.http.routers.anubis.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
 
@@ -163,9 +102,11 @@ services:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
       - traefik.http.routers.target.rule=Host(`example.com`) # Only Matching Requests for example.com
-      - traefik.http.routers.target.entrypoints=anubis # Listening on the exclusive Anubis Network
+      - traefik.http.routers.target.entrypoints=websecure # Listening on the exclusive Anubis Network
       - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik where to receive requests
       - traefik.http.routers.target.service=target # Telling Traefik to use the above specified port
+      - traefik.http.routers.target.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
+      - traefik.http.routers.target.middlewares=anubis@docker # Use the Anubis middleware
 
   # Not Protected by Anubis
   target2:
@@ -175,7 +116,7 @@ services:
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
-      - traefik.http.routers.target2.rule=Host(`another.com`) # Only Matching Requests for example.com
+      - traefik.http.routers.target2.rule=Host(`another.example.com`) # Only Matching Requests for example.com
       - traefik.http.routers.target2.entrypoints=websecure # Listening on the exclusive Anubis Network
       - traefik.http.services.target2.loadbalancer.server.port=80 # Telling Traefik where to receive requests
       - traefik.http.routers.target2.service=target2 # Telling Traefik to use the above specified port
@@ -198,9 +139,6 @@ entryPoints:
     address: ":80"
   websecure:
     address: ":443"
-  # Anubis
-  anubis:
-    address: ":3923"
 
 certificatesResolvers:
   le:

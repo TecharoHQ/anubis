@@ -1,10 +1,4 @@
-import processFast from "./proof-of-work.mjs";
-import processSlow from "./proof-of-work-slow.mjs";
-
-const algorithms = {
-  fast: processFast,
-  slow: processSlow,
-};
+import algorithms from "./algorithms/index.mjs";
 
 // from Xeact
 const u = (url = "", params = {}) => {
@@ -59,6 +53,17 @@ const loadTranslations = async (lang) => {
   }
 };
 
+const getRedirectUrl = () => {
+  const publicUrl = JSON.parse(
+    document.getElementById("anubis_public_url").textContent,
+  );
+  if (publicUrl && window.location.href.startsWith(publicUrl)) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('redir');
+  }
+  return window.location.href;
+}
+
 let translations = {};
 let currentLang;
 
@@ -75,11 +80,6 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
   await initTranslations();
 
   const dependencies = [
-    {
-      name: "WebCrypto",
-      msg: t('web_crypto_error'),
-      value: window.crypto,
-    },
     {
       name: "Web Workers",
       msg: t('web_workers_error'),
@@ -118,15 +118,6 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
     image.src = imageSrc;
     progress.style.display = "none";
   };
-
-  if (!window.isSecureContext) {
-    ohNoes({
-      titleMsg: t('context_not_secure'),
-      statusMsg: t('context_not_secure_msg'),
-      imageSrc: imageURL("reject", anubisVersion, basePrefix),
-    });
-    return;
-  }
 
   status.innerHTML = t('calculating');
 
@@ -171,7 +162,8 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
   try {
     const t0 = Date.now();
     const { hash, nonce } = await process(
-      challenge,
+      { basePrefix, version: anubisVersion },
+      challenge.randomData,
       rules.difficulty,
       null,
       (iters) => {
@@ -224,9 +216,10 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       container.innerHTML = t('finished_reading');
 
       function onDetailsExpand() {
-        const redir = window.location.href;
+        const redir = getRedirectUrl();
         window.location.replace(
           u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
+            id: challenge.id,
             response: hash,
             nonce,
             redir,
@@ -238,9 +231,10 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       container.onclick = onDetailsExpand;
       setTimeout(onDetailsExpand, 30000);
     } else {
-      const redir = window.location.href;
+      const redir = getRedirectUrl();
       window.location.replace(
         u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
+          id: challenge.id,
           response: hash,
           nonce,
           redir,

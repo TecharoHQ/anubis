@@ -149,6 +149,10 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			if parsedBot.Challenge.Algorithm == "" {
 				parsedBot.Challenge.Algorithm = config.DefaultAlgorithm
 			}
+
+			if parsedBot.Challenge.Algorithm == "slow" {
+				slog.Warn("use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", parsedBot.Name)
+			}
 		}
 
 		if b.Weight != nil {
@@ -163,6 +167,10 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	}
 
 	for _, t := range c.Thresholds {
+		if t.Challenge != nil && t.Challenge.Algorithm == "slow" {
+			slog.Warn("use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", t.Name)
+		}
+
 		if t.Name == "legacy-anubis-behaviour" && t.Expression.String() == "true" {
 			if !warnedAboutThresholds.Load() {
 				slog.Warn("configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")

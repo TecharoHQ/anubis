@@ -13,13 +13,13 @@ import (
 func TestDefaultPolicyMustParse(t *testing.T) {
 	ctx := thothmock.WithMockThoth(t)
 
-	fin, err := data.BotPolicies.Open("botPolicies.json")
+	fin, err := data.BotPolicies.Open("botPolicies.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer fin.Close()
 
-	if _, err := ParseConfig(ctx, fin, "botPolicies.json", anubis.DefaultDifficulty); err != nil {
+	if _, err := ParseConfig(ctx, fin, "botPolicies.yaml", anubis.DefaultDifficulty); err != nil {
 		t.Fatalf("can't parse config: %v", err)
 	}
 }

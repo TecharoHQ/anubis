@@ -27,22 +27,25 @@ import (
 )
 
 type Options struct {
-	Next                http.Handler
-	Policy              *policy.ParsedConfig
-	Target              string
-	CookieDynamicDomain bool
-	CookieDomain        string
-	CookieExpiration    time.Duration
-	CookiePartitioned   bool
-	BasePrefix          string
-	WebmasterEmail      string
-	RedirectDomains     []string
-	ED25519PrivateKey   ed25519.PrivateKey
-	HS512Secret         []byte
-	StripBasePrefix     bool
-	OpenGraph           config.OpenGraph
-	ServeRobotsTXT      bool
-	CookieSecure        bool
+	Next                 http.Handler
+	Policy               *policy.ParsedConfig
+	Target               string
+	CookieDynamicDomain  bool
+	CookieDomain         string
+	CookieExpiration     time.Duration
+	CookiePartitioned    bool
+	BasePrefix           string
+	WebmasterEmail       string
+	RedirectDomains      []string
+	ED25519PrivateKey    ed25519.PrivateKey
+	HS512Secret          []byte
+	StripBasePrefix      bool
+	OpenGraph            config.OpenGraph
+	ServeRobotsTXT       bool
+	CookieSecure         bool
+	Logger               *slog.Logger
+	PublicUrl            string
+	JWTRestrictionHeader string
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -89,8 +92,12 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 }
 
 func New(opts Options) (*Server, error) {
+	if opts.Logger == nil {
+		opts.Logger = slog.With("subsystem", "anubis")
+	}
+
 	if opts.ED25519PrivateKey == nil && opts.HS512Secret == nil {
-		slog.Debug("opts.PrivateKey not set, generating a new one")
+		opts.Logger.Debug("opts.PrivateKey not set, generating a new one")
 		_, priv, err := ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			return nil, fmt.Errorf("lib: can't generate private key: %v", err)
@@ -99,6 +106,7 @@ func New(opts Options) (*Server, error) {
 	}
 
 	anubis.BasePrefix = opts.BasePrefix
+	anubis.PublicUrl = opts.PublicUrl
 
 	result := &Server{
 		next:        opts.Next,
@@ -108,6 +116,7 @@ func New(opts Options) (*Server, error) {
 		opts:        opts,
 		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store),
 		store:       opts.Policy.Store,
+		logger:      opts.Logger,
 	}
 
 	mux := http.NewServeMux()

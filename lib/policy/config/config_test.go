@@ -109,7 +109,7 @@ func TestBotValid(t *testing.T) {
 				Action:    RuleChallenge,
 				PathRegex: p("Mozilla"),
 				Challenge: &ChallengeRules{
-					Difficulty: 0,
+					Difficulty: -1,
 					ReportAs:   4,
 					Algorithm:  "fast",
 				},

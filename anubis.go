@@ -23,6 +23,9 @@ const CookieDefaultExpirationTime = 7 * 24 * time.Hour
 // BasePrefix is a global prefix for all Anubis endpoints. Can be emptied to remove the prefix entirely.
 var BasePrefix = ""
 
+// PublicUrl is the externally accessible URL for this Anubis instance.
+var PublicUrl = ""
+
 // StaticPath is the location where all static Anubis assets are located.
 const StaticPath = "/.within.website/x/cmd/anubis/"
 
@@ -36,3 +39,6 @@ const DefaultDifficulty = 4
 // ForcedLanguage is the language being used instead of the one of the request's Accept-Language header
 // if being set.
 var ForcedLanguage = ""
+
+// UseSimplifiedExplanation can be set to true for using the simplified explanation
+var UseSimplifiedExplanation = false
