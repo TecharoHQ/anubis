@@ -140,6 +140,7 @@ headermap
 healthcheck
 healthz
 hec
+Hetzner
 hmc
 homelab
 hostable
@@ -237,7 +238,6 @@ pki
 podkova
 podman
 poststart
-poxied
 prebaked
 privkey
 promauto
@@ -250,7 +250,6 @@ pwuser
 qualys
 qwant
 qwantbot
-QWEN
 rac
 rawler
 rcvar
@@ -282,7 +281,6 @@ shirou
 Sidetrade
 simprint
 sitemap
-Slackware
 sls
 Smartphone
 sni
@@ -360,6 +358,7 @@ XOriginal
 XReal
 yae
 YAMLTo
+Yda
 yeet
 yeetfile
 yourdomain
