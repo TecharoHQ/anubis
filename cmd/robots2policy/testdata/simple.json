@@ -1,12 +1,12 @@
 [
   {
-    "action": "CHALLENGE",
     "expression": "path.startsWith(\"/admin/\")",
-    "name": "robots-txt-policy-disallow-1"
+    "name": "robots-txt-policy-disallow-1",
+    "action": "CHALLENGE"
   },
   {
-    "action": "CHALLENGE",
     "expression": "path.startsWith(\"/private\")",
-    "name": "robots-txt-policy-disallow-2"
+    "name": "robots-txt-policy-disallow-2",
+    "action": "CHALLENGE"
   }
 ]

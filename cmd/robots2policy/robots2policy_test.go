@@ -78,6 +78,12 @@ func TestDataFileConversion(t *testing.T) {
 			expectedFile: "complex.yaml",
 			options:      TestOptions{format: "yaml", crawlDelayWeight: 5},
 		},
+		{
+			name:         "consecutive_user_agents",
+			robotsFile:   "consecutive.robots.txt",
+			expectedFile: "consecutive.yaml",
+			options:      TestOptions{format: "yaml", crawlDelayWeight: 3},
+		},
 	}
 
 	for _, tc := range testCases {
