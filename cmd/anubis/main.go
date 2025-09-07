@@ -317,6 +317,16 @@ func main() {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
 
+	// Warn if persistent storage is used without a configured signing key
+	if policy.Store.IsPersistent() {
+		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
+			slog.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
+				"Challenges will be invalidated when Anubis restarts. " +
+				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
+				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		}
+	}
+
 	ruleErrorIDs := make(map[string]string)
 	for _, rule := range policy.Bots {
 		if rule.Action != config.RuleDeny {
