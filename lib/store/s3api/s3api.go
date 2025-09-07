@@ -6,32 +6,16 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/TecharoHQ/anubis/lib/store"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type Store struct {
 	s3     S3API
 	bucket string
-}
-
-// staticProvider is a minimal aws.CredentialsProvider implementation to avoid
-// pulling a separate credentials module.
-type staticProvider struct {
-	akid   string
-	secret string
-}
-
-func (p staticProvider) Retrieve(ctx context.Context) (aws.Credentials, error) {
-	return aws.Credentials{
-		AccessKeyID:     p.akid,
-		SecretAccessKey: p.secret,
-		Source:          "static",
-	}, nil
 }
 
 func (s *Store) Delete(ctx context.Context, key string) error {
