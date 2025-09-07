@@ -32,7 +32,7 @@ const App = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setPassed(true);
-    }, state.difficulty * 100);
+    }, state.difficulty * 125);
 
     return () => clearTimeout(timer);
   }, [challenge]);
