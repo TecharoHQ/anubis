@@ -130,6 +130,19 @@ func main() {
 	}
 }
 
+func createRuleFromAccumulated(userAgents, disallows, allows []string, crawlDelay int) RobotsRule {
+	rule := RobotsRule{
+		UserAgents: make([]string, len(userAgents)),
+		Disallows:  make([]string, len(disallows)),
+		Allows:     make([]string, len(allows)),
+		CrawlDelay: crawlDelay,
+	}
+	copy(rule.UserAgents, userAgents)
+	copy(rule.Disallows, disallows)
+	copy(rule.Allows, allows)
+	return rule
+}
+
 func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
 	scanner := bufio.NewScanner(input)
 	var rules []RobotsRule
@@ -160,15 +173,7 @@ func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
 			// If we have accumulated rules with directives and encounter a new user-agent,
 			// flush the current rules
 			if len(currentUserAgents) > 0 && (len(currentDisallows) > 0 || len(currentAllows) > 0 || currentCrawlDelay > 0) {
-				rule := RobotsRule{
-					UserAgents: make([]string, len(currentUserAgents)),
-					Disallows:  make([]string, len(currentDisallows)),
-					Allows:     make([]string, len(currentAllows)),
-					CrawlDelay: currentCrawlDelay,
-				}
-				copy(rule.UserAgents, currentUserAgents)
-				copy(rule.Disallows, currentDisallows)
-				copy(rule.Allows, currentAllows)
+				rule := createRuleFromAccumulated(currentUserAgents, currentDisallows, currentAllows, currentCrawlDelay)
 				rules = append(rules, rule)
 				// Reset for next group
 				currentUserAgents = nil
@@ -199,15 +204,7 @@ func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
 
 	// Don't forget the last group of rules
 	if len(currentUserAgents) > 0 {
-		rule := RobotsRule{
-			UserAgents: make([]string, len(currentUserAgents)),
-			Disallows:  make([]string, len(currentDisallows)),
-			Allows:     make([]string, len(currentAllows)),
-			CrawlDelay: currentCrawlDelay,
-		}
-		copy(rule.UserAgents, currentUserAgents)
-		copy(rule.Disallows, currentDisallows)
-		copy(rule.Allows, currentAllows)
+		rule := createRuleFromAccumulated(currentUserAgents, currentDisallows, currentAllows, currentCrawlDelay)
 		rules = append(rules, rule)
 	}
 
