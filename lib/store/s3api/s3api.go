@@ -74,3 +74,5 @@ func (s *Store) Set(ctx context.Context, key string, value []byte, expiry time.D
 	}
 	return nil
 }
+
+func (Store) IsPersistent() bool { return true }
