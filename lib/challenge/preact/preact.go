@@ -57,7 +57,7 @@ func (i *impl) Issue(r *http.Request, lg *slog.Logger, in *challenge.IssueInput)
 }
 
 func (i *impl) Validate(r *http.Request, lg *slog.Logger, in *challenge.ValidateInput) error {
-	wantTime := in.Challenge.IssuedAt.Add(time.Duration(in.Rule.Challenge.Difficulty) * 95 * time.Millisecond)
+	wantTime := in.Challenge.IssuedAt.Add(time.Duration(in.Rule.Challenge.Difficulty) * 80 * time.Millisecond)
 
 	if time.Now().Before(wantTime) {
 		return challenge.NewError("validate", "insufficent time", fmt.Errorf("%w: wanted user to wait until at least %s", challenge.ErrFailed, wantTime.Format(time.RFC3339)))
