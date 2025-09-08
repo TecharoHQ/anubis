@@ -2,11 +2,12 @@
   "loading": "Chargement...",
   "why_am_i_seeing": "Pourquoi je vois ceci ?",
   "protected_by": "Protégé par",
+  "protected_from": "From",
   "made_with": "Fait avec ❤️ au 🇨🇦",
   "mascot_design": "Design de la mascotte par",
   "ai_companies_explanation": "Vous voyez ceci car l'administrateur de ce site web a configuré Anubis pour protéger le serveur contre le fléau des entreprises d'IA qui scrapent agressivement les sites web. Cela peut et cause des temps d'arrêt pour les sites web, ce qui rend leurs ressources inaccessibles pour tout le monde.",
   "anubis_compromise": "Anubis est un compromis. Anubis utilise un schéma de Preuve de Travail dans la veine de Hashcash, un schéma de preuve de travail proposé pour réduire le spam par email. L'idée est qu'à l'échelle individuelle, la charge supplémentaire est négligeable, mais à l'échelle des scrapers de masse, cela s'accumule et rend le scraping beaucoup plus coûteux.",
-  "hack_purpose": "En fin de compte, c'est un hack dont le véritable objectif est de donner une solution de substitution \"assez bonne\" pour que plus de temps puisse être consacré à l'empreinte digitale et à l'identification des navigateurs sans tête (par exemple : via la façon dont ils font le rendu des polices) afin que la page de défi de preuve de travail n'ait pas besoin d'être présentée aux utilisateurs qui sont beaucoup plus susceptibles d'être légitimes.",
+  "hack_purpose": "En fin de compte, il s'agit d'une solution de substitution afin de consacrer plus de temps à l'identification et à l'empreinte digitale des navigateurs sans tête (par exemple, via leur rendu de police) afin que la page de preuve de travail du défi n'ait pas besoin d'être présentée aux utilisateurs qui sont beaucoup plus susceptibles d'être légitimes.",
   "jshelter_note": "Veuillez noter qu'Anubis nécessite l'utilisation de fonctionnalités JavaScript modernes que des plugins comme JShelter désactiveront. Veuillez désactiver JShelter ou d'autres plugins similaires pour ce domaine.",
   "version_info": "Ce site web utilise Anubis version",
   "try_again": "Réessayer",
@@ -59,5 +60,7 @@
   "js_iterations": "itérations",
   "js_finished_reading": "J'ai fini de lire, continuer →",
   "js_calculation_error": "Erreur de calcul !",
-  "js_calculation_error_msg": "Échec du calcul du défi :"
+  "js_calculation_error_msg": "Échec du calcul du défi :",
+  "missing_required_forwarded_headers": "En-têtes X-Forwarded-* requis manquants",
+  "simplified_explanation": "Il s'agit d'une mesure contre les robots et les requêtes malveillantes similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour s'assurer qu'il est un client valide. Ce concept s'appelle <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Preuve de travail</a>. La tâche est calculée en quelques secondes et vous avez accès au site Web. Merci de votre compréhension et de votre patience."
 }

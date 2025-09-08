@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 )
 
 type OGTagCache struct {
-	cache     *decaymap.Impl[string, map[string]string]
+	cache     store.JSON[map[string]string]
 	targetURL *url.URL
 	client    *http.Client
 
@@ -36,7 +36,7 @@ type OGTagCache struct {
 	ogOverride          map[string]string
 }
 
-func NewOGTagCache(target string, conf config.OpenGraph) *OGTagCache {
+func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface) *OGTagCache {
 	// Predefined approved tags and prefixes
 	defaultApprovedTags := []string{"description", "keywords", "author"}
 	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
@@ -77,7 +77,10 @@ func NewOGTagCache(target string, conf config.OpenGraph) *OGTagCache {
 	}
 
 	return &OGTagCache{
-		cache:               decaymap.New[string, map[string]string](),
+		cache: store.JSON[map[string]string]{
+			Underlying: backend,
+			Prefix:     "ogtags:",
+		},
 		targetURL:           parsedTargetURL,
 		ogPassthrough:       conf.Enabled,
 		ogTimeToLive:        conf.TimeToLive,
@@ -123,10 +126,4 @@ func (c *OGTagCache) getTarget(u *url.URL) string {
 	}
 
 	return sb.String()
-}
-
-func (c *OGTagCache) Cleanup() {
-	if c.cache != nil {
-		c.cache.Cleanup()
-	}
 }

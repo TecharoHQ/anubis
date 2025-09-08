@@ -2,6 +2,10 @@
 title: Local development
 ---
 
+If you use an editor with [Development containers](https://containers.dev) support, load this repo's [devcontainer configuration](https://github.com/TecharoHQ/anubis/tree/main/.devcontainer). Skip to [Running Anubis locally](#running-anubis-locally) if you are using the devcontainer.
+
+This enables you to contribute from [GitHub Codespaces](https://github.com/features/codespaces) or other web-based editors.
+
 :::note
 
 TL;DR: `npm ci && npm run dev`

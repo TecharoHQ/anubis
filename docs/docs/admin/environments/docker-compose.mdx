@@ -4,7 +4,7 @@ Docker compose is typically used in concert with other load balancers such as [A
 
 ```yaml
 services:
-  anubis-nginx:
+  anubis:
     image: ghcr.io/techarohq/anubis:latest
     environment:
       BIND: ":8080"
@@ -15,10 +15,17 @@ services:
       POLICY_FNAME: "/data/cfg/botPolicy.yaml"
       OG_PASSTHROUGH: "true"
       OG_EXPIRY_TIME: "24h"
+    healthcheck:
+      test: ["CMD", "anubis", "--healthcheck"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 500ms
     ports:
       - 8080:8080
     volumes:
       - "./botPolicy.yaml:/data/cfg/botPolicy.yaml:ro"
+
   nginx:
     image: nginx
     volumes:

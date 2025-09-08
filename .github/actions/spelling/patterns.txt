@@ -132,3 +132,7 @@ go install(?:\s+[a-z]+\.[-@\w/.]+)+
 # hit-count: 1 file-count: 1
 # microsoft
 \b(?:https?://|)(?:(?:(?:blogs|download\.visualstudio|docs|msdn2?|research)\.|)microsoft|blogs\.msdn)\.co(?:m|\.\w\w)/[-_a-zA-Z0-9()=./%]*
+
+# hit-count: 1 file-count: 1
+# data url
+\bdata:[-a-zA-Z=;:/0-9+]*,\S*

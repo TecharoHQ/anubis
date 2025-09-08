@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
 
 func TestNewOGTagCache(t *testing.T) {
@@ -44,7 +45,7 @@ func TestNewOGTagCache(t *testing.T) {
 				Enabled:      tt.ogPassthrough,
 				TimeToLive:   tt.ogTimeToLive,
 				ConsiderHost: false,
-			})
+			}, memory.New(t.Context()))
 
 			if cache == nil {
 				t.Fatal("expected non-nil cache, got nil")
@@ -84,7 +85,7 @@ func TestNewOGTagCache_UnixSocket(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   5 * time.Minute,
 		ConsiderHost: false,
-	})
+	}, memory.New(t.Context()))
 
 	if cache == nil {
 		t.Fatal("expected non-nil cache, got nil")
@@ -169,7 +170,7 @@ func TestGetTarget(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			})
+			}, memory.New(t.Context()))
 
 			u := &url.URL{
 				Path:     tt.path,
@@ -242,14 +243,14 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	})
+	}, memory.New(t.Context()))
 
 	// Create a dummy URL for the request (path and query matter)
 	testReqURL, _ := url.Parse("/some/page?query=1")
 
 	// Get OG tags
 	// Pass an empty string for host, as it's irrelevant for unix sockets
-	ogTags, err := cache.GetOGTags(testReqURL, "")
+	ogTags, err := cache.GetOGTags(t.Context(), testReqURL, "")
 
 	if err != nil {
 		t.Fatalf("GetOGTags failed for unix socket: %v", err)
@@ -265,7 +266,7 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 
 	// Test cache retrieval (should hit cache)
 	// Pass an empty string for host
-	cachedTags, err := cache.GetOGTags(testReqURL, "")
+	cachedTags, err := cache.GetOGTags(t.Context(), testReqURL, "")
 	if err != nil {
 		t.Fatalf("GetOGTags (cache hit) failed for unix socket: %v", err)
 	}

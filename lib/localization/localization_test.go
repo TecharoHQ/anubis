@@ -2,6 +2,7 @@ package localization
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 	"testing"
 
@@ -11,55 +12,67 @@ import (
 func TestLocalizationService(t *testing.T) {
 	service := NewLocalizationService()
 
-	t.Run("English localization", func(t *testing.T) {
-		localizer := service.GetLocalizer("en")
-		result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
-		if result != "Loading..." {
-			t.Errorf("Expected 'Loading...', got '%s'", result)
-		}
-	})
+	loadingStrMap := map[string]string{
+		"de":    "Ladevorgang...",
+		"en":    "Loading...",
+		"es":    "Cargando...",
+		"et":    "Laadin...",
+		"fil":   "Naglo-load...",
+		"fr":    "Chargement...",
+		"ja":    "ロード中...",
+		"is":    "Hleður...",
+		"nb":    "Laster inn...",
+		"nl":    "Laden...",
+		"nn":    "Lastar inn...",
+		"pt-BR": "Carregando...",
+		"tr":    "Yükleniyor...",
+		"ru":    "Загрузка...",
+		"vi":    "Đang nạp...",
+		"zh-CN": "加载中...",
+		"zh-TW": "載入中...",
+		"sv" : "Laddar...",
+	}
 
-	t.Run("French localization", func(t *testing.T) {
-		localizer := service.GetLocalizer("fr")
-		result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
-		if result != "Chargement..." {
-			t.Errorf("Expected 'Chargement...', got '%s'", result)
-		}
-	})
+	var keys []string
 
-	t.Run("All required keys exist in English", func(t *testing.T) {
-		localizer := service.GetLocalizer("en")
-		requiredKeys := []string{
-			"loading", "why_am_i_seeing", "protected_by", "made_with",
-			"mascot_design", "try_again", "go_home", "javascript_required",
-		}
+	for lang := range loadingStrMap {
+		keys = append(keys, lang)
+	}
 
-		for _, key := range requiredKeys {
-			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: key})
-			if result == "" {
-				t.Errorf("Key '%s' returned empty string", key)
+	sort.Strings(keys)
+
+	for _, lang := range keys {
+		expected := loadingStrMap[lang]
+		t.Run(fmt.Sprintf("%s localization", lang), func(t *testing.T) {
+			localizer := service.GetLocalizer(lang)
+			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "loading"})
+			if result != expected {
+				t.Errorf("Expected '%s', got '%s'", expected, result)
 			}
-		}
-	})
+		})
+	}
 
-	t.Run("All required keys exist in French", func(t *testing.T) {
-		localizer := service.GetLocalizer("fr")
-		requiredKeys := []string{
-			"loading", "why_am_i_seeing", "protected_by", "made_with",
-			"mascot_design", "try_again", "go_home", "javascript_required",
-		}
+	// Test for requiredKeys localization
+	requiredKeys := []string{
+		"loading", "why_am_i_seeing", "protected_by", "protected_from", "made_with",
+		"mascot_design", "try_again", "go_home", "javascript_required",
+	}
 
-		for _, key := range requiredKeys {
-			result := localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: key})
-			if result == "" {
-				t.Errorf("Key '%s' returned empty string", key)
+	for _, lang := range keys {
+		t.Run(fmt.Sprintf("All required keys exist in %s", lang), func(t *testing.T) {
+			loc := service.GetLocalizer(lang)
+			for _, key := range requiredKeys {
+				result := loc.MustLocalize(&i18n.LocalizeConfig{MessageID: key})
+				if result == "" {
+					t.Errorf("Key '%s' returned empty string", key)
+				}
 			}
-		}
-	})
+		})
+	}
 }
 
 type manifest struct {
-	SupportedLanguages []string `json:"supported_languages"`
+	SupportedLanguages []string `json:"supportedLanguages"`
 }
 
 func loadManifest(t *testing.T) manifest {
@@ -100,10 +113,19 @@ func TestComprehensiveTranslations(t *testing.T) {
 
 	sort.Strings(keys)
 
+	manifest := loadManifest(t)
+	if len(manifest.SupportedLanguages) == 0 {
+		t.Fatal("no languages loaded")
+	}
+
 	for _, lang := range loadManifest(t).SupportedLanguages {
 		t.Run(lang, func(t *testing.T) {
 			loc := service.GetLocalizer(lang)
 			sl := SimpleLocalizer{Localizer: loc}
+			service_lang := sl.GetLang()
+			if service_lang != lang {
+				t.Error("Localizer language not same as specified")
+			}
 			for _, key := range keys {
 				t.Run(key, func(t *testing.T) {
 					if result := sl.T(key); result == "" {

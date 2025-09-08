@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
@@ -57,14 +58,14 @@ func NewLocalizationService() *LocalizationService {
 
 		globalService = &LocalizationService{bundle: bundle}
 	})
-	
+
 	// Safety check - if globalService is still nil, create a minimal one
 	if globalService == nil {
 		bundle := i18n.NewBundle(language.English)
 		bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 		globalService = &LocalizationService{bundle: bundle}
 	}
-	
+
 	return globalService
 }
 
@@ -93,8 +94,22 @@ func (sl *SimpleLocalizer) T(messageID string) string {
 	return sl.Localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: messageID})
 }
 
-// GetLocalizer creates a localizer based on the request's Accept-Language header
+// Get the language that is used by the localizer by retrieving a well-known string that is required to be present
+func (sl *SimpleLocalizer) GetLang() string {
+	_, tag, err := sl.Localizer.LocalizeWithTag(&i18n.LocalizeConfig{MessageID: "loading"})
+	if err != nil {
+		return "en"
+	}
+	return tag.String()
+}
+
+// GetLocalizer creates a localizer based on the request's Accept-Language header or forcedLanguage option
 func GetLocalizer(r *http.Request) *SimpleLocalizer {
-	localizer := NewLocalizationService().GetLocalizerFromRequest(r)
+	var localizer *i18n.Localizer
+	if anubis.ForcedLanguage == "" {
+		localizer = NewLocalizationService().GetLocalizerFromRequest(r)
+	} else {
+		localizer = NewLocalizationService().GetLocalizer(anubis.ForcedLanguage)
+	}
 	return &SimpleLocalizer{Localizer: localizer}
 }

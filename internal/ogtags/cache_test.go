@@ -1,6 +1,7 @@
 package ogtags
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -9,6 +10,8 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
 
 func TestCacheReturnsDefault(t *testing.T) {
@@ -21,14 +24,14 @@ func TestCacheReturnsDefault(t *testing.T) {
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
 		Override:     want,
-	})
+	}, memory.New(t.Context()))
 
 	u, err := url.Parse("https://anubis.techaro.lol")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	result, err := cache.GetOGTags(u, "anubis.techaro.lol")
+	result, err := cache.GetOGTags(t.Context(), u, "anubis.techaro.lol")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +52,7 @@ func TestCheckCache(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	})
+	}, memory.New(t.Context()))
 
 	// Set up test data
 	urlStr := "http://example.com/page"
@@ -60,16 +63,16 @@ func TestCheckCache(t *testing.T) {
 	cacheKey := cache.generateCacheKey(urlStr, "example.com")
 
 	// Test cache miss
-	tags := cache.checkCache(cacheKey)
+	tags := cache.checkCache(t.Context(), cacheKey)
 	if tags != nil {
 		t.Errorf("expected nil tags on cache miss, got %v", tags)
 	}
 
 	// Manually add to cache
-	cache.cache.Set(cacheKey, expectedTags, time.Minute)
+	cache.cache.Set(t.Context(), cacheKey, expectedTags, time.Minute)
 
 	// Test cache hit
-	tags = cache.checkCache(cacheKey)
+	tags = cache.checkCache(t.Context(), cacheKey)
 	if tags == nil {
 		t.Fatal("expected non-nil tags on cache hit, got nil")
 	}
@@ -112,7 +115,7 @@ func TestGetOGTags(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	})
+	}, memory.New(t.Context()))
 
 	// Parse the test server URL
 	parsedURL, err := url.Parse(ts.URL)
@@ -122,7 +125,7 @@ func TestGetOGTags(t *testing.T) {
 
 	// Test fetching OG tags from the test server
 	// Pass the host from the parsed test server URL
-	ogTags, err := cache.GetOGTags(parsedURL, parsedURL.Host)
+	ogTags, err := cache.GetOGTags(t.Context(), parsedURL, parsedURL.Host)
 	if err != nil {
 		t.Fatalf("failed to get OG tags: %v", err)
 	}
@@ -142,14 +145,14 @@ func TestGetOGTags(t *testing.T) {
 
 	// Test fetching OG tags from the cache
 	// Pass the host from the parsed test server URL
-	ogTags, err = cache.GetOGTags(parsedURL, parsedURL.Host)
+	ogTags, err = cache.GetOGTags(t.Context(), parsedURL, parsedURL.Host)
 	if err != nil {
 		t.Fatalf("failed to get OG tags from cache: %v", err)
 	}
 
 	// Test fetching OG tags from the cache (3rd time)
 	// Pass the host from the parsed test server URL
-	newOgTags, err := cache.GetOGTags(parsedURL, parsedURL.Host)
+	newOgTags, err := cache.GetOGTags(t.Context(), parsedURL, parsedURL.Host)
 	if err != nil {
 		t.Fatalf("failed to get OG tags from cache: %v", err)
 	}
@@ -165,8 +168,13 @@ func TestGetOGTags(t *testing.T) {
 		if !ok || initialValue != cachedValue {
 			t.Errorf("Cache does not line up: expected %s: %s, got: %s", key, initialValue, cachedValue)
 		}
-
 	}
+
+	t.Run("ensure image is cached as allow", func(t *testing.T) {
+		if _, err := cache.cache.Underlying.Get(t.Context(), "ogtags:allow:example.com/image.jpg"); errors.Is(err, store.ErrNotFound) {
+			t.Fatal("ogtags allow caching for example.com/image.jpg did not work")
+		}
+	})
 }
 
 // TestGetOGTagsWithHostConsideration tests the behavior of the cache with and without host consideration and for multiple hosts in a theoretical setup.
@@ -263,10 +271,10 @@ func TestGetOGTagsWithHostConsideration(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: tc.ogCacheConsiderHost,
-			})
+			}, memory.New(t.Context()))
 
 			for i, req := range tc.requests {
-				ogTags, err := cache.GetOGTags(parsedURL, req.host)
+				ogTags, err := cache.GetOGTags(t.Context(), parsedURL, req.host)
 				if err != nil {
 					t.Errorf("Request %d (host: %s): unexpected error: %v", i+1, req.host, err)
 					continue // Skip further checks for this request if error occurred

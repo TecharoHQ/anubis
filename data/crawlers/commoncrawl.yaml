@@ -1,0 +1,12 @@
+- name: common-crawl
+  user_agent_regex: CCBot
+  action: ALLOW
+  # https://index.commoncrawl.org/ccbot.json
+  remote_addresses:
+    [
+      "2600:1f28:365:80b0::/60",
+      "18.97.9.168/29",
+      "18.97.14.80/29",
+      "18.97.14.88/30",
+      "98.85.178.216/32",
+    ]

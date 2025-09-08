@@ -11,11 +11,292 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<!-- This changes the project to: -->
+
 - Added `DENY_AND_REROUTE` action for redirecting denied requests to external AI tarpits ([#61](https://github.com/json-kyle/anubis/issues/61))
-- Fix OpenGraph passthrough ([#717](https://github.com/TecharoHQ/anubis/issues/717))
-- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677))
-- Implement localization system. Find locale files in lib/localization/locales/.
+- Document missing environment variables in installation guide: `SLOG_LEVEL`, `COOKIE_PREFIX`, `FORCED_LANGUAGE`, and `TARGET_DISABLE_KEEPALIVE` ([#1086](https://github.com/TecharoHQ/anubis/pull/1086))
+- Add validation warning when persistent storage is used without setting signing keys
+- Fixed `robots2policy` to properly group consecutive user agents into `any:` instead of only processing the last one ([#925](https://github.com/TecharoHQ/anubis/pull/925))
+- Add the [`s3api` storage backend](./admin/policies.mdx#s3api) to allow Anubis to use S3 API compatible object storage as its storage backend.
+
+### Bug Fixes
+
+Sometimes the enhanced temporal assurance in [#1038](https://github.com/TecharoHQ/anubis/pull/1038) and [#1068](https://github.com/TecharoHQ/anubis/pull/1068) could backfire because Chromium and its ilk randomize the amount of time they wait in order to avoid a timing side channel attack. This has been fixed by both increasing the amount of time a client has to wait for the metarefresh and preact challenges as well as making the server side logic more permissive.
+
+## v1.22.0: Yda Hext
+
+> Someone has to make an effort at reconciliation if these conflicts are ever going to end.
+
+In this release, we finally fix the odd number of CPU cores bug, pave the way for lighter weight challenges, make Anubis more adaptable, and more.
+
+### Big ticket items
+
+#### Proof of React challenge
+
+A new ["proof of React"](./admin/configuration/challenges/preact.mdx) has been added. It runs a simple app in React that has several chained hooks. It is much more lightweight than the proof of work check.
+
+#### Smaller features
+
+- The [`segments`](./admin/configuration/expressions.mdx#segments) function was added for splitting a path into its slash-separated segments.
+- Added possibility to disable HTTP keep-alive to support backends not properly handling it.
+- When issuing a challenge, Anubis stores information about that challenge into the store. That stored information is later used to validate challenge responses. This works around nondeterminism in bot rules. ([#917](https://github.com/TecharoHQ/anubis/issues/917))
+- One of the biggest sources of lag in Firefox has been eliminated: the use of WebCrypto. Now whenever Anubis detects the client is using Firefox (or Pale Moon), it will swap over to a pure-JS implementation of SHA-256 for speed.
+- Proof of work solving has had a complete overhaul and rethink based on feedback from browser engine developers, frontend experts, and overall performance profiling.
+- Optimize the performance of the pure-JS Anubis solver.
+- Web Workers are stored as dedicated JavaScript files in `static/js/workers/*.mjs`.
+- Pave the way for non-SHA256 solver methods and eventually one that uses WebAssembly (or WebAssembly code compiled to JS for those that disable WebAssembly).
+- Legacy JavaScript code has been eliminated.
+- When parsing [Open Graph tags](./admin/configuration/open-graph.mdx), add any URLs found in the responses to a temporary "allow cache" so that social preview images work.
+- The hard dependency on WebCrypto has been removed, allowing a proof of work challenge to work over plain (unencrypted) HTTP.
+- The Anubis version number is put in the footer of every page.
+- Add a default block rule for Huawei Cloud.
+- Add a default block rule for Alibaba Cloud.
+- Added support to use Traefik forwardAuth middleware.
+- Add X-Request-URI support so that Subrequest Authentication has path support.
+- Added glob matching for `REDIRECT_DOMAINS`. You can pass `*.bugs.techaro.lol` to allow redirecting to anything ending with `.bugs.techaro.lol`. There is a limit of 4 wildcards.
+
+### Fixes
+
+#### Odd numbers of CPU cores are properly supported
+
+Some phones have an odd number of CPU cores. This caused [interesting issues](https://anubis.techaro.lol/blog/2025/cpu-core-odd). This was fixed by [using `Math.trunc` to convert the number of CPU cores back into an integer](https://github.com/TecharoHQ/anubis/issues/1043).
+
+#### Smaller fixes
+
+- A standard library HTTP server log message about HTTP pipelining not working has been filtered out of Anubis' logs. There is no action that can be taken about it.
+- Added a missing link to the Caddy installation environment in the installation documentation.
+- Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
+- The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
+- [Custom-AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)'s default User-Agent has an increased weight by default ([#852](https://github.com/TecharoHQ/anubis/issues/852)).
+- Add option for replacing the default explanation text with a custom one ([#747](https://github.com/TecharoHQ/anubis/pull/747))
+- The contact email in the LibreJS header has been changed.
+- Firefox for Android support has been fixed by embedding the challenge ID into the pass-challenge route. This also fixes some inconsistent issues with other mobile browsers.
+- The default `favicon` pattern in `data/common/keep-internet-working.yaml` has been updated to permit requests for png/gif/jpg/svg files as well as ico.
+- The `--cookie-prefix` flag has been fixed so that it is fully respected.
+- The default patterns in `data/common/keep-internet-working.yaml` have been updated to appropriately escape the '.' character in the regular expression patterns.
+- Add optional restrictions for JWT based on the value of a header ([#697](https://github.com/TecharoHQ/anubis/pull/697))
+- The word "hack" has been removed from the translation strings for Anubis due to incidents involving people misunderstanding that word and sending particularly horrible things to the project lead over email.
+- Bump AI-robots.txt to version 1.39
+- Inject adversarial input to break AI coding assistants.
+- Add better logging when using Subrequest Authentication.
+
+### Security-relevant changes
+
+- Add a server-side check for the meta-refresh challenge that makes sure clients have waited for at least 95% of the time that they should.
+
+#### Fix potential double-spend for challenges
+
+Anubis operates by issuing a challenge and having the client present a solution for that challenge. Challenges are identified by a unique UUID, which is stored in the database.
+
+The problem is that a challenge could potentially be used twice by a dedicated attacker making a targeted attack against Anubis. Challenge records did not have a "spent" or "used" field. In total, a dedicated attacker could solve a challenge once and reuse that solution across multiple sessions in order to mint additional tokens.
+
+This was fixed by adding a "spent" field to challenges in the data store. When a challenge is solved, that "spent" field gets set to `true`. If a future attempt to solve this challenge is observed, it gets rejected.
+
+With the advent of store based challenge issuance in [#749](https://github.com/TecharoHQ/anubis/pull/749), this means that these challenge IDs are [only good for 30 minutes](https://github.com/TecharoHQ/anubis/blob/e8dfff635015d6c906dddd49cb0eaf591326092a/lib/anubis.go#L130-L135d). Websites using the most recent version of Anubis have limited exposure to this problem.
+
+Websites using older versions of Anubis have a much more increased exposure to this problem and are encouraged to keep this software updated as often and as frequently as possible.
+
+Thanks to [@taviso](https://github.com/taviso) for reporting this issue.
+
+### Breaking changes
+
+- The "slow" frontend solver has been removed in order to reduce maintenance burden. Any existing uses of it will still work, but issue a warning upon startup asking administrators to upgrade to the "fast" frontend solver.
+- The legacy JSON based policy file example has been removed and all documentation for how to write a policy file in JSON has been deleted. JSON based policy files will still work, but YAML is the superior option for Anubis configuration.
+
+### New Locales
+
+- Lithuanian [#972](https://github.com/TecharoHQ/anubis/pull/972)
+- Vietnamese [#926](https://github.com/TecharoHQ/anubis/pull/926)
+
+## v1.21.3: Minfilia Warde - Echo 3
+
+### Added
+
+#### New locales
+
+Anubis now supports these new languages:
+
+- [Swedish](https://github.com/TecharoHQ/anubis/pull/913)
+
+### Fixes
+
+#### Fixes a problem with nonstandard URLs and redirects
+
+Fixes [GHSA-jhjj-2g64-px7c](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-jhjj-2g64-px7c).
+
+This could allow an attacker to craft an Anubis pass-challenge URL that forces a redirect to nonstandard URLs, such as the `javascript:` scheme which executes arbitrary JavaScript code in a browser context when the user clicks the "Try again" button.
+
+This has been fixed by disallowing any URLs without the scheme `http` or `https`.
+
+Additionally, the "Try again" button has been fixed to completely ignore the user-supplied redirect location. It now redirects to the home page (`/`).
+
+## v1.21.2: Minfilia Warde - Echo 2
+
+This contained an incomplete fix for [GHSA-jhjj-2g64-px7c](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-jhjj-2g64-px7c). Do not use this version.
+
+## v1.21.1: Minfilia Warde - Echo 1
+
+- Expired records are now properly removed from bbolt databases ([#848](https://github.com/TecharoHQ/anubis/pull/848)).
+- Fix hanging on service restart ([#853](https://github.com/TecharoHQ/anubis/issues/853))
+
+### Added
+
+Anubis now supports the [`missingHeader`](./admin/configuration/expressions.mdx#missingHeader) to assert the absence of headers in requests.
+
+#### New locales
+
+Anubis now supports these new languages:
+
+- [Czech](https://github.com/TecharoHQ/anubis/pull/849)
+- [Finnish](https://github.com/TecharoHQ/anubis/pull/863)
+- [Norwegian Bokmål](https://github.com/TecharoHQ/anubis/pull/855)
+- [Norwegian Nynorsk](https://github.com/TecharoHQ/anubis/pull/855)
+- [Russian](https://github.com/TecharoHQ/anubis/pull/882)
+
+### Fixes
+
+#### Fix ["error: can't get challenge"](https://github.com/TecharoHQ/anubis/issues/869) when details about a challenge can't be found in the server side state
+
+v1.21.0 changed the core challenge flow to maintain information about challenges on the server side instead of only doing them via stateless idempotent generation functions and relying on details to not change. There was a subtle bug introduced in this change: if a client has an unknown challenge ID set in its test cookie, Anubis will clear that cookie and then throw an HTTP 500 error.
+
+This has been fixed by making Anubis throw a new challenge page instead.
+
+#### Fix event loop thrashing when solving a proof of work challenge
+
+Previously the "fast" proof of work solver had a fragment of JavaScript that attempted to only post an update about proof of work progress to the main browser window every 1024 iterations. This fragment of JavaScript was subtly incorrect in a way that passed review but actually made the workers send an update back to the main thread every iteration. This caused a pileup of unhandled async calls (similar to a socket accept() backlog pileup in Unix) that caused stack space exhaustion.
+
+This has been fixed in the following ways:
+
+1. The complicated boolean logic has been totally removed in favour of a worker-local iteration counter.
+2. The progress bar is updated by worker `0` instead of all workers.
+
+Hopefully this should limit the event loop thrashing and let ia32 browsers (as well as any environment with a smaller stack size than amd64 and aarch64 seem to have) function normally when processing Anubis proof of work challenges.
+
+#### Fix potential memory leak when discovering a solution
+
+In some cases, the parallel solution finder in Anubis could cause all of the worker promises to leak due to the fact the promises were being improperly terminated. This was fixed by having Anubis debounce worker termination instead of allowing it to potentially recurse infinitely.
+
+## v1.21.0: Minfilia Warde
+
+> Please, be at ease. You are among friends here.
+
+In this release, Anubis becomes internationalized, gains the ability to use system load as input to issuing challenges, finally fixes the "invalid response" after "success" bug, and more! Please read these notes before upgrading as the changes are big enough that administrators should take action to ensure that the upgrade goes smoothly.
+
+### Big ticket changes
+
+The biggest change is that the ["invalid response" after "success" bug](https://github.com/TecharoHQ/anubis/issues/564) is now finally fixed for good by totally rewriting how Anubis' challenge issuance flow works. Instead of generating challenge strings from request metadata (under the assumption that the values being compared against are stable), Anubis now generates random data for each challenge. This data is stored in the active [storage backend](./admin/policies.mdx#storage-backends) for up to 30 minutes. This also fixes [#746](https://github.com/TecharoHQ/anubis/issues/746) and other similar instances of this issue.
+
+In order to reduce confusion, the "Success" interstitial that shows up when you pass a proof of work challenge has been removed.
+
+#### Storage
+
+Anubis now is able to store things persistently [in memory](./admin/policies.mdx#memory), [on the disk](./admin/policies.mdx#bbolt), or [in Valkey](./admin/policies.mdx#valkey) (this includes other compatible software). By default Anubis uses the in-memory backend. If you have an environment with mutable storage (even if it is temporary), be sure to configure the [`bbolt`](./admin/policies.mdx#bbolt) storage backend.
+
+#### Localization
+
+Anubis now supports localized responses. Locales can be added in [lib/localization/locales/](https://github.com/TecharoHQ/anubis/tree/main/lib/localization/locales). This release includes support for the following languages:
+
+- [Brazilian Portugese](https://github.com/TecharoHQ/anubis/pull/726)
+- [Chinese (Simplified)](https://github.com/TecharoHQ/anubis/pull/774)
+- [Chinese (Traditional)](https://github.com/TecharoHQ/anubis/pull/759)
+- English
+- [Estonian](https://github.com/TecharoHQ/anubis/pull/783)
+- [Filipino](https://github.com/TecharoHQ/anubis/pull/775)
+- [French](https://github.com/TecharoHQ/anubis/pull/716)
+- [German](https://github.com/TecharoHQ/anubis/pull/741)
+- [Icelandic](https://github.com/TecharoHQ/anubis/pull/780)
+- [Italian](https://github.com/TecharoHQ/anubis/pull/778)
+- [Japanese](https://github.com/TecharoHQ/anubis/pull/772)
+- [Spanish](https://github.com/TecharoHQ/anubis/pull/716)
+- [Turkish](https://github.com/TecharoHQ/anubis/pull/751)
+
+If facts or local regulations demand, you can set Anubis default language with the `FORCED_LANGUAGE` environment variable or the `--forced-language` command line argument:
+
+```sh
+FORCED_LANGUAGE=de
+```
+
+#### Load average
+
+Anubis can dynamically take action [based on the system load average](./admin/configuration/expressions.mdx#using-the-system-load-average), allowing you to write rules like this:
+
+```yaml
+## System load based checks.
+# If the system is under high load for the last minute, add weight.
+- name: high-load-average
+  action: WEIGH
+  expression: load_1m >= 10.0 # make sure to end the load comparison in a .0
+  weight:
+    adjust: 20
+
+# If it is not for the last 15 minutes, remove weight.
+- name: low-load-average
+  action: WEIGH
+  expression: load_15m <= 4.0 # make sure to end the load comparison in a .0
+  weight:
+    adjust: -10
+```
+
+Something to keep in mind about system load average is that it is not aware of the number of cores the system has. If you have a 16 core system that has 16 processes running but none of them is hogging the CPU, then you will get a load average below 16. If you are in doubt, make your "high load" metric at least two times the number of CPU cores and your "low load" metric at least half of the number of CPU cores. For example:
+
+|      Kind | Core count | Load threshold |
+| --------: | :--------- | :------------- |
+| high load | 4          | `8.0`          |
+|  low load | 4          | `2.0`          |
+| high load | 16         | `32.0`         |
+|  low load | 16         | `8`            |
+
+Also keep in mind that this does not account for other kinds of latency like I/O latency. A system can have its web applications unresponsive due to high latency from a MySQL server but still have that web application server report a load near or at zero.
+
+### Other features and fixes
+
+There are a bunch of other assorted features and fixes too:
+
+- Add `COOKIE_SECURE` option to set the cookie [Secure flag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#block_access_to_your_cookies)
+- Sets cookie defaults to use [SameSite: None](https://web.dev/articles/samesite-cookies-explained)
+- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677)).
+- Implement a [development container](https://containers.dev/) manifest to make contributions easier.
 - Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
+- Add option for custom cookie prefix ([#732](https://github.com/TecharoHQ/anubis/pull/732))
+- Make the [Open Graph](./admin/configuration/open-graph.mdx) subsystem and DNSBL subsystem use [storage backends](./admin/policies.mdx#storage-backends) instead of storing everything in memory by default.
+- Allow [Common Crawl](https://commoncrawl.org/) by default so scrapers have less incentive to scrape
+- The [bbolt storage backend](./admin/policies.mdx#bbolt) now runs its cleanup every hour instead of every five minutes.
+- Don't block Anubis starting up if [Thoth](./admin/thoth.mdx) health checks fail.
+- A race condition involving [opening two challenge pages at once in different tabs](https://github.com/TecharoHQ/anubis/issues/832) causing one of them to fail has been fixed.
+- The "Try again" button on the error page has been fixed. Previously it meant "try the solution again" instead of "try the challenge again".
+- In certain cases, a user could be stuck with a test cookie that is invalid, locking them out of the service for up to half an hour. This has been fixed with better validation of this case and clearing the cookie.
+- Start exposing JA4H fingerprints for later use in CEL expressions.
+- Add `/healthz` route for use in platform-based health checks.
+
+### Potentially breaking changes
+
+We try to introduce breaking changes as much as possible, but these are the changes that may be relevant for you as an administrator:
+
+#### Challenge format change
+
+Previously Anubis did no accounting for challenges that it issued. This means that if Anubis restarted during a client, the client would be able to proceed once Anubis came back online.
+
+During the upgrade to v1.21.0 and when v1.21.0 (or later) restarts with the [in-memory storage backend](./admin/policies.mdx#memory), you may see a higher rate of failed challenges than normal. If this persists beyond a few minutes, [open an issue](https://github.com/TecharoHQ/anubis/issues/new).
+
+If you are using the in-memory storage backend, please consider using [a different storage backend](./admin/policies.mdx#storage-backends).
+
+#### Systemd service changes
+
+The following potentially breaking change applies to native installs with systemd only:
+
+Each instance of systemd service template now has a unique `RuntimeDirectory`, as opposed to each instance of the service sharing a `RuntimeDirectory`. This change was made to avoid [the `RuntimeDirectory` getting nuked any time one of the Anubis instances restarts](https://github.com/TecharoHQ/anubis/issues/748).
+
+If you configured Anubis' unix sockets to listen on `/run/anubis/foo.sock` for instance `anubis@foo`, you will need to configure Anubis to listen on `/run/anubis/foo/foo.sock` and additionally configure your HTTP load balancer as appropriate.
+
+If you need the legacy behaviour, install this [systemd unit dropin](https://www.flatcar.org/docs/latest/setup/systemd/drop-in-units/):
+
+```systemd
+# /etc/systemd/system/anubis@.service.d/50-runtimedir.conf
+[Service]
+RuntimeDirectory=anubis
+```
+
+Just keep in mind that this will cause problems when Anubis restarts.
 
 ## v1.20.0: Thancred Waters
 

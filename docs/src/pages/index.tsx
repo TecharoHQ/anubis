@@ -31,19 +31,12 @@ export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`Anubis: self hostable scraper defense software`}
-      description="Weigh the soul of incoming HTTP requests using proof-of-work to stop AI crawlers"
+      title={`Anubis: Web AI Firewall Utility`}
+      description="Weigh the soul of incoming HTTP requests to protect your website!"
     >
       <HomepageHeader />
       <main>
         <HomepageFeatures />
-
-        <center>
-          <p>
-            This is all placeholder text. It will be fixed. Give me time. I am
-            one person and my project has unexpectedly gone viral.
-          </p>
-        </center>
       </main>
     </Layout>
   );

@@ -2,7 +2,7 @@
 title: Why does Anubis use Proof-of-Work?
 ---
 
-Anubis uses a [proof of work](https://en.wikipedia.org/wiki/Proof_of_work) in order to validate that clients are genuine. The reason Anubis does this was inspired by [Hashcash](https://en.wikipedia.org/wiki/Hashcash), a suggestion from the early 2000's about extending the email protocol to avoid spam. The idea is that genuine people sending emails will have to do a small math problem that is expensive to compute, but easy to verify such as hashing a string with a given number of leading zeroes. This will have basically no impact on individuals sending a few emails a week, but the company churning out industrial quantities of advertising will be required to do prohibitively expensive computation. This is also how Bitcoin's consensus algorithm works.
+Anubis uses [proof of work](https://en.wikipedia.org/wiki/Proof_of_work) in order to validate that clients are genuine. The reason Anubis does this was inspired by [Hashcash](https://en.wikipedia.org/wiki/Hashcash), a suggestion from the early 2000's about extending the email protocol to avoid spam. The idea is that genuine people sending emails will have to do a small math problem that is expensive to compute, but easy to verify such as hashing a string with a given number of leading zeroes. This will have basically no impact on individuals sending a few emails a week, but the company churning out industrial quantities of advertising will be required to do prohibitively expensive computation. This is also how Bitcoin's consensus algorithm works.
 
 ## How Anubis' proof of work scheme works
 
@@ -21,16 +21,3 @@ const hash = await sha256(`${challenge}${nonce}`);
 In order to pass a challenge, the `hash` has to have the right number of leading zeros (the "difficulty"). When a client requests to pass the challenge, they include the nonce they used. The server then only has to do one sha256 operation: the one that confirms that the challenge (generated from request metadata) and the nonce (provided by the client) match the difficulty number of leading zeroes.
 
 Ultimately, this is a hack whose real purpose is to give a "good enough" placeholder solution so that more time can be spent on fingerprinting and identifying headless browsers (EG via how they do font rendering) so that the challenge proof of work page doesn't need to be presented to known legitimate users.
-
-## Challenge format
-
-Anubis generates challenges based on browser metadata, including but not limited to the following:
-
-- The contents of your [`Accept-Language` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept-Language)
-- The IP address of your client
-- Your browser's [`User-Agent` string](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent)
-- The date of the current week, rooted on Sundays
-- Anubis' ed25519 public signing key for [JSON web tokens](https://jwt.io/) (JWTs)
-- The challenge difficulty
-
-This is intended to be a random value that is difficult for attackers to forge and guess, but also deterministic enough that it will naturally reset itself.

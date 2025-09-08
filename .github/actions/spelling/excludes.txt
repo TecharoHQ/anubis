@@ -84,10 +84,13 @@
 ^\Q.github/workflows/spelling.yml\E$
 ^data/crawlers/
 ^docs/blog/tags\.yml$
+^docs/docs/user/known-instances.md$
 ^docs/manifest/.*$
 ^docs/static/\.nojekyll$
 ^lib/policy/config/testdata/bad/unparseable\.json$
+^internal/glob/glob_test.go$
 ignore$
 robots.txt
 ^lib/localization/locales/.*\.json$
 ^lib/localization/.*_test.go$
+^test/.*$

@@ -1,0 +1,22 @@
+services:
+  cgit:
+    image: joseluisq/alpine-cgit
+    pull_policy: always
+    restart: always
+    environment:
+      CGIT_TITLE: Test git server
+      CGIT_DESC: Test server, please ignore
+    volumes:
+      - ./var/repos:/srv/git
+
+  anubis:
+    image: ko.local/anubis
+    environment:
+      BIND: ":8005"
+      TARGET: http://cgit:80
+      USE_REMOTE_ADDRESS: "true"
+    ports:
+      - 8005:8005
+
+volumes:
+  cgit-data:

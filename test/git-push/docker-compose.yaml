@@ -1,0 +1,16 @@
+services:
+  git:
+    image: ghcr.io/kutespaces/simple-git-http-server
+    pull_policy: always
+    restart: always
+    volumes:
+      - ./var/repos:/git
+
+  anubis:
+    image: ko.local/anubis
+    environment:
+      BIND: ":3000"
+      TARGET: http://git:80
+      USE_REMOTE_ADDRESS: "true"
+    ports:
+      - 3000:3000

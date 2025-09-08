@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
 
 func TestIntegrationGetOGTags(t *testing.T) {
@@ -110,7 +111,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			})
+			}, memory.New(t.Context()))
 
 			// Create URL for test
 			testURL, _ := url.Parse(ts.URL)
@@ -119,7 +120,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 
 			// Get OG tags
 			// Pass the host from the test URL
-			ogTags, err := cache.GetOGTags(testURL, testURL.Host)
+			ogTags, err := cache.GetOGTags(t.Context(), testURL, testURL.Host)
 
 			// Check error expectation
 			if tc.expectError {
@@ -147,7 +148,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 
 			// Test cache retrieval
 			// Pass the host from the test URL
-			cachedOGTags, err := cache.GetOGTags(testURL, testURL.Host)
+			cachedOGTags, err := cache.GetOGTags(t.Context(), testURL, testURL.Host)
 			if err != nil {
 				t.Fatalf("failed to get OG tags from cache: %v", err)
 			}

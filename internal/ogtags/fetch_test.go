@@ -1,6 +1,7 @@
 package ogtags
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 	"golang.org/x/net/html"
 )
 
@@ -85,8 +87,8 @@ func TestFetchHTMLDocument(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			})
-			doc, err := cache.fetchHTMLDocument(ts.URL, "anything")
+			}, memory.New(t.Context()))
+			doc, err := cache.fetchHTMLDocument(t.Context(), ts.URL, "anything")
 
 			if tt.expectError {
 				if err == nil {
@@ -116,9 +118,9 @@ func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	})
+	}, memory.New(t.Context()))
 
-	doc, err := cache.fetchHTMLDocument("http://invalid.url.that.doesnt.exist.example", "anything")
+	doc, err := cache.fetchHTMLDocument(t.Context(), "http://invalid.url.that.doesnt.exist.example", "anything")
 
 	if err == nil {
 		t.Error("expected error for invalid URL, got nil")
@@ -130,7 +132,7 @@ func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
 }
 
 // fetchHTMLDocument allows you to call fetchHTMLDocumentWithCache without a duplicate generateCacheKey call
-func (c *OGTagCache) fetchHTMLDocument(urlStr string, originalHost string) (*html.Node, error) {
+func (c *OGTagCache) fetchHTMLDocument(ctx context.Context, urlStr string, originalHost string) (*html.Node, error) {
 	cacheKey := c.generateCacheKey(urlStr, originalHost)
-	return c.fetchHTMLDocumentWithCache(urlStr, originalHost, cacheKey)
+	return c.fetchHTMLDocumentWithCache(ctx, urlStr, originalHost, cacheKey)
 }
