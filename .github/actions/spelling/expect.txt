@@ -214,6 +214,7 @@ nicksnyder
 nobots
 NONINFRINGEMENT
 nosleep
+nullglob
 OCOB
 ogtag
 oklch
@@ -278,6 +279,7 @@ Seo
 setsebool
 shellcheck
 shirou
+shopt
 Sidetrade
 simprint
 sitemap
