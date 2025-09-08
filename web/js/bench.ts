@@ -1,20 +1,24 @@
-import algorithms from "./algorithms/index.mjs";
+import algorithms from "./algorithms";
 
 const defaultDifficulty = 4;
 
-const status = document.getElementById("status");
-const difficultyInput = document.getElementById("difficulty-input");
-const algorithmSelect = document.getElementById("algorithm-select");
-const compareSelect = document.getElementById("compare-select");
-const header = document.getElementById("table-header");
-const headerCompare = document.getElementById("table-header-compare");
-const results = document.getElementById("results");
+const status: HTMLParagraphElement = document.getElementById("status") as HTMLParagraphElement;
+const difficultyInput: HTMLInputElement = document.getElementById("difficulty-input") as HTMLInputElement;
+const algorithmSelect: HTMLSelectElement = document.getElementById("algorithm-select") as HTMLSelectElement;
+const compareSelect: HTMLSelectElement = document.getElementById("compare-select") as HTMLSelectElement;
+const header: HTMLTableRowElement = document.getElementById("table-header") as HTMLTableRowElement;
+const headerCompare: HTMLTableSectionElement = document.getElementById("table-header-compare") as HTMLTableSectionElement;
+const results: HTMLTableRowElement = document.getElementById("results") as HTMLTableRowElement;
 
 const setupControls = () => {
-  difficultyInput.value = defaultDifficulty;
+  if (defaultDifficulty == null) {
+    return;
+  }
+
+  difficultyInput.value = defaultDifficulty.toString();
   for (const alg of Object.keys(algorithms)) {
     const option1 = document.createElement("option");
-    algorithmSelect.append(option1);
+    algorithmSelect?.append(option1);
     const option2 = document.createElement("option");
     compareSelect.append(option2);
     option1.value = option1.innerText = option2.value = option2.innerText = alg;
@@ -116,13 +120,13 @@ const benchmarkLoop = async (controller) => {
   await benchmarkLoop(controller);
 };
 
-let controller = null;
+let controller: AbortController | null = null;
 const reset = () => {
   stats.time = stats.iters = 0;
   comparison.time = comparison.iters = 0;
   results.innerHTML = status.innerText = "";
 
-  const table = results.parentElement;
+  const table = results.parentElement as HTMLElement;
   if (compareSelect.value !== "NONE") {
     table.style.gridTemplateColumns = "repeat(4,auto)";
     header.style.display = "none";
