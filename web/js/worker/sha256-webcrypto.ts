@@ -1,10 +1,11 @@
 const encoder = new TextEncoder();
-const calculateSHA256 = async (input) => {
+
+const calculateSHA256 = async (input: string) => {
   const data = encoder.encode(input);
   return await crypto.subtle.digest("SHA-256", data);
 };
 
-const toHexString = (byteArray) => {
+const toHexString = (byteArray: Uint8Array) => {
   return byteArray.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
 };
 
