@@ -11,10 +11,9 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// Sentinel error values used for testing and in admin-visible error messages.
+// Sentinel error value used for testing and in admin-visible error messages.
 var (
-	ErrBucketDoesNotExist = errors.New("bbolt: bucket does not exist")
-	ErrNotExists          = errors.New("bbolt: value does not exist in store")
+	ErrNotExists = errors.New("bbolt: value does not exist in store")
 )
 
 // Store implements store.Interface backed by bbolt[1].
@@ -142,12 +141,16 @@ func (s *Store) cleanup(ctx context.Context) error {
 			}
 
 			if now.After(expiry) {
-				return valueBkt.DeleteBucket(key)
+				return tx.DeleteBucket(key)
 			}
 
 			return nil
 		})
 	})
+}
+
+func (s *Store) IsPersistent() bool {
+	return true
 }
 
 func (s *Store) cleanupThread(ctx context.Context) {

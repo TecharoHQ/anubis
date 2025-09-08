@@ -1,0 +1,28 @@
+package preact
+
+import (
+	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/localization"
+)
+
+templ page(redir, challenge string, difficulty int, loc *localization.SimpleLocalizer) {
+	<div class="centered-div">
+		<div id="app">
+			<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
+			<p id="status">{ loc.T("loading") }</p>
+			<p>{ loc.T("connection_security") }</p>
+		</div>
+		@templ.JSONScript("preact_info", map[string]any{
+			"redir":                       redir,
+			"challenge":                   challenge,
+			"difficulty":                  difficulty,
+			"connection_security_message": loc.T("connection_security"),
+			"loading_message":             loc.T("loading"),
+			"pensive_url":                 anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version,
+		})
+		@templ.ComponentFunc(renderAppJS)
+		<noscript>
+			{ loc.T("javascript_required") }
+		</noscript>
+	</div>
+}

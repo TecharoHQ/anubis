@@ -10,7 +10,7 @@ import (
 
 templ base(title string, body templ.Component, impressum *config.Impressum, challenge any, ogTags map[string]string, localizer *localization.SimpleLocalizer) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang={ localizer.GetLang() }>
 		<head>
 			<title>{ title }</title>
 			<link rel="stylesheet" href={ anubis.BasePrefix + xess.URL }/>
@@ -58,21 +58,18 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
         }
     	</style>
 			@templ.JSONScript("anubis_version", anubis.Version)
-			if challenge != nil {
-				@templ.JSONScript("anubis_challenge", challenge)
-			}
+			@templ.JSONScript("anubis_challenge", challenge)
 			@templ.JSONScript("anubis_base_prefix", anubis.BasePrefix)
+			@templ.JSONScript("anubis_public_url", anubis.PublicUrl)
 		</head>
 		<body id="top">
 			<main>
-				<center>
-					<h1 id="title" class=".centered-div">{ title }</h1>
-				</center>
+				<h1 id="title" class="centered-div">{ title }</h1>
 				@body
 				<footer>
-					<center>
+					<div class="centered-div">
 						<p>
-							{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> from <a
+							{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> { localizer.T("protected_from") } <a
 	href="https://techaro.lol"
 >Techaro</a>. { localizer.T("made_with") }.
 						</p>
@@ -83,52 +80,18 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 								-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
 							</p>
 						}
-					</center>
+						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
+					</div>
 				</footer>
 			</main>
 		</body>
 	</html>
 }
 
-templ index(localizer *localization.SimpleLocalizer) {
-	<div class="centered-div">
-		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
-		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
-		<p id="status">{ localizer.T("loading") }</p>
-		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
-		<div id="progress" role="progressbar" aria-labelledby="status">
-			<div class="bar-inner"></div>
-		</div>
-		<details>
-			<summary>{ localizer.T("why_am_i_seeing") }</summary>
-			<p>
-				{ localizer.T("ai_companies_explanation") }
-			</p>
-			<p>
-				{ localizer.T("anubis_compromise") }
-			</p>
-			<p>
-				{ localizer.T("hack_purpose") }
-			</p>
-			<p>
-				{ localizer.T("jshelter_note") }
-			</p>
-			<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
-		</details>
-		<noscript>
-			<p>
-				{ localizer.T("javascript_required") }
-			</p>
-		</noscript>
-		<div id="testarea"></div>
-	</div>
-}
-
-templ errorPage(message string, mail string, localizer *localization.SimpleLocalizer) {
+templ errorPage(message, mail string, localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
-		<button onClick="window.location.reload();">{ localizer.T("try_again") }</button>
 		if mail != "" {
 			<p>
 				<a href="/">{ localizer.T("go_home") }</a> { localizer.T("contact_webmaster") }

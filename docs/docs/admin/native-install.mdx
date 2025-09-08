@@ -137,7 +137,7 @@ Test to make sure it's running with `curl`:
 curl http://localhost:8240/metrics
 ```
 
-Then set up your reverse proxy (Nginx, Caddy, etc.) to point to the Anubis port. Anubis will then reverse proxy all requests that meet the policies in `/etc/anubis/gitea.botPolicies.json` to the target service.
+Then set up your reverse proxy (Nginx, Caddy, etc.) to point to the Anubis port. Anubis will then reverse proxy all requests that meet the policies in `/etc/anubis/gitea.botPolicies.yaml` to the target service.
 
 For more details on particular reverse proxies, see here:
 

@@ -1,16 +1,18 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/glob"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
@@ -21,6 +23,26 @@ import (
 )
 
 var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+
+// matchRedirectDomain returns true if host matches any of the allowed redirect
+// domain patterns. Patterns may contain '*' which are matched using the
+// internal glob matcher. Matching is case-insensitive on hostnames.
+func matchRedirectDomain(allowed []string, host string) bool {
+	h := strings.ToLower(strings.TrimSpace(host))
+ 	for _, pat := range allowed {
+ 		p := strings.ToLower(strings.TrimSpace(pat))
+ 		if strings.Contains(p, glob.GLOB) {
+ 			if glob.Glob(p, h) {
+ 				return true
+ 			}
+ 			continue
+ 		}
+ 		if p == h {
+ 			return true
+ 		}
+ 	}
+ 	return false
+}
 
 type CookieOpts struct {
 	Value  string
@@ -111,29 +133,42 @@ func randomChance(n int) bool {
 	return rand.Intn(n) == 0
 }
 
-func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *policy.Bot, returnHTTPStatusOnly bool) {
+func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, rule *policy.Bot, returnHTTPStatusOnly bool) {
 	localizer := localization.GetLocalizer(r)
 
 	if returnHTTPStatusOnly {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(localizer.T("authorization_required")))
+		if s.opts.PublicUrl == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(localizer.T("authorization_required")))
+		} else {
+			redirectURL, err := s.constructRedirectURL(r)
+			if err != nil {
+				s.respondWithStatus(w, r, err.Error(), http.StatusBadRequest)
+				return
+			}
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+		}
 		return
 	}
 
-	lg := internal.GetRequestLogger(r)
+	lg := internal.GetRequestLogger(s.logger, r)
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") && randomChance(64) {
 		lg.Error("client was given a challenge but does not in fact support gzip compression")
 		s.respondWithError(w, r, localizer.T("client_error_browser"))
+		return
 	}
 
 	challengesIssued.WithLabelValues("embedded").Add(1)
-	chall, err := s.challengeFor(r)
+	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
 	if err != nil {
-		lg.Error("can't get challenge", "err", "err")
+		lg.Error("can't get challenge", "err", err)
+		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
 		return
 	}
+
+	lg = lg.With("challenge", chall.ID)
 
 	var ogTags map[string]string = nil
 	if s.opts.OpenGraph.Enabled {
@@ -152,9 +187,10 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 		Expiry: 30 * time.Minute,
 	})
 
-	impl, ok := challenge.Get(rule.Challenge.Algorithm)
+	impl, ok := challenge.Get(chall.Method)
 	if !ok {
 		lg.Error("check failed", "err", "can't get algorithm", "algorithm", rule.Challenge.Algorithm)
+		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
 		return
 	}
@@ -169,16 +205,48 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, rule *polic
 
 	component, err := impl.Issue(r, lg, in)
 	if err != nil {
-		lg.Error("[unexpected] render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
+		lg.Error("[unexpected] challenge component render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")))
 		return
 	}
 
-	handler := internal.GzipMiddleware(1, internal.NoStoreCache(templ.Handler(
+	page := web.BaseWithChallengeAndOGTags(
+		localizer.T("making_sure_not_bot"),
 		component,
+		s.policy.Impressum,
+		chall,
+		in.Rule.Challenge,
+		in.OGTags,
+		localizer,
+	)
+
+	handler := internal.GzipMiddleware(1, internal.NoStoreCache(templ.Handler(
+		page,
 		templ.WithStatus(s.opts.Policy.StatusCodes.Challenge),
 	)))
 	handler.ServeHTTP(w, r)
+}
+
+func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	host := r.Header.Get("X-Forwarded-Host")
+	uri := r.Header.Get("X-Forwarded-Uri")
+
+	localizer := localization.GetLocalizer(r)
+
+	if proto == "" || host == "" || uri == "" {
+		return "", errors.New(localizer.T("missing_required_forwarded_headers"))
+	}
+	// Check if host is allowed in RedirectDomains (supports '*' via glob)
+	if len(s.opts.RedirectDomains) > 0 && !matchRedirectDomain(s.opts.RedirectDomains, host) {
+		lg := internal.GetRequestLogger(s.logger, r)
+		lg.Debug("domain not allowed", "domain", host)
+		return "", errors.New(localizer.T("redirect_domain_not_allowed"))
+	}
+
+	redir := proto + "://" + host + uri
+	escapedURL := url.QueryEscape(redir)
+	return fmt.Sprintf("%s/.within.website/?redir=%s", s.opts.PublicUrl, escapedURL), nil
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
@@ -240,7 +308,14 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		hostNotAllowed := len(urlParsed.Host) > 0 &&
+			len(s.opts.RedirectDomains) != 0 &&
+			!matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)
+		hostMismatch := r.URL.Host != "" && urlParsed.Host != r.URL.Host
+
+		if hostNotAllowed || hostMismatch {
+			lg := internal.GetRequestLogger(s.logger, r)
+			lg.Debug("domain not allowed", "domain", urlParsed.Host)
 			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), http.StatusBadRequest)
 			return
 		}

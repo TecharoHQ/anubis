@@ -3,3 +3,7 @@ https
 ssh
 ubuntu
 workarounds
+rjack
+msgbox
+xeact
+ABee

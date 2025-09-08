@@ -2,10 +2,12 @@ package expressions
 
 import (
 	"math/rand/v2"
+	"strings"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
+	"github.com/google/cel-go/common/types/traits"
 	"github.com/google/cel-go/ext"
 )
 
@@ -26,6 +28,55 @@ func BotEnvironment() (*cel.Env, error) {
 		cel.Variable("load_1m", cel.DoubleType),
 		cel.Variable("load_5m", cel.DoubleType),
 		cel.Variable("load_15m", cel.DoubleType),
+
+		// Bot-specific functions:
+		cel.Function("missingHeader",
+			cel.Overload("missingHeader_map_string_string_string",
+				[]*cel.Type{cel.MapType(cel.StringType, cel.StringType), cel.StringType},
+				cel.BoolType,
+				cel.BinaryBinding(func(headers, key ref.Val) ref.Val {
+					// Convert headers to a trait that supports Find
+					headersMap, ok := headers.(traits.Indexer)
+					if !ok {
+						return types.ValOrErr(headers, "headers is not a map, but is %T", headers)
+					}
+
+					keyStr, ok := key.(types.String)
+					if !ok {
+						return types.ValOrErr(key, "key is not a string, but is %T", key)
+					}
+
+					val := headersMap.Get(keyStr)
+					// Check if the key is missing by testing for an error
+					if types.IsError(val) {
+						return types.Bool(true) // header is missing
+					}
+					return types.Bool(false) // header is present
+				}),
+			),
+		),
+
+		cel.Function("segments",
+			cel.Overload("segments_string_list_string",
+				[]*cel.Type{cel.StringType},
+				cel.ListType(cel.StringType),
+				cel.UnaryBinding(func(path ref.Val) ref.Val {
+					pathStrType, ok := path.(types.String)
+					if !ok {
+						return types.ValOrErr(path, "path is not a string, but is %T", path)
+					}
+
+					pathStr := string(pathStrType)
+					if !strings.HasPrefix(pathStr, "/") {
+						return types.ValOrErr(path, "path does not start with /")
+					}
+
+					pathList := strings.Split(string(pathStr), "/")[1:]
+
+					return types.NewStringList(types.DefaultTypeAdapter, pathList)
+				}),
+			),
+		),
 	)
 }
 

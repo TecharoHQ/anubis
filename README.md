@@ -48,6 +48,13 @@ Anubis is brought to you by sponsors and donors like:
     height="64"
   />
 </a>
+<a href="https://fabulous.systems/">
+  <img
+    src="./docs/static/img/sponsors/fabulous-systems.webp"
+    alt="Cat eyes over the word Emma in a serif font"
+    height="64"
+  />
+</a>
 
 ## Overview
 

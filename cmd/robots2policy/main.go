@@ -29,7 +29,7 @@ var (
 )
 
 type RobotsRule struct {
-	UserAgent   string
+	UserAgents  []string
 	Disallows   []string
 	Allows      []string
 	CrawlDelay  int
@@ -130,10 +130,26 @@ func main() {
 	}
 }
 
+func createRuleFromAccumulated(userAgents, disallows, allows []string, crawlDelay int) RobotsRule {
+	rule := RobotsRule{
+		UserAgents: make([]string, len(userAgents)),
+		Disallows:  make([]string, len(disallows)),
+		Allows:     make([]string, len(allows)),
+		CrawlDelay: crawlDelay,
+	}
+	copy(rule.UserAgents, userAgents)
+	copy(rule.Disallows, disallows)
+	copy(rule.Allows, allows)
+	return rule
+}
+
 func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
 	scanner := bufio.NewScanner(input)
 	var rules []RobotsRule
-	var currentRule *RobotsRule
+	var currentUserAgents []string
+	var currentDisallows []string
+	var currentAllows []string
+	var currentCrawlDelay int
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -154,38 +170,42 @@ func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
 
 		switch directive {
 		case "user-agent":
-			// Start a new rule section
-			if currentRule != nil {
-				rules = append(rules, *currentRule)
+			// If we have accumulated rules with directives and encounter a new user-agent,
+			// flush the current rules
+			if len(currentUserAgents) > 0 && (len(currentDisallows) > 0 || len(currentAllows) > 0 || currentCrawlDelay > 0) {
+				rule := createRuleFromAccumulated(currentUserAgents, currentDisallows, currentAllows, currentCrawlDelay)
+				rules = append(rules, rule)
+				// Reset for next group
+				currentUserAgents = nil
+				currentDisallows = nil
+				currentAllows = nil
+				currentCrawlDelay = 0
 			}
-			currentRule = &RobotsRule{
-				UserAgent: value,
-				Disallows: make([]string, 0),
-				Allows:    make([]string, 0),
-			}
+			currentUserAgents = append(currentUserAgents, value)
 
 		case "disallow":
-			if currentRule != nil && value != "" {
-				currentRule.Disallows = append(currentRule.Disallows, value)
+			if len(currentUserAgents) > 0 && value != "" {
+				currentDisallows = append(currentDisallows, value)
 			}
 
 		case "allow":
-			if currentRule != nil && value != "" {
-				currentRule.Allows = append(currentRule.Allows, value)
+			if len(currentUserAgents) > 0 && value != "" {
+				currentAllows = append(currentAllows, value)
 			}
 
 		case "crawl-delay":
-			if currentRule != nil {
+			if len(currentUserAgents) > 0 {
 				if delay, err := parseIntSafe(value); err == nil {
-					currentRule.CrawlDelay = delay
+					currentCrawlDelay = delay
 				}
 			}
 		}
 	}
 
-	// Don't forget the last rule
-	if currentRule != nil {
-		rules = append(rules, *currentRule)
+	// Don't forget the last group of rules
+	if len(currentUserAgents) > 0 {
+		rule := createRuleFromAccumulated(currentUserAgents, currentDisallows, currentAllows, currentCrawlDelay)
+		rules = append(rules, rule)
 	}
 
 	// Mark blacklisted user agents (those with "Disallow: /")
@@ -211,10 +231,11 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 	var anubisRules []AnubisRule
 	ruleCounter := 0
 
+	// Process each robots rule individually
 	for _, robotsRule := range robotsRules {
-		userAgent := robotsRule.UserAgent
+		userAgents := robotsRule.UserAgents
 
-		// Handle crawl delay as weight adjustment (do this first before any continues)
+		// Handle crawl delay
 		if robotsRule.CrawlDelay > 0 && *crawlDelay > 0 {
 			ruleCounter++
 			rule := AnubisRule{
@@ -223,20 +244,32 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 				Weight: &config.Weight{Adjust: *crawlDelay},
 			}
 
-			if userAgent == "*" {
+			if len(userAgents) == 1 && userAgents[0] == "*" {
 				rule.Expression = &config.ExpressionOrList{
 					All: []string{"true"}, // Always applies
 				}
-			} else {
+			} else if len(userAgents) == 1 {
 				rule.Expression = &config.ExpressionOrList{
-					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
+					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgents[0])},
+				}
+			} else {
+				// Multiple user agents - use any block
+				var expressions []string
+				for _, ua := range userAgents {
+					if ua == "*" {
+						expressions = append(expressions, "true")
+					} else {
+						expressions = append(expressions, fmt.Sprintf("userAgent.contains(%q)", ua))
+					}
+				}
+				rule.Expression = &config.ExpressionOrList{
+					Any: expressions,
 				}
 			}
-
 			anubisRules = append(anubisRules, rule)
 		}
 
-		// Handle blacklisted user agents (complete deny/challenge)
+		// Handle blacklisted user agents
 		if robotsRule.IsBlacklist {
 			ruleCounter++
 			rule := AnubisRule{
@@ -244,21 +277,36 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 				Action: *userAgentDeny,
 			}
 
-			if userAgent == "*" {
-				// This would block everything - convert to a weight adjustment instead
-				rule.Name = fmt.Sprintf("%s-global-restriction-%d", *policyName, ruleCounter)
-				rule.Action = "WEIGH"
-				rule.Weight = &config.Weight{Adjust: 20} // Increase difficulty significantly
-				rule.Expression = &config.ExpressionOrList{
-					All: []string{"true"}, // Always applies
+			if len(userAgents) == 1 {
+				userAgent := userAgents[0]
+				if userAgent == "*" {
+					// This would block everything - convert to a weight adjustment instead
+					rule.Name = fmt.Sprintf("%s-global-restriction-%d", *policyName, ruleCounter)
+					rule.Action = "WEIGH"
+					rule.Weight = &config.Weight{Adjust: 20} // Increase difficulty significantly
+					rule.Expression = &config.ExpressionOrList{
+						All: []string{"true"}, // Always applies
+					}
+				} else {
+					rule.Expression = &config.ExpressionOrList{
+						All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
+					}
 				}
 			} else {
+				// Multiple user agents - use any block
+				var expressions []string
+				for _, ua := range userAgents {
+					if ua == "*" {
+						expressions = append(expressions, "true")
+					} else {
+						expressions = append(expressions, fmt.Sprintf("userAgent.contains(%q)", ua))
+					}
+				}
 				rule.Expression = &config.ExpressionOrList{
-					All: []string{fmt.Sprintf("userAgent.contains(%q)", userAgent)},
+					Any: expressions,
 				}
 			}
 			anubisRules = append(anubisRules, rule)
-			continue
 		}
 
 		// Handle specific disallow rules
@@ -276,9 +324,33 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 			// Build CEL expression
 			var conditions []string
 
-			// Add user agent condition if not wildcard
-			if userAgent != "*" {
-				conditions = append(conditions, fmt.Sprintf("userAgent.contains(%q)", userAgent))
+			// Add user agent conditions
+			if len(userAgents) == 1 && userAgents[0] == "*" {
+				// Wildcard user agent - no user agent condition needed
+			} else if len(userAgents) == 1 {
+				conditions = append(conditions, fmt.Sprintf("userAgent.contains(%q)", userAgents[0]))
+			} else {
+				// For multiple user agents, we need to use a more complex expression
+				// This is a limitation - we can't easily combine any for user agents with all for path
+				// So we'll create separate rules for each user agent
+				for _, ua := range userAgents {
+					if ua == "*" {
+						continue // Skip wildcard as it's handled separately
+					}
+					ruleCounter++
+					subRule := AnubisRule{
+						Name:   fmt.Sprintf("%s-disallow-%d", *policyName, ruleCounter),
+						Action: *baseAction,
+						Expression: &config.ExpressionOrList{
+							All: []string{
+								fmt.Sprintf("userAgent.contains(%q)", ua),
+								buildPathCondition(disallow),
+							},
+						},
+					}
+					anubisRules = append(anubisRules, subRule)
+				}
+				continue
 			}
 
 			// Add path condition
@@ -291,7 +363,6 @@ func convertToAnubisRules(robotsRules []RobotsRule) []AnubisRule {
 
 			anubisRules = append(anubisRules, rule)
 		}
-
 	}
 
 	return anubisRules

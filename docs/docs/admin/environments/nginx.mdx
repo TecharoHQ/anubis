@@ -79,6 +79,10 @@ server {
   root "/srv/http/anubistest.techaro.lol";
   index index.html;
 
+  # Get the visiting IP from the TLS termination server
+  set_real_ip_from unix:;
+  real_ip_header   X-Real-IP;
+  
   # Your normal configuration can go here
   # location .php { fastcgi...} etc.
 }
@@ -125,6 +129,8 @@ server {
   listen unix:/run/nginx/nginx.sock;
 
   server_name mimi.techaro.lol;
+  
+  port_in_redirect off;
   root "/srv/http/mimi.techaro.lol";
   index index.html;
 

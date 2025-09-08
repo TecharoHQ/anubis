@@ -37,6 +37,11 @@ type Interface interface {
 
 	// Set puts a value into the store that expires according to its expiry.
 	Set(ctx context.Context, key string, value []byte, expiry time.Duration) error
+
+	// IsPersistent returns true if this storage backend persists data across
+	// service restarts (e.g., bbolt, valkey). Returns false for volatile storage
+	// like in-memory backends.
+	IsPersistent() bool
 }
 
 func z[T any]() T { return *new(T) }
@@ -87,4 +92,8 @@ func (j *JSON[T]) Set(ctx context.Context, key string, value T, expiry time.Dura
 	}
 
 	return nil
+}
+
+func (j *JSON[T]) IsPersistent() bool {
+	return j.Underlying.IsPersistent()
 }

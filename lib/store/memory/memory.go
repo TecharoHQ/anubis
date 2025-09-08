@@ -48,6 +48,10 @@ func (i *impl) Set(_ context.Context, key string, value []byte, expiry time.Dura
 	return nil
 }
 
+func (i *impl) IsPersistent() bool {
+	return false
+}
+
 func (i *impl) cleanupThread(ctx context.Context) {
 	t := time.NewTicker(5 * time.Minute)
 	defer t.Stop()

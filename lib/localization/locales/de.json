@@ -2,11 +2,12 @@
   "loading": "Ladevorgang...",
   "why_am_i_seeing": "Warum sehe ich diese Seite?",
   "protected_by": "Geschützt durch",
+  "protected_from": "From",
   "made_with": "Mit ❤️ gemacht in 🇨🇦",
   "mascot_design": "Maskottchen erstellt von",
   "ai_companies_explanation": "Diese Seite wird angezeigt, da der Betreiber der Webseite Anubis eingerichtet hat, um sie vor aggressiven KI-Website-Scrapern zu schützen. Diese können Ausfälle der Webseite verursachen, wodurch die Webseite für niemanden erreichbar ist.",
   "anubis_compromise": "Anubis stellt einen Kompromiss dar. Es verwendet eine Proof-of-Work-Methode nach Hashcash, die ursprünglich zur Bekämpfung von E-Mail-Spam entwickelt wurde. Die Idee dahinter ist, dass ein legitimer Besucher die Webseite mit einer vernachlässigbaren Verzögerung erreichen kann. Massenhaftes Scraping wird dadurch jedoch aufwändig und teuer.",
-  "hack_purpose": "Man könnte dies als eine Lösung bezeichnen, die einem etwas Zeit für Fingerprinting und dem Identifizieren von Headless-Browsern verschafft. Besucher, die mit sehr hoher Wahrscheinlichkeit legitim sind, bekommen diese Seite nicht zu sehen.",
+  "hack_purpose": "Letztendlich ist dies eine Platzhalterlösung, damit mehr Zeit für die Fingerabdruckerkennung und Identifizierung von Headless-Browsern (z. B. anhand ihrer Schriftwiedergabe) aufgewendet werden kann, sodass die Proof-of-Work-Seite nicht Benutzern präsentiert werden muss, die viel wahrscheinlicher legitim sind.",
   "jshelter_note": "Anubis benötigt moderne JavaScript-Features, welche von Plugins wie JShelter deaktiviert werden. Bitte deaktiviere JShelter oder ähnliche Plugins für diese Domain.",
   "version_info": "Diese Webseite läuft mit der Anubis-Version",
   "try_again": "Erneut versuchen",
@@ -59,5 +60,7 @@
   "js_iterations": "Iterationen",
   "js_finished_reading": "Fertig gelesen, weiter zur Seite →",
   "js_calculation_error": "Berechnung fehlgeschlagen!",
-  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:"
+  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:",
+  "missing_required_forwarded_headers": "Fehlende erforderliche X-Forwarded-* Header",
+  "simplified_explanation": "Dies ist eine Maßnahme gegen Bots und bösartige Anfragen, ähnlich einem CAPTCHA. Anstatt jedoch selbst arbeiten zu müssen, erhält Ihr Browser eine Berechnungsaufgabe, die er lösen muss, um sicherzustellen, dass es sich um einen gültigen Client handelt. Dieses Konzept wird als <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a> bezeichnet. Die Aufgabe wird in wenigen Sekunden berechnet und Sie erhalten Zugriff auf die Website. Vielen Dank für Ihr Verständnis und Ihre Geduld."
 }

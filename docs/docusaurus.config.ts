@@ -139,6 +139,10 @@ const config: Config = {
               label: 'GitHub',
               href: 'https://github.com/TecharoHQ/anubis',
             },
+            {
+              label: 'Status',
+              href: 'https://techarohq.github.io/status/'
+            },
           ],
         },
       ],

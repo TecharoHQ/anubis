@@ -102,6 +102,13 @@ func NewPathChecker(rexStr string) (checker.Impl, error) {
 }
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
+	originalUrl := r.Header.Get("X-Original-URI")
+	if originalUrl != "" {
+		if pc.regexp.MatchString(originalUrl) {
+			return true, nil
+		}
+	}
+
 	if pc.regexp.MatchString(r.URL.Path) {
 		return true, nil
 	}

@@ -16,7 +16,6 @@ $`npm run assets`;
         documentation: {
             "./README.md": "README.md",
             "./LICENSE": "LICENSE",
-            "./data/botPolicies.json": "botPolicies.json",
             "./data/botPolicies.yaml": "botPolicies.yaml",
         },
 
