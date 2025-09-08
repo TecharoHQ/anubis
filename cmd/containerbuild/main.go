@@ -46,6 +46,11 @@ func main() {
 		)
 	}
 
+	if strings.Contains(*dockerTags, ",") {
+		newTags := strings.Join(strings.Split(*dockerTags, ","), "\n")
+		dockerTags = &newTags
+	}
+
 	setOutput("docker_image", strings.SplitN(*dockerTags, "\n", 2)[0])
 
 	version, err := run("git describe --tags --always --dirty")
