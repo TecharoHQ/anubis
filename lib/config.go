@@ -43,6 +43,7 @@ type Options struct {
 	OpenGraph            config.OpenGraph
 	ServeRobotsTXT       bool
 	CookieSecure         bool
+	CookieSameSite       http.SameSite
 	Logger               *slog.Logger
 	PublicUrl            string
 	JWTRestrictionHeader string

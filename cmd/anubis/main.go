@@ -56,6 +56,7 @@ var (
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
+	cookieSameSite           = flag.String("cookie-same-site", "None", "sets the same site option on Anubis cookies, will auto-downgrade None to Lax if cookie-secure is false. Valid values are None, Lax, Strict, and Default.")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
 	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
@@ -141,6 +142,22 @@ func parseBindNetFromAddr(address string) (string, string) {
 		log.Fatal(fmt.Errorf("unsupported network scheme %s in address %s", bindUri.Scheme, address))
 	}
 	return "", address
+}
+
+func parseSameSite(s string) (http.SameSite) {
+    switch strings.ToLower(s) {
+    case "none":
+        return http.SameSiteNoneMode
+    case "lax":
+        return http.SameSiteLaxMode
+    case "strict":
+        return http.SameSiteStrictMode
+	case "default":
+		return http.SameSiteDefaultMode
+    default:
+        log.Fatalf("invalid cookie same-site mode: %s, valid values are None, Lax, Strict, and Default", s)
+    }
+	return http.SameSiteDefaultMode
 }
 
 func setupListener(network string, address string) (net.Listener, string) {
@@ -432,6 +449,7 @@ func main() {
 		WebmasterEmail:       *webmasterEmail,
 		OpenGraph:            policy.OpenGraph,
 		CookieSecure:         *cookieSecure,
+		CookieSameSite:       parseSameSite(*cookieSameSite),
 		PublicUrl:            *publicUrl,
 		JWTRestrictionHeader: *jwtRestrictionHeader,
 		DifficultyInJWT:      *difficultyInJWT,

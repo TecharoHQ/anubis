@@ -56,6 +56,8 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
 	var name = anubis.CookieName
 	var path = "/"
+	var sameSite = s.opts.CookieSameSite
+
 	if cookieOpts.Name != "" {
 		name = cookieOpts.Name
 	}
@@ -72,11 +74,15 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		cookieOpts.Expiry = s.opts.CookieExpiration
 	}
 
+	if s.opts.CookieSameSite == http.SameSiteNoneMode && !s.opts.CookieSecure {
+		sameSite = http.SameSiteLaxMode
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       cookieOpts.Value,
 		Expires:     time.Now().Add(cookieOpts.Expiry),
-		SameSite:    http.SameSiteNoneMode,
+		SameSite:    sameSite,
 		Domain:      domain,
 		Secure:      s.opts.CookieSecure,
 		Partitioned: s.opts.CookiePartitioned,
@@ -88,6 +94,8 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
 	var name = anubis.CookieName
 	var path = "/"
+	var sameSite = s.opts.CookieSameSite
+
 	if cookieOpts.Name != "" {
 		name = cookieOpts.Name
 	}
@@ -99,13 +107,16 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 			domain = etld
 		}
 	}
+	if s.opts.CookieSameSite == http.SameSiteNoneMode && !s.opts.CookieSecure {
+		sameSite = http.SameSiteLaxMode
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       "",
 		MaxAge:      -1,
 		Expires:     time.Now().Add(-1 * time.Minute),
-		SameSite:    http.SameSiteNoneMode,
+		SameSite:    sameSite,
 		Partitioned: s.opts.CookiePartitioned,
 		Domain:      domain,
 		Secure:      s.opts.CookieSecure,
