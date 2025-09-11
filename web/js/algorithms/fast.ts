@@ -5,13 +5,16 @@ interface ProcessOptions {
   version: string;
 }
 
+const getHardwareConcurrency = () =>
+  navigator.hardwareConcurrency !== undefined ? navigator.hardwareConcurrency : 1;
+
 export default function process(
   options: ProcessOptions,
   data: string,
   difficulty: number = 5,
   signal: AbortSignal | null = null,
   progressCallback?: ProgressCallback,
-  threads: number = Math.trunc(Math.max(navigator.hardwareConcurrency / 2, 1)),
+  threads: number = Math.trunc(Math.max(getHardwareConcurrency() / 2, 1)),
 ): Promise<string> {
   console.debug("fast algo");
 
