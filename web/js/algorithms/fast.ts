@@ -1,11 +1,21 @@
+type ProgressCallback = (nonce: number) => void;
+
+interface ProcessOptions {
+  basePrefix: string;
+  version: string;
+}
+
+const getHardwareConcurrency = () =>
+  navigator.hardwareConcurrency !== undefined ? navigator.hardwareConcurrency : 1;
+
 export default function process(
-  { basePrefix, version },
-  data,
-  difficulty = 5,
-  signal = null,
-  progressCallback = null,
-  threads = Math.trunc(Math.max(navigator.hardwareConcurrency / 2, 1)),
-) {
+  options: ProcessOptions,
+  data: string,
+  difficulty: number = 5,
+  signal: AbortSignal | null = null,
+  progressCallback?: ProgressCallback,
+  threads: number = Math.trunc(Math.max(getHardwareConcurrency() / 2, 1)),
+): Promise<string> {
   console.debug("fast algo");
 
   let workerMethod = window.crypto !== undefined ? "webcrypto" : "purejs";
@@ -16,12 +26,16 @@ export default function process(
   }
 
   return new Promise((resolve, reject) => {
-    let webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/sha256-${workerMethod}.mjs?cacheBuster=${version}`;
+    let webWorkerURL = `${options.basePrefix}/.within.website/x/cmd/anubis/static/js/worker/sha256-${workerMethod}.mjs?cacheBuster=${options.version}`;
 
-    console.log(webWorkerURL);
-
-    const workers = [];
+    const workers: Worker[] = [];
     let settled = false;
+
+    const onAbort = () => {
+      console.log("PoW aborted");
+      cleanup();
+      reject(new DOMException("Aborted", "AbortError"));
+    };
 
     const cleanup = () => {
       if (settled) {
@@ -32,12 +46,6 @@ export default function process(
       if (signal != null) {
         signal.removeEventListener("abort", onAbort);
       }
-    };
-
-    const onAbort = () => {
-      console.log("PoW aborted");
-      cleanup();
-      reject(new DOMException("Aborted", "AbortError"));
     };
 
     if (signal != null) {

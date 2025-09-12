@@ -7,12 +7,9 @@ export KO_DOCKER_REPO=ko.local
 
 set -u
 
-(
-  cd ../.. && \
-  npm ci && \
-  npm run assets \
-  ko build --platform=all --base-import-paths --tags="latest" --image-user=1000 --image-annotation="" --image-label="" ./cmd/anubis -L
-)
+source ../lib/lib.sh
+
+build_anubis_ko
 
 rm -rf ./var/repos ./var/clones
 mkdir -p ./var/repos ./var/clones
@@ -25,4 +22,4 @@ sleep 2
 
 (cd ./var/clones && git clone http://localhost:8005/status.git)
 
-docker compose down
+exit 0

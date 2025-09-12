@@ -196,6 +196,83 @@ store:
     path: /data/anubis.bdb
 ```
 
+### `s3api`
+
+A network-backed storage layer backed by [object storage](https://en.wikipedia.org/wiki/Object_storage), specifically using the [S3 API](https://docs.aws.amazon.com/AmazonS3/latest/API/Type_API_Reference.html). This can be backed by any S3-compatible object storage service such as:
+
+- [AWS S3](https://aws.amazon.com/s3/)
+- [Cloudflare R2](https://www.cloudflare.com/developer-platform/products/r2/)
+- [Hetzner Object Storage](https://www.hetzner.com/storage/object-storage/)
+- [Minio](https://www.min.io/)
+- [Tigris](https://www.tigrisdata.com/)
+
+If you are using a cloud platform, they likely provide an S3 compatible object storage service. If not, you may want to choose [one of the fastest options](https://www.tigrisdata.com/blog/benchmark-small-objects/).
+
+| Should I use this backend?                                    | Yes/no |
+| :------------------------------------------------------------ | :----- |
+| Are you running only one instance of Anubis for this service? | 🚫 No  |
+| Does your service get a lot of traffic?                       | ✅ Yes |
+| Do you want to store data persistently when Anubis restarts?  | ✅ Yes |
+| Do you run Anubis without mutable filesystem storage?         | ✅ Yes |
+
+:::note
+
+Using this backend will cause a lot of S3 operations, at least one for creating challenges, one for invalidating challenges, one for updating challenges to prevent double-spends, and one for removing challenges.
+
+:::
+
+#### Configuration
+
+The `s3api` backend takes the following configuration options:
+
+| Name         | Type    | Example                                                              | Description                                                                                                                                 |
+| :----------- | :------ | :------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketName` | string  | The name of the dedicated bucket for Anubis to store information in. |
+| `pathStyle`  | boolean | `false`                                                              | If true, use path-style S3 API operations. Please consult your storage provider's documentation if you don't know what you should put here. |
+
+:::note
+
+You should probably enable a lifecycle expiration rule for buckets containing Anubis data. Here is an example policy:
+
+```json
+{
+  "Rules": [
+    {
+      "Status": "Enabled",
+      "Expiration": {
+        "Days": 7
+      }
+    }
+  ]
+}
+```
+
+Adjust this as facts and circumstances demand, but 7 days should be enough for anyone.
+
+:::
+
+Example:
+
+Assuming your environment looks like this:
+
+```sh
+# All of the following are fake credentials that look like real ones.
+AWS_ACCESS_KEY_ID=accordingToAllKnownRulesOfAviation
+AWS_SECRET_ACCESS_KEY=thereIsNoWayABeeShouldBeAbleToFly
+AWS_REGION=yow
+AWS_ENDPOINT_URL_S3=https://yow.s3.probably-not-malware.lol
+```
+
+Then your configuration would look like this:
+
+```yaml
+store:
+  backend: s3api
+  parameters:
+    bucketName: techaro-prod-anubis
+    pathStyle: false
+```
+
 ### `valkey`
 
 [Valkey](https://valkey.io/) is an in-memory key/value store that clients access over the network. This allows multiple instances of Anubis to share information and does not require each instance of Anubis to have persistent filesystem storage.

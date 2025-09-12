@@ -140,6 +140,7 @@ headermap
 healthcheck
 healthz
 hec
+Hetzner
 hmc
 homelab
 hostable
@@ -213,6 +214,7 @@ nicksnyder
 nobots
 NONINFRINGEMENT
 nosleep
+nullglob
 OCOB
 ogtag
 oklch
@@ -237,7 +239,6 @@ pki
 podkova
 podman
 poststart
-poxied
 prebaked
 privkey
 promauto
@@ -278,11 +279,12 @@ Seo
 setsebool
 shellcheck
 shirou
+shopt
 Sidetrade
 simprint
 sitemap
-Slackware
 sls
+Smartphone
 sni
 Spambot
 sparkline
@@ -322,6 +324,7 @@ unifiedjs
 unmarshal
 unparseable
 uvx
+uwu
 UXP
 valkey
 Varis
@@ -345,7 +348,6 @@ workaround
 workdir
 wpbot
 XCircle
-Xeact
 xeiaso
 xeserv
 xesite
@@ -358,6 +360,7 @@ XOriginal
 XReal
 yae
 YAMLTo
+Yda
 yeet
 yeetfile
 yourdomain

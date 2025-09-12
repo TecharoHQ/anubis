@@ -36,11 +36,12 @@
   "invalid_redirect": "Netinkamas nukreipimas",
   "redirect_not_parseable": "Nukreipimo adreso nepavyko išanalizuoti",
   "redirect_domain_not_allowed": "Nukreipimo domenas neleistinas",
+  "missing_required_forwarded_headers": "Trūksta būtinų „X-Forwarded-*“ antraščių",
   "failed_to_sign_jwt": "nepavyko pasirašyti JWT",
   "invalid_invocation": "Netinkamas kreipinys į „MakeChallenge“",
-  "client_error_browser": "Kliento klaida: įsitikinkite, jog jūsų naršyklė pakankamai atšviežinta ir bandykite dar kartą.",
+  "client_error_browser": "Problema klientinėje dalyje: įsitikinkite, jog jūsų naršyklė nepasenusi ir bandykite dar kartą.",
   "oh_noes": "O, ne!",
-  "benchmarking_anubis": "„Anubis“ vertina!",
+  "benchmarking_anubis": "Vertinama „Anubis“ sparta!",
   "you_are_not_a_bot": "Jūs nesate robotas!",
   "making_sure_not_bot": "Stengiamasi užtikrinti, jog jūs nesate robotas!",
   "celphase": "CELPHASE",
@@ -61,5 +62,6 @@
   "js_iterations": "iteracijų",
   "js_finished_reading": "Viską perskaičiau, tęskime →",
   "js_calculation_error": "Skaičiavimo klaida!",
-  "js_calculation_error_msg": "Nepavyko įveikti iššūkio:"
+  "js_calculation_error_msg": "Nepavyko įveikti iššūkio:",
+  "missing_required_forwarded_headers": "Trūksta privalomų X-Forwarded-* antraščių"
 }

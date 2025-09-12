@@ -7,13 +7,9 @@ export KO_DOCKER_REPO=ko.local
 
 set -u
 
-(
-  cd ../.. && \
-  npm ci && \
-  npm run assets \
-  ko build --platform=all --base-import-paths --tags="latest" --image-user=1000 --image-annotation="" --image-label="" ./cmd/anubis -L
-)
+source ../lib/lib.sh
 
+build_anubis_ko
 docker compose up -d
 
 attempt=1
@@ -31,4 +27,4 @@ while ! docker compose ps | grep healthy; do
   attempt=$(( attempt + 1 ))
 done
 
-docker compose down
+exit 0

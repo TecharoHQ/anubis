@@ -51,6 +51,7 @@ var (
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
 	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
 	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
@@ -317,6 +318,16 @@ func main() {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
 
+	// Warn if persistent storage is used without a configured signing key
+	if policy.Store.IsPersistent() {
+		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
+			slog.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
+				"Challenges will be invalidated when Anubis restarts. " +
+				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
+				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		}
+	}
+
 	ruleErrorIDs := make(map[string]string)
 	for _, rule := range policy.Bots {
 		if rule.Action != config.RuleDeny {
@@ -423,6 +434,7 @@ func main() {
 		CookieSecure:         *cookieSecure,
 		PublicUrl:            *publicUrl,
 		JWTRestrictionHeader: *jwtRestrictionHeader,
+		DifficultyInJWT:      *difficultyInJWT,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)

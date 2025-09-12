@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/glob"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
@@ -23,6 +23,26 @@ import (
 )
 
 var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+
+// matchRedirectDomain returns true if host matches any of the allowed redirect
+// domain patterns. Patterns may contain '*' which are matched using the
+// internal glob matcher. Matching is case-insensitive on hostnames.
+func matchRedirectDomain(allowed []string, host string) bool {
+	h := strings.ToLower(strings.TrimSpace(host))
+ 	for _, pat := range allowed {
+ 		p := strings.ToLower(strings.TrimSpace(pat))
+ 		if strings.Contains(p, glob.GLOB) {
+ 			if glob.Glob(p, h) {
+ 				return true
+ 			}
+ 			continue
+ 		}
+ 		if p == h {
+ 			return true
+ 		}
+ 	}
+ 	return false
+}
 
 type CookieOpts struct {
 	Value  string
@@ -217,8 +237,8 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 	if proto == "" || host == "" || uri == "" {
 		return "", errors.New(localizer.T("missing_required_forwarded_headers"))
 	}
-	// Check if host is allowed in RedirectDomains
-	if len(s.opts.RedirectDomains) > 0 && !slices.Contains(s.opts.RedirectDomains, host) {
+	// Check if host is allowed in RedirectDomains (supports '*' via glob)
+	if len(s.opts.RedirectDomains) > 0 && !matchRedirectDomain(s.opts.RedirectDomains, host) {
 		lg := internal.GetRequestLogger(s.logger, r)
 		lg.Debug("domain not allowed", "domain", host)
 		return "", errors.New(localizer.T("redirect_domain_not_allowed"))
@@ -290,7 +310,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 
 		hostNotAllowed := len(urlParsed.Host) > 0 &&
 			len(s.opts.RedirectDomains) != 0 &&
-			!slices.Contains(s.opts.RedirectDomains, urlParsed.Host)
+			!matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)
 		hostMismatch := r.URL.Host != "" && urlParsed.Host != r.URL.Host
 
 		if hostNotAllowed || hostMismatch {

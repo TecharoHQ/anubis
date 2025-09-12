@@ -40,9 +40,9 @@ for the JavaScript code in this page.
 
 mkdir -p static/js
 
-for file in js/*.jsx; do
+for file in js/*.tsx; do
   filename="${file##*/}"       # Extracts "app.jsx" from "./js/app.jsx"
-  output="${filename%.jsx}.js"  # Changes "app.jsx" to "app.js"
+  output="${filename%.tsx}.js"  # Changes "app.jsx" to "app.js"
   echo $output
 
   esbuild "${file}" --minify --bundle --outfile=static/"${output}" --banner:js="${LICENSE}"

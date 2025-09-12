@@ -6,7 +6,7 @@ const calculateSHA256 = (text) => {
   return hash.digest();
 };
 
-function toHexString(arr) {
+function toHexString(arr: Uint8Array): string {
   return Array.from(arr)
     .map((c) => c.toString(16).padStart(2, "0"))
     .join("");

@@ -13,45 +13,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
-- Add a "proof of React" challenge to prove that the client is able to run a simple JSX app.
-- Added possibility to disable HTTP keep-alive to support backends not properly
-  handling it
-- Added a missing link to the Caddy installation environment in the installation documentation.
-- Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
-- The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
-- [Custom-AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)'s default User-Agent has an increased weight by default ([#852](https://github.com/TecharoHQ/anubis/issues/852)).
+- Document missing environment variables in installation guide: `SLOG_LEVEL`, `COOKIE_PREFIX`, `FORCED_LANGUAGE`, and `TARGET_DISABLE_KEEPALIVE` ([#1086](https://github.com/TecharoHQ/anubis/pull/1086))
+- Add validation warning when persistent storage is used without setting signing keys
+- Improve the quality of Simplified Chinese translation ([#1066](https://github.com/TecharoHQ/anubis/pull/1066))
+- Fixed `robots2policy` to properly group consecutive user agents into `any:` instead of only processing the last one ([#925](https://github.com/TecharoHQ/anubis/pull/925))
+- Add the [`s3api` storage backend](./admin/policies.mdx#s3api) to allow Anubis to use S3 API compatible object storage as its storage backend.
+- Make `cmd/containerbuild` support commas for separating elements of the `--docker-tags` argument as well as newlines.
+- Add the `DIFFICULTY_IN_JWT` option, which allows one to add the `difficulty` field in the JWT claims which indicates the difficulty of the token ([#1063](https://github.com/TecharoHQ/anubis/pull/1063))
+- Ported the client-side JS to TypeScript to avoid egregious errors in the future.
+- Fixes concurrency problems with very old browsers ([#1082](https://github.com/TecharoHQ/anubis/issues/1082)).
+
+### Bug Fixes
+
+Sometimes the enhanced temporal assurance in [#1038](https://github.com/TecharoHQ/anubis/pull/1038) and [#1068](https://github.com/TecharoHQ/anubis/pull/1068) could backfire because Chromium and its ilk randomize the amount of time they wait in order to avoid a timing side channel attack. This has been fixed by both increasing the amount of time a client has to wait for the metarefresh and preact challenges as well as making the server side logic more permissive.
+
+## v1.22.0: Yda Hext
+
+> Someone has to make an effort at reconciliation if these conflicts are ever going to end.
+
+In this release, we finally fix the odd number of CPU cores bug, pave the way for lighter weight challenges, make Anubis more adaptable, and more.
+
+### Big ticket items
+
+#### Proof of React challenge
+
+A new ["proof of React"](./admin/configuration/challenges/preact.mdx) has been added. It runs a simple app in React that has several chained hooks. It is much more lightweight than the proof of work check.
+
+#### Smaller features
+
 - The [`segments`](./admin/configuration/expressions.mdx#segments) function was added for splitting a path into its slash-separated segments.
+- Added possibility to disable HTTP keep-alive to support backends not properly handling it.
 - When issuing a challenge, Anubis stores information about that challenge into the store. That stored information is later used to validate challenge responses. This works around nondeterminism in bot rules. ([#917](https://github.com/TecharoHQ/anubis/issues/917))
-- When parsing [Open Graph tags](./admin/configuration/open-graph.mdx), add any URLs found in the responses to a temporary "allow cache" so that social preview images work.
-- Proof of work solving has had a complete overhaul and rethink based on feedback from browser engine developers, frontend experts, and overall performance profiling.
 - One of the biggest sources of lag in Firefox has been eliminated: the use of WebCrypto. Now whenever Anubis detects the client is using Firefox (or Pale Moon), it will swap over to a pure-JS implementation of SHA-256 for speed.
+- Proof of work solving has had a complete overhaul and rethink based on feedback from browser engine developers, frontend experts, and overall performance profiling.
 - Optimize the performance of the pure-JS Anubis solver.
 - Web Workers are stored as dedicated JavaScript files in `static/js/workers/*.mjs`.
 - Pave the way for non-SHA256 solver methods and eventually one that uses WebAssembly (or WebAssembly code compiled to JS for those that disable WebAssembly).
 - Legacy JavaScript code has been eliminated.
+- When parsing [Open Graph tags](./admin/configuration/open-graph.mdx), add any URLs found in the responses to a temporary "allow cache" so that social preview images work.
+- The hard dependency on WebCrypto has been removed, allowing a proof of work challenge to work over plain (unencrypted) HTTP.
+- The Anubis version number is put in the footer of every page.
+- Add a default block rule for Huawei Cloud.
+- Add a default block rule for Alibaba Cloud.
+- Added support to use Traefik forwardAuth middleware.
+- Add X-Request-URI support so that Subrequest Authentication has path support.
+- Added glob matching for `REDIRECT_DOMAINS`. You can pass `*.bugs.techaro.lol` to allow redirecting to anything ending with `.bugs.techaro.lol`. There is a limit of 4 wildcards.
+
+### Fixes
+
+#### Odd numbers of CPU cores are properly supported
+
+Some phones have an odd number of CPU cores. This caused [interesting issues](https://anubis.techaro.lol/blog/2025/cpu-core-odd). This was fixed by [using `Math.trunc` to convert the number of CPU cores back into an integer](https://github.com/TecharoHQ/anubis/issues/1043).
+
+#### Smaller fixes
+
+- A standard library HTTP server log message about HTTP pipelining not working has been filtered out of Anubis' logs. There is no action that can be taken about it.
+- Added a missing link to the Caddy installation environment in the installation documentation.
+- Downstream consumers can change the default [log/slog#Logger](https://pkg.go.dev/log/slog#Logger) instance that Anubis uses by setting `opts.Logger` to your slog instance of choice ([#864](https://github.com/TecharoHQ/anubis/issues/864)).
+- The [Thoth client](https://anubis.techaro.lol/docs/admin/thoth) is now public in the repo instead of being an internal package.
+- [Custom-AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)'s default User-Agent has an increased weight by default ([#852](https://github.com/TecharoHQ/anubis/issues/852)).
 - Add option for replacing the default explanation text with a custom one ([#747](https://github.com/TecharoHQ/anubis/pull/747))
 - The contact email in the LibreJS header has been changed.
-- The hard dependency on WebCrypto has been removed, allowing a proof of work challenge to work over plain (unencrypted) HTTP.
 - Firefox for Android support has been fixed by embedding the challenge ID into the pass-challenge route. This also fixes some inconsistent issues with other mobile browsers.
-- The Anubis version number is put in the footer of every page.
-- Prevent the proof of work nonce from being a decimal value by using Math.trunc to coerce it back to an integer if it happens ([#1043](https://github.com/TecharoHQ/anubis/issues/1043)).
-- The legacy JSON based policy file example has been removed and all documentation for how to write a policy file in JSON has been deleted. JSON based policy files will still work, but YAML is the superior option for Anubis configuration.
-- A standard library HTTP server log message about HTTP pipelining not working has been filtered out of Anubis' logs. There is no action that can be taken about it.
 - The default `favicon` pattern in `data/common/keep-internet-working.yaml` has been updated to permit requests for png/gif/jpg/svg files as well as ico.
 - The `--cookie-prefix` flag has been fixed so that it is fully respected.
 - The default patterns in `data/common/keep-internet-working.yaml` have been updated to appropriately escape the '.' character in the regular expression patterns.
 - Add optional restrictions for JWT based on the value of a header ([#697](https://github.com/TecharoHQ/anubis/pull/697))
 - The word "hack" has been removed from the translation strings for Anubis due to incidents involving people misunderstanding that word and sending particularly horrible things to the project lead over email.
 - Bump AI-robots.txt to version 1.39
-- Add a default block rule for Huawei Cloud.
-- Add a default block rule for Alibaba Cloud.
-- Add X-Request-URI support so that Subrequest Authentication has path support.
+- Inject adversarial input to break AI coding assistants.
 - Add better logging when using Subrequest Authentication.
 - Two of Slackware's community git repository servers are now poxied by Anubis.
 - Added support to use Traefik forwardAuth middleware.
-- Improve the quality of Simplified Chinese translation ([#1066](https://github.com/TecharoHQ/anubis/pull/1066))
 
 ### Security-relevant changes
+
+- Add a server-side check for the meta-refresh challenge that makes sure clients have waited for at least 95% of the time that they should.
 
 #### Fix potential double-spend for challenges
 
@@ -70,15 +107,11 @@ Thanks to [@taviso](https://github.com/taviso) for reporting this issue.
 ### Breaking changes
 
 - The "slow" frontend solver has been removed in order to reduce maintenance burden. Any existing uses of it will still work, but issue a warning upon startup asking administrators to upgrade to the "fast" frontend solver.
+- The legacy JSON based policy file example has been removed and all documentation for how to write a policy file in JSON has been deleted. JSON based policy files will still work, but YAML is the superior option for Anubis configuration.
 
 ### New Locales
 
-- [Lithuanian](https://github.com/TecharoHQ/anubis/pull/972)
-
-### Added
-
-Anubis now supports these new languages:
-
+- Lithuanian [#972](https://github.com/TecharoHQ/anubis/pull/972)
 - Vietnamese [#926](https://github.com/TecharoHQ/anubis/pull/926)
 
 ## v1.21.3: Minfilia Warde - Echo 3
