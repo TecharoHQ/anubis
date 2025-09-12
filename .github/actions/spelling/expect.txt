@@ -142,6 +142,7 @@ healthz
 hec
 Hetzner
 hmc
+honeypots
 homelab
 hostable
 htmlc
@@ -158,6 +159,7 @@ Imagesift
 imgproxy
 impressum
 inp
+Iocaine
 internets
 IPTo
 iptoasn
@@ -300,6 +302,7 @@ subrequest
 SVCNAME
 tagline
 tarballs
+tarpit
 tarrif
 taviso
 tbn

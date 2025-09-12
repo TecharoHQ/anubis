@@ -66,6 +66,7 @@ There are four actions that can be returned from a rule:
 | :---------- | :---------------------------------------------------------------------------------------------------------------------------------- |
 | `ALLOW`     | Bypass all further checks and send the request to the backend.                                                                      |
 | `DENY`      | Deny the request and send back an error message that scrapers think is a success.                                                   |
+| `DENY_AND_REROUTE` | Deny the request and redirect it to an external URL (e.g. a [tarpit](#tarpits))).                                            |
 | `CHALLENGE` | Show a challenge page and/or validate that clients have passed a challenge.                                                         |
 | `WEIGH`     | Change the [request weight](#request-weight) for this request. See the [request weight](#request-weight) docs for more information. |
 
@@ -319,12 +320,70 @@ This would have the Valkey client connect to host `valkey.int.techaro.lol` on po
 In case your service needs it for risk calculation reasons, Anubis exposes information about the rules that any requests match using a few headers:
 
 | Header            | Explanation                                          | Example          |
-| :---------------- | :--------------------------------------------------- | :--------------- |
+|:------------------|:-----------------------------------------------------|:-----------------|
 | `X-Anubis-Rule`   | The name of the rule that was matched                | `bot/lightpanda` |
 | `X-Anubis-Action` | The action that Anubis took in response to that rule | `CHALLENGE`      |
 | `X-Anubis-Status` | The status and how strict Anubis was in its checks   | `PASS`           |
 
 Policy rules are matched using [Go's standard library regular expressions package](https://pkg.go.dev/regexp). You can mess around with the syntax at [regex101.com](https://regex101.com), make sure to select the Golang option.
+
+### Deny and Reroute Configuration {#tarpits}
+
+The `DENY_AND_REROUTE` action allows you to redirect denied requests to external AI tarpits or honeypots. This is useful for sending bot traffic to services like [Nepenthes](https://zadzmo.org/code/nepenthes/) or [Iocaine](https://iocaine.madhouse-project.org/) that specialize in wasting bots' time and resources.
+
+<Tabs>
+<TabItem value="json" label="JSON" default>
+
+```json
+{
+  "name": "ai-scrapers-to-tarpit",
+  "user_agent_regex": "(ChatGPT|GPTBot|Claude-Web|OpenAI|Anthropic)",
+  "action": "DENY_AND_REROUTE",
+  "reroute_to": "https://tarpit.example.com/honeypot"
+}
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```yaml
+- name: ai-scrapers-to-tarpit
+  user_agent_regex: (ChatGPT|GPTBot|Claude-Web|OpenAI|Anthropic)
+  action: DENY_AND_REROUTE
+  reroute_to: https://tarpit.example.com/honeypot
+```
+
+</TabItem>
+</Tabs>
+
+The `reroute_to` field must contain an absolute URL (including the scheme like `http://` or `https://`). When this rule matches, Anubis will send a `307 Temporary Redirect` response to redirect the client to the specified URL.
+
+#### Usage
+
+**Requirements:**
+- `reroute_to` must be an absolute URL with scheme (`http://` or `https://`)
+- Returns HTTP 307 Temporary Redirect to the specified URL
+
+**Examples:**
+```yaml
+# Redirect suspicious AI scrapers with high weight
+- name: ai-to-tarpit
+  action: DENY_AND_REROUTE
+  expression:
+    all:
+      - userAgent.contains("GPT") || userAgent.contains("Claude")
+      - weight > 10
+  reroute_to: https://tarpit.example.com/honeypot
+
+# Reroute scrapers trying to access unsecured PHP files. Would be useful for sites that don't use PHP.
+- name: php-scraper-reroute
+  action: DENY_AND_REROUTE
+  expression:
+    all:
+      - path.endsWith(".php") # PHP files are often targeted by bots
+      - weight > 5
+  reroute_to: https://example.com/not-found
+```
 
 ## Request Weight
 

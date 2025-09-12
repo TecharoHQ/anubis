@@ -69,8 +69,9 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		}
 
 		parsedBot := Bot{
-			Name:   b.Name,
-			Action: b.Action,
+			Name:      b.Name,
+			Action:    b.Action,
+			RerouteTo: b.RerouteTo,
 		}
 
 		cl := checker.List{}

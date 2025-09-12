@@ -1,0 +1,18 @@
+bots:
+  - name: "missing-url"
+    action: "DENY_AND_REROUTE"
+    user_agent_regex: "BadBot"
+    # Missing reroute_to field should cause validation error
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
+
+thresholds:
+  - name: "legacy-anubis-behaviour"
+    expression: "true"
+    action: "CHALLENGE"
+    challenge:
+      algorithm: "fast"
+      difficulty: 5
+      report_as: 5

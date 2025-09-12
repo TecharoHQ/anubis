@@ -666,6 +666,79 @@ func TestRuleChange(t *testing.T) {
 	}
 }
 
+func TestDenyAndRerouteAction(t *testing.T) {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Log(r.UserAgent())
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
+
+	pol := loadPolicies(t, "./testdata/deny_and_reroute_test.yaml", 4)
+
+	srv := spawnAnubis(t, Options{
+		Next:   h,
+		Policy: pol,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	testCases := []struct {
+		userAgent    string
+		expectedCode int
+		expectedURL  string
+	}{
+		{
+			userAgent:    "REROUTE_ME",
+			expectedCode: http.StatusTemporaryRedirect,
+			expectedURL:  "https://example.com/tarpit",
+		},
+		{
+			userAgent:    "DENY_ME",
+			expectedCode: http.StatusOK, // From status_codes config
+		},
+		{
+			userAgent:    "ALLOW_ME",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.userAgent, func(t *testing.T) {
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					// Don't follow redirects, we want to test the redirect response
+					return http.ErrUseLastResponse
+				},
+			}
+
+			req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, ts.URL, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			req.Header.Set("User-Agent", tc.userAgent)
+
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.expectedCode {
+				t.Errorf("wanted status code %d but got: %d", tc.expectedCode, resp.StatusCode)
+			}
+
+			if tc.expectedURL != "" {
+				location := resp.Header.Get("Location")
+				if location != tc.expectedURL {
+					t.Errorf("wanted Location header %q but got: %q", tc.expectedURL, location)
+				}
+			}
+		})
+	}
+}
+
 func TestStripBasePrefixFromRequest(t *testing.T) {
 	testCases := []struct {
 		name            string
