@@ -41,6 +41,30 @@ func NewActorifiedStore(backend Interface) *ActorifiedStore {
 
 func (a *ActorifiedStore) Close() { a.cancel() }
 
+func (a *ActorifiedStore) Delete(ctx context.Context, key string) error {
+	if _, err := a.deleteActor.Call(ctx, key); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *ActorifiedStore) Get(ctx context.Context, key string) ([]byte, error) {
+	return a.getActor.Call(ctx, key)
+}
+
+func (a *ActorifiedStore) Set(ctx context.Context, key string, value []byte, expiry time.Duration) error {
+	if _, err := a.setActor.Call(ctx, &actorSetReq{
+		key:    key,
+		value:  value,
+		expiry: expiry,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *ActorifiedStore) actorDelete(ctx context.Context, key string) (unit, error) {
 	if err := a.Interface.Delete(ctx, key); err != nil {
 		return unit{}, err
