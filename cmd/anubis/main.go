@@ -51,6 +51,7 @@ var (
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
 	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
 	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
@@ -69,6 +70,7 @@ var (
 	targetSNI                = flag.String("target-sni", "", "if set, the value of the TLS handshake hostname when forwarding requests to the target")
 	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
 	targetInsecureSkipVerify = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
+	targetDisableKeepAlive   = flag.Bool("target-disable-keepalive", false, "if true, disables HTTP keep-alive for the backend")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
@@ -188,13 +190,17 @@ func setupListener(network string, address string) (net.Listener, string) {
 	return listener, formattedAddress
 }
 
-func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool) (http.Handler, error) {
+func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool) (http.Handler, error) {
 	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
+
+	if targetDisableKeepAlive {
+		transport.DisableKeepAlives = true
+	}
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
 	if targetUri.Scheme == "unix" {
@@ -281,7 +287,7 @@ func main() {
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
 		var err error
-		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify)
+		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify, *targetDisableKeepAlive)
 		if err != nil {
 			log.Fatalf("can't make reverse proxy: %v", err)
 		}
@@ -310,6 +316,16 @@ func main() {
 	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty)
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
+	}
+
+	// Warn if persistent storage is used without a configured signing key
+	if policy.Store.IsPersistent() {
+		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
+			slog.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
+				"Challenges will be invalidated when Anubis restarts. " +
+				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
+				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		}
 	}
 
 	ruleErrorIDs := make(map[string]string)
@@ -418,6 +434,7 @@ func main() {
 		CookieSecure:         *cookieSecure,
 		PublicUrl:            *publicUrl,
 		JWTRestrictionHeader: *jwtRestrictionHeader,
+		DifficultyInJWT:      *difficultyInJWT,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)

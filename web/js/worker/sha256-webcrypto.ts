@@ -1,10 +1,11 @@
 const encoder = new TextEncoder();
-const calculateSHA256 = async (input) => {
+
+const calculateSHA256 = async (input: string) => {
   const data = encoder.encode(input);
   return await crypto.subtle.digest("SHA-256", data);
 };
 
-const toHexString = (byteArray) => {
+const toHexString = (byteArray: Uint8Array) => {
   return byteArray.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
 };
 
@@ -48,6 +49,18 @@ addEventListener("message", async ({ data: eventData }) => {
 
     nonce += threads;
     iterations++;
+
+    /* Truncate the decimal portion of the nonce. This is a bit of an evil bit
+     * hack, but it works reliably enough. The core of why this works is:
+     * 
+     * > 13.4 % 1 !== 0
+     * true
+     * > 13 % 1 !== 0
+     * false
+     */
+    if (nonce % 1 !== 0) {
+      nonce = Math.trunc(nonce);
+    }
 
     // Send a progress update from the main thread every 1024 iterations.
     if (isMainThread && (iterations & 1023) === 0) {

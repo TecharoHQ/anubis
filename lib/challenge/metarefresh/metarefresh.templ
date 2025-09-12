@@ -13,6 +13,6 @@ templ page(redir string, difficulty int, loc *localization.SimpleLocalizer) {
 		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
 		<p id="status">{ loc.T("loading") }</p>
 		<p>{ loc.T("connection_security") }</p>
-		<meta http-equiv="refresh" content={ fmt.Sprintf("%d; url=%s", difficulty, redir) }/>
+		<meta http-equiv="refresh" content={ fmt.Sprintf("%d; url=%s", difficulty+1, redir) }/>
 	</div>
 }

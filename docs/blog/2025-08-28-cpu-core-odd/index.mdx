@@ -1,0 +1,129 @@
+---
+slug: 2025/cpu-core-odd
+title: Sometimes CPU cores are odd
+description: "TL;DR: all the assumptions you have about processor design are wrong and if you are unlucky you will never run into problems that users do through sheer chance."
+authors: [xe]
+tags:
+  - bugfix
+  - implementation
+image: parc-dsilence.webp
+---
+
+import ProofOfWorkDiagram from "./ProofOfWorkDiagram";
+
+![](./parc-dsilence.webp)
+
+One of the biggest lessons that I've learned in my career is that all software has bugs, and the more complicated your software gets the more complicated your bugs get. A lot of the time those bugs will be fairly obvious and easy to spot, validate, and replicate. Sometimes, the process of fixing it will uncover your core assumptions about how things work in ways that will leave you feeling like you just got trolled.
+
+Today I'm going to talk about a single line fix that prevents people on a large number of devices from having weird irreproducible issues with Anubis rejecting people when it frankly shouldn't. Stick around, it's gonna be a wild ride.
+
+{/* truncate */}
+
+## How this happened
+
+Anubis is a web application firewall that tries to make sure that the client is a browser. It uses a few [challenge methods](/docs/admin/configuration/challenges/) to do this determination, but the main method is the [proof of work](/docs/admin/configuration/challenges/proof-of-work/) challenge which makes clients grind away at cryptographic checksums in order to rate limit clients from connecting too eagerly.
+
+:::note
+
+In retrospect implementing the proof of work challenge may have been a mistake and it's likely to be supplanted by things like [Proof of React](https://github.com/TecharoHQ/anubis/pull/1038) or other methods that have yet to be developed. Your patience and polite behaviour in the bug tracker is appreciated.
+
+:::
+
+In order to make sure the proof of work challenge screen _goes away as fast as possible_, the [worker code](https://github.com/TecharoHQ/anubis/tree/main/web/js/worker) is optimized within an inch of its digital life. One of the main ways that this code is optimized is with how it's run. Over the last 10-20 years, the main way that CPUs have gotten fast is via increasing multicore performance. Anubis tries to make sure that it can use as many cores as possible in order to take advantage of your device's CPU as much as it can.
+
+This strategy sometimes has some issues though, for one Firefox seems to get _much slower_ if you have Anubis try to absolutely saturate all of the cores on the system. It also has a fairly high overhead between JavaScript JIT code and [WebCrypto](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API). I did some testing and found out that Firefox's point of diminishing returns was about half of the CPU cores.
+
+## Another "invalid response" bug
+
+One of the complaints I've been getting from users and administrators using Anubis is that they've been running into issues where users get randomly rejected with an error message only saying "invalid response". This happens when the challenge validating process fails. This issue has been blocking the release of the next version of Anubis.
+
+In order to demonstrate this better, I've made a little interactive diagram for the proof of work process:
+
+<ProofOfWorkDiagram />
+
+I've fixed a lot of the easy bugs in Anubis by this point. A lot of what's left is the hard bugs, but also specifically the kinds of hard bugs that involve weird hardware configurations. In order to try and catch these issues before software hits prod, I test Anubis against a bunch of hardware I have locally. Any issues I find and fix before software ships are issues that you don't hit in production.
+
+Let's consider [the line of code](https://github.com/TecharoHQ/anubis/blob/main/web/js/algorithms/fast.mjs) that was causing this issue:
+
+```js
+threads = Math.max(navigator.hardwareConcurrency / 2, 1),
+```
+
+This is intended to make your browser spawn a proof of work worker for _half_ of your available CPU cores. If you only have one CPU core, you should only have one worker. Each thread is given this number of threads and uses that to increment the nonce so that each thread doesn't try to find a solution that another worker has already performed.
+
+One of the subtle problems here is that all of the parts of this assume that the thread ID and nonce are integers without a decimal portion. Famously, [all JavaScript numbers are IEEE 754 floating point numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number). Surely there wouldn't be a case where the thread count could be a _decimal_ number, right?
+
+Here's all the devices I use to test Anubis _and their core counts_:
+
+| Device Name                  | Core Count |
+| :--------------------------- | :--------- |
+| MacBook Pro M3 Max           | 16         |
+| MacBook Pro M4 Max           | 16         |
+| AMD Ryzen 9 7950x3D          | 32         |
+| Google Pixel 9a (GrapheneOS) | 8          |
+| iPhone 15 Pro Max            | 6          |
+| iPad Pro (M1)                | 8          |
+| iPad mini                    | 6          |
+| Steam Deck                   | 8          |
+| Core i5 10600 (homelab)      | 12         |
+| ROG Ally                     | 16         |
+
+Notice something? All of those devices have an _even_ number of cores. Some devices such as the [Pixel 8 Pro](https://www.gsmarena.com/google_pixel_8_pro-12545.php) have an _odd_ number of cores. So what happens with that line of code as the JavaScript engine evaluates it?
+
+Let's replace the [`navigator.hardwareConcurrency`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/hardwareConcurrency) with the Pixel 8 Pro's 9 cores:
+
+```js
+threads = Math.max(9 / 2, 1),
+```
+
+Then divide it by two:
+
+```js
+threads = Math.max(4.5, 1),
+```
+
+Oops, that's not ideal. However `4.5` is bigger than `1`, so [`Math.max`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/max) returns that:
+
+```js
+threads = 4.5,
+```
+
+This means that each time the proof of work equation is calculated, there is a 50% chance that a valid solution would include a nonce with a decimal portion in it. If the client finds a solution with such a nonce, then it would think the client was successful and submit the solution to the server, but the server only expects whole numbers back so it rejects that as an invalid response.
+
+I keep telling more junior people that when you have the weirdest, most inconsistent bugs in software that it's going to boil down to the dumbest possible thing you can possibly imagine. People don't believe me, then they encounter bugs like this. Then they suddenly believe me.
+
+Here is the fix:
+
+```js
+threads = Math.trunc(Math.max(navigator.hardwareConcurrency / 2, 1)),
+```
+
+This uses [`Math.trunc`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc) to truncate away the decimal portion so that the Pixel 8 Pro has `4` workers instead of `4.5` workers.
+
+## Today I learned this was possible
+
+This was a total "today I learned" moment. I didn't actually think that hardware vendors shipped processors with an odd number of cores, however if you look at the core geometry of the Pixel 8 Pro, it has _three_ tiers of processor cores:
+
+| Core type          | Core model           | Number |
+| :----------------- | :------------------- | :----- |
+| High performance   | 3 Ghz Cortex X3      | 1      |
+| Medium performance | 2.45 Ghz Cortex A715 | 4      |
+| High efficiency    | 2.15 Cortex A510     | 4      |
+| Total              |                      | 9      |
+
+I guess every assumption that developers have about CPU design is probably wrong.
+
+This probably isn't helped by the fact that for most of my career, the core count in phones has been largely irrelevant and most of the desktop / laptop CPUs I've had (where core count does matter) uses [simultaneous multithreading](https://en.wikipedia.org/wiki/Simultaneous_multithreading) to "multiply" the core count by two.
+
+The client side fix is a bit of an "emergency stop" button to try and mitigate the badness as early as possible. In general I'm quite aware of the terrible UX involved with this flow failing and I'm still noodling through ways to make that UX better and easier for users / administrators to debug.
+
+I'm looking into the following:
+
+1. This could have been prevented on the server side by doing less strict input validation in compliance with [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle). I feel nervous about making such a security-sensitive endpoint _more liberal_ with the inputs it can accept, but it may be fine? I need to consult with a security expert.
+2. Showing an encrypted error message on the "invalid response" page so that the user and administrator can work together to fix or report the issue. I remember Google doing this at least once, but I can't recall where I've seen it in the past. Either way, this is probably the most robust method even though it would require developing some additional tooling. I think it would be worth it.
+
+I'm likely going to go with the second option. I will need to figure out a good flow for this. It's likely going to involve [age](https://github.com/FiloSottile/age). I'll say more about this when I have more to say.
+
+In the meantime though, looks like I need to expense a used Pixel 8 Pro to add to the testing jungle for Anubis. If anyone has a deal out there, please let me know!
+
+Thank you to the people that have been polite and helpful when trying to root cause and fix this issue.

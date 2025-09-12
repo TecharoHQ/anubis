@@ -197,6 +197,96 @@ $ du -hs *
 8.0K    reject.webp
 ```
 
+## Custom HTML templates
+
+If you need to completely control the HTML layout of all Anubis pages, you can customize the entire page with `USE_TEMPLATES=true`. This uses Go's standard library [html/template](https://pkg.go.dev/html/template) package to template HTML responses. In order to use this, you must define the following templates:
+
+| Template path                              | Usage                                           |
+| :----------------------------------------- | :---------------------------------------------- |
+| `$OVERLAY_FOLDER/templates/challenge.tmpl` | Challenge pages                                 |
+| `$OVERLAY_FOLDER/templates/error.tmpl`     | Error pages                                     |
+| `$OVERLAY_FOLDER/templates/impressum.tmpl` | [Impressum](./configuration/impressum.mdx) page |
+
+Here are minimal (but working) examples for each template:
+
+<details>
+<summary>`challenge.tmpl`</summary>
+
+:::note
+
+You **MUST** include the `{{.Head}}` segment in a `<head>` tag. It contains important information for challenges to execute. If you don't include this, no clients will be able to pass challenges.
+
+:::
+
+```html
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <head>
+    {{ .Head }}
+  </head>
+  <body>
+    {{ .Body }}
+  </body>
+</html>
+```
+
+</details>
+
+<details>
+<summary>`error.tmpl`</summary>
+
+```html
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <body>
+    {{ .Body }}
+  </body>
+</html>
+```
+
+</details>
+
+<details>
+<summary>`impressum.tmpl`</summary>
+
+```html
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <body>
+    {{ .Body }}
+  </body>
+</html>
+```
+
+</details>
+
+### Template functions
+
+In order to make life easier, the following template functions are defined:
+
+#### `Asset`
+
+Constructs the path for a static asset in the [overlay folder](#custom-images-and-css)'s `static` directory.
+
+```go
+func Asset(string) string
+```
+
+Usage:
+
+```html
+<link rel="stylesheet" href="{{ Asset "css/example.css" }}" />
+```
+
+Generates:
+
+```html
+<link
+  rel="stylesheet"
+  href="/.within.website/x/cmd/anubis/static/css/example.css"
+/>
+```
+
 ## Customizing messages
 
 You can customize messages using the following environment variables:

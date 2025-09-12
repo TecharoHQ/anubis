@@ -34,3 +34,5 @@ go run ../../cmd/cipra/ --compose-name $(basename $(pwd))
 
 docker compose down -t 1 || :
 docker compose rm -f || :
+
+exit 0

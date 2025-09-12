@@ -1,0 +1,25 @@
+# Test consecutive user agents that should be grouped into any: blocks
+User-agent: *
+Disallow: /admin
+Crawl-delay: 10
+
+# Multiple consecutive user agents - should be grouped
+User-agent: BadBot
+User-agent: SpamBot
+User-agent: EvilBot
+Disallow: /
+
+# Single user agent - should be separate
+User-agent: GoodBot
+Disallow: /private
+
+# Multiple consecutive user agents with crawl delay
+User-agent: SlowBot1
+User-agent: SlowBot2
+Crawl-delay: 5
+
+# Multiple consecutive user agents with specific path
+User-agent: SearchBot1
+User-agent: SearchBot2
+User-agent: SearchBot3
+Disallow: /search 

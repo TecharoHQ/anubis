@@ -5,3 +5,5 @@ ubuntu
 workarounds
 rjack
 msgbox
+xeact
+ABee

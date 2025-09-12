@@ -1,0 +1,47 @@
+- action: WEIGH
+  expression: "true"
+  name: robots-txt-policy-crawl-delay-1
+  weight:
+    adjust: 3
+- action: CHALLENGE
+  expression: path.startsWith("/admin")
+  name: robots-txt-policy-disallow-2
+- action: DENY
+  expression:
+    any:
+    - userAgent.contains("BadBot")
+    - userAgent.contains("SpamBot")
+    - userAgent.contains("EvilBot")
+  name: robots-txt-policy-blacklist-3
+- action: CHALLENGE
+  expression:
+    all:
+    - userAgent.contains("GoodBot")
+    - path.startsWith("/private")
+  name: robots-txt-policy-disallow-4
+- action: WEIGH
+  expression:
+    any:
+    - userAgent.contains("SlowBot1")
+    - userAgent.contains("SlowBot2")
+  name: robots-txt-policy-crawl-delay-5
+  weight:
+    adjust: 3
+- action: CHALLENGE
+  expression:
+    all:
+    - userAgent.contains("SearchBot1")
+    - path.startsWith("/search")
+  name: robots-txt-policy-disallow-7
+- action: CHALLENGE
+  expression:
+    all:
+    - userAgent.contains("SearchBot2")
+    - path.startsWith("/search")
+  name: robots-txt-policy-disallow-8
+- action: CHALLENGE
+  expression:
+    all:
+    - userAgent.contains("SearchBot3")
+    - path.startsWith("/search")
+  name: robots-txt-policy-disallow-9

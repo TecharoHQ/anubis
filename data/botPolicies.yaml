@@ -212,13 +212,28 @@ thresholds:
         - weight < 20
     action: CHALLENGE
     challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/preact
+      #
+      # This challenge proves the client can run a webapp written with Preact.
+      # The preact webapp simply loads, calculates the SHA-256 checksum of the
+      # challenge data, and forwards that to the client.
+      algorithm: preact
+      difficulty: 1
+      report_as: 1
+  - name: mild-proof-of-work
+    expression:
+      all:
+        - weight >= 20
+        - weight < 30
+    action: CHALLENGE
+    challenge:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
       algorithm: fast
       difficulty: 2 # two leading zeros, very fast for most clients
       report_as: 2
   # For clients that are browser like and have gained many points from custom rules
   - name: extreme-suspicion
-    expression: weight >= 20
+    expression: weight >= 30
     action: CHALLENGE
     challenge:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work

@@ -46,6 +46,7 @@ type Options struct {
 	Logger               *slog.Logger
 	PublicUrl            string
 	JWTRestrictionHeader string
+	DifficultyInJWT      bool
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -106,6 +107,7 @@ func New(opts Options) (*Server, error) {
 	}
 
 	anubis.BasePrefix = opts.BasePrefix
+	anubis.PublicUrl = opts.PublicUrl
 
 	result := &Server{
 		next:        opts.Next,

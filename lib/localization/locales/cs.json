@@ -61,5 +61,6 @@
   "js_iterations": "iterací",
   "js_finished_reading": "Čtení dokončeno, pokračovat →",
   "js_calculation_error": "Chyba výpočtu!",
-  "js_calculation_error_msg": "Nepodařilo se vypočítat výzvu:"
+  "js_calculation_error_msg": "Nepodařilo se vypočítat výzvu:",
+  "missing_required_forwarded_headers": "Chybějící požadované hlavičky X-Forwarded-*"
 }
