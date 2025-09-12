@@ -120,6 +120,14 @@ func New(opts Options) (*Server, error) {
 		logger:      opts.Logger,
 	}
 
+	if opts.Policy.Logging != nil {
+		var err error
+		result.logger, err = opts.Policy.ApplyLogFilters(opts.Logger)
+		if err != nil {
+			return nil, fmt.Errorf("can't create log filters: %w", err)
+		}
+	}
+
 	mux := http.NewServeMux()
 	xess.Mount(mux)
 
