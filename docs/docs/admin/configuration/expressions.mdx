@@ -197,6 +197,12 @@ Log filters are run on every time Anubis logs data. These are high throughput fi
 | `level` | `string`              | The [log level](https://pkg.go.dev/log/slog#Level) for the log message.                                | `"INFO"`                                |
 | `attrs` | `map[string, string]` | The key -> value attributes for the given log line. Note that this is an expensive variable to access. | `{"err": "internal: the sun exploded"}` |
 
+:::note
+
+When you define a log filter, anything matching that filter is _removed_. Any remaining logs are sent through to the system journal or standard error.
+
+:::
+
 ## Functions exposed to Anubis expressions
 
 Anubis expressions can be augmented with the following functions:
