@@ -1,3 +1,7 @@
+# Uptime Robot is a website and endpoint monitoring service.
+#
+# Website: https://uptimerobot.com
+
 - name: uptime-robot
   user_agent_regex: UptimeRobot
   action: ALLOW

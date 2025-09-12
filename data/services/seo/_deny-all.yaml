@@ -1,0 +1,7 @@
+- import: (data)/services/seo/ahrefs.yaml
+- import: (data)/services/seo/dataforseo.yaml
+- import: (data)/services/seo/mj12bot.yaml
+- import: (data)/services/seo/screaming-frog.yaml
+- import: (data)/services/seo/seokicks.yaml
+- import: (data)/services/seo/serpstat.yaml
+- import: (data)/services/seo/zoombot.yaml
