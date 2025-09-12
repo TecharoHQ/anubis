@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix lock convoy problem in decaymap ([#1103](https://github.com/TecharoHQ/anubis/issues/1103))
 - Document missing environment variables in installation guide: `SLOG_LEVEL`, `COOKIE_PREFIX`, `FORCED_LANGUAGE`, and `TARGET_DISABLE_KEEPALIVE` ([#1086](https://github.com/TecharoHQ/anubis/pull/1086))
 - Add validation warning when persistent storage is used without setting signing keys
+- Improve the quality of Simplified Chinese translation ([#1066](https://github.com/TecharoHQ/anubis/pull/1066))
 - Fixed `robots2policy` to properly group consecutive user agents into `any:` instead of only processing the last one ([#925](https://github.com/TecharoHQ/anubis/pull/925))
 - Add the [`s3api` storage backend](./admin/policies.mdx#s3api) to allow Anubis to use S3 API compatible object storage as its storage backend.
 - Make `cmd/containerbuild` support commas for separating elements of the `--docker-tags` argument as well as newlines.
@@ -83,6 +84,8 @@ Some phones have an odd number of CPU cores. This caused [interesting issues](ht
 - Bump AI-robots.txt to version 1.39
 - Inject adversarial input to break AI coding assistants.
 - Add better logging when using Subrequest Authentication.
+- Two of Slackware's community git repository servers are now poxied by Anubis.
+- Added support to use Traefik forwardAuth middleware.
 
 ### Security-relevant changes
 
