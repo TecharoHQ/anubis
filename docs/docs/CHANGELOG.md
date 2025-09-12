@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the `DIFFICULTY_IN_JWT` option, which allows one to add the `difficulty` field in the JWT claims which indicates the difficulty of the token ([#1063](https://github.com/TecharoHQ/anubis/pull/1063))
 - Ported the client-side JS to TypeScript to avoid egregious errors in the future.
 - Fixes concurrency problems with very old browsers ([#1082](https://github.com/TecharoHQ/anubis/issues/1082)).
+- Add Ukrainian locale ([#1044](https://github.com/TecharoHQ/anubis/pull/1044))
 
 ### Bug Fixes
 
@@ -80,8 +81,6 @@ Some phones have an odd number of CPU cores. This caused [interesting issues](ht
 - Add optional restrictions for JWT based on the value of a header ([#697](https://github.com/TecharoHQ/anubis/pull/697))
 - The word "hack" has been removed from the translation strings for Anubis due to incidents involving people misunderstanding that word and sending particularly horrible things to the project lead over email.
 - Bump AI-robots.txt to version 1.39
-- Inject adversarial input to break AI coding assistants.
-- Add better logging when using Subrequest Authentication.
 
 ### Security-relevant changes
 
