@@ -18,7 +18,7 @@ jobs:
         host:
           - ubuntu@riscv64.techaro.lol
           - ci@ppc64le.techaro.lol
-          #- rocky@192.168.2.52 # aile, aarch64-4k
+          - rocky@192.168.2.52 # aile, aarch64-4k
           - ci@192.168.2.28 # t-elos, aarch64-16k
     steps:
       - name: Checkout code
