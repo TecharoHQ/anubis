@@ -16,10 +16,10 @@ jobs:
     strategy:
       matrix:
         host:
-          - ubuntu@riscv64.techaro.lol
-          - ci@ppc64le.techaro.lol
-          - rocky@192.168.2.52 # aile, aarch64-4k
-          - ci@192.168.2.28 # t-elos, aarch64-16k
+          - riscv64
+          - ppc64le
+          - aarch64-4k
+          - aarch64-16k
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0

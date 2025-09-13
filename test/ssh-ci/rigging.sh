@@ -7,10 +7,17 @@ if [ "$#" -ne 1 ]; then
 	echo "Usage: rigging.sh <user@host>"
 fi
 
+declare -A Hosts
+
+Hosts["riscv64"]="ubuntu@riscv64.techaro.lol" # GOARCH=riscv64 GOOS=linux
+Hosts["ppc64le"]="ci@ppc64le.techaro.lol"     # GOARCH=ppc64le GOOS=linux
+Hosts["aarch64-4k"]="rocky@192.168.2.52"      # GOARCH=arm64 GOOS=linux 4k page size
+Hosts["aarch64-16k"]="ci@192.168.2.28"        # GOARCH=arm64 GOOS=linux 16k page size
+
 CIRunnerImage="ghcr.io/techarohq/anubis/ci-runner:latest"
 RunID=${GITHUB_RUN_ID:-$(uuidgen)}
 RunFolder="anubis/runs/${RunID}"
-Target="${1}"
+Target="${Hosts["$1"]}"
 
 ssh "${Target}" uname -av
 ssh "${Target}" mkdir -p "${RunFolder}"
