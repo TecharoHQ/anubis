@@ -19,7 +19,7 @@ RunID=${GITHUB_RUN_ID:-$(uuidgen)}
 RunFolder="anubis/runs/${RunID}"
 Target="${Hosts["$1"]}"
 
-ssh "${Target}" uname -av
+ssh "${Target}" uname -av >/dev/null
 ssh "${Target}" mkdir -p "${RunFolder}"
 git archive HEAD | ssh "${Target}" tar xC "${RunFolder}"
 
