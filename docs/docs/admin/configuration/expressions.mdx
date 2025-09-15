@@ -103,6 +103,7 @@ Anubis exposes the following variables to expressions:
 | :-------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
 | `headers`       | `map[string, string]` | The [headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) of the request being processed.                            | `{"User-Agent": "Mozilla/5.0 Gecko/20100101 Firefox/137.0"}` |
 | `host`          | `string`              | The [HTTP hostname](https://web.dev/articles/url-parts#host) the request is targeted to.                                                      | `anubis.techaro.lol`                                         |
+| `contentLength` | `int64`               | The numerical value of the `Content-Length` header.                                                                                           |
 | `load_1m`       | `double`              | The current system load average over the last one minute. This is useful for making [load-based checks](#using-the-system-load-average).      |
 | `load_5m`       | `double`              | The current system load average over the last five minutes. This is useful for making [load-based checks](#using-the-system-load-average).    |
 | `load_15m`      | `double`              | The current system load average over the last fifteen minutes. This is useful for making [load-based checks](#using-the-system-load-average). |
