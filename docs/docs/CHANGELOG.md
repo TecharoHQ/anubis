@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the `DIFFICULTY_IN_JWT` option, which allows one to add the `difficulty` field in the JWT claims which indicates the difficulty of the token ([#1063](https://github.com/TecharoHQ/anubis/pull/1063))
 - Ported the client-side JS to TypeScript to avoid egregious errors in the future.
 - Fixes concurrency problems with very old browsers ([#1082](https://github.com/TecharoHQ/anubis/issues/1082)).
+- Randomly use the Refresh header instead of the meta refresh tag in the metarefresh challenge.
 
 ### Bug Fixes
 
