@@ -35,9 +35,20 @@ func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 	q.Set("id", in.Challenge.ID)
 	u.RawQuery = q.Encode()
 
+	showMeta := false
+
+	switch in.Challenge.RandomData[0] {
+	case '0', '1', '2', '3', '4', '5', '6', '7':
+		lg.Debug("rendering meta element")
+		showMeta = true
+	default:
+		lg.Debug("adding Refresh header")
+		w.Header().Add("Refresh", fmt.Sprintf("%d; url=%s", in.Rule.Challenge.Difficulty+1, u.String()))
+	}
+
 	loc := localization.GetLocalizer(r)
 
-	result := page(u.String(), in.Rule.Challenge.Difficulty, loc)
+	result := page(u.String(), in.Rule.Challenge.Difficulty, showMeta, loc)
 
 	return result, nil
 }
