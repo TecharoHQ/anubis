@@ -7,6 +7,7 @@ import (
 
 func TestImpl(t *testing.T) {
 	dm := New[string, string]()
+	t.Cleanup(dm.Close)
 
 	dm.Set("test", "hi", 5*time.Minute)
 
@@ -28,10 +29,24 @@ func TestImpl(t *testing.T) {
 	if ok {
 		t.Error("got value even though it was supposed to be expired")
 	}
+
+	// Deletion of expired entries after Get is deferred to a background worker.
+	// Assert it eventually disappears from the map.
+	deadline := time.Now().Add(200 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if dm.Len() == 0 {
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if dm.Len() != 0 {
+		t.Fatalf("expected background cleanup to remove expired key; len=%d", dm.Len())
+	}
 }
 
 func TestCleanup(t *testing.T) {
 	dm := New[string, string]()
+	t.Cleanup(dm.Close)
 
 	dm.Set("test1", "hi1", 1*time.Second)
 	dm.Set("test2", "hi2", 2*time.Second)

@@ -126,6 +126,34 @@ Your directory tree should look like this, assuming your data is in `./your_fold
 
 For an example directory tree using some off-the-shelf images the Tango icon set, see the [testdata](https://github.com/TecharoHQ/botstopper/tree/main/testdata/static/img) folder.
 
+### Header-based overlay dispatch
+
+If you run BotStopper in a multi-tenant environment where each tenant needs its own branding, BotStopper supports the ability to use request header values to direct asset reads to different folders under your `OVERLAY_FOLDER`. One of the most common ways to do this is based on the HTTP Host of the request. For example, if you set `ASSET_LOOKUP_HEADER=Host` in BotStopper's environment:
+
+```text
+$OVERLAY_FOLDER
+├── static
+│   ├── css
+│   │   ├── custom.css
+│   │   └── eyesore.css
+│   └── img
+│       ├── happy.webp
+│       ├── pensive.webp
+│       └── reject.webp
+└── test.anubis.techaro.lol
+    └── static
+        ├── css
+        │   └── custom.css
+        └── img
+            ├── happy.webp
+            ├── pensive.webp
+            └── reject.webp
+```
+
+Requests to `test.anubis.techaro.lol` will load assets in `$OVERLAY_FOLDER/test.anubis.techaro.lol/static` and all other requests will load them from `$OVERLAY_FOLDER/static`.
+
+For an example, look at [the testdata folder in the BotStopper repo](https://github.com/TecharoHQ/botstopper/tree/main/testdata).
+
 ### Custom CSS
 
 CSS customization is done mainly with CSS variables. View [the example custom CSS file](https://github.com/TecharoHQ/botstopper/blob/main/testdata/static/css/custom.css) for more information about what can be customized.
@@ -199,13 +227,21 @@ $ du -hs *
 
 ## Custom HTML templates
 
-If you need to completely control the HTML layout of all Anubis pages, you can customize the entire page with `USE_TEMPLATES=true`. This uses Go's standard library [html/template](https://pkg.go.dev/html/template) package to template HTML responses. In order to use this, you must define the following templates:
+If you need to completely control the HTML layout of all Anubis pages, you can customize the entire page with `USE_TEMPLATES=true`. This uses Go's standard library [html/template](https://pkg.go.dev/html/template) package to template HTML responses. Your templates can contain whatever HTML you want. The only catch is that you MUST include `{{ .Head }}` in the `<head>` element for challenge pages, and you MUST include `{{ .Body }}` in the `<body>` element for all pages.
+
+In order to use this, you must define the following templates:
 
 | Template path                              | Usage                                           |
 | :----------------------------------------- | :---------------------------------------------- |
 | `$OVERLAY_FOLDER/templates/challenge.tmpl` | Challenge pages                                 |
 | `$OVERLAY_FOLDER/templates/error.tmpl`     | Error pages                                     |
 | `$OVERLAY_FOLDER/templates/impressum.tmpl` | [Impressum](./configuration/impressum.mdx) page |
+
+:::note
+
+Currently HTML templates don't work together with [Header-based overlay dispatch](#header-based-overlay-dispatch). This is a known issue that will be fixed soon. If you enable header-based overlay dispatch, BotStopper will use the global `templates` folder instead of using the templates present in the overlay.
+
+:::
 
 Here are minimal (but working) examples for each template:
 

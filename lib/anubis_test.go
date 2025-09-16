@@ -299,6 +299,7 @@ func TestCookieSettings(t *testing.T) {
 		CookieDomain:      "127.0.0.1",
 		CookiePartitioned: true,
 		CookieSecure:      true,
+		CookieSameSite:    http.SameSiteNoneMode,
 		CookieExpiration:  anubis.CookieDefaultExpirationTime,
 	})
 
@@ -338,6 +339,65 @@ func TestCookieSettings(t *testing.T) {
 
 	if ckie.Secure != srv.opts.CookieSecure {
 		t.Errorf("wanted secure flag %v, got: %v", srv.opts.CookieSecure, ckie.Secure)
+	}
+	if ckie.SameSite != srv.opts.CookieSameSite {
+		t.Errorf("wanted same site option %v, got: %v", srv.opts.CookieSameSite, ckie.SameSite)
+	}
+}
+
+func TestCookieSettingsSameSiteNoneModeDowngradedToLaxWhenUnsecure(t *testing.T) {
+	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+
+		CookieDomain:      "127.0.0.1",
+		CookiePartitioned: true,
+		CookieSecure:      false,
+		CookieSameSite:    http.SameSiteNoneMode,
+		CookieExpiration:  anubis.CookieDefaultExpirationTime,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := httpClient(t)
+	chall := makeChallenge(t, ts, cli)
+
+	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+
+	if resp.StatusCode != http.StatusFound {
+		resp.Write(os.Stderr)
+		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
+	}
+
+	var ckie *http.Cookie
+	for _, cookie := range resp.Cookies() {
+		t.Logf("%#v", cookie)
+		if cookie.Name == anubis.CookieName {
+			ckie = cookie
+			break
+		}
+	}
+	if ckie == nil {
+		t.Errorf("Cookie %q not found", anubis.CookieName)
+		return
+	}
+
+	if ckie.Domain != "127.0.0.1" {
+		t.Errorf("cookie domain is wrong, wanted 127.0.0.1, got: %s", ckie.Domain)
+	}
+
+	if ckie.Partitioned != srv.opts.CookiePartitioned {
+		t.Errorf("wanted partitioned flag %v, got: %v", srv.opts.CookiePartitioned, ckie.Partitioned)
+	}
+
+	if ckie.Secure != srv.opts.CookieSecure {
+		t.Errorf("wanted secure flag %v, got: %v", srv.opts.CookieSecure, ckie.Secure)
+	}
+	if ckie.SameSite != http.SameSiteLaxMode {
+		t.Errorf("wanted same site Lax option %v, got: %v", http.SameSiteLaxMode, ckie.SameSite)
 	}
 }
 

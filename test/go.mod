@@ -6,7 +6,7 @@ replace github.com/TecharoHQ/anubis => ..
 
 require (
 	github.com/TecharoHQ/anubis v1.22.0
-	github.com/docker/docker v28.3.2+incompatible
+	github.com/docker/docker v28.3.3+incompatible
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 	github.com/google/uuid v1.6.0
 )

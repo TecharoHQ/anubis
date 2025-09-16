@@ -12,12 +12,14 @@ permissions:
 jobs:
   ssh:
     if: github.repository == 'TecharoHQ/anubis'
-    runs-on: ubuntu-24.04
+    runs-on: alrest-techarohq
     strategy:
       matrix:
         host:
-          - ubuntu@riscv64.techaro.lol
-          - ci@ppc64le.techaro.lol
+          - riscv64
+          - ppc64le
+          - aarch64-4k
+          - aarch64-16k
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0

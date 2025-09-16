@@ -1,0 +1,18 @@
+.link {
+  text-decoration: none;
+}
+
+.container {
+  background-color: #16a34a; /* green-500 */
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  border-radius: 9999px; /* rounded-full */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg approximation */
+  display: inline-flex; /* flex */
+  align-items: center; /* items-center */
+}
+
+.label {
+  line-height: 1;
+}
