@@ -35,14 +35,9 @@ func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 	q.Set("id", in.Challenge.ID)
 	u.RawQuery = q.Encode()
 
-	showMeta := false
+	showMeta := in.Challenge.RandomData[0]%2 == 0
 
-	switch in.Challenge.RandomData[0] {
-	case '0', '1', '2', '3', '4', '5', '6', '7':
-		lg.Debug("rendering meta element")
-		showMeta = true
-	default:
-		lg.Debug("adding Refresh header")
+	if !showMeta {
 		w.Header().Add("Refresh", fmt.Sprintf("%d; url=%s", in.Rule.Challenge.Difficulty+1, u.String()))
 	}
 
