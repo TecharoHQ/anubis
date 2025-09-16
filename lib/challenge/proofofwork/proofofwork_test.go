@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
@@ -133,7 +134,7 @@ func TestBasic(t *testing.T) {
 				},
 			}
 
-			if _, err := i.Issue(cs.req, lg, inp); err != nil {
+			if _, err := i.Issue(httptest.NewRecorder(), cs.req, lg, inp); err != nil {
 				t.Errorf("can't issue challenge: %v", err)
 			}
 

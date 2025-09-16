@@ -38,7 +38,7 @@ type impl struct{}
 
 func (i *impl) Setup(mux *http.ServeMux) {}
 
-func (i *impl) Issue(r *http.Request, lg *slog.Logger, in *challenge.IssueInput) (templ.Component, error) {
+func (i *impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *challenge.IssueInput) (templ.Component, error) {
 	u, err := r.URL.Parse(anubis.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)

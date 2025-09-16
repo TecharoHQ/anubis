@@ -29,19 +29,19 @@ var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[
 // internal glob matcher. Matching is case-insensitive on hostnames.
 func matchRedirectDomain(allowed []string, host string) bool {
 	h := strings.ToLower(strings.TrimSpace(host))
- 	for _, pat := range allowed {
- 		p := strings.ToLower(strings.TrimSpace(pat))
- 		if strings.Contains(p, glob.GLOB) {
- 			if glob.Glob(p, h) {
- 				return true
- 			}
- 			continue
- 		}
- 		if p == h {
- 			return true
- 		}
- 	}
- 	return false
+	for _, pat := range allowed {
+		p := strings.ToLower(strings.TrimSpace(pat))
+		if strings.Contains(p, glob.GLOB) {
+			if glob.Glob(p, h) {
+				return true
+			}
+			continue
+		}
+		if p == h {
+			return true
+		}
+	}
+	return false
 }
 
 type CookieOpts struct {
@@ -203,7 +203,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		Store:     s.store,
 	}
 
-	component, err := impl.Issue(r, lg, in)
+	component, err := impl.Issue(w, r, lg, in)
 	if err != nil {
 		lg.Error("[unexpected] challenge component render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")))
