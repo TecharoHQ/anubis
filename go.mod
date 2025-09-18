@@ -164,7 +164,7 @@ require (
 	github.com/suzuki-shunsuke/urfave-cli-help-all v0.0.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
+	github.com/ulikunitz/xz v0.5.14 // indirect
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
