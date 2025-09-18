@@ -405,10 +405,6 @@ func main() {
 		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
 	}
 
-	if customRealIPHeader != nil && *customRealIPHeader == "" {
-		log.Fatalf("custom-real-ip-header option requires a value")
-	}
-
 	var redirectDomainsList []string
 	if *redirectDomains != "" {
 		domains := strings.Split(*redirectDomains, ",")
@@ -465,7 +461,7 @@ func main() {
 
 	var h http.Handler
 	h = s
-	h = internal.CustomRealIPHeader(customRealIPHeader, h)
+	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)

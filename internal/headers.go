@@ -42,14 +42,14 @@ func UnchangingCache(next http.Handler) http.Handler {
 // different header.
 // Used in environments where the upstream proxy sets the request's
 // origin IP in a custom header.
-func CustomRealIPHeader(customRealIPHeaderValue *string, next http.Handler) http.Handler {
-	if customRealIPHeaderValue == nil {
+func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.Handler {
+	if customRealIPHeaderValue == "" {
 		slog.Debug("skipping middleware, customRealIPHeaderValue is empty")
 		return next
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Set("X-Real-IP", r.Header.Get(*customRealIPHeaderValue))
+		r.Header.Set("X-Real-IP", r.Header.Get(customRealIPHeaderValue))
 		next.ServeHTTP(w, r)
 	})
 }
