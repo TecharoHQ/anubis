@@ -11,7 +11,7 @@ var Version = "devel"
 
 // CookieName is the name of the cookie that Anubis uses in order to validate
 // access.
-var CookieName = "techaro.lol-anubis-auth"
+var CookieName = "techaro.lol-anubis"
 
 // TestCookieName is the name of the cookie that Anubis uses in order to check
 // if cookies are enabled on the client's browser.
