@@ -1,10 +1,19 @@
-import algorithms from "./algorithms/index.mjs";
+import algorithms from "./algorithms";
 
 // from Xeact
-const u = (url = "", params = {}) => {
+const u = (url: string = "", params: Record<string, any> = {}) => {
   let result = new URL(url, window.location.href);
   Object.entries(params).forEach(([k, v]) => result.searchParams.set(k, v));
   return result.toString();
+};
+
+const j = (id: string): any | null => {
+  const elem = document.getElementById(id);
+  if (elem === null) {
+    return null;
+  }
+
+  return JSON.parse(elem.textContent);
 };
 
 const imageURL = (mood, cacheBuster, basePrefix) =>
@@ -14,9 +23,10 @@ const imageURL = (mood, cacheBuster, basePrefix) =>
 
 // Detect available languages by loading the manifest
 const getAvailableLanguages = async () => {
-  const basePrefix = JSON.parse(
-    document.getElementById("anubis_base_prefix").textContent,
-  );
+  const basePrefix = j("anubis_base_prefix");
+  if (basePrefix === null) {
+    return;
+  }
 
   try {
     const response = await fetch(`${basePrefix}/.within.website/x/cmd/anubis/static/locales/manifest.json`);
@@ -38,9 +48,11 @@ const getBrowserLanguage = async () =>
 
 // Load translations from JSON files
 const loadTranslations = async (lang) => {
-  const basePrefix = JSON.parse(
-    document.getElementById("anubis_base_prefix").textContent,
-  );
+  const basePrefix = j("anubis_base_prefix");
+  if (basePrefix === null) {
+    return;
+  }
+
   try {
     const response = await fetch(`${basePrefix}/.within.website/x/cmd/anubis/static/locales/${lang}.json`);
     return await response.json();
@@ -52,6 +64,18 @@ const loadTranslations = async (lang) => {
     throw error;
   }
 };
+
+const getRedirectUrl = () => {
+  const publicUrl = j("anubis_public_url");
+  if (publicUrl === null) {
+    return;
+  }
+  if (publicUrl && window.location.href.startsWith(publicUrl)) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('redir');
+  }
+  return window.location.href;
+}
 
 let translations = {};
 let currentLang;
@@ -80,16 +104,14 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       value: navigator.cookieEnabled,
     },
   ];
-  const status = document.getElementById("status");
-  const image = document.getElementById("image");
-  const title = document.getElementById("title");
-  const progress = document.getElementById("progress");
-  const anubisVersion = JSON.parse(
-    document.getElementById("anubis_version").textContent,
-  );
-  const basePrefix = JSON.parse(
-    document.getElementById("anubis_base_prefix").textContent,
-  );
+
+  const status: HTMLParagraphElement = document.getElementById("status") as HTMLParagraphElement;
+  const image: HTMLImageElement = document.getElementById("image") as HTMLImageElement;
+  const title: HTMLHeadingElement = document.getElementById("title") as HTMLHeadingElement;
+  const progress: HTMLDivElement = document.getElementById("progress") as HTMLDivElement;
+
+  const anubisVersion = j("anubis_version");
+  const basePrefix = j("anubis_base_prefix");
   const details = document.querySelector("details");
   let userReadDetails = false;
 
@@ -121,9 +143,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
     }
   }
 
-  const { challenge, rules } = JSON.parse(
-    document.getElementById("anubis_challenge").textContent,
-  );
+  const { challenge, rules } = j("anubis_challenge");
 
   const process = algorithms[rules.algorithm];
   if (!process) {
@@ -171,7 +191,9 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
         const probability = Math.pow(1 - likelihood, iters);
         const distance = (1 - Math.pow(probability, 2)) * 100;
         progress["aria-valuenow"] = distance;
-        progress.firstElementChild.style.width = `${distance}%`;
+        if (progress.firstElementChild !== null) {
+          (progress.firstElementChild as HTMLElement).style.width = `${distance}%`;
+        }
 
         if (probability < 0.1 && !showingApology) {
           status.append(
@@ -186,7 +208,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
     console.log({ hash, nonce });
 
     if (userReadDetails) {
-      const container = document.getElementById("progress");
+      const container: HTMLDivElement = document.getElementById("progress") as HTMLDivElement;
 
       // Style progress bar as a continue button
       container.style.display = "flex";
@@ -205,7 +227,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       container.innerHTML = t('finished_reading');
 
       function onDetailsExpand() {
-        const redir = window.location.href;
+        const redir = getRedirectUrl();
         window.location.replace(
           u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
             id: challenge.id,
@@ -220,7 +242,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       container.onclick = onDetailsExpand;
       setTimeout(onDetailsExpand, 30000);
     } else {
-      const redir = window.location.href;
+      const redir = getRedirectUrl();
       window.location.replace(
         u(`${basePrefix}/.within.website/x/cmd/anubis/api/pass-challenge`, {
           id: challenge.id,

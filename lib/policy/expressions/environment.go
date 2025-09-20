@@ -19,6 +19,7 @@ func BotEnvironment() (*cel.Env, error) {
 	return New(
 		// Variables exposed to CEL programs:
 		cel.Variable("remoteAddress", cel.StringType),
+		cel.Variable("contentLength", cel.IntType),
 		cel.Variable("host", cel.StringType),
 		cel.Variable("method", cel.StringType),
 		cel.Variable("userAgent", cel.StringType),

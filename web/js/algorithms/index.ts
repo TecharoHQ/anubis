@@ -1,4 +1,4 @@
-import fast from "./fast.mjs";
+import fast from "./fast";
 
 export default {
   fast: fast,

@@ -1,5 +1,9 @@
 acs
+Actorified
+actorifiedstore
+actorify
 Aibrew
+alibaba
 alrest
 amazonbot
 anthro
@@ -17,6 +21,7 @@ badregexes
 bbolt
 bdba
 berr
+bezier
 bingbot
 Bitcoin
 bitrate
@@ -63,6 +68,7 @@ Cromite
 crt
 Cscript
 daemonizing
+dayjob
 DDOS
 Debian
 debrpm
@@ -80,6 +86,7 @@ dracula
 dronebl
 droneblresponse
 dropin
+dsilence
 duckduckbot
 eerror
 ellenjoe
@@ -98,11 +105,13 @@ Factset
 fastcgi
 fediverse
 ffprobe
+financials
 finfos
 Firecrawl
 flagenv
 Fordola
 forgejo
+forwardauth
 fsys
 fullchain
 gaissmai
@@ -111,6 +120,7 @@ geoip
 geoipchecker
 gha
 GHSA
+Ghz
 gipc
 gitea
 godotenv
@@ -124,6 +134,7 @@ goyaml
 GPG
 GPT
 gptbot
+Graphene
 grpcprom
 grw
 Hashcash
@@ -132,12 +143,15 @@ headermap
 healthcheck
 healthz
 hec
+Hetzner
 hmc
+homelab
 hostable
 htmlc
 htmx
 httpdebug
 Huawei
+huawei
 hypertext
 iaskspider
 iaso
@@ -146,6 +160,7 @@ ifm
 Imagesift
 imgproxy
 impressum
+inbox
 inp
 internets
 IPTo
@@ -203,8 +218,10 @@ nicksnyder
 nobots
 NONINFRINGEMENT
 nosleep
+nullglob
 OCOB
 ogtag
+oklch
 omgili
 omgilibot
 openai
@@ -253,8 +270,10 @@ runlevels
 RUnlock
 runtimedir
 runtimedirectory
+Ryzen
 sas
 sasl
+screenshots
 searchbot
 searx
 sebest
@@ -264,10 +283,12 @@ Seo
 setsebool
 shellcheck
 shirou
+shopt
 Sidetrade
 simprint
 sitemap
 sls
+Smartphone
 sni
 Spambot
 sparkline
@@ -284,6 +305,7 @@ SVCNAME
 tagline
 tarballs
 tarrif
+taviso
 tbn
 tbr
 techaro
@@ -298,6 +320,7 @@ Tik
 Timpibot
 TLog
 traefik
+trunc
 uberspace
 Unbreak
 unbreakdocker
@@ -305,6 +328,7 @@ unifiedjs
 unmarshal
 unparseable
 uvx
+uwu
 UXP
 valkey
 Varis
@@ -324,9 +348,10 @@ withthothmock
 wolfbeast
 wordpress
 Workaround
+workaround
 workdir
 wpbot
-Xeact
+XCircle
 xeiaso
 xeserv
 xesite
@@ -335,9 +360,11 @@ xff
 XForwarded
 XNG
 XOB
+XOriginal
 XReal
 yae
 YAMLTo
+Yda
 yeet
 yeetfile
 yourdomain

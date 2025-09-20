@@ -2,6 +2,8 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 (cd $REPO_ROOT && go install ./utils/cmd/...)
 
 function cleanup() {
+  set +e
+
   pkill -P $$
 
   if [ -f "docker-compose.yaml" ]; then

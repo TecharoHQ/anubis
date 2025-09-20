@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"slices"
 	"strings"
 	"time"
 
@@ -36,6 +35,7 @@ import (
 
 	// challenge implementations
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
+	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 )
 
@@ -237,6 +237,13 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
+	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader)) {
+		lg.Debug("JWT restriction header is invalid")
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
+		return
+	}
+
 	r.Header.Add("X-Anubis-Status", "PASS")
 	s.ServeHTTPNext(w, r)
 }
@@ -427,7 +434,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.respondWithError(w, r, localizer.T("redirect_not_parseable"))
 		return
 	}
-	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		lg.Debug("domain not allowed", "domain", urlParsed.Host)
 		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"))
 		return
 	}
@@ -444,6 +452,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Error("getChallenge failed", "err", err)
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
+		return
+	}
+
+	if chall.Spent {
+		lg.Error("double spend prevented", "reason", "double_spend")
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"))
 		return
 	}
 
@@ -484,12 +498,30 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// generate JWT cookie
-	tokenString, err := s.signJWT(jwt.MapClaims{
+	var tokenString string
+
+	// check if JWTRestrictionHeader is set and header is in request
+	claims := jwt.MapClaims{
 		"challenge":  chall.ID,
 		"method":     rule.Challenge.Algorithm,
 		"policyRule": rule.Hash(),
 		"action":     string(cr.Rule),
-	})
+	}
+	if s.opts.JWTRestrictionHeader != "" {
+		if r.Header.Get(s.opts.JWTRestrictionHeader) == "" {
+			lg.Error("JWTRestrictionHeader is set in config but not found in request, please check your reverse proxy config.")
+			s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+			s.respondWithError(w, r, "failed to sign JWT")
+			return
+		} else {
+			claims["restriction"] = internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader))
+		}
+	}
+	if s.opts.DifficultyInJWT {
+		claims["difficulty"] = rule.Challenge.Difficulty
+	}
+	tokenString, err = s.signJWT(claims)
+
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
@@ -498,6 +530,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.SetCookie(w, CookieOpts{Path: cookiePath, Host: r.Host, Value: tokenString})
+
+	chall.Spent = true
+	j := store.JSON[challenge.Challenge]{Underlying: s.store}
+	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
+		lg.Debug("can't update information about challenge", "err", err)
+	}
 
 	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
 	lg.Debug("challenge passed, redirecting to app")

@@ -1,16 +1,18 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/glob"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
@@ -21,6 +23,26 @@ import (
 )
 
 var domainMatchRegexp = regexp.MustCompile(`^((xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+
+// matchRedirectDomain returns true if host matches any of the allowed redirect
+// domain patterns. Patterns may contain '*' which are matched using the
+// internal glob matcher. Matching is case-insensitive on hostnames.
+func matchRedirectDomain(allowed []string, host string) bool {
+	h := strings.ToLower(strings.TrimSpace(host))
+	for _, pat := range allowed {
+		p := strings.ToLower(strings.TrimSpace(pat))
+		if strings.Contains(p, glob.GLOB) {
+			if glob.Glob(p, h) {
+				return true
+			}
+			continue
+		}
+		if p == h {
+			return true
+		}
+	}
+	return false
+}
 
 type CookieOpts struct {
 	Value  string
@@ -34,6 +56,8 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
 	var name = anubis.CookieName
 	var path = "/"
+	var sameSite = s.opts.CookieSameSite
+
 	if cookieOpts.Name != "" {
 		name = cookieOpts.Name
 	}
@@ -50,11 +74,15 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		cookieOpts.Expiry = s.opts.CookieExpiration
 	}
 
+	if s.opts.CookieSameSite == http.SameSiteNoneMode && !s.opts.CookieSecure {
+		sameSite = http.SameSiteLaxMode
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       cookieOpts.Value,
 		Expires:     time.Now().Add(cookieOpts.Expiry),
-		SameSite:    http.SameSiteNoneMode,
+		SameSite:    sameSite,
 		Domain:      domain,
 		Secure:      s.opts.CookieSecure,
 		Partitioned: s.opts.CookiePartitioned,
@@ -66,6 +94,8 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
 	var name = anubis.CookieName
 	var path = "/"
+	var sameSite = s.opts.CookieSameSite
+
 	if cookieOpts.Name != "" {
 		name = cookieOpts.Name
 	}
@@ -77,13 +107,16 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 			domain = etld
 		}
 	}
+	if s.opts.CookieSameSite == http.SameSiteNoneMode && !s.opts.CookieSecure {
+		sameSite = http.SameSiteLaxMode
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:        name,
 		Value:       "",
 		MaxAge:      -1,
 		Expires:     time.Now().Add(-1 * time.Minute),
-		SameSite:    http.SameSiteNoneMode,
+		SameSite:    sameSite,
 		Partitioned: s.opts.CookiePartitioned,
 		Domain:      domain,
 		Secure:      s.opts.CookieSecure,
@@ -115,8 +148,17 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	localizer := localization.GetLocalizer(r)
 
 	if returnHTTPStatusOnly {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(localizer.T("authorization_required")))
+		if s.opts.PublicUrl == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(localizer.T("authorization_required")))
+		} else {
+			redirectURL, err := s.constructRedirectURL(r)
+			if err != nil {
+				s.respondWithStatus(w, r, err.Error(), http.StatusBadRequest)
+				return
+			}
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+		}
 		return
 	}
 
@@ -172,7 +214,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		Store:     s.store,
 	}
 
-	component, err := impl.Issue(r, lg, in)
+	component, err := impl.Issue(w, r, lg, in)
 	if err != nil {
 		lg.Error("[unexpected] challenge component render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")))
@@ -194,6 +236,28 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		templ.WithStatus(s.opts.Policy.StatusCodes.Challenge),
 	)))
 	handler.ServeHTTP(w, r)
+}
+
+func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	host := r.Header.Get("X-Forwarded-Host")
+	uri := r.Header.Get("X-Forwarded-Uri")
+
+	localizer := localization.GetLocalizer(r)
+
+	if proto == "" || host == "" || uri == "" {
+		return "", errors.New(localizer.T("missing_required_forwarded_headers"))
+	}
+	// Check if host is allowed in RedirectDomains (supports '*' via glob)
+	if len(s.opts.RedirectDomains) > 0 && !matchRedirectDomain(s.opts.RedirectDomains, host) {
+		lg := internal.GetRequestLogger(s.logger, r)
+		lg.Debug("domain not allowed", "domain", host)
+		return "", errors.New(localizer.T("redirect_domain_not_allowed"))
+	}
+
+	redir := proto + "://" + host + uri
+	escapedURL := url.QueryEscape(redir)
+	return fmt.Sprintf("%s/.within.website/?redir=%s", s.opts.PublicUrl, escapedURL), nil
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
@@ -255,7 +319,14 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !slices.Contains(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
+		hostNotAllowed := len(urlParsed.Host) > 0 &&
+			len(s.opts.RedirectDomains) != 0 &&
+			!matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)
+		hostMismatch := r.URL.Host != "" && urlParsed.Host != r.URL.Host
+
+		if hostNotAllowed || hostMismatch {
+			lg := internal.GetRequestLogger(s.logger, r)
+			lg.Debug("domain not allowed", "domain", urlParsed.Host)
 			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), http.StatusBadRequest)
 			return
 		}

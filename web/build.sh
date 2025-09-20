@@ -39,9 +39,18 @@ for the JavaScript code in this page.
 mkdir -p static/locales
 cp ../lib/localization/locales/*.json static/locales/
 
-for file in js/*.mjs js/worker/*.mjs; do
-  esbuild "${file}" --sourcemap --bundle --minify --outfile=static/"${file}" --banner:js="${LICENSE}"
-  gzip -f -k -n static/${file}
-  zstd -f -k --ultra -22 static/${file}
-  brotli -fZk static/${file}
+shopt -s nullglob globstar
+
+for file in js/**/*.ts js/**/*.mjs; do
+  out="static/${file}"
+  if [[ "$file" == *.ts ]]; then
+    out="static/${file%.ts}.mjs"
+  fi
+
+  mkdir -p "$(dirname "$out")"
+
+  esbuild "$file" --sourcemap --bundle --minify --outfile="$out" --banner:js="$LICENSE"
+  gzip -f -k -n "$out"
+  zstd -f -k --ultra -22 "$out"
+  brotli -fZk "$out"
 done

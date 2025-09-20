@@ -61,6 +61,8 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	switch name {
 	case "remoteAddress":
 		return cr.Header.Get("X-Real-Ip"), true
+	case "contentLength":
+		return cr.ContentLength, true
 	case "host":
 		return cr.Host, true
 	case "method":

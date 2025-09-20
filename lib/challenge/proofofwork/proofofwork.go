@@ -27,7 +27,7 @@ type Impl struct {
 
 func (i *Impl) Setup(mux *http.ServeMux) {}
 
-func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
+func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)
 	return page(loc), nil
 }

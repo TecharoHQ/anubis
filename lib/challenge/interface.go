@@ -61,7 +61,7 @@ type Impl interface {
 	Setup(mux *http.ServeMux)
 
 	// Issue a new challenge to the user, called by the Anubis.
-	Issue(r *http.Request, lg *slog.Logger, in *IssueInput) (templ.Component, error)
+	Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *IssueInput) (templ.Component, error)
 
 	// Validate a challenge, making sure that it passes muster.
 	Validate(r *http.Request, lg *slog.Logger, in *ValidateInput) error
