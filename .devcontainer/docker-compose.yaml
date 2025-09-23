@@ -20,7 +20,11 @@ services:
       dockerfile: .devcontainer/Dockerfile
     volumes:
       - ../:/workspace/anubis:cached
+      - cargo-target:/workspace/anubis/target:cached
     environment:
       VALKEY_URL: redis://valkey:6379/0
     #entrypoint: ["/usr/bin/sleep", "infinity"]
     user: vscode
+
+volumes:
+  cargo-target:

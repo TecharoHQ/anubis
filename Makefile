@@ -1,17 +1,22 @@
 VERSION= $(shell cat ./VERSION)
 GO?= go
 NPM?= npm
+CARGO?= cargo
 
-.PHONY: build assets deps lint prebaked-build test
+.PHONY: build assets assets-wasm deps lint prebaked-build test
 
 all: build
 
 deps:
 	$(NPM) ci
 	$(GO) mod download
+	$(CARGO) fetch
+
+assets-wasm:
+	bash ./scripts/build_wasm.sh
 
 assets: PATH:=$(PWD)/node_modules/.bin:$(PATH)
-assets: deps
+assets: deps assets-wasm
 	$(GO) generate ./...
 	./web/build.sh
 	./xess/build.sh
