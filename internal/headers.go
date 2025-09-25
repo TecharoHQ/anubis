@@ -38,6 +38,22 @@ func UnchangingCache(next http.Handler) http.Handler {
 	})
 }
 
+// CustomXRealIPHeader sets the X-Real-IP header to the value of a
+// different header.
+// Used in environments where the upstream proxy sets the request's
+// origin IP in a custom header.
+func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.Handler {
+	if customRealIPHeaderValue == "" {
+		slog.Debug("skipping middleware, customRealIPHeaderValue is empty")
+		return next
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("X-Real-IP", r.Header.Get(customRealIPHeaderValue))
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
 // the setting is enabled by the user.
 func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
