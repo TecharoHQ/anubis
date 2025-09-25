@@ -279,7 +279,12 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg s
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+anubis.StaticPath) {
+		s.mux.ServeHTTP(w, r)
+		return
+	}
+
+	s.maybeReverseProxyOrPage(w, r)
 }
 
 func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
