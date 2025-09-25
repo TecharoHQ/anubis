@@ -175,3 +175,4 @@
 /wiki//var/lib/portage
 /wiki//var/lib/portage/world
 /wiki//var/run
+/gcc-bugs/bug-122002-4@http.gcc.gnu.org%2Fbugzilla%2F/T/
