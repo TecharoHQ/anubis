@@ -457,7 +457,7 @@ func TestBasePrefix(t *testing.T) {
 	}{
 		{
 			name:       "no prefix",
-			basePrefix: "/",
+			basePrefix: "",
 			path:       "/.within.website/x/cmd/anubis/api/make-challenge",
 			expected:   "/.within.website/x/cmd/anubis/api/make-challenge",
 		},
@@ -499,8 +499,14 @@ func TestBasePrefix(t *testing.T) {
 			}
 
 			q := req.URL.Query()
-			q.Set("redir", tc.basePrefix)
+			redir := tc.basePrefix
+			if tc.basePrefix == "" {
+				redir = "/"
+			}
+			q.Set("redir", redir)
 			req.URL.RawQuery = q.Encode()
+
+			t.Log(req.URL.String())
 
 			// Test API endpoint with prefix
 			resp, err := cli.Do(req)
@@ -513,8 +519,15 @@ func TestBasePrefix(t *testing.T) {
 				t.Errorf("expected status code %d, got: %d", http.StatusOK, resp.StatusCode)
 			}
 
+			data, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("can't read body: %v", err)
+			}
+
+			t.Log(string(data))
+
 			var chall challengeResp
-			if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
+			if err := json.NewDecoder(bytes.NewBuffer(data)).Decode(&chall); err != nil {
 				t.Fatalf("can't read challenge response body: %v", err)
 			}
 
@@ -535,7 +548,7 @@ func TestBasePrefix(t *testing.T) {
 				nonce++
 			}
 			elapsedTime := 420
-			redir := "/"
+			redir = "/"
 
 			cli.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse

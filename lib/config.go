@@ -107,7 +107,7 @@ func New(opts Options) (*Server, error) {
 		opts.ED25519PrivateKey = priv
 	}
 
-	anubis.BasePrefix = opts.BasePrefix
+	anubis.BasePrefix = strings.TrimRight(opts.BasePrefix, "/")
 	anubis.PublicUrl = opts.PublicUrl
 
 	result := &Server{
