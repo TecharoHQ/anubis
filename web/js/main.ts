@@ -171,7 +171,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
   try {
     const t0 = Date.now();
     const { hash, nonce } = await process(
-      { basePrefix, version: anubisVersion },
+      { basePrefix, version: anubisVersion, algorithm: rules.algorithm },
       challenge.randomData,
       rules.difficulty,
       null,

@@ -16,6 +16,9 @@
     "package": "yeet",
     "lint": "make lint"
   },
+  "imports": {
+    "lib/*": "./web/lib/*"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {

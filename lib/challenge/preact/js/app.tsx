@@ -1,6 +1,6 @@
 import { render, h, Fragment } from "preact";
 import { useState, useEffect } from "preact/hooks";
-import { g, j, r, u, x } from "./xeact.js";
+import { g, j, r, u, x } from "../../../../web/lib/xeact";
 import { Sha256 } from "@aws-crypto/sha256-js";
 
 /** @jsx h */

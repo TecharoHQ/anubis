@@ -1,0 +1,81 @@
+package wasm
+
+import (
+	"crypto/subtle"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/TecharoHQ/anubis/internal"
+	chall "github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
+	"github.com/a-h/templ"
+)
+
+//go:generate go tool github.com/a-h/templ/cmd/templ generate
+
+func init() {
+	chall.Register("argon2id", &Impl{Algorithm: "argon2id"})
+	chall.Register("sha256", &Impl{Algorithm: "sha256"})
+}
+
+type Impl struct {
+	Algorithm string
+}
+
+func (i *Impl) Setup(mux *http.ServeMux) {}
+
+func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
+	loc := localization.GetLocalizer(r)
+	return page(loc), nil
+}
+
+func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInput) error {
+	rule := in.Rule
+	challenge := in.Challenge.RandomData
+
+	nonceStr := r.FormValue("nonce")
+	if nonceStr == "" {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w nonce", chall.ErrMissingField))
+	}
+
+	nonce, err := strconv.Atoi(nonceStr)
+	if err != nil {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: nonce: %w", chall.ErrInvalidFormat, err))
+
+	}
+
+	elapsedTimeStr := r.FormValue("elapsedTime")
+	if elapsedTimeStr == "" {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w elapsedTime", chall.ErrMissingField))
+	}
+
+	elapsedTime, err := strconv.ParseFloat(elapsedTimeStr, 64)
+	if err != nil {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: elapsedTime: %w", chall.ErrInvalidFormat, err))
+	}
+
+	response := r.FormValue("response")
+	if response == "" {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w response", chall.ErrMissingField))
+	}
+
+	calcString := fmt.Sprintf("%s%d", challenge, nonce)
+	calculated := internal.SHA256sum(calcString)
+
+	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted response %s but got %s", chall.ErrFailed, calculated, response))
+	}
+
+	// compare the leading zeroes
+	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted %d leading zeros but got %s", chall.ErrFailed, rule.Challenge.Difficulty, response))
+	}
+
+	lg.Debug("challenge took", "elapsedTime", elapsedTime)
+	chall.TimeTaken.WithLabelValues(i.Algorithm).Observe(elapsedTime)
+
+	return nil
+}
