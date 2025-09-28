@@ -1,4 +1,5 @@
 import { u } from "../../lib/xeact";
+import { simd } from "wasm-feature-detect";
 
 type ProgressCallback = (nonce: number) => void;
 
@@ -22,9 +23,13 @@ export default function process(
   console.debug(options);
   const { basePrefix, version, algorithm } = options;
 
-  let wasmFeatures = "baseline";
-
   return new Promise(async (resolve, reject) => {
+    let wasmFeatures = "baseline";
+
+    if (await simd()) {
+      wasmFeatures = "simd128";
+    }
+
     const module = await fetch(u(`${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${wasmFeatures}/${algorithm}.wasm?cacheBuster=${version}`))
       .then(x => WebAssembly.compileStreaming(x));
 
