@@ -1,31 +1,44 @@
 package wasm
 
 import (
-	"crypto/subtle"
+	"context"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/TecharoHQ/anubis/internal"
 	chall "github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
+	"github.com/TecharoHQ/anubis/wasm"
+	"github.com/TecharoHQ/anubis/web"
 	"github.com/a-h/templ"
 )
 
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
-	chall.Register("argon2id", &Impl{Algorithm: "argon2id"})
-	chall.Register("sha256", &Impl{Algorithm: "sha256"})
+	chall.Register("argon2id", &Impl{algorithm: "argon2id"})
+	chall.Register("sha256", &Impl{algorithm: "sha256"})
 }
 
 type Impl struct {
-	Algorithm string
+	algorithm string
+	runner    *wasm.Runner
 }
 
-func (i *Impl) Setup(mux *http.ServeMux) {}
+func (i *Impl) Setup(mux *http.ServeMux) error {
+	fname := fmt.Sprintf("static/wasm/simd128/%s.wasm", i.algorithm)
+	fin, err := web.Static.Open(fname)
+	if err != nil {
+		return err
+	}
+	defer fin.Close()
+
+	i.runner, err = wasm.NewRunner(context.Background(), fname, fin)
+
+	return err
+}
 
 func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)
@@ -33,9 +46,6 @@ func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 }
 
 func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInput) error {
-	rule := in.Rule
-	challenge := in.Challenge.RandomData
-
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w nonce", chall.ErrMissingField))
@@ -62,20 +72,27 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w response", chall.ErrMissingField))
 	}
 
-	calcString := fmt.Sprintf("%s%d", challenge, nonce)
-	calculated := internal.SHA256sum(calcString)
-
-	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
-		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted response %s but got %s", chall.ErrFailed, calculated, response))
+	challengeBytes, err := hex.DecodeString(in.Challenge.RandomData)
+	if err != nil {
+		return chall.NewError("validate", "invalid random data", fmt.Errorf("can't decode random data: %w", err))
 	}
 
-	// compare the leading zeroes
-	if !strings.HasPrefix(response, strings.Repeat("0", rule.Challenge.Difficulty)) {
-		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted %d leading zeros but got %s", chall.ErrFailed, rule.Challenge.Difficulty, response))
+	gotBytes, err := hex.DecodeString(response)
+	if err != nil {
+		return chall.NewError("validate", "invalid client data format", fmt.Errorf("%w response", chall.ErrInvalidFormat))
+	}
+
+	ok, err := i.runner.Verify(r.Context(), challengeBytes, gotBytes, uint32(nonce), uint32(in.Rule.Challenge.Difficulty))
+	if err != nil {
+		return chall.NewError("validate", "internal WASM error", fmt.Errorf("can't run wasm validation logic: %w", err))
+	}
+
+	if !ok {
+		return chall.NewError("verify", "client calculated wrong data", fmt.Errorf("%w: response invalid: %s", chall.ErrFailed, response))
 	}
 
 	lg.Debug("challenge took", "elapsedTime", elapsedTime)
-	chall.TimeTaken.WithLabelValues(i.Algorithm).Observe(elapsedTime)
+	chall.TimeTaken.WithLabelValues(i.algorithm).Observe(elapsedTime)
 
 	return nil
 }
