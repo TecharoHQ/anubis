@@ -46,6 +46,9 @@ jobs:
           brew bundle
 
       - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1.15.1
+        with:
+          cache: false
+          target: wasm32-unknown-unknown
 
       - name: Docker meta
         id: meta
