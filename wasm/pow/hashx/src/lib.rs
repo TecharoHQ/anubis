@@ -1,11 +1,12 @@
 use anubis::{DATA_BUFFER, DATA_LENGTH, update_nonce};
-use argon2::Argon2;
+use hashx::HashX;
 use std::boxed::Box;
 use std::sync::{LazyLock, Mutex};
 
 /// SHA-256 hashes are 32 bytes (256 bits). These are stored in static buffers due to the
 /// fact that you cannot easily pass data from host space to WebAssembly space.
-pub static RESULT_HASH: LazyLock<Mutex<[u8; 32]>> = LazyLock::new(|| Mutex::new([0; 32]));
+pub static RESULT_HASH: LazyLock<Box<Mutex<[u8; 32]>>> =
+    LazyLock::new(|| Box::new(Mutex::new([0; 32])));
 
 pub static VERIFICATION_HASH: LazyLock<Box<Mutex<[u8; 32]>>> =
     LazyLock::new(|| Box::new(Mutex::new([0; 32])));
@@ -44,40 +45,43 @@ fn validate(hash: &[u8], difficulty: u32) -> bool {
     true
 }
 
-/// Computes hash for given nonce.
-///
-/// This differs from the JavaScript implementations by constructing the hash differently. In
-/// JavaScript implementations, the SHA-256 input is the result of appending the nonce as an
-/// integer to the hex-formatted challenge, eg:
-///
-///     sha256(`${challenge}${nonce}`);
-///
-/// This **does work**, however I think that this can be done a bit better by operating on the
-/// challenge bytes _directly_ and treating the nonce as a salt.
-///
-/// The nonce is also randomly encoded in either big or little endian depending on the last
-/// byte of the data buffer in an effort to make it more annoying to automate with GPUs.
-fn compute_hash(nonce: u32) -> [u8; 32] {
+fn anubis_work_inner(
+    difficulty: u32,
+    initial_nonce: u32,
+    iterand: u32,
+) -> Result<u32, hashx::Error> {
+    let mut nonce: u32 = initial_nonce;
+
     let data = &DATA_BUFFER;
     let data_len = *DATA_LENGTH.lock().unwrap();
-    let use_le = data[data_len - 1] >= 128;
-    let mut result = [0u8; 32];
-
-    let nonce = nonce as u64;
-
     let data_slice = &data[..data_len];
 
-    let nonce = if use_le {
-        nonce.to_le_bytes()
-    } else {
-        nonce.to_be_bytes()
-    };
+    let h = HashX::new(data_slice)?;
 
-    let argon2 = Argon2::default();
-    argon2
-        .hash_password_into(&data_slice, &nonce, &mut result)
-        .unwrap();
-    result
+    loop {
+        let hash = h.hash_to_bytes(nonce as u64);
+
+        if validate(&hash, difficulty) {
+            // If the challenge worked, copy the bytes into `RESULT_HASH` so the runtime
+            // can pick it up.
+            let mut challenge = RESULT_HASH.lock().unwrap();
+            challenge.copy_from_slice(&hash);
+            return Ok(nonce);
+        }
+
+        let old_nonce = nonce;
+        nonce = nonce.wrapping_add(iterand);
+
+        // send a progress update every 1024 iterations. since each thread checks
+        // separate values, one simple way to do this is by bit masking the
+        // nonce for multiples of 1024. unfortunately, if the number of threads
+        // is not prime, only some of the threads will be sending the status
+        // update and they will get behind the others. this is slightly more
+        // complicated but ensures an even distribution between threads.
+        if nonce > old_nonce | 1023 && (nonce >> 10) % iterand == initial_nonce {
+            update_nonce(nonce);
+        }
+    }
 }
 
 /// This function is the main entrypoint for the Anubis proof of work implementation.
@@ -100,32 +104,7 @@ fn compute_hash(nonce: u32) -> [u8; 32] {
 /// wasting CPU time retrying a hash+nonce pair that likely won't work.
 #[unsafe(no_mangle)]
 pub extern "C" fn anubis_work(difficulty: u32, initial_nonce: u32, iterand: u32) -> u32 {
-    let mut nonce = initial_nonce;
-
-    loop {
-        let hash = compute_hash(nonce);
-
-        if validate(&hash, difficulty) {
-            // If the challenge worked, copy the bytes into `RESULT_HASH` so the runtime
-            // can pick it up.
-            let mut challenge = RESULT_HASH.lock().unwrap();
-            challenge.copy_from_slice(&hash);
-            return nonce;
-        }
-
-        let old_nonce = nonce;
-        nonce = nonce.wrapping_add(iterand);
-
-        // send a progress update every 1024 iterations. since each thread checks
-        // separate values, one simple way to do this is by bit masking the
-        // nonce for multiples of 1024. unfortunately, if the number of threads
-        // is not prime, only some of the threads will be sending the status
-        // update and they will get behind the others. this is slightly more
-        // complicated but ensures an even distribution between threads.
-        if nonce > old_nonce + 1023 && (nonce >> 10) % iterand == initial_nonce {
-            update_nonce(nonce);
-        }
-    }
+    anubis_work_inner(difficulty, initial_nonce, iterand).unwrap()
 }
 
 /// This function is called by the server in order to validate a proof-of-work challenge.
@@ -138,7 +117,12 @@ pub extern "C" fn anubis_work(difficulty: u32, initial_nonce: u32, iterand: u32)
 /// for now.
 #[unsafe(no_mangle)]
 pub extern "C" fn anubis_validate(nonce: u32, difficulty: u32) -> bool {
-    let computed = compute_hash(nonce);
+    let data = &DATA_BUFFER;
+    let data_len = *DATA_LENGTH.lock().unwrap();
+    let data_slice = &data[..data_len];
+
+    let h: HashX = HashX::new(data_slice).unwrap();
+    let computed = h.hash_to_bytes(nonce as u64);
     let valid = validate(&computed, difficulty);
     if !valid {
         return false;

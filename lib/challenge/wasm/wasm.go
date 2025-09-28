@@ -18,7 +18,7 @@ import (
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
-	chall.Register("argon2id", &Impl{algorithm: "argon2id"})
+	chall.Register("hashx", &Impl{algorithm: "argon2id"})
 	chall.Register("sha256", &Impl{algorithm: "sha256"})
 }
 

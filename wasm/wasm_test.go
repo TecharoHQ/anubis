@@ -58,9 +58,8 @@ func TestAlgos(t *testing.T) {
 
 	for _, kind := range []string{"baseline", "simd128"} {
 		for _, fname := range fnames {
-			fname := fname
-			t.Run(fname.Name(), func(t *testing.T) {
-				abiTest(t, kind, fname.Name(), 4)
+			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
+				abiTest(t, kind, fname.Name(), 16)
 			})
 		}
 	}
@@ -112,10 +111,10 @@ func BenchmarkSHA256(b *testing.B) {
 	}
 }
 
-func BenchmarkArgon2ID(b *testing.B) {
+func BenchmarkHashX(b *testing.B) {
 	for _, kind := range []string{"baseline", "simd128"} {
 		b.Run(kind, func(b *testing.B) {
-			bench(b, kind, "argon2id.wasm", []uint32{4, 6, 8})
+			bench(b, kind, "hashx.wasm", []uint32{4, 6, 8, 10, 12, 14, 16})
 		})
 	}
 }
