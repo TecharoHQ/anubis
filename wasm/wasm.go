@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -35,6 +36,7 @@ type Runner struct {
 	r     wazero.Runtime
 	code  wazero.CompiledModule
 	fname string
+	lock  sync.Mutex
 }
 
 func NewRunner(ctx context.Context, fname string, fin io.ReadCloser) (*Runner, error) {
@@ -269,6 +271,9 @@ func (r *Runner) verify(ctx context.Context, data, verify []byte, nonce, difficu
 }
 
 func (r *Runner) Verify(ctx context.Context, data, verify []byte, nonce, difficulty uint32) (bool, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	t0 := time.Now()
 	ok, _, err := r.verify(ctx, data, verify, nonce, difficulty)
 	validationTime.WithLabelValues(r.fname).Observe(float64(time.Since(t0)))

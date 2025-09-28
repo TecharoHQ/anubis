@@ -16,7 +16,6 @@ interface AnubisExports {
 }
 
 addEventListener("message", async (event: MessageEvent<Args>) => {
-  console.log(event.data);
   const { data, difficulty, threads, module } = event.data;
   let { nonce } = event.data;
 
