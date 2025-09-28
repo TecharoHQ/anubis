@@ -2,7 +2,7 @@ name: Docker image builds (pull requests)
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
@@ -44,6 +44,8 @@ jobs:
       - name: Install Brew dependencies
         run: |
           brew bundle
+
+      - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1.15.1
 
       - name: Docker meta
         id: meta
