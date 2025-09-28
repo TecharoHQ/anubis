@@ -59,6 +59,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-golang-
 
+      - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1.15.1
+        with:
+          cache: false
+          target: wasm32-unknown-unknown
+
       - name: install node deps
         run: |
           npm ci
