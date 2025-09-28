@@ -18,7 +18,7 @@ import (
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
-	chall.Register("hashx", &Impl{algorithm: "argon2id"})
+	chall.Register("hashx", &Impl{algorithm: "hashx"})
 	chall.Register("sha256", &Impl{algorithm: "sha256"})
 }
 
@@ -37,7 +37,11 @@ func (i *Impl) Setup(mux *http.ServeMux) error {
 
 	i.runner, err = wasm.NewRunner(context.Background(), fname, fin)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
