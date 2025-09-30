@@ -55,10 +55,12 @@ fn anubis_work_inner(
     let data = &DATA_BUFFER;
     let data_len = *DATA_LENGTH.lock().unwrap();
     let data_slice = &data[..data_len];
+    let mut i = 0;
 
     let h = HashX::new(data_slice)?;
 
     loop {
+        i += 1;
         let hash = h.hash_to_bytes(nonce as u64);
 
         if validate(&hash, difficulty) {
@@ -69,24 +71,18 @@ fn anubis_work_inner(
             return Ok(nonce);
         }
 
-        let old_nonce = nonce;
         nonce = nonce.wrapping_add(iterand);
 
-        // send a progress update every 1024 iterations. since each thread checks
-        // separate values, one simple way to do this is by bit masking the
-        // nonce for multiples of 1024. unfortunately, if the number of threads
-        // is not prime, only some of the threads will be sending the status
-        // update and they will get behind the others. this is slightly more
-        // complicated but ensures an even distribution between threads.
-        if nonce > old_nonce | 1023 && (nonce >> 10) % iterand == initial_nonce {
+        if i == 1024 {
             update_nonce(nonce);
+            i = 0;
         }
     }
 }
 
 /// This function is the main entrypoint for the Anubis proof of work implementation.
 ///
-/// This expects `DATA_BUFFER` to be pre-populated with the challenge value as "raw bytes".
+/// This expects `DATA_BUFFER` to be prepopulated with the challenge value as "raw bytes".
 /// The definition of what goes in the data buffer is an exercise for the implementor, but
 /// for SHA-256 we store the hash as "raw bytes". The data buffer is intentionally oversized
 /// so that the challenge value can be expanded in the future.

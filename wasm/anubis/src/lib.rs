@@ -38,8 +38,20 @@ mod hostimport {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod hostimport {
+    use crate::{DATA_BUFFER, DATA_LENGTH};
+
     pub fn update_nonce(_nonce: u32) {
         // This is intentionally blank
+    }
+
+    pub fn data_ptr() -> *const u8 {
+        let challenge = &DATA_BUFFER;
+        challenge.as_ptr()
+    }
+
+    pub fn set_data_length(len: u32) {
+        let mut data_length = DATA_LENGTH.lock().unwrap();
+        *data_length = len as usize;
     }
 }
 
@@ -57,4 +69,4 @@ mod hostimport {
 pub static DATA_BUFFER: LazyLock<[u8; 4096]> = LazyLock::new(|| [0; 4096]);
 pub static DATA_LENGTH: LazyLock<Mutex<usize>> = LazyLock::new(|| Mutex::new(0));
 
-pub use hostimport::update_nonce;
+pub use hostimport::{data_ptr, set_data_length, update_nonce};
