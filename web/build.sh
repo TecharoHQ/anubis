@@ -49,7 +49,7 @@ for file in js/**/*.ts js/**/*.mjs; do
 
   mkdir -p "$(dirname "$out")"
 
-  esbuild "$file" --sourcemap --minify --bundle --outfile="$out" --banner:js="$LICENSE"
+  esbuild "$file" --sourcemap --bundle --outfile="$out" --banner:js="$LICENSE"
   gzip -f -k -n "$out"
   zstd -f -k --ultra -22 "$out"
   brotli -fZk "$out"

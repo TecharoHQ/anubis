@@ -50,6 +50,9 @@ jobs:
           cache: false
           target: wasm32-unknown-unknown
 
+      - name: Setup Binaryen
+        uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0

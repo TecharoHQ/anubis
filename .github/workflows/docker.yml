@@ -60,6 +60,9 @@ jobs:
           cache: false
           target: wasm32-unknown-unknown
 
+      - name: Setup Binaryen
+        uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
+
       - name: Log into registry
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
         with:

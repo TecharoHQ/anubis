@@ -64,6 +64,9 @@ jobs:
           cache: false
           target: wasm32-unknown-unknown
 
+      - name: Setup Binaryen
+        uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
+
       - name: install node deps
         run: |
           npm ci

@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY go.mod go.sum package.json package-lock.json ./
 RUN apt-get update \
-  && apt-get -y install zstd brotli redis uuid-runtime \
+  && apt-get -y install zstd brotli redis uuid-runtime binaryen \
   && mkdir -p /home/vscode/.local/share/fish \
   && chown -R vscode:vscode /home/vscode/.local/share/fish \
   && chown -R vscode:vscode /go
