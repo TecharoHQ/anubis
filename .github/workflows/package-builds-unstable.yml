@@ -69,6 +69,7 @@ jobs:
         uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          version: 108
 
       - name: install node deps
         run: |
