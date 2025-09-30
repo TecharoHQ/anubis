@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -58,6 +59,9 @@ func TestAlgos(t *testing.T) {
 
 	for _, kind := range []string{"baseline", "simd128"} {
 		for _, fname := range fnames {
+			if filepath.Ext(fname.Name()) != ".wasm" {
+				continue
+			}
 			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
 				abiTest(t, kind, fname.Name(), 16)
 			})
@@ -137,6 +141,10 @@ func BenchmarkValidate(b *testing.B) {
 		switch fname {
 		case "sha256.wasm":
 			difficulty = 16
+		}
+
+		if filepath.Ext(fname) != ".wasm" {
+			continue
 		}
 
 		b.Run(fname, func(b *testing.B) {

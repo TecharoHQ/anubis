@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -45,7 +46,18 @@ func NewRunner(ctx context.Context, fname string, fin io.ReadCloser) (*Runner, e
 		return nil, fmt.Errorf("wasm: can't read from fin: %w", err)
 	}
 
-	r := wazero.NewRuntime(ctx)
+	var cfg wazero.RuntimeConfig
+
+	switch runtime.GOARCH {
+	case "amd64":
+		cfg = wazero.NewRuntimeConfigCompiler()
+	default:
+		cfg = wazero.NewRuntimeConfigInterpreter()
+	}
+
+	cfg = cfg.WithMemoryLimitPages(512)
+
+	r := wazero.NewRuntimeWithConfig(ctx, cfg)
 
 	_, err = r.NewHostModuleBuilder("anubis").
 		NewFunctionBuilder().
