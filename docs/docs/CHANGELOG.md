@@ -47,6 +47,8 @@ Clients that don't have WebAssembly enabled will instead be served a pure JavaSc
 
 :::
 
+If you are packaging this for a Linux distribution, Anubis requires [binaryen](https://github.com/WebAssembly/binaryen) at exactly version 108. We are working on mitigating this dependency.
+
 ### Bug Fixes
 
 Sometimes the enhanced temporal assurance in [#1038](https://github.com/TecharoHQ/anubis/pull/1038) and [#1068](https://github.com/TecharoHQ/anubis/pull/1068) could backfire because Chromium and its ilk randomize the amount of time they wait in order to avoid a timing side channel attack. This has been fixed by both increasing the amount of time a client has to wait for the metarefresh and preact challenges as well as making the server side logic more permissive.
