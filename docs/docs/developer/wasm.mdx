@@ -1,0 +1,75 @@
+# WebAssembly based proof of work implementation details
+
+When an administrator configures Anubis to use a [WebAssembly based proof of work check](../admin/configuration/challenges/wasm.mdx), Anubis serves [WebAssembly modules](https://webassembly.github.io/spec/core/syntax/modules.html) to clients. Clients execute these WebAssembly modules in order to solve challenges and the server executes the same WebAssembly modules in order to validate solutions. This architecture allows the client and server to be implemented in lockstep, making it much easier to add future challenge methods as long as they meet the API contract.
+
+## Design goals
+
+Anubis WebAssembly modules are meant to provide the following properties:
+
+- **Small size** - Modules should not be bigger than 128Ki unless there is a very good reason for them to be larger.
+- **Minimal interfaces to the outside world** - These are meant to run hash functions. Minimize the inputs and outputs to the bare minimum required to run the program.
+- **The same code must run on both the client and server** - In order to simplify implementation, expansion, and technical debt: the same code must run on both the client and the server. When a client computes a solution, it uses the same validation code that the server uses to verify correctness.
+- **Execution as fast as possible** - This code is in a unique deployment scenario. At some level you want the code to execute slowly to better function as a rate limiter for incoming client requests. At another level, you want the code to execute as quickly as possible so that clients don't have a bad experience with the check taking "too long" or causing battery life impacts.
+
+Given these constraints, the following compromises are made:
+
+- WebAssembly modules are written in [Rust](https://rust-lang.org/), a modern systems programming language with best-in-class support for WebAssembly.
+- [Wazero](https://wazero.io/) is used on the server for running the validation logic in a secure sandbox.
+- A low-level Unix-like API is used to communicate between the host and the guest.
+
+## API contract
+
+Anubis WebAssembly modules have two main entrypoints:
+
+- `anubis_work`: Reads the data buffer and works until the validation function says that the solution is correct.
+- `anubis_validate`: Reads the verification and data buffers and ensures that both of them match and the solution is correct.
+
+For an example of an Anubis WebAssembly module, read the source code for the [`sha256` challenge](https://github.com/TecharoHQ/anubis/blob/main/wasm/pow/sha256/src/lib.rs).
+
+Anubis WebAssembly modules have the following de-facto global variables:
+
+- The data buffer: where the challenge-specific random data is stored and used for computing challenge results. Limit of 4096 bytes.
+- The result buffer: where the result hash is stored. Limit varies based on challenge.
+- The verification buffer: where a verification hash is written to for comparison with the computed hash in the result buffer. Limit varies based on challenge.
+
+Other functions:
+
+### Writing to the data buffer
+
+The data buffer is a write-only buffer with a maximum capacity of 4096 bytes. The host writes data into the buffer and sets the buffer length. This functions similarly to a Go slice.
+
+Usage:
+
+- Host: call `data_ptr` to discover the base pointer of the data buffer.
+- Guest: return the pointer.
+- Host: write up to 4096 bytes to guest memory starting at the base pointer.
+- Host: call `set_data_length` to tell the guest how large the data buffer is.
+- Guest: update that length as a global mutable variable.
+- Host: call `anubis_work` or set the verification buffer and call `anubis_validate`.
+
+### Reading from the result buffer
+
+The result buffer is a read-only buffer that contains the result computed by `anubis_work`. The size of this buffer varies based on the challenge implementation.
+
+After calling `anubis_work`:
+
+- Host: call `result_hash_ptr` to discover the base pointer of the result buffer.
+- Guest: return the pointer.
+- Host: call `result_hash_size` to discover the size of the result buffer in bytes.
+- Guest: return the size.
+- Host: read exactly that number of bytes to host memory.
+- Host: use that result to continue on with normal execution.
+
+### Writing to the verification buffer
+
+The verification buffer is a write-only buffer that contains the result computed by a client. The size of this buffer varies based on the challenge implementation.
+
+After setting the data buffer:
+
+- Host: call `verification_hash_ptr` to discover the base pointer of the verification buffer.
+- Guest: return that pointer.
+- Host: call `verification_hash_size` to discover the size of the verification buffer in bytes.
+- Guest: return the size.
+- Host: write exactly that number of bytes to guest memory starting at the base pointer.
+- Host: call `anubis_validate` with settings from the server-side challenge information.
+- Guest: compute both hashes, compare them and validate against the server-side challenge level. If valid: return true. If invalid: return false.
