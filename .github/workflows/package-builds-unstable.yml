@@ -67,6 +67,8 @@ jobs:
 
       - name: Setup Binaryen
         uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: install node deps
         run: |

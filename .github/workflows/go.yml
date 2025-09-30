@@ -65,6 +65,8 @@ jobs:
 
       - name: Setup Binaryen
         uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache playwright binaries
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
