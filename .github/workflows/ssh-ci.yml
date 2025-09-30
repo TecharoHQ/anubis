@@ -39,6 +39,17 @@ jobs:
         with:
           go-version: stable
 
+      - uses: actions-rust-lang/setup-rust-toolchain@02be93da58aa71fb456aa9c43b301149248829d8 # v1.15.1
+        with:
+          cache: false
+          target: wasm32-unknown-unknown
+
+      - name: Setup Binaryen
+        uses: Aandreba/setup-binaryen@77f25f9d7d30f09667a2535888bf9516b31a4cd7 # v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 108
+
       - name: Run CI
         run: go run ./utils/cmd/backoff-retry bash test/ssh-ci/rigging.sh ${{ matrix.host }}
         env:
