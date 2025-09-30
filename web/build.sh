@@ -31,6 +31,9 @@ THE SOFTWARE.
 Includes code from https://github.com/aws/aws-sdk-js-crypto-helpers which is
 used under the terms of the Apache 2 license.
 
+Includes code written in Rust and transpiled from WebAssembly to JavaScript
+which is used under the terms of the licenses that comprise those crates.
+
 @licend  The above is the entire license notice
 for the JavaScript code in this page.
 */'
@@ -49,7 +52,7 @@ for file in js/**/*.ts js/**/*.mjs; do
 
   mkdir -p "$(dirname "$out")"
 
-  esbuild "$file" --sourcemap --bundle --outfile="$out" --banner:js="$LICENSE"
+  esbuild "$file" --sourcemap --minify --bundle --outfile="$out" --banner:js="$LICENSE"
   gzip -f -k -n "$out"
   zstd -f -k --ultra -22 "$out"
   brotli -fZk "$out"
