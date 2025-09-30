@@ -32,6 +32,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow multiple consecutive slashes in a row in application paths ([#754](https://github.com/TecharoHQ/anubis/issues/754)).
 - Add option to set `targetSNI` to special keyword 'auto' to indicate that it should be automatically set to the request Host name ([424](https://github.com/TecharoHQ/anubis/issues/424)).
 
+### Major new features
+
+#### WebAssembly support
+
+Anubis now supports running [WebAssembly based proof of work challenges](./admin/configuration/challenges/wasm.mdx) in addition to pure-JavaScript challenges. For more information, check the following links:
+
+- [Proof of Work (WebAssembly)](./admin/configuration/challenges/wasm.mdx)
+- [WebAssembly based proof of work implementation details](./developer/wasm.mdx)
+
+:::note
+
+Clients that don't have WebAssembly enabled will instead be served a pure JavaScript variant of the WebAssembly module. This will be much slower than the WebAssembly module, but will work.
+
+:::
+
 ### Bug Fixes
 
 Sometimes the enhanced temporal assurance in [#1038](https://github.com/TecharoHQ/anubis/pull/1038) and [#1068](https://github.com/TecharoHQ/anubis/pull/1068) could backfire because Chromium and its ilk randomize the amount of time they wait in order to avoid a timing side channel attack. This has been fixed by both increasing the amount of time a client has to wait for the metarefresh and preact challenges as well as making the server side logic more permissive.
