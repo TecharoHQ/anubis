@@ -51,6 +51,13 @@ export default function process(
       wasmFeatures = "simd128";
     }
 
+    let module = undefined;
+
+    if (isWASMSupported) {
+      module = await fetch(u(`${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${wasmFeatures}/${algorithm}.wasm?cacheBuster=${version}`))
+        .then(x => WebAssembly.compileStreaming(x));
+    }
+
     const webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/${worker}.mjs?cacheBuster=${version}`;
 
     const workers: Worker[] = [];
@@ -103,6 +110,7 @@ export default function process(
         nonce: i,
         threads,
         algorithm,
+        module,
       });
     }
   });
