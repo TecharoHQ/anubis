@@ -58,7 +58,7 @@ type ValidateInput struct {
 
 type Impl interface {
 	// Setup registers any additional routes with the Impl for assets or API routes.
-	Setup(mux *http.ServeMux)
+	Setup(mux *http.ServeMux) error
 
 	// Issue a new challenge to the user, called by the Anubis.
 	Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *IssueInput) (templ.Component, error)

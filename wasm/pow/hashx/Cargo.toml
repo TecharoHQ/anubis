@@ -1,0 +1,22 @@
+[package]
+name = "hashx"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+equix = "0.3"
+hashx = "0.4"
+
+anubis = { path = "../../anubis" }
+
+[lints.clippy]
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+uninlined_format_args = "allow"
+missing_panics_doc = "allow"
+missing_errors_doc = "allow"
+cognitive_complexity = "allow"

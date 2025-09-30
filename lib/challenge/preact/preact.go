@@ -36,7 +36,7 @@ func init() {
 
 type impl struct{}
 
-func (i *impl) Setup(mux *http.ServeMux) {}
+func (i *impl) Setup(mux *http.ServeMux) error { return nil }
 
 func (i *impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *challenge.IssueInput) (templ.Component, error) {
 	u, err := r.URL.Parse(anubis.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
