@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update OpenRC service to truncate the runtime directory before starting Anubis.
 - Allow multiple consecutive slashes in a row in application paths ([#754](https://github.com/TecharoHQ/anubis/issues/754)).
 - Add option to set `targetSNI` to special keyword 'auto' to indicate that it should be automatically set to the request Host name ([424](https://github.com/TecharoHQ/anubis/issues/424)).
+- Add Bulgarian translation ([#1164](https://github.com/TecharoHQ/anubis/pull/1164))
 
 ### Bug Fixes
 
