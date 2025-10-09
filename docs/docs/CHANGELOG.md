@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixes concurrency problems with very old browsers ([#1082](https://github.com/TecharoHQ/anubis/issues/1082)).
 - Randomly use the Refresh header instead of the meta refresh tag in the metarefresh challenge.
 - Update OpenRC service to truncate the runtime directory before starting Anubis.
+- Make the git client profile more strictly match how the git client behaves.
+- Make the default configuration reward users using normal browsers.
 
 ### Bug Fixes
 
