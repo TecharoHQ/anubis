@@ -68,7 +68,7 @@ var (
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	stripBasePrefix          = flag.Bool("strip-base-prefix", false, "if true, strips the base prefix from requests forwarded to the target server")
 	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
-	targetSNI                = flag.String("target-sni", "", "if set, the value of the TLS handshake hostname when forwarding requests to the target")
+	targetSNI                = flag.String("target-sni", "", "if set, TLS handshake hostname when forwarding requests to the target, if set to auto, use Host header")
 	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
 	targetInsecureSkipVerify = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
 	targetDisableKeepAlive   = flag.Bool("target-disable-keepalive", false, "if true, disables HTTP keep-alive for the backend")
@@ -83,6 +83,7 @@ var (
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
 	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
+	customRealIPHeader      = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
 	thothInsecure        = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
@@ -235,23 +236,28 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 
 	if insecureSkipVerify || targetSNI != "" {
 		transport.TLSClientConfig = &tls.Config{}
-		if insecureSkipVerify {
-			slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
-			transport.TLSClientConfig.InsecureSkipVerify = true
-		}
-		if targetSNI != "" {
-			transport.TLSClientConfig.ServerName = targetSNI
-		}
+	}
+	if insecureSkipVerify {
+		slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
+		transport.TLSClientConfig.InsecureSkipVerify = true
+	}
+	if targetSNI != "" && targetSNI != "auto" {
+		transport.TLSClientConfig.ServerName = targetSNI
 	}
 
 	rp := httputil.NewSingleHostReverseProxy(targetUri)
 	rp.Transport = transport
 
-	if targetHost != "" {
+	if targetHost != "" || targetSNI == "auto" {
 		originalDirector := rp.Director
 		rp.Director = func(req *http.Request) {
 			originalDirector(req)
-			req.Host = targetHost
+			if targetHost != "" {
+				req.Host = targetHost
+			}
+			if targetSNI == "auto" {
+				transport.TLSClientConfig.ServerName = req.Host
+			}
 		}
 	}
 
@@ -460,6 +466,7 @@ func main() {
 
 	var h http.Handler
 	h = s
+	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)

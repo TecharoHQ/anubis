@@ -16,7 +16,8 @@ var (
 	//go:embed *.css static
 	Static embed.FS
 
-	URL = "/.within.website/x/xess/xess.css"
+	BasePrefix = "/.within.website/x/xess/"
+	URL        = "/.within.website/x/xess/xess.css"
 )
 
 func init() {

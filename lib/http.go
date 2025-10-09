@@ -17,6 +17,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
+	"github.com/TecharoHQ/anubis/xess"
 	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/net/publicsuffix"
@@ -279,7 +280,15 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg s
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+anubis.StaticPath) {
+		s.mux.ServeHTTP(w, r)
+		return
+	} else if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+xess.BasePrefix) {
+		s.mux.ServeHTTP(w, r)
+		return
+	}
+
+	s.maybeReverseProxyOrPage(w, r)
 }
 
 func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
