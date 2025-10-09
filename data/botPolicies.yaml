@@ -93,6 +93,44 @@ bots:
   #   weight:
   #     adjust: -10
 
+  # Assert behaviour that only genuine browsers display. This ensures that Chrome
+  # or Firefox versions
+  - name: realistic-browser-catchall
+    expression:
+      all:
+        - '"User-Agent" in headers'
+        - '( userAgent.contains("Firefox") ) || ( userAgent.contains("Chrome") ) || ( userAgent.contains("Safari") )'
+        - '"Accept" in headers'
+        - '"Sec-Fetch-Dest" in headers'
+        - '"Sec-Fetch-Mode" in headers'
+        - '"Sec-Fetch-Site" in headers'
+        - '"Upgrade-Insecure-Requests" in headers'
+        - '"Accept-Encoding" in headers'
+        - '( headers["Accept-Encoding"].contains("zstd") || headers["Accept-Encoding"].contains("br") )'
+        - '"Accept-Language" in headers'
+    action: WEIGH
+    weight:
+      adjust: -10
+
+  # Chrome should behave like Chrome
+  - name: chrome-is-proper
+    expression:
+      all:
+        - userAgent.contains("Chrome")
+        - '"Sec-Ch-Ua" in headers'
+        - 'headers["Sec-Ch-Ua"].contains("Chromium")'
+        - '"Sec-Ch-Ua-Mobile" in headers'
+        - '"Sec-Ch-Ua-Platform" in headers'
+    action: WEIGH
+    weight:
+      adjust: -5
+
+  - name: should-have-accept
+    expression: '!("Accept" in headers)'
+    action: WEIGH
+    weight:
+      adjust: 5
+
   # Generic catchall rule
   - name: generic-browser
     user_agent_regex: >-
