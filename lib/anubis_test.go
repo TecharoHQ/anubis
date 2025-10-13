@@ -194,6 +194,7 @@ func (u *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 	// Only set if not already present
 	req = req.Clone(req.Context()) // avoid mutating original request
 	req.Header.Set("User-Agent", "Mozilla/5.0")
+	req.Header.Set("Accept-Encoding", "gzip")
 	return u.rt.RoundTrip(req)
 }
 
