@@ -1,0 +1,127 @@
+- # Pathological bots to deny
+  # This correlates to data/bots/_deny-pathological.yaml in the source tree
+  # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
+  import: (data)/bots/_deny-pathological.yaml
+- import: (data)/bots/aggressive-brazilian-scrapers.yaml
+
+# Aggressively block AI/LLM related bots/agents by default
+- import: (data)/meta/ai-block-aggressive.yaml
+
+# Consider replacing the aggressive AI policy with more selective policies:
+# - import: (data)/meta/ai-block-moderate.yaml
+# - import: (data)/meta/ai-block-permissive.yaml
+
+# Search engine crawlers to allow, defaults to:
+#   - Google (so they don't try to bypass Anubis)
+#   - Apple
+#   - Bing
+#   - DuckDuckGo
+#   - Qwant
+#   - The Internet Archive
+#   - Kagi
+#   - Marginalia
+#   - Mojeek
+- import: (data)/crawlers/_allow-good.yaml
+# Challenge Firefox AI previews
+- import: (data)/clients/x-firefox-ai.yaml
+
+# Allow common "keeping the internet working" routes (well-known, favicon, robots.txt)
+- import: (data)/common/keep-internet-working.yaml
+
+# # Punish any bot with "bot" in the user-agent string
+# # This is known to have a high false-positive rate, use at your own risk
+# - name: generic-bot-catchall
+#   user_agent_regex: (?i:bot|crawler)
+#   action: CHALLENGE
+#   challenge:
+#     difficulty: 16  # impossible
+#     report_as: 4    # lie to the operator
+#     algorithm: slow # intentionally waste CPU cycles and time
+
+# Requires a subscription to Thoth to use, see
+# https://anubis.techaro.lol/docs/admin/thoth#geoip-based-filtering
+- name: countries-with-aggressive-scrapers
+  action: WEIGH
+  geoip:
+    countries:
+      - BR
+      - CN
+  weight:
+    adjust: 10
+
+# Requires a subscription to Thoth to use, see
+# https://anubis.techaro.lol/docs/admin/thoth#asn-based-filtering
+- name: aggressive-asns-without-functional-abuse-contact
+  action: WEIGH
+  asns:
+    match:
+      - 13335 # Cloudflare
+      - 136907 # Huawei Cloud
+      - 45102 # Alibaba Cloud
+  weight:
+    adjust: 10
+
+# ## System load based checks.
+# # If the system is under high load, add weight.
+# - name: high-load-average
+#   action: WEIGH
+#   expression: load_1m >= 10.0 # make sure to end the load comparison in a .0
+#   weight:
+#     adjust: 20
+
+## If your backend service is running on the same operating system as Anubis,
+## you can uncomment this rule to make the challenge easier when the system is
+## under low load.
+##
+## If it is not, remove weight.
+# - name: low-load-average
+#   action: WEIGH
+#   expression: load_15m <= 4.0 # make sure to end the load comparison in a .0
+#   weight:
+#     adjust: -10
+
+# Assert behaviour that only genuine browsers display. This ensures that Chrome
+# or Firefox versions
+- name: realistic-browser-catchall
+  expression:
+    all:
+      - '"User-Agent" in headers'
+      - '( userAgent.contains("Firefox") ) || ( userAgent.contains("Chrome") ) || ( userAgent.contains("Safari") )'
+      - '"Accept" in headers'
+      - '"Sec-Fetch-Dest" in headers'
+      - '"Sec-Fetch-Mode" in headers'
+      - '"Sec-Fetch-Site" in headers'
+      - '"Upgrade-Insecure-Requests" in headers'
+      - '"Accept-Encoding" in headers'
+      - '( headers["Accept-Encoding"].contains("zstd") || headers["Accept-Encoding"].contains("br") )'
+      - '"Accept-Language" in headers'
+  action: WEIGH
+  weight:
+    adjust: -10
+
+# Chrome should behave like Chrome
+- name: chrome-is-proper
+  expression:
+    all:
+      - userAgent.contains("Chrome")
+      - '"Sec-Ch-Ua" in headers'
+      - 'headers["Sec-Ch-Ua"].contains("Chromium")'
+      - '"Sec-Ch-Ua-Mobile" in headers'
+      - '"Sec-Ch-Ua-Platform" in headers'
+  action: WEIGH
+  weight:
+    adjust: -5
+
+- name: should-have-accept
+  expression: '!("Accept" in headers)'
+  action: WEIGH
+  weight:
+    adjust: 5
+
+# Generic catchall rule
+- name: generic-browser
+  user_agent_regex: >-
+    Mozilla|Opera
+  action: WEIGH
+  weight:
+    adjust: 10

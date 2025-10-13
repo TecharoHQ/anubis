@@ -11,6 +11,9 @@
 ## /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
 
 bots:
+  # You can import the entire default config with this macro:
+  # - import: (data)/meta/default-config.yaml
+
   # Pathological bots to deny
   - # This correlates to data/bots/_deny-pathological.yaml in the source tree
     # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
