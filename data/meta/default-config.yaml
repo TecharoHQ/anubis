@@ -91,13 +91,19 @@
       - '"Sec-Fetch-Dest" in headers'
       - '"Sec-Fetch-Mode" in headers'
       - '"Sec-Fetch-Site" in headers'
-      - '"Upgrade-Insecure-Requests" in headers'
       - '"Accept-Encoding" in headers'
       - '( headers["Accept-Encoding"].contains("zstd") || headers["Accept-Encoding"].contains("br") )'
       - '"Accept-Language" in headers'
   action: WEIGH
   weight:
     adjust: -10
+
+# The Upgrade-Insecure-Requests header is typically sent by browsers, but not always
+- name: upgrade-insecure-requests
+  expression: '"Upgrade-Insecure-Requests" in headers'
+  action: WEIGH
+  weight:
+    adjust: -2
 
 # Chrome should behave like Chrome
 - name: chrome-is-proper
