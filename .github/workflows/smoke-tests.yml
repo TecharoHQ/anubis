@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         test:
+          - default-config-macro
           - double_slash
           - forced-language
           - git-clone
