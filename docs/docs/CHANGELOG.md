@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix `ED25519_PRIVATE_KEY_HEX` characters length in the documentation
 - Added `(data)/meta/default-config.yaml` for importing the entire default configuration at once.
 - Add `-custom-real-ip-header` flag to get the original request IP from a different header than `x-real-ip`.
 - Add `contentLength` variable to bot expressions.
