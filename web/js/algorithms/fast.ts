@@ -18,7 +18,12 @@ export default function process(
 ): Promise<string> {
   console.debug("fast algo");
 
-  let workerMethod = window.crypto !== undefined ? "webcrypto" : "purejs";
+  // Choose worker based on secure context.
+  // Use the WebCrypto worker if the page is a secure context; otherwise fall back to pure‑JS.
+  let workerMethod: "webcrypto" | "purejs" = "purejs";
+  if (window.isSecureContext) {
+    workerMethod = "webcrypto";
+  }
 
   if (navigator.userAgent.includes("Firefox") || navigator.userAgent.includes("Goanna")) {
     console.log("Firefox detected, using pure-JS fallback");
