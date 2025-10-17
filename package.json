@@ -8,12 +8,19 @@
     "test:integration": "npm run assets && go test -v ./internal/test",
     "test:integration:podman": "npm run assets && go test -v ./internal/test --playwright-runner=podman",
     "test:integration:docker": "npm run assets && go test -v ./internal/test --playwright-runner=docker",
-    "assets": "go generate ./... && ./web/build.sh && ./xess/build.sh",
+    "generate": "go generate ./...",
+    "assets:js": "./web/build.sh",
+    "assets:css": "./xess/build.sh",
+    "assets:wasm": "bash ./scripts/build_wasm.sh",
+    "assets": "npm run generate && npm run assets:wasm && npm run assets:js && npm run assets:css",
     "build": "npm run assets && go build -o ./var/anubis ./cmd/anubis",
     "dev": "npm run assets && go run ./cmd/anubis --use-remote-address --target http://localhost:3000",
     "container": "npm run assets && go run ./cmd/containerbuild",
     "package": "yeet",
     "lint": "make lint"
+  },
+  "imports": {
+    "lib/*": "./web/lib/*"
   },
   "author": "",
   "license": "ISC",
@@ -29,6 +36,8 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.27.2"
+    "@haribala/wasm2js": "^1.1.1",
+    "preact": "^10.27.2",
+    "wasm-feature-detect": "^1.8.0"
   }
 }

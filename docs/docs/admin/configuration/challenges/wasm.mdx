@@ -1,0 +1,66 @@
+# Proof of Work (WebAssembly)
+
+Anubis supports using [WebAssembly](https://en.wikipedia.org/wiki/WebAssembly) to speed up proof of work validation. Proof of work functions as a randomized delay to prevent clients from overwhelming your server with traffic. All WebAssembly proof of work functions are written in Rust. If clients are running in a context without WebAssembly support, Anubis uses a variant of the WebAssembly code compiled to JavaScript.
+
+Anubis offers the following WebAssembly proof of work functions:
+
+- [hashx](#hashx) (via the [`hashx`](https://docs.rs/hashx/latest/hashx/index.html) crate)
+- [sha256](#sha256) (via the [`sha2`](https://docs.rs/sha2/latest/sha2/) crate)
+
+:::note
+
+The difficulty values for the WebAssembly based checks are going to be much higher than the equivalent difficulty values for the [JavaScript based checks](./proof-of-work.mdx). Generally these count the number of leading _bits_ that much match instead of the number of leading _nibbles_ that must match. Here's a rough translation table:
+
+| `fast` difficulty | `sha256` difficulty | `hashx` difficulty |
+| :---------------- | :------------------ | :----------------- |
+| `4`               | `16`                | `15`               |
+| `2`               | `8`                 | `7`                |
+| `6`               | `24`                | `20`               |
+
+:::
+
+## `hashx`
+
+Uses the ASIC-resistant [hashx](https://github.com/tevador/hashx) as the proof of work function. This is resistant to GPU and ASIC attacks. In practice this means that users need to be using a standards-compliant browser to pass the challenge.
+
+Usage:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: hashx
+      difficulty: 16
+      report_as: 16
+```
+
+## `sha256`
+
+Uses [SHA-256](https://en.wikipedia.org/wiki/SHA-2) as the proof of work function.
+
+:::note
+
+This is included mostly as a fallback for usecases that specifically require this hashing function. There are known tools that solve this particular challenge. Prefer [hashx](#hashx) unless you know what you are doing.
+
+:::
+
+Usage:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: sha256
+      difficulty: 16
+      report_as: 16
+```

@@ -37,6 +37,7 @@ import (
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
+	_ "github.com/TecharoHQ/anubis/lib/challenge/wasm"
 )
 
 var (
