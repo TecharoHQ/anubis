@@ -97,6 +97,7 @@ Some phones have an odd number of CPU cores. This caused [interesting issues](ht
 - Bump AI-robots.txt to version 1.39
 - Inject adversarial input to break AI coding assistants.
 - Add better logging when using Subrequest Authentication.
+- Add Ukrainian locale ([#1044](https://github.com/TecharoHQ/anubis/pull/1044))
 
 ### Security-relevant changes
 
