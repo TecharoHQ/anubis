@@ -164,7 +164,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		localizer := localization.GetLocalizer(r)
-		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy\"", localizer.T("internal_server_error")))
+		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy\"", localizer.T("internal_server_error")), makeCode(err))
 		return
 	}
 
@@ -267,13 +267,13 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		lg.Info("explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
-			s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.RuleDeny\"", localizer.T("internal_server_error")))
+			s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.RuleDeny\"", localizer.T("internal_server_error")), makeCode(ErrActualAnubisBug))
 			return true
 		}
 		hash := rule.Hash()
 
 		lg.Debug("rule hash", "hash", hash)
-		s.respondWithStatus(w, r, fmt.Sprintf("%s %s", localizer.T("access_denied"), hash), s.policy.StatusCodes.Deny)
+		s.respondWithStatus(w, r, fmt.Sprintf("%s %s", localizer.T("access_denied"), hash), "", s.policy.StatusCodes.Deny)
 		return true
 	case config.RuleChallenge:
 		lg.Debug("challenge requested")
@@ -284,7 +284,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 	default:
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		lg.Error("CONFIG ERROR: unknown rule", "rule", cr.Rule)
-		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.Rules\"", localizer.T("internal_server_error")))
+		s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.Rules\"", localizer.T("internal_server_error")), makeCode(ErrActualAnubisBug))
 		return true
 	}
 	return false
@@ -311,7 +311,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 				localizer.T("dronebl_entry"),
 				resp.String(),
 				localizer.T("see_dronebl_lookup"),
-				ip), s.policy.StatusCodes.Deny)
+				ip), "", s.policy.StatusCodes.Deny)
 			return true
 		}
 	}
@@ -399,7 +399,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	redirURL, err := url.ParseRequestURI(redir)
 	if err != nil {
 		lg.Error("invalid redirect", "err", err)
-		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), http.StatusBadRequest)
+		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), makeCode(err), http.StatusBadRequest)
 		return
 	}
 
@@ -408,7 +408,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		// allowed
 	default:
 		lg.Error("XSS attempt blocked, invalid redirect scheme", "scheme", redirURL.Scheme)
-		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), http.StatusBadRequest)
+		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
 		return
 	}
 
@@ -422,7 +422,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 		lg.Warn("user has cookies disabled, this is not an anubis bug")
-		s.respondWithError(w, r, localizer.T("cookies_disabled"))
+		s.respondWithError(w, r, localizer.T("cookies_disabled"), "")
 		return
 	}
 
@@ -431,19 +431,19 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	urlParsed, err := r.URL.Parse(redir)
 	if err != nil {
-		s.respondWithError(w, r, localizer.T("redirect_not_parseable"))
+		s.respondWithError(w, r, localizer.T("redirect_not_parseable"), makeCode(err))
 		return
 	}
 	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
 		lg.Debug("domain not allowed", "domain", urlParsed.Host)
-		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"))
+		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"), "")
 		return
 	}
 
 	cr, rule, err := s.check(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")))
+		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")), makeCode(err))
 		return
 	}
 	lg = lg.With("check_result", cr)
@@ -451,20 +451,20 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.Error("getChallenge failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
 		return
 	}
 
 	if chall.Spent {
 		lg.Error("double spend prevented", "reason", "double_spend")
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"), "")
 		return
 	}
 
 	impl, ok := challenge.Get(chall.Method)
 	if !ok {
 		lg.Error("check failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(ErrActualAnubisBug))
 		return
 	}
 
@@ -487,11 +487,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 			switch {
 			case errors.Is(err, challenge.ErrFailed):
 				lg.Error("challenge failed", "err", err)
-				s.respondWithStatus(w, r, cerr.PublicReason, cerr.StatusCode)
+				s.respondWithStatus(w, r, cerr.PublicReason, makeCode(err), cerr.StatusCode)
 				return
 			case errors.Is(err, challenge.ErrInvalidFormat), errors.Is(err, challenge.ErrMissingField):
 				lg.Error("invalid challenge format", "err", err)
-				s.respondWithError(w, r, cerr.PublicReason)
+				s.respondWithError(w, r, cerr.PublicReason, makeCode(err))
 				return
 			}
 		}
@@ -511,7 +511,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(s.opts.JWTRestrictionHeader) == "" {
 			lg.Error("JWTRestrictionHeader is set in config but not found in request, please check your reverse proxy config.")
 			s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-			s.respondWithError(w, r, "failed to sign JWT")
+			s.respondWithError(w, r, "failed to sign JWT", makeCode(err))
 			return
 		} else {
 			claims["restriction"] = internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader))
@@ -525,7 +525,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lg.Error("failed to sign JWT", "err", err)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.respondWithError(w, r, localizer.T("failed_to_sign_jwt"))
+		s.respondWithError(w, r, localizer.T("failed_to_sign_jwt"), makeCode(err))
 		return
 	}
 

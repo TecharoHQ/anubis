@@ -88,10 +88,13 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 	</html>
 }
 
-templ errorPage(message, mail string, localizer *localization.SimpleLocalizer) {
+templ errorPage(message, mail, code string, localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
 		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
+		if code != "" {
+			<code><pre>{ code }</pre></code>
+		}
 		if mail != "" {
 			<p>
 				<a href="/">{ localizer.T("go_home") }</a> { localizer.T("contact_webmaster") }
