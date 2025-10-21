@@ -137,6 +137,7 @@ gptbot
 Graphene
 grpcprom
 grw
+gzw
 Hashcash
 hashrate
 headermap
@@ -288,7 +289,6 @@ Sidetrade
 simprint
 sitemap
 sls
-Smartphone
 sni
 Spambot
 sparkline
@@ -368,7 +368,6 @@ Yda
 yeet
 yeetfile
 yourdomain
-yoursite
 yyz
 Zenos
 zizmor
