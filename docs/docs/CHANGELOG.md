@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add option to set `targetSNI` to special keyword 'auto' to indicate that it should be automatically set to the request Host name ([424](https://github.com/TecharoHQ/anubis/issues/424)).
 - The Preact challenge has been removed from the default configuration. It will be deprecated in the future.
 
+### Better error messages
+
+In order to make it easier for legitimate clients to debug issues with their browser configuration and Anubis, Anubis will emit internal error detail in base 64 so that administrators can chase down issues. Future versions of this may also include a variant that encrypts the error detail messages.
+
 ### Bug Fixes
 
 Sometimes the enhanced temporal assurance in [#1038](https://github.com/TecharoHQ/anubis/pull/1038) and [#1068](https://github.com/TecharoHQ/anubis/pull/1068) could backfire because Chromium and its ilk randomize the amount of time they wait in order to avoid a timing side channel attack. This has been fixed by both increasing the amount of time a client has to wait for the metarefresh and preact challenges as well as making the server side logic more permissive.
