@@ -62,5 +62,5 @@
   "js_calculation_error": "Rekningsfeil!",
   "js_calculation_error_msg": "Mislukkast i å rekna utfordring:",
   "missing_required_forwarded_headers": "Vantande naudsynte «X-Forwarded-*»-overskrifter",
-  "simplified_explanation": "Dette er eit tiltak mot robotar og ondsinna førespurnader som liknar på ein CAPTCHA. Men i staden for å måtte gjera arbeidet sjølv, får netlesaren din ei utrekningsoppgåve som han må løysa for å stadfesta at han er ein gyldig klient. Dette konseptet vert kalla <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">prov av arbeid</a>. Oppgåva vert rekna ut på nokre få sekund, og du får tilgang til nettstaden. Takk for forståinga di og tolmodet ditt."
+  "simplified_explanation": "Dette er eit tiltak mot robotar og ondsinna førespurnader som liknar på ein CAPTCHA. Men i staden for å måtte gjera arbeidet sjølv, får netlesaren din ei utrekningsoppgåve som han må løysa for å stadfesta at han er ein gyldig klient. Dette konseptet vert kalla <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">arbeidsstadfesting</a>. Oppgåva vert rekna ut på nokre få sekund, og du får tilgang til nettstaden. Takk for forståinga di og tolmodet ditt."
 }
