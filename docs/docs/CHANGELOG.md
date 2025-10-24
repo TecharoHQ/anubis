@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.23.0: Lyse Hext
 
+- Add default tencent cloud DENY rule.
 - Added `(data)/meta/default-config.yaml` for importing the entire default configuration at once.
 - Add `-custom-real-ip-header` flag to get the original request IP from a different header than `x-real-ip`.
 - Add `contentLength` variable to bot expressions.
