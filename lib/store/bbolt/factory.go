@@ -48,7 +48,7 @@ func (Factory) Build(ctx context.Context, data json.RawMessage) (store.Interface
 
 	go result.cleanupThread(ctx)
 
-	return store.NewActorifiedStore(result), nil
+	return result, nil
 }
 
 // Valid parses and validates the bbolt store Config or returns
