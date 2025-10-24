@@ -74,6 +74,19 @@ If you run into any issues running Anubis, please [open an issue](https://github
 
 For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in the Patron discord in the channel `#anubis`.
 
+
+# Documentation Referrers
+
+- Configuration
+    - [Apache](https://anubis.techaro.lol/docs/admin/environments/apache)
+    - [Caddy](https://anubis.techaro.lol/docs/admin/environments/caddy)
+    - [Cloudflare](https://anubis.techaro.lol/docs/admin/environments/cloudflare)
+    - [Docker Compose](https://anubis.techaro.lol/docs/admin/environments/docker-compose)
+
+- Build (DEVELOPER ONLY)
+    - [Without Docker](https://anubis.techaro.lol/docs/developer/building-anubis)
+
+
 ## Star History
 
 <a href="https://www.star-history.com/#TecharoHQ/anubis&Date">
@@ -95,3 +108,5 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
+
+
