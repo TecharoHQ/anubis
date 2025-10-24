@@ -66,7 +66,7 @@ Anubis is a bit of a nuclear response. This will result in your website being bl
 
 In most cases, you should not need this and can probably get by using Cloudflare to protect a given origin. However, for circumstances where you can't or won't use Cloudflare, Anubis is there for you.
 
-If you want to try this out, connect to [anubis.techaro.lol](https://anubis.techaro.lol).
+If you want to try this out, visit the Anubis documentation site at [anubis.techaro.lol](https://anubis.techaro.lol).
 
 ## Support
 
