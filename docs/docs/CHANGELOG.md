@@ -41,6 +41,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add option to set `targetSNI` to special keyword 'auto' to indicate that it should be automatically set to the request Host name ([424](https://github.com/TecharoHQ/anubis/issues/424)).
 - The Preact challenge has been removed from the default configuration. It will be deprecated in the future.
 
+### Potentially breaking changes
+
+#### Multiple checks at once has and-like semantics instead of or-like semantics
+
+Anubis lets you stack multiple checks at once with blocks like this:
+
+```yaml
+name: allow-prometheus
+action: ALLOW
+user_agent_regex: ^prometheus-probe$
+remote_addresses:
+  - 192.168.2.0/24
+```
+
+Previously, this only returned ALLOW if _any one_ of the conditions matched. This behaviour has changed to only return ALLOW if _all_ of the conditions match. I expect this to have some issues with user configs, however this fix is grave enough that it's worth the risk of breaking configs. If this bites you, please let me know so we can make an escape hatch.
+
 ### Better error messages
 
 In order to make it easier for legitimate clients to debug issues with their browser configuration and Anubis, Anubis will emit internal error detail in base 64 so that administrators can chase down issues. Future versions of this may also include a variant that encrypts the error detail messages.
