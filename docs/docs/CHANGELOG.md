@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
+## ## v1.23.1: qwertdev
+
+- Added `Documentation Reffers ( Links )` to the readme file for more easier setup and understanding of the user. Improving User/Client's Understanding of the Project, making it more simpler
+- Added `Developer Only Reffers` for developers to easily navigate the documentation, directly from the repo (IF THE DEVELOPER IS NOT FAMILIAR WITH THE PROJECT)
+
 
 ## v1.23.0: Lyse Hext
 
