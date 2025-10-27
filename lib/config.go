@@ -175,7 +175,9 @@ func New(opts Options) (*Server, error) {
 
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)
-		impl.Setup(mux)
+		if err := impl.Setup(mux); err != nil {
+			return nil, fmt.Errorf("failed to init challenge method %s: %w", implKind, err)
+		}
 	}
 
 	result.mux = mux

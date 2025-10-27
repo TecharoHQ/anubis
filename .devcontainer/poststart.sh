@@ -5,5 +5,6 @@ pwd
 npm ci &
 go mod download &
 go install ./utils/cmd/... &
+cargo fetch &
 
 wait

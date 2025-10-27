@@ -76,6 +76,7 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
+	github.com/tetratelabs/wazero v1.9.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

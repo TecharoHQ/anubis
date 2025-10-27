@@ -10,7 +10,11 @@
   "postStartCommand": "bash ./.devcontainer/poststart.sh",
   "features": {
     "ghcr.io/xe/devcontainer-features/ko:1.1.0": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "targets": "wasm32-unknown-unknown"
+    }
   },
   "initializeCommand": "mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.local/share/atuin",
   "customizations": {
