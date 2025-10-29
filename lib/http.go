@@ -296,6 +296,16 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 	if proto == "" || host == "" || uri == "" {
 		return "", errors.New(localizer.T("missing_required_forwarded_headers"))
 	}
+
+	switch proto {
+	case "http", "https":
+		// allowed
+	default:
+		lg := internal.GetRequestLogger(s.logger, r)
+		lg.Warn("invalid protocol in X-Forwarded-Proto", "proto", proto)
+		return "", errors.New(localizer.T("invalid_redirect"))
+	}
+
 	// Check if host is allowed in RedirectDomains (supports '*' via glob)
 	if len(s.opts.RedirectDomains) > 0 && !matchRedirectDomain(s.opts.RedirectDomains, host) {
 		lg := internal.GetRequestLogger(s.logger, r)
@@ -369,16 +379,31 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		localizer := localization.GetLocalizer(r)
 
 		redir := r.FormValue("redir")
-		urlParsed, err := r.URL.Parse(redir)
+		urlParsed, err := url.ParseRequestURI(redir)
 		if err != nil {
-			s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), makeCode(err), http.StatusBadRequest)
+			// if ParseRequestURI fails, try as relative URL
+			urlParsed, err = r.URL.Parse(redir)
+			if err != nil {
+				s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), makeCode(err), http.StatusBadRequest)
+				return
+			}
+		}
+
+		// validate URL scheme to prevent javascript:, data:, file:, tel:, etc.
+		switch urlParsed.Scheme {
+		case "", "http", "https":
+			// allowed: empty scheme means relative URL
+		default:
+			lg := internal.GetRequestLogger(s.logger, r)
+			lg.Warn("XSS attempt blocked, invalid redirect scheme", "scheme", urlParsed.Scheme, "redir", redir)
+			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
 			return
 		}
 
 		hostNotAllowed := len(urlParsed.Host) > 0 &&
 			len(s.opts.RedirectDomains) != 0 &&
 			!matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)
-		hostMismatch := r.URL.Host != "" && urlParsed.Host != r.URL.Host
+		hostMismatch := r.URL.Host != "" && urlParsed.Host != "" && urlParsed.Host != r.URL.Host
 
 		if hostNotAllowed || hostMismatch {
 			lg := internal.GetRequestLogger(s.logger, r)
