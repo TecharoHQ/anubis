@@ -7,4 +7,4 @@ configMapGenerator:
   - name: nginx-cfg
     behavior: create
     files:
-    - ./conf.d/default.conf
+      - ./conf.d/default.conf
