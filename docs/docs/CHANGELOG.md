@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow multiple consecutive slashes in a row in application paths ([#754](https://github.com/TecharoHQ/anubis/issues/754)).
 - Add option to set `targetSNI` to special keyword 'auto' to indicate that it should be automatically set to the request Host name ([424](https://github.com/TecharoHQ/anubis/issues/424)).
 - The Preact challenge has been removed from the default configuration. It will be deprecated in the future.
+- An open redirect when in subrequest mode has been fixed.
 
 ### Potentially breaking changes
 
