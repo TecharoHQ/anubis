@@ -4,4 +4,3 @@
 - import: (data)/bots/custom-async-http-client.yaml
 - import: (data)/crawlers/alibaba-cloud.yaml
 - import: (data)/crawlers/huawei-cloud.yaml
-- import: (data)/crawlers/tencent-cloud.yaml

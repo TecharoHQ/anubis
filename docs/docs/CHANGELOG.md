@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Fix `SERVE_ROBOTS_TXT` setting file after the double slash fix broke it.
+- Remove the default configuration rule to block Tencent cloud. If users see abuse from Tencent cloud IP ranges, please contact abuse@tencent.com and mention that you are using Anubis to protect your services. Please include source IP address, source port, timestamp, target IP address, target port, request headers (including the User-Agent header), and target endpoints/patterns.
 
 ## v1.23.0: Lyse Hext
 
