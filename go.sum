@@ -37,6 +37,8 @@ github.com/Songmu/gitconfig v0.2.1 h1:cZsqELfMtxWVI8ovq17gbvsR4qLfoYLAiXy5GwtJWb
 github.com/Songmu/gitconfig v0.2.1/go.mod h1:XM4O3SoXFnli9Ql2G7qXK2Fg7LJwf7Hs8GLFEOJlzmM=
 github.com/TecharoHQ/thoth-proto v0.4.0 h1:UbkvfgCku0Dm1R6O4ug3HOsJNnE6F3wB8x+Dpw2lzFI=
 github.com/TecharoHQ/thoth-proto v0.4.0/go.mod h1:IcGnZt3iYUZQVEa0Lwk5l4ix0hCeXlWUV1TJMZvbWx0=
+github.com/TecharoHQ/thoth-proto v0.5.0 h1:Fa663s4soYiURSU8MfW9tZ2wF+LsCRSaYmjUSyagfBM=
+github.com/TecharoHQ/thoth-proto v0.5.0/go.mod h1:C/U7FqTxpVn4V/qebC/GcW32I0h9xzsmWehF27KFOJs=
 github.com/TecharoHQ/yeet v0.6.3 h1:Iev6TYt/tpFYU73kbkNIYjCObYTvlihtby+htGF4Us8=
 github.com/TecharoHQ/yeet v0.6.3/go.mod h1:ltt+PWPjnvmQJxEHsdJ5K9u3GoWK83vSLWCCp8XbxqI=
 github.com/a-h/parse v0.0.0-20250122154542-74294addb73e h1:HjVbSQHy+dnlS6C3XajZ69NYAb5jbGNfHanvm1+iYlo=
