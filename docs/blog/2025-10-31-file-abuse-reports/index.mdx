@@ -9,7 +9,7 @@ image: goose-pond.webp
 
 ![](./goose-pond.webp)
 
-Recently with Anubis I've been focusing on making normal users see fewer challenge pages. This means a better experience for users, however there is a chance that services will be exposed to abuse from users of public clouds. In order to make administrators better equipped, I want to take the time to help you understand how to file abuse reports with IP space owners so that we can cut the scrapers off at the source.
+As part of Anubis's ongoing development, I've been working to reduce friction for legitimate users by minimizing unnecessary challenge pages. While this improves the user experience, it can potentially expose services to increased abuse from public cloud infrastructure. To help administrators better protect their services, I want to share my strategies for filing abuse reports with IP space owners, enabling us to address malicious scraping at its source.
 
 {/* truncate */}
 
@@ -18,7 +18,7 @@ In general, there are two kinds of IP addresses:
 - Residential IP addresses: IP addresses that are allocated to residential customers such as home internet connections and cellular data plans. These IP addresses are increasingly shared between customers due to technologies like [CGNAT](https://en.wikipedia.org/wiki/Carrier-grade_NAT).
 - Commercial IP addresses: IP addresses that are allocated to commercial customers such as cloud providers, VPS providers, root server providers, and other such business to business companies. These IP addresses are almost always statically allocated to one customer for a very long period of time (typically the lifetime of the server unless they are using things like dedicated IP addresses).
 
-In general, filing abuse reports to residential IP addresses is a lost cause. Many times the users of those IP addresses don't know that their computer is sending abusive traffic to your services. A lot of malware botnets that used to be used with DDOS for hire services are now being used as residential proxies. Those "free VPN apps" are almost certainly making you pay for your usage by making your computer a zombie in a botnet. At some level I really respect the hustle as they manage to sell other people's bandwidth for rates as ludicrous as $1.00 per gigabyte ingressed and egressed.
+In general, filing abuse reports to residential IP addresses is a waste of time. The administrators do appreciate knowing what kinds of abusive traffic is causing grief, but many times the users of those IP addresses don't know that their computer is sending abusive traffic to your services. A lot of malware botnets that used to be used with DDOS for hire services are now being used as residential proxies. Those "free VPN apps" are almost certainly making you pay for your usage by making your computer a zombie in a botnet. At some level I really respect the hustle as they manage to sell other people's bandwidth for rates as ludicrous as $1.00 per gigabyte ingressed and egressed.
 
 :::note
 
