@@ -3,11 +3,11 @@ slug: 2025/file-abuse-reports
 title: Taking steps to end abusive traffic from cloud providers
 description: "Learn how to effectively file abuse reports with cloud providers to stop malicious traffic at its source and protect your services from automated abuse."
 authors: [xe]
-tags: []
+tags: [abuse, cloud, security, networking]
 image: goose-pond.webp
 ---
 
-![](./goose-pond.webp)
+![A peaceful goose pond](./goose-pond.webp)
 
 As part of Anubis's ongoing development, I've been working to reduce friction for legitimate users by minimizing unnecessary challenge pages. While this improves the user experience, it can potentially expose services to increased abuse from public cloud infrastructure. To help administrators better protect their services, I want to share my strategies for filing abuse reports with IP space owners, enabling us to address malicious scraping at its source.
 
@@ -34,7 +34,7 @@ In general, the best abuse reports contain the following information:
 
 - Time of abusive requests.
 - IP address, User-Agent header, or other unique identifiers that can help the abuse team educate the customer about their misbehaving infrastructure.
-- Does the abusive IP address requests robots.txt? If not, be sure to include that information.
+- Does the abusive IP address request robots.txt? If not, be sure to include that information.
 - A brief description of the impact to your system such as high system load, pages not rendering, or database system crashes. This helps the provider establish the fact that their customer is causing you measurable harm.
 - Context as to what your service is, what it does, and why they should care.
 
