@@ -9,6 +9,8 @@ amazonbot
 anthro
 anubis
 anubistest
+apnic
+APNICRANDNETAU
 Applebot
 archlinux
 asnc
@@ -144,6 +146,7 @@ headermap
 healthcheck
 healthz
 hec
+helpdesk
 Hetzner
 hmc
 homelab
@@ -162,6 +165,7 @@ Imagesift
 imgproxy
 impressum
 inbox
+ingressed
 inp
 internets
 IPTo
@@ -208,6 +212,7 @@ metrix
 mimi
 Minfilia
 mistralai
+mnt
 Mojeek
 mojeekbot
 mozilla
@@ -243,6 +248,7 @@ pipefail
 pki
 podkova
 podman
+Postgre
 poststart
 prebaked
 privkey
@@ -328,7 +334,6 @@ unifiedjs
 unmarshal
 unparseable
 uvx
-uwu
 UXP
 valkey
 Varis
@@ -336,6 +341,7 @@ Velen
 vendored
 vhosts
 VKE
+VPS
 Vultr
 weblate
 webmaster
@@ -343,6 +349,7 @@ webpage
 websecure
 websites
 Webzio
+whois
 wildbase
 withthothmock
 wolfbeast
