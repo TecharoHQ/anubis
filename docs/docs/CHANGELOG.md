@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix `SERVE_ROBOTS_TXT` setting file after the double slash fix broke it.
+
 ## v1.23.0: Lyse Hext
 
 - Add default tencent cloud DENY rule.

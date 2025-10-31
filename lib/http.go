@@ -345,6 +345,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Forward robots.txt requests to mux when ServeRobotsTXT is enabled
+	if s.opts.ServeRobotsTXT {
+		path := strings.TrimPrefix(r.URL.Path, anubis.BasePrefix)
+		if path == "/robots.txt" || path == "/.well-known/robots.txt" {
+			s.mux.ServeHTTP(w, r)
+			return
+		}
+	}
+
 	s.maybeReverseProxyOrPage(w, r)
 }
 

@@ -23,6 +23,7 @@ jobs:
           - i18n
           - palemoon/amd64
           #- palemoon/i386
+          - robots_txt
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
