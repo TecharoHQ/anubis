@@ -134,6 +134,16 @@ bots:
     weight:
       adjust: -5
 
+  # Chrome should send versions of form 130.0.0.0 in its user agent string.
+  - name: chrome-version-simplified
+    expression:
+      all:
+        - userAgent.contains("Chrome")
+        - userAgent.matches("Chrome/1[3-9][0-9]\\.0\\.0\\.0")
+    action: WEIGH
+    weight:
+      adjust: -5
+
   - name: should-have-accept
     expression: '!("Accept" in headers)'
     action: WEIGH
