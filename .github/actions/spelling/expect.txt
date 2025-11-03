@@ -196,8 +196,8 @@ lgbt
 licend
 licstart
 lightpanda
-limsa
-Linting
+LIMSA
+linting
 linuxbrew
 LLU
 loadbalancer

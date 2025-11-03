@@ -300,7 +300,10 @@ There are a bunch of other assorted features and fixes too:
 
 - Add `COOKIE_SECURE` option to set the cookie [Secure flag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#block_access_to_your_cookies)
 - Sets cookie defaults to use [SameSite: None](https://web.dev/articles/samesite-cookies-explained)
-- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677)).
+- Add conventional commit linting to enforce standardized commit message formatting across the project
+- Fix OpenGraph passthrough with new policy definitions ([#717](https://github.com/TecharoHQ/anubis/issues/717))
+- Determine the `BIND_NETWORK`/`--bind-network` value from the bind address ([#677](https://github.com/TecharoHQ/anubis/issues/677))
+- Implement localization system. Find locale files in lib/localization/locales/.
 - Implement a [development container](https://containers.dev/) manifest to make contributions easier.
 - Fix dynamic cookie domains functionality ([#731](https://github.com/TecharoHQ/anubis/pull/731))
 - Add option for custom cookie prefix ([#732](https://github.com/TecharoHQ/anubis/pull/732))
