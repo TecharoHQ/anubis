@@ -8,7 +8,7 @@
   "ai_companies_explanation": "Þú ert að sjá þetta vegna þess að kerfisstjóri þessa vefsvæðis hefur sett upp Anubis til að vernda vefþjóninn fyrir holskeflu beiðna frá svokölluðum gervigreindarfyrirtækjum sem samviskulaust eru að skrapa upplýsingar af vefsvæðum annarra. Þetta getur valdið og veldur töfum og truflunum á þessum vefsvæðum, sem aftur veldur því að efni þeirra verður öllum óaðgengilegt.",
   "anubis_compromise": "Anubis er millivegur. Anubis notar sönnun-á-vinnu (Proof-of-Work) skema í líkingu við Hashcash, sem er viðlíka skema til að minnka ruslpóst. Hugmyndin er að fyrir almennar heimsóknir verði viðbótarálagið vegna þessa ásættanlegt og valdi litlum truflunum, en við massaskröpun verði samlegðaráhrifin veruleg og geri slíka skröpun upplýsinga of dýra hvað varðar afköst og reiknigetu.",
   "hack_purpose": "Að lokum er þetta staðgengilslausn svo hægt sé að eyða meiri tíma í fingraför og auðkenningu höfuðlausra vafra (t.d. með því hvernig þeir birta leturgerðir) svo að áskorunarprófunarsíðan þurfi ekki að birtast notendum sem eru mun líklegri til að vera lögmætir.",
-  "jshelter_note": "Athugaðu að Anubis krefst notkunar á ýmsum nútímalegum eiginleikum JavaScript sem viðbætur á borð við JShelter munu gera ávirka. Endilega gerðu JShelter eða álíka viðbætur óvirkar fyrir þetta lén.",
+  "jshelter_note": "Athugaðu að Anubis krefst notkunar á ýmsum nútímalegum eiginleikum JavaScript sem viðbætur á borð við JShelter munu gera óvirka. Endilega gerðu JShelter eða álíka viðbætur óvirkar fyrir þetta lén.",
   "version_info": "Þetta vefsvæði er að keyra Anubis útgáfu",
   "try_again": "Prófaðu aftur",
   "go_home": "Farðu aftur heim til þín",
@@ -62,5 +62,5 @@
   "js_calculation_error": "Reiknivilla!",
   "js_calculation_error_msg": "Mistókst að reikna áskorun:",
   "missing_required_forwarded_headers": "Vantar nauðsynleg X-Forwarded-* hausar",
-  "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illgjarnum beiðnum svipað og CAPTCHA. Hins vegar, í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Sönnun-á-vinnu</a>. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina."
+  "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illa meinandi beiðnum, sem virkar svipað og CAPTCHA-mennskupróf. Hins vegar; í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Sönnun-á-vinnu</a>. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina."
 }
