@@ -64,6 +64,7 @@ Codespaces
 confd
 connnection
 containerbuild
+containerregistry
 coreutils
 Cotoyogi
 Cromite
@@ -341,6 +342,7 @@ Velen
 vendored
 vhosts
 VKE
+vnd
 VPS
 Vultr
 weblate
