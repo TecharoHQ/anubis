@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+export VERSION=$GITHUB_COMMIT-test
+export KO_DOCKER_REPO=ko.local
+
 source ../lib/lib.sh
 
 build_anubis_ko
