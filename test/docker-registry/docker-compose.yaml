@@ -1,0 +1,30 @@
+services:
+  registry:
+    image: distribution/distribution:edge
+    restart: always
+
+  relayd:
+    image: ghcr.io/xe/x/relayd
+    pull_policy: always
+    environment:
+      CERT_DIR: /etc/techaro/pki/registry.local.cetacean.club
+      CERT_FNAME: cert.pem
+      KEY_FNAME: key.pem
+      PROXY_TO: http://anubis:3000
+    ports:
+      - 3004:3004
+    volumes:
+      - ../pki/registry.local.cetacean.club:/etc/techaro/pki/registry.local.cetacean.club
+
+  anubis:
+    image: ko.local/anubis
+    restart: always
+    environment:
+      BIND: ":3000"
+      TARGET: http://registry:5000
+      POLICY_FNAME: /etc/techaro/anubis.yaml
+      USE_REMOTE_ADDRESS: "true"
+    ports:
+      - 3000
+    volumes:
+      - ./anubis.yaml:/etc/techaro/anubis.yaml

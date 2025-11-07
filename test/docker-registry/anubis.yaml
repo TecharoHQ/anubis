@@ -1,0 +1,7 @@
+bots:
+  - import: (data)/meta/default-config.yaml
+  - import: (data)/clients/docker-client.yaml
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403

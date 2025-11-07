@@ -15,6 +15,7 @@ jobs:
       matrix:
         test:
           - default-config-macro
+          - docker-registry
           - double_slash
           - forced-language
           - git-clone
