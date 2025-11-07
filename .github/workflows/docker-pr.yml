@@ -2,7 +2,7 @@ name: Docker image builds (pull requests)
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   DOCKER_METADATA_SET_OUTPUT_ENV: "true"
@@ -20,6 +20,11 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
           persist-credentials: false
+
+      - name: build essential
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential simdjson
 
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@main

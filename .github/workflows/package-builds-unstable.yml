@@ -2,9 +2,9 @@ name: Package builds (unstable)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -15,60 +15,60 @@ jobs:
     #runs-on: alrest-techarohq
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        persist-credentials: false
-        fetch-tags: true
-        fetch-depth: 0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+          fetch-tags: true
+          fetch-depth: 0
 
-    - name: build essential
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential
+      - name: build essential
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential simdjson
 
-    - name: Set up Homebrew
-      uses: Homebrew/actions/setup-homebrew@main
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
 
-    - name: Setup Homebrew cellar cache
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-      with:
-        path: |
-          /home/linuxbrew/.linuxbrew/Cellar
-          /home/linuxbrew/.linuxbrew/bin
-          /home/linuxbrew/.linuxbrew/etc
-          /home/linuxbrew/.linuxbrew/include
-          /home/linuxbrew/.linuxbrew/lib
-          /home/linuxbrew/.linuxbrew/opt
-          /home/linuxbrew/.linuxbrew/sbin
-          /home/linuxbrew/.linuxbrew/share
-          /home/linuxbrew/.linuxbrew/var
-        key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-homebrew-cellar-
+      - name: Setup Homebrew cellar cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            /home/linuxbrew/.linuxbrew/Cellar
+            /home/linuxbrew/.linuxbrew/bin
+            /home/linuxbrew/.linuxbrew/etc
+            /home/linuxbrew/.linuxbrew/include
+            /home/linuxbrew/.linuxbrew/lib
+            /home/linuxbrew/.linuxbrew/opt
+            /home/linuxbrew/.linuxbrew/sbin
+            /home/linuxbrew/.linuxbrew/share
+            /home/linuxbrew/.linuxbrew/var
+          key: ${{ runner.os }}-go-homebrew-cellar-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-homebrew-cellar-
 
-    - name: Install Brew dependencies
-      run: |
-        brew bundle
+      - name: Install Brew dependencies
+        run: |
+          brew bundle
 
-    - name: Setup Golang caches
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-golang-
+      - name: Setup Golang caches
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
 
-    - name: install node deps
-      run: |
-        npm ci
+      - name: install node deps
+        run: |
+          npm ci
 
-    - name: Build Packages
-      run: |
-        go tool yeet
+      - name: Build Packages
+        run: |
+          go tool yeet
 
-    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-      with:
-        name: packages
-        path: var/*
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: packages
+          path: var/*
