@@ -1,0 +1,73 @@
+name: Asset Build Verification
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  asset_verification:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: build essential
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: latest
+
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: stable
+
+      - name: install node deps
+        run: |
+          npm ci
+
+      - name: Check for uncommitted changes before asset build
+        id: check-changes-before
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fail if there are uncommitted changes before build
+        if: steps.check-changes-before.outputs.has_changes == 'true'
+        run: |
+          echo "There are uncommitted changes before running npm run assets"
+          git status
+          exit 1
+
+      - name: Run asset build
+        run: |
+          npm run assets
+
+      - name: Check for uncommitted changes after asset build
+        id: check-changes-after
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fail if assets generated changes
+        if: steps.check-changes-after.outputs.has_changes == 'true'
+        run: |
+          echo "npm run assets generated uncommitted changes. This indicates the repository has outdated generated files."
+          echo "Please run 'npm run assets' locally and commit the changes."
+          git status
+          git diff
+          exit 1
