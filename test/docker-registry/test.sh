@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 
-export VERSION=$GITHUB_COMMIT-test
+export VERSION=${GITHUB_SHA}-test
 export KO_DOCKER_REPO=ko.local
+
+set -u
 
 source ../lib/lib.sh
 
