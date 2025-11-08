@@ -36,6 +36,7 @@ botstopper
 BPort
 Brightbot
 broked
+buildah
 byteslice
 Bytespider
 cachebuster
@@ -199,7 +200,6 @@ licstart
 lightpanda
 limsa
 Linting
-linuxbrew
 LLU
 loadbalancer
 lol
@@ -226,6 +226,7 @@ nobots
 NONINFRINGEMENT
 nosleep
 nullglob
+oci
 OCOB
 ogtag
 oklch
