@@ -23,3 +23,24 @@
     all:
       - '"Docker-Distribution-Api-Version" in headers'
       - '!(userAgent.contains("Mozilla"))'
+
+- name: allow-go-containerregistry-client
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("go-containerregistry/")
+
+- name: allow-buildah
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("Buildah/")
+
+- name: allow-podman
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("containers/")
