@@ -1,0 +1,8 @@
+{
+  "label": "Server Roles",
+  "position": 40,
+  "link": {
+    "type": "generated-index",
+    "description": "Various server roles you will need to keep in mind with Anubis."
+  }
+}
