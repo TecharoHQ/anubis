@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Allow more OCI registry clients [based on feedback](https://github.com/TecharoHQ/anubis/pull/1253#issuecomment-3506744184).
+- Expose services directory in the embedded `(data)` filesystem.
 
 ## v1.23.1: Lyse Hext - Echo 1
 
