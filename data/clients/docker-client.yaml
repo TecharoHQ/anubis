@@ -44,3 +44,10 @@
     all:
       - path.startsWith("/v2/")
       - userAgent.contains("containers/")
+
+- name: allow-containerd
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("containerd/")
