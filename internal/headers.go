@@ -87,7 +87,7 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-Ip") == "" && xffHeader != "" {
 			ip := xff.Parse(xffHeader)
-			slog.Debug("setting x-real-ip", "val", ip)
+			slog.Debug("setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
 			r.Header.Set("X-Real-Ip", ip)
 		}
 
@@ -129,6 +129,8 @@ func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
 		} else {
 			r.Header.Set("X-Forwarded-For", xffHeaderString)
 		}
+
+		slog.Debug("updating X-Forwarded-For", "original", origXFFHeader, "new", xffHeaderString)
 	})
 }
 
