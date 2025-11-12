@@ -51,3 +51,10 @@
     all:
       - path.startsWith("/v2/")
       - userAgent.contains("containerd/")
+
+- name: allow-renovate
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("Renovate/")
