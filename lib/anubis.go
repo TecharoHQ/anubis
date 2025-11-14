@@ -117,10 +117,12 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	}
 
 	chall := challenge.Challenge{
-		ID:         id.String(),
-		Method:     rule.Challenge.Algorithm,
-		RandomData: fmt.Sprintf("%x", randomData),
-		IssuedAt:   time.Now(),
+		ID:             id.String(),
+		Method:         rule.Challenge.Algorithm,
+		RandomData:     fmt.Sprintf("%x", randomData),
+		IssuedAt:       time.Now(),
+		Difficulty:     rule.Challenge.Difficulty,
+		PolicyRuleHash: rule.Hash(),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
 			"X-Real-Ip":  r.Header.Get("X-Real-Ip"),
@@ -135,6 +137,44 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	lg.Info("new challenge issued", "challenge", id.String())
 
 	return &chall, err
+}
+
+func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challenge, lg *slog.Logger) *policy.Bot {
+	if chall == nil {
+		return rule
+	}
+
+	if rule == nil {
+		rule = &policy.Bot{
+			Rules: &checker.List{},
+		}
+	}
+
+	if chall.Difficulty == 0 {
+		// fall back to whatever the policy currently says or the global default
+		if rule.Challenge != nil && rule.Challenge.Difficulty != 0 {
+			chall.Difficulty = rule.Challenge.Difficulty
+		} else {
+			chall.Difficulty = s.policy.DefaultDifficulty
+		}
+	}
+
+	if rule.Challenge == nil {
+		lg.Warn("rule missing challenge configuration; using stored challenge metadata", "rule", rule.Name)
+		rule.Challenge = &config.ChallengeRules{}
+	}
+
+	if rule.Challenge.Difficulty == 0 {
+		rule.Challenge.Difficulty = chall.Difficulty
+	}
+	if rule.Challenge.ReportAs == 0 {
+		rule.Challenge.ReportAs = chall.Difficulty
+	}
+	if rule.Challenge.Algorithm == "" {
+		rule.Challenge.Algorithm = chall.Method
+	}
+
+	return rule
 }
 
 func (s *Server) maybeReverseProxyHttpStatusOnly(w http.ResponseWriter, r *http.Request) {
@@ -460,6 +500,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"), "")
 		return
 	}
+
+	rule = s.hydrateChallengeRule(rule, chall, lg)
 
 	impl, ok := challenge.Get(chall.Method)
 	if !ok {

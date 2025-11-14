@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,8 +19,10 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
@@ -1025,6 +1028,59 @@ func TestPassChallengeXSS(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
+	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+	})
+
+	allowThreshold, err := policy.ParsedThresholdFromConfig(config.Threshold{
+		Name: "allow-all",
+		Expression: &config.ExpressionOrList{
+			Expression: "true",
+		},
+		Action: config.RuleAllow,
+	})
+	if err != nil {
+		t.Fatalf("can't compile test threshold: %v", err)
+	}
+	srv.policy.Thresholds = []*policy.Threshold{allowThreshold}
+	srv.policy.Bots = nil
+
+	chall := challenge.Challenge{
+		ID:         "test-challenge",
+		Method:     "metarefresh",
+		RandomData: "apple cider",
+		IssuedAt:   time.Now().Add(-5 * time.Second),
+		Difficulty: 1,
+	}
+
+	j := store.JSON[challenge.Challenge]{Underlying: srv.store}
+	if err := j.Set(context.Background(), "challenge:"+chall.ID, chall, time.Minute); err != nil {
+		t.Fatalf("can't insert challenge into store: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "https://example.com"+anubis.APIPrefix+"pass-challenge", nil)
+	q := req.URL.Query()
+	q.Set("redir", "/")
+	q.Set("id", chall.ID)
+	q.Set("challenge", chall.RandomData)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Set("X-Real-Ip", "203.0.113.4")
+	req.Header.Set("User-Agent", "NilChallengeTester/1.0")
+	req.AddCookie(&http.Cookie{Name: anubis.TestCookieName, Value: chall.ID})
+
+	rr := httptest.NewRecorder()
+
+	srv.PassChallenge(rr, req)
+
+	if rr.Code != http.StatusFound {
+		t.Fatalf("expected redirect when validating challenge, got %d", rr.Code)
+	}
 }
 
 func TestXForwardedForNoDoubleComma(t *testing.T) {
