@@ -22,6 +22,20 @@ func TestRemoteAddrChecker(t *testing.T) {
 			err:   nil,
 		},
 		{
+			name:  "match_ipv4_in_ipv6",
+			cidrs: []string{"0.0.0.0/0"},
+			ip:    "::ffff:1.1.1.1",
+			ok:    true,
+			err:   nil,
+		},
+		{
+			name:  "match_ipv4_in_ipv6_hex",
+			cidrs: []string{"0.0.0.0/0"},
+			ip:    "::ffff:101:101",
+			ok:    true,
+			err:   nil,
+		},
+		{
 			name:  "match_ipv6",
 			cidrs: []string{"::/0"},
 			ip:    "cafe:babe::",
