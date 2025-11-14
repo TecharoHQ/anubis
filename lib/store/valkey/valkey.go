@@ -31,7 +31,14 @@ func (s *Store) Set(ctx context.Context, key string, value []byte, expiry time.D
 }
 
 func (s *Store) Delete(ctx context.Context, key string) error {
-	return s.client.Del(ctx, key).Err()
+	res := s.client.Del(ctx, key)
+	if err := res.Err(); err != nil {
+		return err
+	}
+	if n, _ := res.Result(); n == 0 {
+		return store.ErrNotFound
+	}
+	return nil
 }
 
 // IsPersistent tells Anubis this backend is “real” storage, not in-memory.

@@ -8,3 +8,4 @@ msgbox
 xeact
 ABee
 tencent
+maintnotifications

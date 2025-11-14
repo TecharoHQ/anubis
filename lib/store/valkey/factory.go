@@ -87,6 +87,9 @@ func (Factory) Build(ctx context.Context, data json.RawMessage) (store.Interface
 		}
 		client = valkey.NewClusterClient(clusterOpts)
 	} else {
+		opts.MaintNotificationsConfig = &maintnotifications.Config{
+			Mode: maintnotifications.ModeDisabled,
+		}
 		client = valkey.NewClient(opts)
 	}
 
