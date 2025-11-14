@@ -9,6 +9,7 @@ import (
 
 	"github.com/TecharoHQ/anubis/lib/store"
 	valkey "github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9/maintnotifications"
 )
 
 func init() {
@@ -78,6 +79,11 @@ func (Factory) Build(ctx context.Context, data json.RawMessage) (store.Interface
 		// Cluster mode: use the parsed Addr as the seed node.
 		clusterOpts := &valkey.ClusterOptions{
 			Addrs: []string{opts.Addr},
+			// Explicitly disable maintenance notifications
+			// This prevents the client from sending CLIENT MAINT_NOTIFICATIONS ON
+			MaintNotificationsConfig: &maintnotifications.Config{
+				Mode: maintnotifications.ModeDisabled,
+			},
 		}
 		client = valkey.NewClusterClient(clusterOpts)
 	} else {
