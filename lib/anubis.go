@@ -576,6 +576,7 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
 			case config.RuleWeigh:
 				lg.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
+				policy.Applications.WithLabelValues("bot/"+b.Name, "WEIGH").Add(1)
 				weight += b.Weight.Adjust
 			}
 		}
