@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Ukrainian locale ([#1044](https://github.com/TecharoHQ/anubis/pull/1044)).
 - Allow Renovate as an OCI registry client.
 - Properly handle 4in6 addresses so that IP matching works with those addresses.
+- Add support to simple Valkey/Redis cluster mode
 
 ## v1.23.1: Lyse Hext - Echo 1
 
