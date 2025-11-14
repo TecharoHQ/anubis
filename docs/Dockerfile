@@ -1,4 +1,4 @@
-FROM docker.io/library/node AS build
+FROM docker.io/library/node:lts AS build
 
 WORKDIR /app
 COPY . .
