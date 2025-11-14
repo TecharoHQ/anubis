@@ -50,5 +50,6 @@ jobs:
           RELEASE="${RELEASE_VERSION}"
           cd var
           for file in *; do
+            [[ file == *.apk ]] && continue
             gh release upload $RELEASE $file
           done
