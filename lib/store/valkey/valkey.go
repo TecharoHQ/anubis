@@ -2,52 +2,39 @@ package valkey
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/store"
 	valkey "github.com/redis/go-redis/v9"
 )
 
+// Store implements store.Interface on top of Redis/Valkey.
 type Store struct {
-	rdb *valkey.Client
+	client redisClient
 }
 
-func (s *Store) Delete(ctx context.Context, key string) error {
-	n, err := s.rdb.Del(ctx, key).Result()
-	if err != nil {
-		return fmt.Errorf("can't delete from valkey: %w", err)
-	}
-
-	switch n {
-	case 0:
-		return fmt.Errorf("%w: %d key(s) deleted", store.ErrNotFound, n)
-	default:
-		return nil
-	}
-}
+var _ store.Interface = (*Store)(nil)
 
 func (s *Store) Get(ctx context.Context, key string) ([]byte, error) {
-	result, err := s.rdb.Get(ctx, key).Result()
-	if err != nil {
-		if valkey.HasErrorPrefix(err, "redis: nil") {
-			return nil, fmt.Errorf("%w: %w", store.ErrNotFound, err)
+	cmd := s.client.Get(ctx, key)
+	if err := cmd.Err(); err != nil {
+		if err == valkey.Nil {
+			return nil, store.ErrNotFound
 		}
-
-		return nil, fmt.Errorf("can't fetch from valkey: %w", err)
+		return nil, err
 	}
-
-	return []byte(result), nil
+	return cmd.Bytes()
 }
 
 func (s *Store) Set(ctx context.Context, key string, value []byte, expiry time.Duration) error {
-	if _, err := s.rdb.Set(ctx, key, string(value), expiry).Result(); err != nil {
-		return fmt.Errorf("can't set %q in valkey: %w", key, err)
-	}
-
-	return nil
+	return s.client.Set(ctx, key, value, expiry).Err()
 }
 
+func (s *Store) Delete(ctx context.Context, key string) error {
+	return s.client.Del(ctx, key).Err()
+}
+
+// IsPersistent tells Anubis this backend is “real” storage, not in-memory.
 func (s *Store) IsPersistent() bool {
 	return true
 }
