@@ -173,6 +173,148 @@ func TestRenderIndexRedirect(t *testing.T) {
 	}
 }
 
+func TestClearCookieHostParameterHonorsDynamicDomain(t *testing.T) {
+	// Test that Host parameter is only used when CookieDynamicDomain is enabled
+	testCases := []struct {
+		name                   string
+		options                Options
+		host                   string
+		expectedDomain         string
+		shouldHaveDomainField  bool
+	}{
+		{
+			name:                   "dynamic domain disabled",
+			options:                Options{CookieDynamicDomain: false},
+			host:                   "subdomain.example.com",
+			expectedDomain:         "",
+			shouldHaveDomainField:  false,
+		},
+		{
+			name:                   "dynamic domain enabled with valid host",
+			options:                Options{CookieDynamicDomain: true},
+			host:                   "subdomain.example.com",
+			expectedDomain:         "example.com",
+			shouldHaveDomainField:  true,
+		},
+		{
+			name:                   "dynamic domain enabled with invalid host",
+			options:                Options{CookieDynamicDomain: true},
+			host:                   "invalid-host",
+			expectedDomain:         "",
+			shouldHaveDomainField:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := spawnAnubis(t, tc.options)
+			rw := httptest.NewRecorder()
+
+			// Test ClearCookie with Host parameter
+			srv.ClearCookie(rw, CookieOpts{Path: "/", Host: tc.host})
+
+			resp := rw.Result()
+			cookies := resp.Cookies()
+
+			if len(cookies) != 1 {
+				t.Errorf("wanted 1 cookie, got %d cookies", len(cookies))
+			}
+
+			ckie := cookies[0]
+
+			if ckie.Name != anubis.CookieName {
+				t.Errorf("wanted cookie named %q, got cookie named %q", anubis.CookieName, ckie.Name)
+			}
+
+			if ckie.MaxAge != -1 {
+				t.Errorf("wanted cookie max age of -1, got: %d", ckie.MaxAge)
+			}
+
+			// Verify domain handling based on CookieDynamicDomain setting
+			if tc.shouldHaveDomainField {
+				if ckie.Domain != tc.expectedDomain {
+					t.Errorf("wanted cookie domain %q, got cookie domain %q", tc.expectedDomain, ckie.Domain)
+				}
+			} else {
+				if ckie.Domain != tc.expectedDomain {
+					t.Errorf("wanted cookie domain %q, got cookie domain %q", tc.expectedDomain, ckie.Domain)
+				}
+			}
+		})
+	}
+}
+
+func TestSetCookieHostParameterHonorsDynamicDomain(t *testing.T) {
+	// Test that SetCookie Host parameter is only used when CookieDynamicDomain is enabled
+	testCases := []struct {
+		name                   string
+		options                Options
+		host                   string
+		expectedDomain         string
+		shouldHaveDomainField  bool
+	}{
+		{
+			name:                   "dynamic domain disabled",
+			options:                Options{CookieDynamicDomain: false},
+			host:                   "subdomain.example.com",
+			expectedDomain:         "",
+			shouldHaveDomainField:  false,
+		},
+		{
+			name:                   "dynamic domain enabled with valid host",
+			options:                Options{CookieDynamicDomain: true},
+			host:                   "subdomain.example.com",
+			expectedDomain:         "example.com",
+			shouldHaveDomainField:  true,
+		},
+		{
+			name:                   "dynamic domain enabled with invalid host",
+			options:                Options{CookieDynamicDomain: true},
+			host:                   "invalid-host",
+			expectedDomain:         "",
+			shouldHaveDomainField:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := spawnAnubis(t, tc.options)
+			rw := httptest.NewRecorder()
+
+			// Test SetCookie with Host parameter
+			srv.SetCookie(rw, CookieOpts{Path: "/", Host: tc.host, Value: "test-value"})
+
+			resp := rw.Result()
+			cookies := resp.Cookies()
+
+			if len(cookies) != 1 {
+				t.Errorf("wanted 1 cookie, got %d cookies", len(cookies))
+			}
+
+			ckie := cookies[0]
+
+			if ckie.Name != anubis.CookieName {
+				t.Errorf("wanted cookie named %q, got cookie named %q", anubis.CookieName, ckie.Name)
+			}
+
+			if ckie.Value != "test-value" {
+				t.Errorf("wanted cookie value %q, got cookie value %q", "test-value", ckie.Value)
+			}
+
+			// Verify domain handling based on CookieDynamicDomain setting
+			if tc.shouldHaveDomainField {
+				if ckie.Domain != tc.expectedDomain {
+					t.Errorf("wanted cookie domain %q, got cookie domain %q", tc.expectedDomain, ckie.Domain)
+				}
+			} else {
+				if ckie.Domain != tc.expectedDomain {
+					t.Errorf("wanted cookie domain %q, got cookie domain %q", tc.expectedDomain, ckie.Domain)
+				}
+			}
+		})
+	}
+}
+
 func TestRenderIndexUnauthorized(t *testing.T) {
 	s := &Server{
 		opts: Options{
