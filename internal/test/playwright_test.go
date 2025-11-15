@@ -31,6 +31,9 @@ import (
 	"github.com/TecharoHQ/anubis"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/playwright-community/playwright-go"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/network"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var (
@@ -38,7 +41,7 @@ var (
 	playwrightServer      = flag.String("playwright", "ws://localhost:9001", "Playwright server URL")
 	playwrightMaxTime     = flag.Duration("playwright-max-time", 5*time.Second, "maximum time for Playwright requests")
 	playwrightMaxHardTime = flag.Duration("playwright-max-hard-time", 5*time.Minute, "maximum time for hard Playwright requests")
-	playwrightRunner      = flag.String("playwright-runner", "npx", "how to start Playwright, can be: none,npx,docker,podman")
+	playwrightRunner      = flag.String("playwright-runner", "testcontainer", "how to start Playwright, can be: none,npx,docker,podman")
 
 	testCases = []testCase{
 		{
@@ -168,10 +171,11 @@ func daemonize(t *testing.T, command string) {
 	})
 }
 
-func startPlaywright(t *testing.T) {
+func startPlaywright(t *testing.T, anubisPort int) {
 	t.Helper()
 
-	if *playwrightRunner == "npx" {
+	switch *playwrightRunner {
+	case "npx":
 		doesCommandExist(t, "npx")
 
 		if os.Getenv("CI") == "true" {
@@ -181,7 +185,7 @@ func startPlaywright(t *testing.T) {
 		}
 
 		daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
-	} else if *playwrightRunner == "docker" || *playwrightRunner == "podman" {
+	case "docker", "podman":
 		doesCommandExist(t, *playwrightRunner)
 
 		// docs: https://playwright.dev/docs/docker
@@ -190,19 +194,43 @@ func startPlaywright(t *testing.T) {
 		t.Cleanup(func() {
 			run(t, fmt.Sprintf("%s rm --force %s", *playwrightRunner, container))
 		})
-	} else if *playwrightRunner == "none" {
+	case "testcontainer":
+		playwrightC, err := testcontainers.Run(
+			t.Context(),
+			fmt.Sprintf("mcr.microsoft.com/playwright:v%s-noble", playwrightVersion),
+			testcontainers.WithCmdArgs(
+				"npx", "-y", fmt.Sprintf("playwright@%s", playwrightVersion), "run-server", "--port=9001", "--host=0.0.0.0"),
+			testcontainers.WithExposedPorts("9001/tcp"),
+			network.WithNetworkName([]string{"anubis"}, "anubis_devcontainer_default"),
+			// testcontainers.WithHostPortAccess(anubisPort),
+			testcontainers.WithWaitStrategy(
+				// wait.ForListeningPort("9001/tcp"),
+				wait.ForLog("Listening on ws://0.0.0.0:9001/"),
+			),
+		)
+		testcontainers.CleanupContainer(t, playwrightC)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		*playwrightServer, err = playwrightC.PortEndpoint(t.Context(), "9001/tcp", "ws")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+	case "none":
 		t.Log("not starting Playwright, assuming it is already running")
-	} else {
+	default:
 		t.Skipf("unknown runner: %s, skipping", *playwrightRunner)
 	}
 
-	for {
-		if _, err := http.Get(fmt.Sprintf("http://localhost:%d", *playwrightPort)); err != nil {
-			time.Sleep(500 * time.Millisecond)
-			continue
-		}
-		break
-	}
+	// for {
+	// 	if _, err := http.Get(strings.Replace(*playwrightServer, "ws://", "http://", 1)); err != nil {
+	// 		time.Sleep(500 * time.Millisecond)
+	// 		continue
+	// 	}
+	// 	break
+	// }
 
 	//nosleep:bypass XXX(Xe): Playwright doesn't have a good way to signal readiness. This is a HACK that will just let the tests pass.
 	time.Sleep(2 * time.Second)
@@ -219,10 +247,10 @@ func TestPlaywrightBrowser(t *testing.T) {
 		return
 	}
 
-	startPlaywright(t)
+	anubisURL, anubisPort := spawnAnubis(t)
 
+	startPlaywright(t, anubisPort)
 	pw := setupPlaywright(t)
-	anubisURL := spawnAnubis(t)
 
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
@@ -301,11 +329,12 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	t.Skip("NOTE(Xe)\\ these tests require HTTPS support in #364")
 
-	startPlaywright(t)
+	basePrefix := "/myapp"
+	anubisURL, anubisPort := spawnAnubisWithOptions(t, basePrefix)
+
+	startPlaywright(t, anubisPort)
 
 	pw := setupPlaywright(t)
-	basePrefix := "/myapp"
-	anubisURL := spawnAnubisWithOptions(t, basePrefix)
 
 	// Reset BasePrefix after test
 	t.Cleanup(func() {
@@ -583,11 +612,11 @@ func setupPlaywright(t *testing.T) *playwright.Playwright {
 	return pw
 }
 
-func spawnAnubis(t *testing.T) string {
+func spawnAnubis(t *testing.T) (string, int) {
 	return spawnAnubisWithOptions(t, "")
 }
 
-func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
+func spawnAnubisWithOptions(t *testing.T, basePrefix string) (anubisURL string, anubisPort int) {
 	t.Helper()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -625,11 +654,31 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 		Config:   &http.Server{Handler: s},
 	}
 	ts.Start()
-	t.Log(ts.URL)
+
+	url, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	anubisPort, err = strconv.Atoi(url.Port())
+	if err != nil {
+		anubisPort = 80
+	}
+
+	var anubisHost string
+
+	if os.Getenv("REMOTE_CONTAINER") == "true" {
+		anubisHost = "workspace"
+	} else {
+		anubisHost = "localhost"
+	}
+
+	anubisURL = "http://" + anubisHost + ":" + strconv.Itoa(anubisPort)
+
+	t.Logf("Anubis started on %s", anubisURL)
 
 	t.Cleanup(func() {
 		ts.Close()
 	})
 
-	return ts.URL
+	return
 }
