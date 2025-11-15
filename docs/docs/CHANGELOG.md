@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow Renovate as an OCI registry client.
 - Properly handle 4in6 addresses so that IP matching works with those addresses.
 - Add support to simple Valkey/Redis cluster mode
+- Bump the Playwright dev dependency to 1.56.0
 
 ## v1.23.1: Lyse Hext - Echo 1
 
