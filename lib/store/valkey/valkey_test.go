@@ -5,15 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/store/storetest"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
-
-func init() {
-	internal.UnbreakDocker()
-}
 
 func TestImpl(t *testing.T) {
 	if os.Getenv("DONT_USE_NETWORK") != "" {
