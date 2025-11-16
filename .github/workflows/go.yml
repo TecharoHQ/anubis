@@ -38,7 +38,7 @@ jobs:
         with:
           path: |
             ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-playwright-1.56.0
 
       - name: install node deps
         run: |
@@ -46,8 +46,8 @@ jobs:
 
       - name: install playwright browsers
         run: |
-          npx --no-install playwright@1.52.0 install --with-deps
-          npx --no-install playwright@1.52.0 run-server --port 9001 &
+          npx playwright@1.56.0 install --with-deps
+          npx playwright@1.56.0 run-server --port 9001 &
 
       - name: Build
         run: npm run build

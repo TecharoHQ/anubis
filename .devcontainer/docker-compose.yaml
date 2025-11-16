@@ -1,12 +1,12 @@
 services:
   playwright:
-    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    image: mcr.microsoft.com/playwright:v1.56.0-noble
     init: true
     network_mode: service:workspace
     command:
       - /bin/sh
       - -c
-      - npx -y playwright@1.52.0 run-server --port 9001 --host 0.0.0.0
+      - npx -y playwright@1.56.0 run-server --port 9001 --host 0.0.0.0
 
   valkey:
     image: valkey/valkey:8
