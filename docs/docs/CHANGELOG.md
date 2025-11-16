@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Properly handle 4in6 addresses so that IP matching works with those addresses.
 - Add support to simple Valkey/Redis cluster mode
 - Open Graph passthrough now reuses the configured target Host/SNI/TLS settings, so metadata fetches succeed when the upstream certificate differs from the public domain. ([1283](https://github.com/TecharoHQ/anubis/pull/1283)) 
+- Stabilize the CVE-2025-24369 regression test by always submitting an invalid proof instead of relying on random POW failures.
 
 ## v1.23.1: Lyse Hext - Echo 1
 
