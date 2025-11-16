@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -41,7 +40,6 @@ type OGTagCache struct {
 	targetSNI           string
 	targetSNIAuto       bool
 	insecureSkipVerify  bool
-	transportMu         sync.Mutex
 }
 
 type TargetOptions struct {
