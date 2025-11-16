@@ -11,10 +11,10 @@ import (
 
 func TestExpressionOrListMarshalJSON(t *testing.T) {
 	for _, tt := range []struct {
-		name   string
-		input  *ExpressionOrList
-		output []byte
 		err    error
+		input  *ExpressionOrList
+		name   string
+		output []byte
 	}{
 		{
 			name: "single expression",
@@ -74,10 +74,10 @@ func TestExpressionOrListMarshalJSON(t *testing.T) {
 
 func TestExpressionOrListMarshalYAML(t *testing.T) {
 	for _, tt := range []struct {
-		name   string
-		input  *ExpressionOrList
-		output []byte
 		err    error
+		input  *ExpressionOrList
+		name   string
+		output []byte
 	}{
 		{
 			name: "single expression",
@@ -217,8 +217,8 @@ func TestExpressionOrListUnmarshalJSON(t *testing.T) {
 func TestExpressionOrListString(t *testing.T) {
 	for _, tt := range []struct {
 		name string
-		in   ExpressionOrList
 		out  string
+		in   ExpressionOrList
 	}{
 		{
 			name: "single expression",

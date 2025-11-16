@@ -29,16 +29,15 @@ var (
 )
 
 type ParsedConfig struct {
-	orig *config.Config
-
-	Bots              []Bot
-	Thresholds        []*Threshold
-	DNSBL             bool
+	Store             store.Interface
+	orig              *config.Config
 	Impressum         *config.Impressum
 	OpenGraph         config.OpenGraph
-	DefaultDifficulty int
+	Bots              []Bot
+	Thresholds        []*Threshold
 	StatusCodes       config.StatusCodes
-	Store             store.Interface
+	DefaultDifficulty int
+	DNSBL             bool
 }
 
 func newParsedConfig(orig *config.Config) *ParsedConfig {

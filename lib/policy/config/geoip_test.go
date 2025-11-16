@@ -7,9 +7,9 @@ import (
 
 func TestGeoIPValid(t *testing.T) {
 	for _, tt := range []struct {
-		name  string
-		input *GeoIP
 		err   error
+		input *GeoIP
+		name  string
 	}{
 		{
 			name: "basic valid",

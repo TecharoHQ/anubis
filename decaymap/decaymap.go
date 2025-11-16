@@ -13,13 +13,13 @@ func Zilch[T any]() T {
 // Impl is a lazy key->value map. It's a wrapper around a map and a mutex. If values exceed their time-to-live, they are pruned at Get time.
 type Impl[K comparable, V any] struct {
 	data map[K]decayMapEntry[V]
-	lock sync.RWMutex
 
 	// deleteCh receives decay-deletion requests from readers.
 	deleteCh chan deleteReq[K]
 	// stopCh stops the background cleanup worker.
 	stopCh chan struct{}
 	wg     sync.WaitGroup
+	lock   sync.RWMutex
 }
 
 type decayMapEntry[V any] struct {

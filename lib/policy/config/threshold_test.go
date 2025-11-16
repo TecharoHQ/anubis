@@ -10,9 +10,9 @@ import (
 
 func TestThresholdValid(t *testing.T) {
 	for _, tt := range []struct {
-		name  string
-		input *Threshold
 		err   error
+		input *Threshold
+		name  string
 	}{
 		{
 			name: "basic allow",

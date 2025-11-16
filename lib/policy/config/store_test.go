@@ -12,9 +12,9 @@ import (
 
 func TestStoreValid(t *testing.T) {
 	for _, tt := range []struct {
+		err   error
 		name  string
 		input config.Store
-		err   error
 	}{
 		{
 			name:  "no backend",

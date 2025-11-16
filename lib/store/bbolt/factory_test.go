@@ -17,9 +17,9 @@ func TestFactoryValid(t *testing.T) {
 
 	t.Run("invalid config", func(t *testing.T) {
 		for _, tt := range []struct {
+			err  error
 			name string
 			cfg  Config
-			err  error
 		}{
 			{
 				name: "missing path",

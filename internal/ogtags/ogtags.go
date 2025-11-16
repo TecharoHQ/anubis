@@ -23,21 +23,21 @@ const (
 )
 
 type OGTagCache struct {
-	cache     store.JSON[map[string]string]
-	targetURL *url.URL
-	client    *http.Client
-	transport *http.Transport
+	ogOverride map[string]string
+	targetURL  *url.URL
+	client     *http.Client
+	transport  *http.Transport
+	cache      store.JSON[map[string]string]
 
 	// Pre-built strings for optimization
 	unixPrefix          string // "http://unix"
-	approvedTags        []string
-	approvedPrefixes    []string
-	ogTimeToLive        time.Duration
-	ogCacheConsiderHost bool
-	ogPassthrough       bool
-	ogOverride          map[string]string
-	targetHost          string
 	targetSNI           string
+	targetHost          string
+	approvedPrefixes    []string
+	approvedTags        []string
+	ogTimeToLive        time.Duration
+	ogPassthrough       bool
+	ogCacheConsiderHost bool
 	targetSNIAuto       bool
 	insecureSkipVerify  bool
 }
