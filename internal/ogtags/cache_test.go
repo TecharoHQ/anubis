@@ -24,7 +24,7 @@ func TestCacheReturnsDefault(t *testing.T) {
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
 		Override:     want,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 
 	u, err := url.Parse("https://anubis.techaro.lol")
 	if err != nil {
@@ -52,7 +52,7 @@ func TestCheckCache(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 
 	// Set up test data
 	urlStr := "http://example.com/page"
@@ -115,7 +115,7 @@ func TestGetOGTags(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 
 	// Parse the test server URL
 	parsedURL, err := url.Parse(ts.URL)
@@ -271,7 +271,7 @@ func TestGetOGTagsWithHostConsideration(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: tc.ogCacheConsiderHost,
-			}, memory.New(t.Context()))
+			}, memory.New(t.Context()), TargetOptions{})
 
 			for i, req := range tc.requests {
 				ogTags, err := cache.GetOGTags(t.Context(), parsedURL, req.host)

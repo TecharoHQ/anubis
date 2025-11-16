@@ -27,27 +27,30 @@ import (
 )
 
 type Options struct {
-	Next                 http.Handler
-	Policy               *policy.ParsedConfig
-	Target               string
-	CookieDynamicDomain  bool
-	CookieDomain         string
-	CookieExpiration     time.Duration
-	CookiePartitioned    bool
-	BasePrefix           string
-	WebmasterEmail       string
-	RedirectDomains      []string
-	ED25519PrivateKey    ed25519.PrivateKey
-	HS512Secret          []byte
-	StripBasePrefix      bool
-	OpenGraph            config.OpenGraph
-	ServeRobotsTXT       bool
-	CookieSecure         bool
-	CookieSameSite       http.SameSite
-	Logger               *slog.Logger
-	PublicUrl            string
-	JWTRestrictionHeader string
-	DifficultyInJWT      bool
+	Next                     http.Handler
+	Policy                   *policy.ParsedConfig
+	Target                   string
+	TargetHost               string
+	TargetSNI                string
+	TargetInsecureSkipVerify bool
+	CookieDynamicDomain      bool
+	CookieDomain             string
+	CookieExpiration         time.Duration
+	CookiePartitioned        bool
+	BasePrefix               string
+	WebmasterEmail           string
+	RedirectDomains          []string
+	ED25519PrivateKey        ed25519.PrivateKey
+	HS512Secret              []byte
+	StripBasePrefix          bool
+	OpenGraph                config.OpenGraph
+	ServeRobotsTXT           bool
+	CookieSecure             bool
+	CookieSameSite           http.SameSite
+	Logger                   *slog.Logger
+	PublicUrl                string
+	JWTRestrictionHeader     string
+	DifficultyInJWT          bool
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -116,9 +119,13 @@ func New(opts Options) (*Server, error) {
 		hs512Secret: opts.HS512Secret,
 		policy:      opts.Policy,
 		opts:        opts,
-		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store),
-		store:       opts.Policy.Store,
-		logger:      opts.Logger,
+		OGTags: ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store, ogtags.TargetOptions{
+			Host:               opts.TargetHost,
+			SNI:                opts.TargetSNI,
+			InsecureSkipVerify: opts.TargetInsecureSkipVerify,
+		}),
+		store:  opts.Policy.Store,
+		logger: opts.Logger,
 	}
 
 	mux := http.NewServeMux()
