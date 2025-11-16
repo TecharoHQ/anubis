@@ -1,5 +1,9 @@
 # Kubernetes
 
+:::note
+Leave the `PUBLIC_URL` environment variable unset in this sidecar/standalone setup. Setting it here makes redirect construction fail (`redir=null`).
+:::
+
 When setting up Anubis in Kubernetes, you want to make sure that you thread requests through Anubis kinda like this:
 
 ```mermaid
@@ -90,7 +94,9 @@ containers:
           - ALL
       seccompProfile:
         type: RuntimeDefault
+
 ```
+
 
 Then add a Service entry for Anubis:
 
