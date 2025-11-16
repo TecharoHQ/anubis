@@ -22,9 +22,9 @@ type TestCase struct {
 type TestOptions struct {
 	format           string
 	action           string
-	crawlDelayWeight int
 	policyName       string
 	deniedAction     string
+	crawlDelayWeight int
 }
 
 func TestDataFileConversion(t *testing.T) {

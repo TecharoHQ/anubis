@@ -29,24 +29,24 @@ import (
 type Options struct {
 	Next                 http.Handler
 	Policy               *policy.ParsedConfig
-	Target               string
-	CookieDynamicDomain  bool
+	Logger               *slog.Logger
+	OpenGraph            config.OpenGraph
+	PublicUrl            string
 	CookieDomain         string
-	CookieExpiration     time.Duration
-	CookiePartitioned    bool
+	JWTRestrictionHeader string
 	BasePrefix           string
 	WebmasterEmail       string
+	Target               string
 	RedirectDomains      []string
 	ED25519PrivateKey    ed25519.PrivateKey
 	HS512Secret          []byte
-	StripBasePrefix      bool
-	OpenGraph            config.OpenGraph
+	CookieExpiration     time.Duration
+	CookieSameSite       http.SameSite
 	ServeRobotsTXT       bool
 	CookieSecure         bool
-	CookieSameSite       http.SameSite
-	Logger               *slog.Logger
-	PublicUrl            string
-	JWTRestrictionHeader string
+	StripBasePrefix      bool
+	CookiePartitioned    bool
+	CookieDynamicDomain  bool
 	DifficultyInJWT      bool
 }
 

@@ -13,9 +13,9 @@ import (
 func TestSetCookie(t *testing.T) {
 	for _, tt := range []struct {
 		name       string
-		options    Options
 		host       string
 		cookieName string
+		options    Options
 	}{
 		{
 			name:       "basic",

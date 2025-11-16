@@ -31,10 +31,10 @@ var (
 )
 
 type Threshold struct {
-	Name       string            `json:"name" yaml:"name"`
 	Expression *ExpressionOrList `json:"expression" yaml:"expression"`
-	Action     Rule              `json:"action" yaml:"action"`
 	Challenge  *ChallengeRules   `json:"challenge" yaml:"challenge"`
+	Name       string            `json:"name" yaml:"name"`
+	Action     Rule              `json:"action" yaml:"action"`
 }
 
 func (t Threshold) Valid() error {

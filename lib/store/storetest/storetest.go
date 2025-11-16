@@ -21,9 +21,9 @@ func Common(t *testing.T, f store.Factory, config json.RawMessage) {
 	}
 
 	for _, tt := range []struct {
-		name string
-		doer func(t *testing.T, s store.Interface) error
 		err  error
+		doer func(t *testing.T, s store.Interface) error
+		name string
 	}{
 		{
 			name: "basic get set delete",

@@ -8,9 +8,9 @@ import (
 
 func TestImpressumValid(t *testing.T) {
 	for _, cs := range []struct {
-		name string
-		inp  Impressum
 		err  error
+		inp  Impressum
+		name string
 	}{
 		{
 			name: "basic happy path",

@@ -88,8 +88,8 @@ func (Factory) Valid(data json.RawMessage) error {
 }
 
 type Config struct {
-	PathStyle  bool   `json:"pathStyle"`
 	BucketName string `json:"bucketName"`
+	PathStyle  bool   `json:"pathStyle"`
 }
 
 func (c Config) Valid() error {

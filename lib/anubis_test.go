@@ -154,8 +154,8 @@ func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.
 
 type loggingCookieJar struct {
 	t       *testing.T
-	lock    sync.Mutex
 	cookies map[string][]*http.Cookie
+	lock    sync.Mutex
 }
 
 func (lcj *loggingCookieJar) Cookies(u *url.URL) []*http.Cookie {
@@ -747,9 +747,9 @@ func TestStripBasePrefixFromRequest(t *testing.T) {
 	testCases := []struct {
 		name            string
 		basePrefix      string
-		stripBasePrefix bool
 		requestPath     string
 		expectedPath    string
+		stripBasePrefix bool
 	}{
 		{
 			name:            "strip disabled - no change",
