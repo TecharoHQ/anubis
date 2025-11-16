@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -40,6 +41,8 @@ type OGTagCache struct {
 	targetSNI           string
 	targetSNIAuto       bool
 	insecureSkipVerify  bool
+	sniClients          map[string]*http.Client
+	transportMu         sync.RWMutex
 }
 
 type TargetOptions struct {
@@ -124,6 +127,7 @@ func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface
 		targetSNI:           targetOpts.SNI,
 		targetSNIAuto:       targetSNIAuto,
 		insecureSkipVerify:  targetOpts.InsecureSkipVerify,
+		sniClients:          make(map[string]*http.Client),
 	}
 }
 
