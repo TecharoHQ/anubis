@@ -2,6 +2,7 @@ package ogtags
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -27,7 +28,10 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(ctx context.Context, urlStr stri
 	}
 
 	// Set the Host header to the original host
-	if originalHost != "" {
+	switch {
+	case c.targetHost != "":
+		req.Host = c.targetHost
+	case originalHost != "":
 		req.Host = originalHost
 	}
 
@@ -35,8 +39,34 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(ctx context.Context, urlStr stri
 	req.Header.Set("X-Forwarded-Proto", "https")
 	req.Header.Set("User-Agent", "Anubis-OGTag-Fetcher/1.0") // For tracking purposes
 
+	client := c.client
+
+	if c.targetSNIAuto {
+		serverName := originalHost
+		if c.targetHost != "" {
+			serverName = c.targetHost
+		}
+
+		if serverName != "" {
+			transport := c.transport.Clone()
+			if transport.TLSClientConfig == nil {
+				transport.TLSClientConfig = &tls.Config{}
+			}
+			transport.TLSClientConfig.ServerName = serverName
+			if c.insecureSkipVerify {
+				transport.TLSClientConfig.InsecureSkipVerify = true
+			}
+
+			client = &http.Client{
+				Timeout:   httpTimeout,
+				Transport: transport,
+			}
+			defer transport.CloseIdleConnections()
+		}
+	}
+
 	// Send the request
-	resp, err := c.client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {

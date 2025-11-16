@@ -18,7 +18,7 @@ func TestExtractOGTags(t *testing.T) {
 		Enabled:      false,
 		ConsiderHost: false,
 		TimeToLive:   time.Minute,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 	// Manually set approved tags/prefixes based on the user request for clarity
 	testCache.approvedTags = []string{"description"}
 	testCache.approvedPrefixes = []string{"og:"}
@@ -199,7 +199,7 @@ func TestExtractMetaTagInfo(t *testing.T) {
 		Enabled:      false,
 		ConsiderHost: false,
 		TimeToLive:   time.Minute,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 	testCache.approvedTags = []string{"description"}
 	testCache.approvedPrefixes = []string{"og:"}
 

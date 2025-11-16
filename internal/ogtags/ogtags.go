@@ -2,11 +2,13 @@ package ogtags
 
 import (
 	"context"
+	"crypto/tls"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
@@ -25,6 +27,7 @@ type OGTagCache struct {
 	cache     store.JSON[map[string]string]
 	targetURL *url.URL
 	client    *http.Client
+	transport *http.Transport
 
 	// Pre-built strings for optimization
 	unixPrefix          string // "http://unix"
@@ -34,9 +37,20 @@ type OGTagCache struct {
 	ogCacheConsiderHost bool
 	ogPassthrough       bool
 	ogOverride          map[string]string
+	targetHost          string
+	targetSNI           string
+	targetSNIAuto       bool
+	insecureSkipVerify  bool
+	transportMu         sync.Mutex
 }
 
-func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface) *OGTagCache {
+type TargetOptions struct {
+	Host               string
+	SNI                string
+	InsecureSkipVerify bool
+}
+
+func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface, targetOpts TargetOptions) *OGTagCache {
 	// Predefined approved tags and prefixes
 	defaultApprovedTags := []string{"description", "keywords", "author"}
 	defaultApprovedPrefixes := []string{"og:", "twitter:", "fediverse:"}
@@ -62,18 +76,35 @@ func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface
 		}
 	}
 
-	client := &http.Client{
-		Timeout: httpTimeout,
-	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
 
 	// Configure custom transport for Unix sockets
 	if parsedTargetURL.Scheme == "unix" {
 		socketPath := parsedTargetURL.Path // For unix scheme, path is the socket path
-		client.Transport = &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", socketPath)
-			},
+		transport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {
+			return net.Dial("unix", socketPath)
 		}
+	}
+
+	targetSNIAuto := targetOpts.SNI == "auto"
+
+	if targetOpts.SNI != "" && !targetSNIAuto {
+		if transport.TLSClientConfig == nil {
+			transport.TLSClientConfig = &tls.Config{}
+		}
+		transport.TLSClientConfig.ServerName = targetOpts.SNI
+	}
+
+	if targetOpts.InsecureSkipVerify {
+		if transport.TLSClientConfig == nil {
+			transport.TLSClientConfig = &tls.Config{}
+		}
+		transport.TLSClientConfig.InsecureSkipVerify = true
+	}
+
+	client := &http.Client{
+		Timeout:   httpTimeout,
+		Transport: transport,
 	}
 
 	return &OGTagCache{
@@ -89,7 +120,12 @@ func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface
 		approvedTags:        defaultApprovedTags,
 		approvedPrefixes:    defaultApprovedPrefixes,
 		client:              client,
+		transport:           transport,
 		unixPrefix:          "http://unix",
+		targetHost:          targetOpts.Host,
+		targetSNI:           targetOpts.SNI,
+		targetSNIAuto:       targetSNIAuto,
+		insecureSkipVerify:  targetOpts.InsecureSkipVerify,
 	}
 }
 

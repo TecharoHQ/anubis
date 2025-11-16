@@ -111,7 +111,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			}, memory.New(t.Context()))
+			}, memory.New(t.Context()), TargetOptions{})
 
 			// Create URL for test
 			testURL, _ := url.Parse(ts.URL)
