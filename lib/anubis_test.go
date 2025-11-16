@@ -152,6 +152,30 @@ func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.
 	return resp
 }
 
+func handleChallengeInvalidProof(t *testing.T, ts *httptest.Server, cli *http.Client, chall challengeResp) *http.Response {
+	t.Helper()
+
+	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+
+	q := req.URL.Query()
+	q.Set("response", strings.Repeat("f", 64)) // "hash" that never starts with the nonce
+	q.Set("nonce", "0")
+	q.Set("redir", "/")
+	q.Set("elapsedTime", "0")
+	q.Set("id", chall.ID)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		t.Fatalf("can't do request: %v", err)
+	}
+
+	return resp
+}
+
 type loggingCookieJar struct {
 	t       *testing.T
 	cookies map[string][]*http.Cookie
@@ -247,7 +271,7 @@ func TestCVE2025_24369(t *testing.T) {
 
 	cli := httpClient(t)
 	chall := makeChallenge(t, ts, cli)
-	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+	resp := handleChallengeInvalidProof(t, ts, cli, chall)
 
 	if resp.StatusCode == http.StatusFound {
 		t.Log("Regression on CVE-2025-24369")
