@@ -2,7 +2,6 @@ package ogtags
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -28,42 +27,26 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(ctx context.Context, urlStr stri
 	}
 
 	// Set the Host header to the original host
+	var hostForRequest string
 	switch {
 	case c.targetHost != "":
-		req.Host = c.targetHost
+		hostForRequest = c.targetHost
 	case originalHost != "":
-		req.Host = originalHost
+		hostForRequest = originalHost
+	}
+	if hostForRequest != "" {
+		req.Host = hostForRequest
 	}
 
 	// Add proxy headers
 	req.Header.Set("X-Forwarded-Proto", "https")
 	req.Header.Set("User-Agent", "Anubis-OGTag-Fetcher/1.0") // For tracking purposes
 
-	client := c.client
-
-	if c.targetSNIAuto {
-		serverName := originalHost
-		if c.targetHost != "" {
-			serverName = c.targetHost
-		}
-
-		if serverName != "" {
-			transport := c.transport.Clone()
-			if transport.TLSClientConfig == nil {
-				transport.TLSClientConfig = &tls.Config{}
-			}
-			transport.TLSClientConfig.ServerName = serverName
-			if c.insecureSkipVerify {
-				transport.TLSClientConfig.InsecureSkipVerify = true
-			}
-
-			client = &http.Client{
-				Timeout:   httpTimeout,
-				Transport: transport,
-			}
-			defer transport.CloseIdleConnections()
-		}
+	serverName := hostForRequest
+	if serverName == "" {
+		serverName = req.URL.Hostname()
 	}
+	client := c.clientForSNI(serverName)
 
 	// Send the request
 	resp, err := client.Do(req)
