@@ -68,14 +68,14 @@ var (
 
 type Server struct {
 	next        http.Handler
+	store       store.Interface
 	mux         *http.ServeMux
 	policy      *policy.ParsedConfig
 	OGTags      *ogtags.OGTagCache
+	logger      *slog.Logger
+	opts        Options
 	ed25519Priv ed25519.PrivateKey
 	hs512Secret []byte
-	opts        Options
-	store       store.Interface
-	logger      *slog.Logger
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
@@ -117,10 +117,12 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	}
 
 	chall := challenge.Challenge{
-		ID:         id.String(),
-		Method:     rule.Challenge.Algorithm,
-		RandomData: fmt.Sprintf("%x", randomData),
-		IssuedAt:   time.Now(),
+		ID:             id.String(),
+		Method:         rule.Challenge.Algorithm,
+		RandomData:     fmt.Sprintf("%x", randomData),
+		IssuedAt:       time.Now(),
+		Difficulty:     rule.Challenge.Difficulty,
+		PolicyRuleHash: rule.Hash(),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
 			"X-Real-Ip":  r.Header.Get("X-Real-Ip"),
@@ -135,6 +137,44 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	lg.Info("new challenge issued", "challenge", id.String())
 
 	return &chall, err
+}
+
+func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challenge, lg *slog.Logger) *policy.Bot {
+	if chall == nil {
+		return rule
+	}
+
+	if rule == nil {
+		rule = &policy.Bot{
+			Rules: &checker.List{},
+		}
+	}
+
+	if chall.Difficulty == 0 {
+		// fall back to whatever the policy currently says or the global default
+		if rule.Challenge != nil && rule.Challenge.Difficulty != 0 {
+			chall.Difficulty = rule.Challenge.Difficulty
+		} else {
+			chall.Difficulty = s.policy.DefaultDifficulty
+		}
+	}
+
+	if rule.Challenge == nil {
+		lg.Warn("rule missing challenge configuration; using stored challenge metadata", "rule", rule.Name)
+		rule.Challenge = &config.ChallengeRules{}
+	}
+
+	if rule.Challenge.Difficulty == 0 {
+		rule.Challenge.Difficulty = chall.Difficulty
+	}
+	if rule.Challenge.ReportAs == 0 {
+		rule.Challenge.ReportAs = chall.Difficulty
+	}
+	if rule.Challenge.Algorithm == "" {
+		rule.Challenge.Algorithm = chall.Method
+	}
+
+	return rule
 }
 
 func (s *Server) maybeReverseProxyHttpStatusOnly(w http.ResponseWriter, r *http.Request) {
@@ -461,6 +501,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rule = s.hydrateChallengeRule(rule, chall, lg)
+
 	impl, ok := challenge.Get(chall.Method)
 	if !ok {
 		lg.Error("check failed", "err", err)
@@ -576,6 +618,7 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
 			case config.RuleWeigh:
 				lg.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
+				policy.Applications.WithLabelValues("bot/"+b.Name, "WEIGH").Add(1)
 				weight += b.Weight.Adjust
 			}
 		}

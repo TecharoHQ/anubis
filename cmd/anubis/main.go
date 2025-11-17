@@ -83,7 +83,7 @@ var (
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
 	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
-	customRealIPHeader      = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
+	customRealIPHeader       = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
 	thothInsecure        = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
@@ -145,19 +145,19 @@ func parseBindNetFromAddr(address string) (string, string) {
 	return "", address
 }
 
-func parseSameSite(s string) (http.SameSite) {
-    switch strings.ToLower(s) {
-    case "none":
-        return http.SameSiteNoneMode
-    case "lax":
-        return http.SameSiteLaxMode
-    case "strict":
-        return http.SameSiteStrictMode
+func parseSameSite(s string) http.SameSite {
+	switch strings.ToLower(s) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
 	case "default":
 		return http.SameSiteDefaultMode
-    default:
-        log.Fatalf("invalid cookie same-site mode: %s, valid values are None, Lax, Strict, and Default", s)
-    }
+	default:
+		log.Fatalf("invalid cookie same-site mode: %s, valid values are None, Lax, Strict, and Default", s)
+	}
 	return http.SameSiteDefaultMode
 }
 

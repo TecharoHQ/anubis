@@ -13,12 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix panic when validating challenges after privacy-mode browsers strip headers and the follow-up request matches an `ALLOW` threshold.
+- Expose WEIGHT rule matches as Prometheus metrics.
 - Allow more OCI registry clients [based on feedback](https://github.com/TecharoHQ/anubis/pull/1253#issuecomment-3506744184).
 - Expose services directory in the embedded `(data)` filesystem.
 - Add Ukrainian locale ([#1044](https://github.com/TecharoHQ/anubis/pull/1044)).
 - Allow Renovate as an OCI registry client.
 - Properly handle 4in6 addresses so that IP matching works with those addresses.
 - Add unstable/experimental APK packages to CI, powered by yeet. Please let us know if there's any issues with the packaging!
+- Add support to simple Valkey/Redis cluster mode
+- Stabilize the CVE-2025-24369 regression test by always submitting an invalid proof instead of relying on random POW failures.
 
 ## v1.23.1: Lyse Hext - Echo 1
 

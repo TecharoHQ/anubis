@@ -15,9 +15,9 @@ func p[V any](v V) *V { return &v }
 
 func TestBotValid(t *testing.T) {
 	var tests = []struct {
+		bot  BotConfig
 		err  error
 		name string
-		bot  BotConfig
 	}{
 		{
 			name: "simple user agent",

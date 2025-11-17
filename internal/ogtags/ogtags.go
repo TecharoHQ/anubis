@@ -22,9 +22,10 @@ const (
 )
 
 type OGTagCache struct {
-	cache     store.JSON[map[string]string]
-	targetURL *url.URL
-	client    *http.Client
+	targetURL  *url.URL
+	client     *http.Client
+	ogOverride map[string]string
+	cache      store.JSON[map[string]string]
 
 	// Pre-built strings for optimization
 	unixPrefix          string // "http://unix"
@@ -33,7 +34,6 @@ type OGTagCache struct {
 	ogTimeToLive        time.Duration
 	ogCacheConsiderHost bool
 	ogPassthrough       bool
-	ogOverride          map[string]string
 }
 
 func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface) *OGTagCache {

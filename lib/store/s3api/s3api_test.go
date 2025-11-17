@@ -17,10 +17,10 @@ import (
 
 // mockS3 is an in-memory mock of the methods we use.
 type mockS3 struct {
-	mu     sync.RWMutex
-	bucket string
 	data   map[string][]byte
 	meta   map[string]map[string]string
+	bucket string
+	mu     sync.RWMutex
 }
 
 func (m *mockS3) PutObject(ctx context.Context, in *s3.PutObjectInput, _ ...func(*s3.Options)) (*s3.PutObjectOutput, error) {

@@ -55,8 +55,9 @@ server {
 # proxy all traffic to the target via Anubis.
 server {
   # Listen on TCP port 443 with TLS (https) and HTTP/2
-  listen 443 ssl http2;
-  listen [::]:443 ssl http2;
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
 
   location / {
     proxy_set_header Host $host;
@@ -113,8 +114,9 @@ Then in a server block:
 
 server {
   # Listen on 443 with SSL
-  listen 443 ssl http2;
-  listen [::]:443 ssl http2;
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
 
   # Slipstream via Anubis
   include "conf-anubis.inc";

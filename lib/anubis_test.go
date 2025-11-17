@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,8 +19,10 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
@@ -149,10 +152,34 @@ func handleChallengeZeroDifficulty(t *testing.T, ts *httptest.Server, cli *http.
 	return resp
 }
 
+func handleChallengeInvalidProof(t *testing.T, ts *httptest.Server, cli *http.Client, chall challengeResp) *http.Response {
+	t.Helper()
+
+	req, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+
+	q := req.URL.Query()
+	q.Set("response", strings.Repeat("f", 64)) // "hash" that never starts with the nonce
+	q.Set("nonce", "0")
+	q.Set("redir", "/")
+	q.Set("elapsedTime", "0")
+	q.Set("id", chall.ID)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		t.Fatalf("can't do request: %v", err)
+	}
+
+	return resp
+}
+
 type loggingCookieJar struct {
 	t       *testing.T
-	lock    sync.Mutex
 	cookies map[string][]*http.Cookie
+	lock    sync.Mutex
 }
 
 func (lcj *loggingCookieJar) Cookies(u *url.URL) []*http.Cookie {
@@ -244,7 +271,7 @@ func TestCVE2025_24369(t *testing.T) {
 
 	cli := httpClient(t)
 	chall := makeChallenge(t, ts, cli)
-	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+	resp := handleChallengeInvalidProof(t, ts, cli, chall)
 
 	if resp.StatusCode == http.StatusFound {
 		t.Log("Regression on CVE-2025-24369")
@@ -744,9 +771,9 @@ func TestStripBasePrefixFromRequest(t *testing.T) {
 	testCases := []struct {
 		name            string
 		basePrefix      string
-		stripBasePrefix bool
 		requestPath     string
 		expectedPath    string
+		stripBasePrefix bool
 	}{
 		{
 			name:            "strip disabled - no change",
@@ -1025,6 +1052,59 @@ func TestPassChallengeXSS(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
+	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+	})
+
+	allowThreshold, err := policy.ParsedThresholdFromConfig(config.Threshold{
+		Name: "allow-all",
+		Expression: &config.ExpressionOrList{
+			Expression: "true",
+		},
+		Action: config.RuleAllow,
+	})
+	if err != nil {
+		t.Fatalf("can't compile test threshold: %v", err)
+	}
+	srv.policy.Thresholds = []*policy.Threshold{allowThreshold}
+	srv.policy.Bots = nil
+
+	chall := challenge.Challenge{
+		ID:         "test-challenge",
+		Method:     "metarefresh",
+		RandomData: "apple cider",
+		IssuedAt:   time.Now().Add(-5 * time.Second),
+		Difficulty: 1,
+	}
+
+	j := store.JSON[challenge.Challenge]{Underlying: srv.store}
+	if err := j.Set(context.Background(), "challenge:"+chall.ID, chall, time.Minute); err != nil {
+		t.Fatalf("can't insert challenge into store: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "https://example.com"+anubis.APIPrefix+"pass-challenge", nil)
+	q := req.URL.Query()
+	q.Set("redir", "/")
+	q.Set("id", chall.ID)
+	q.Set("challenge", chall.RandomData)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Set("X-Real-Ip", "203.0.113.4")
+	req.Header.Set("User-Agent", "NilChallengeTester/1.0")
+	req.AddCookie(&http.Cookie{Name: anubis.TestCookieName, Value: chall.ID})
+
+	rr := httptest.NewRecorder()
+
+	srv.PassChallenge(rr, req)
+
+	if rr.Code != http.StatusFound {
+		t.Fatalf("expected redirect when validating challenge, got %d", rr.Code)
+	}
 }
 
 func TestXForwardedForNoDoubleComma(t *testing.T) {

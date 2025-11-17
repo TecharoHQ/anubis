@@ -14,11 +14,11 @@ func TestBotEnvironment(t *testing.T) {
 
 	t.Run("missingHeader", func(t *testing.T) {
 		tests := []struct {
+			headers     map[string]string
 			name        string
 			expression  string
-			headers     map[string]string
-			expected    types.Bool
 			description string
+			expected    types.Bool
 		}{
 			{
 				name:       "missing-header",
@@ -167,10 +167,10 @@ func TestBotEnvironment(t *testing.T) {
 
 		t.Run("invalid", func(t *testing.T) {
 			for _, tt := range []struct {
+				env             any
 				name            string
 				description     string
 				expression      string
-				env             any
 				wantFailCompile bool
 				wantFailEval    bool
 			}{
@@ -244,11 +244,11 @@ func TestThresholdEnvironment(t *testing.T) {
 	}
 
 	tests := []struct {
+		variables     map[string]interface{}
 		name          string
 		expression    string
-		variables     map[string]interface{}
-		expected      types.Bool
 		description   string
+		expected      types.Bool
 		shouldCompile bool
 	}{
 		{

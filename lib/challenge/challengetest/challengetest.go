@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/google/uuid"
@@ -19,5 +20,6 @@ func New(t *testing.T) *challenge.Challenge {
 		ID:         id.String(),
 		RandomData: randomData,
 		IssuedAt:   time.Now(),
+		Difficulty: anubis.DefaultDifficulty,
 	}
 }

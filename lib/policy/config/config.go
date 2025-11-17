@@ -62,13 +62,11 @@ type BotConfig struct {
 	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
 	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
+	GeoIP          *GeoIP            `json:"geoip,omitempty"`
+	ASNs           *ASNs             `json:"asns,omitempty"`
 	Name           string            `json:"name" yaml:"name"`
 	Action         Rule              `json:"action" yaml:"action"`
 	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
-
-	// Thoth features
-	GeoIP *GeoIP `json:"geoip,omitempty"`
-	ASNs  *ASNs  `json:"asns,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -324,13 +322,13 @@ func (sc StatusCodes) Valid() error {
 }
 
 type fileConfig struct {
-	Bots        []BotOrImport       `json:"bots"`
-	DNSBL       bool                `json:"dnsbl"`
 	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
 	Impressum   *Impressum          `json:"impressum,omitempty"`
-	StatusCodes StatusCodes         `json:"status_codes"`
 	Store       *Store              `json:"store"`
+	Bots        []BotOrImport       `json:"bots"`
 	Thresholds  []Threshold         `json:"thresholds"`
+	StatusCodes StatusCodes         `json:"status_codes"`
+	DNSBL       bool                `json:"dnsbl"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -462,13 +460,13 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 }
 
 type Config struct {
+	Impressum   *Impressum
+	Store       *Store
+	OpenGraph   OpenGraph
 	Bots        []BotConfig
 	Thresholds  []Threshold
-	DNSBL       bool
-	Impressum   *Impressum
-	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
-	Store       *Store
+	DNSBL       bool
 }
 
 func (c Config) Valid() error {

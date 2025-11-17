@@ -13,7 +13,7 @@ import (
 
 func TestRedirectSecurity(t *testing.T) {
 	tests := []struct {
-		name     string
+		reqHost  string
 		testType string // "constructRedirectURL", "serveHTTPNext", "renderIndex"
 
 		// For constructRedirectURL tests
@@ -23,17 +23,16 @@ func TestRedirectSecurity(t *testing.T) {
 
 		// For serveHTTPNext tests
 		redirParam string
-		reqHost    string
+		name       string
+
+		errorContains  string
+		expectedStatus int
 
 		// For renderIndex tests
 		returnHTTPStatusOnly bool
-
-		// Expected results
-		expectedStatus    int
-		shouldError       bool
-		shouldNotRedirect bool
-		shouldBlock       bool
-		errorContains     string
+		shouldError          bool
+		shouldNotRedirect    bool
+		shouldBlock          bool
 	}{
 		// constructRedirectURL tests - X-Forwarded-Proto validation
 		{

@@ -7,9 +7,9 @@ import (
 
 func TestOpenGraphFileConfigValid(t *testing.T) {
 	for _, tt := range []struct {
-		name  string
-		input *openGraphFileConfig
 		err   error
+		input *openGraphFileConfig
+		name  string
 	}{
 		{
 			name: "basic happy path",
