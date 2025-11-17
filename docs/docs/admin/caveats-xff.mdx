@@ -1,0 +1,27 @@
+# Client IP Headers
+
+Currently Anubis will always flatten the `X-Forwarded-For` when it contains multiple IP addresses. From right to left, the first IP address that is not in one of the following categories will be set as `X-Forwarded-For` in the request passed to the upstream.
+
+- Private (`XFF_STRIP_PRIVATE`, enabled by default)
+- CGNAT (always stripped)
+- Link-local Unicast (always stripped)
+
+```
+Incoming: X-Forwarded-For: 1.2.3.4, 5.6.7.8, 10.0.0.1
+Upstream: X-Forwarded-For: 5.6.7.8
+```
+
+This behavior will cause problems if the proxy in front of Anubis is from a public IP, such as Cloudflare, because Anubis will use the Cloudflare IP instead of your client's real IP. You will likely see all requests from your browser being blocked and/or an infinite challenge loop.
+
+```
+Incoming: X-Forwarded-For: REAL_CLIENT_IP, CF_IP
+Upstream: X-Forwarded-For: CF_IP
+```
+
+As a workaround, you should configure your web server to parse an alternative source (such as `CF-Connecting-IP`), or pre-process the incoming `X-Forwarded-For` with your web server to ensure it only contains the real client IP address, then pass it to Anubis as `X-Forwarded-For`.
+
+If you do not control the web server upstream of Anubis, the `custom-real-ip-header` command line flag accepts a header value that Anubis will read the real client IP address from. Anubis will set the `X-Real-IP` header to the IP address found in the custom header.
+
+The `X-Real-IP` header will be automatically inferred from `X-Forwarded-For` if not set, setting it explicitly is not necessary as long as `X-Forwarded-For` contains only the real client IP. However setting it explicitly can eliminate spoofed values if your web server doesn't set this.
+
+See [Cloudflare](environments/cloudflare.mdx) for an example configuration.

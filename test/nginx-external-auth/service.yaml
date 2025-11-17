@@ -6,8 +6,8 @@ spec:
   selector:
     app: nginx-external-auth
   ports:
-  - name: http
-    protocol: TCP
-    port: 80
-    targetPort: 80
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
   type: ClusterIP

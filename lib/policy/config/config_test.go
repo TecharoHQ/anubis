@@ -1,4 +1,4 @@
-package config
+package config_test
 
 import (
 	"errors"
@@ -8,15 +8,16 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis/data"
+	. "github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 func p[V any](v V) *V { return &v }
 
 func TestBotValid(t *testing.T) {
 	var tests = []struct {
+		bot  BotConfig
 		err  error
 		name string
-		bot  BotConfig
 	}{
 		{
 			name: "simple user agent",
@@ -108,7 +109,7 @@ func TestBotValid(t *testing.T) {
 				Action:    RuleChallenge,
 				PathRegex: p("Mozilla"),
 				Challenge: &ChallengeRules{
-					Difficulty: 0,
+					Difficulty: -1,
 					ReportAs:   4,
 					Algorithm:  "fast",
 				},
@@ -325,37 +326,37 @@ func TestConfigValidBad(t *testing.T) {
 func TestBotConfigZero(t *testing.T) {
 	var b BotConfig
 	if !b.Zero() {
-		t.Error("zero value BotConfig is not zero value")
+		t.Error("zero value config.BotConfig is not zero value")
 	}
 
 	b.Name = "hi"
 	if b.Zero() {
-		t.Error("BotConfig with name is zero value")
+		t.Error("config.BotConfig with name is zero value")
 	}
 
 	b.UserAgentRegex = p(".*")
 	if b.Zero() {
-		t.Error("BotConfig with user agent regex is zero value")
+		t.Error("config.BotConfig with user agent regex is zero value")
 	}
 
 	b.PathRegex = p(".*")
 	if b.Zero() {
-		t.Error("BotConfig with path regex is zero value")
+		t.Error("config.BotConfig with path regex is zero value")
 	}
 
 	b.HeadersRegex = map[string]string{"hi": "there"}
 	if b.Zero() {
-		t.Error("BotConfig with headers regex is zero value")
+		t.Error("config.BotConfig with headers regex is zero value")
 	}
 
 	b.Action = RuleAllow
 	if b.Zero() {
-		t.Error("BotConfig with action is zero value")
+		t.Error("config.BotConfig with action is zero value")
 	}
 
 	b.RemoteAddr = []string{"::/0"}
 	if b.Zero() {
-		t.Error("BotConfig with remote addresses is zero value")
+		t.Error("config.BotConfig with remote addresses is zero value")
 	}
 
 	b.Challenge = &ChallengeRules{
@@ -364,6 +365,6 @@ func TestBotConfigZero(t *testing.T) {
 		Algorithm:  DefaultAlgorithm,
 	}
 	if b.Zero() {
-		t.Error("BotConfig with challenge rules is zero value")
+		t.Error("config.BotConfig with challenge rules is zero value")
 	}
 }

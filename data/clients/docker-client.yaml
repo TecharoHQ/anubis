@@ -1,0 +1,60 @@
+- name: allow-docker-client
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("docker/")
+      - userAgent.contains("git-commit/")
+      - '"Accept" in headers'
+      - headers["Accept"].contains("vnd.docker.distribution")
+      - '"Baggage" in headers'
+      - headers["Baggage"].contains("trigger")
+
+- name: allow-crane-client
+  action: ALLOW
+  expression:
+    all:
+      - userAgent.contains("crane/")
+      - userAgent.contains("go-containerregistry/")
+
+- name: allow-docker-distribution-api-client
+  action: ALLOW
+  expression:
+    all:
+      - '"Docker-Distribution-Api-Version" in headers'
+      - '!(userAgent.contains("Mozilla"))'
+
+- name: allow-go-containerregistry-client
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("go-containerregistry/")
+
+- name: allow-buildah
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("Buildah/")
+
+- name: allow-podman
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("containers/")
+
+- name: allow-containerd
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("containerd/")
+
+- name: allow-renovate
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("Renovate/")

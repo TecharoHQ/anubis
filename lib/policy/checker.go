@@ -17,20 +17,6 @@ var (
 	ErrMisconfiguration = errors.New("[unexpected] policy: administrator misconfiguration")
 )
 
-type staticHashChecker struct {
-	hash string
-}
-
-func (staticHashChecker) Check(r *http.Request) (bool, error) {
-	return true, nil
-}
-
-func (s staticHashChecker) Hash() string { return s.hash }
-
-func NewStaticHashChecker(hashable string) checker.Impl {
-	return staticHashChecker{hash: internal.FastHash(hashable)}
-}
-
 type RemoteAddrChecker struct {
 	prefixTable *bart.Lite
 	hash        string
@@ -63,6 +49,11 @@ func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
 	addr, err := netip.ParseAddr(host)
 	if err != nil {
 		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
+	}
+
+	// Convert IPv4-mapped IPv6 addresses to IPv4
+	if addr.Is6() && addr.Is4In6() {
+		addr = addr.Unmap()
 	}
 
 	return rac.prefixTable.Contains(addr), nil
@@ -116,6 +107,13 @@ func NewPathChecker(rexStr string) (checker.Impl, error) {
 }
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
+	originalUrl := r.Header.Get("X-Original-URI")
+	if originalUrl != "" {
+		if pc.regexp.MatchString(originalUrl) {
+			return true, nil
+		}
+	}
+
 	if pc.regexp.MatchString(r.URL.Path) {
 		return true, nil
 	}

@@ -1,0 +1,44 @@
+package proofofwork
+
+import (
+	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/localization"
+)
+
+templ page(localizer *localization.SimpleLocalizer) {
+	<div class="centered-div">
+		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
+		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
+		<p id="status">{ localizer.T("loading") }</p>
+		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
+		<div id="progress" role="progressbar" aria-labelledby="status">
+			<div class="bar-inner"></div>
+		</div>
+		<details>
+			if anubis.UseSimplifiedExplanation {
+				<p>
+					{ localizer.T("simplified_explanation") }
+				</p>
+			} else {
+				<p>
+					{ localizer.T("ai_companies_explanation") }
+				</p>
+				<p>
+					{ localizer.T("anubis_compromise") }
+				</p>
+				<p>
+					{ localizer.T("hack_purpose") }
+				</p>
+				<p>
+					{ localizer.T("jshelter_note") }
+				</p>
+			}
+		</details>
+		<noscript>
+			<p>
+				{ localizer.T("javascript_required") }
+			</p>
+		</noscript>
+		<div id="testarea"></div>
+	</div>
+}

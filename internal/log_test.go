@@ -3,6 +3,8 @@ package internal
 import (
 	"bytes"
 	"log"
+	"log/slog"
+	"net/http"
 	"strings"
 	"testing"
 )
@@ -43,4 +45,38 @@ func TestErrorLogFilter(t *testing.T) {
 		t.Errorf("Partially matching message was written to output. Output: %q", buf.String())
 	}
 	buf.Reset()
+}
+
+func TestGetRequestLogger(t *testing.T) {
+	// Test case 1: Normal request with Host header
+	req1, _ := http.NewRequest("GET", "http://example.com/test", nil)
+	req1.Host = "example.com"
+
+	logger := slog.Default()
+	reqLogger := GetRequestLogger(logger, req1)
+
+	// We can't easily test the actual log output without setting up a test handler,
+	// but we can verify the function doesn't panic and returns a logger
+	if reqLogger == nil {
+		t.Error("GetRequestLogger returned nil")
+	}
+
+	// Test case 2: Subrequest auth mode with X-Forwarded-Host
+	req2, _ := http.NewRequest("GET", "http://test.com/auth", nil)
+	req2.Host = ""
+	req2.Header.Set("X-Forwarded-Host", "original-site.com")
+
+	reqLogger2 := GetRequestLogger(logger, req2)
+	if reqLogger2 == nil {
+		t.Error("GetRequestLogger returned nil for X-Forwarded-Host case")
+	}
+
+	// Test case 3: No host information available
+	req3, _ := http.NewRequest("GET", "http://test.com/nohost", nil)
+	req3.Host = ""
+
+	reqLogger3 := GetRequestLogger(logger, req3)
+	if reqLogger3 == nil {
+		t.Error("GetRequestLogger returned nil for no host case")
+	}
 }

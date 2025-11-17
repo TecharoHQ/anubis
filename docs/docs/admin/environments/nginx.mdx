@@ -55,8 +55,9 @@ server {
 # proxy all traffic to the target via Anubis.
 server {
   # Listen on TCP port 443 with TLS (https) and HTTP/2
-  listen 443 ssl http2;
-  listen [::]:443 ssl http2;
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
 
   location / {
     proxy_set_header Host $host;
@@ -79,6 +80,10 @@ server {
   root "/srv/http/anubistest.techaro.lol";
   index index.html;
 
+  # Get the visiting IP from the TLS termination server
+  set_real_ip_from unix:;
+  real_ip_header   X-Real-IP;
+  
   # Your normal configuration can go here
   # location .php { fastcgi...} etc.
 }
@@ -109,8 +114,9 @@ Then in a server block:
 
 server {
   # Listen on 443 with SSL
-  listen 443 ssl http2;
-  listen [::]:443 ssl http2;
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
 
   # Slipstream via Anubis
   include "conf-anubis.inc";
@@ -125,6 +131,8 @@ server {
   listen unix:/run/nginx/nginx.sock;
 
   server_name mimi.techaro.lol;
+  
+  port_in_redirect off;
   root "/srv/http/mimi.techaro.lol";
   index index.html;
 

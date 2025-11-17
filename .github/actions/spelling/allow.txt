@@ -3,3 +3,9 @@ https
 ssh
 ubuntu
 workarounds
+rjack
+msgbox
+xeact
+ABee
+tencent
+maintnotifications

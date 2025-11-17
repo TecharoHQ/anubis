@@ -62,13 +62,11 @@ type BotConfig struct {
 	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
 	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
+	GeoIP          *GeoIP            `json:"geoip,omitempty"`
+	ASNs           *ASNs             `json:"asns,omitempty"`
 	Name           string            `json:"name" yaml:"name"`
 	Action         Rule              `json:"action" yaml:"action"`
 	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
-
-	// Thoth features
-	GeoIP *GeoIP `json:"geoip,omitempty"`
-	ASNs  *ASNs  `json:"asns,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -194,7 +192,7 @@ type ChallengeRules struct {
 }
 
 var (
-	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 1)")
+	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 0)")
 	ErrChallengeDifficultyTooHigh = errors.New("config.ChallengeRules: difficulty is too high (must be <= 64)")
 	ErrChallengeMustHaveAlgorithm = errors.New("config.ChallengeRules: must have algorithm name set")
 )
@@ -206,7 +204,7 @@ func (cr ChallengeRules) Valid() error {
 		errs = append(errs, ErrChallengeMustHaveAlgorithm)
 	}
 
-	if cr.Difficulty < 1 {
+	if cr.Difficulty < 0 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooLow, cr.Difficulty))
 	}
 
@@ -324,12 +322,13 @@ func (sc StatusCodes) Valid() error {
 }
 
 type fileConfig struct {
-	Bots        []BotOrImport       `json:"bots"`
-	DNSBL       bool                `json:"dnsbl"`
 	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
 	Impressum   *Impressum          `json:"impressum,omitempty"`
-	StatusCodes StatusCodes         `json:"status_codes"`
+	Store       *Store              `json:"store"`
+	Bots        []BotOrImport       `json:"bots"`
 	Thresholds  []Threshold         `json:"thresholds"`
+	StatusCodes StatusCodes         `json:"status_codes"`
+	DNSBL       bool                `json:"dnsbl"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -361,6 +360,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.Store != nil {
+		if err := c.Store.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -373,6 +378,9 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		StatusCodes: StatusCodes{
 			Challenge: http.StatusOK,
 			Deny:      http.StatusOK,
+		},
+		Store: &Store{
+			Backend: "memory",
 		},
 	}
 
@@ -392,6 +400,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			Override:     c.OpenGraph.Override,
 		},
 		StatusCodes: c.StatusCodes,
+		Store:       c.Store,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -451,12 +460,13 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 }
 
 type Config struct {
+	Impressum   *Impressum
+	Store       *Store
+	OpenGraph   OpenGraph
 	Bots        []BotConfig
 	Thresholds  []Threshold
-	DNSBL       bool
-	Impressum   *Impressum
-	OpenGraph   OpenGraph
 	StatusCodes StatusCodes
+	DNSBL       bool
 }
 
 func (c Config) Valid() error {

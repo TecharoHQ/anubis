@@ -26,8 +26,16 @@ func InitSlog(level string) {
 	slog.SetDefault(slog.New(h))
 }
 
-func GetRequestLogger(r *http.Request) *slog.Logger {
-	return slog.With(
+func GetRequestLogger(base *slog.Logger, r *http.Request) *slog.Logger {
+	host := r.Host
+	if host == "" {
+		host = r.Header.Get("X-Forwarded-Host")
+	}
+
+	return base.With(
+		"host", host,
+		"method", r.Method,
+		"path", r.URL.Path,
 		"user_agent", r.UserAgent(),
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),
@@ -46,6 +54,9 @@ func (elf *ErrorLogFilter) Write(p []byte) (n int, err error) {
 	logMessage := string(p)
 	if strings.Contains(logMessage, "context canceled") {
 		return len(p), nil // Suppress the log by doing nothing
+	}
+	if strings.Contains(logMessage, "Unsolicited response received on idle HTTP channel") {
+		return len(p), nil
 	}
 	if elf.Unwrap != nil {
 		return elf.Unwrap.Writer().Write(p)

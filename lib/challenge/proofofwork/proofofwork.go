@@ -10,10 +10,11 @@ import (
 
 	"github.com/TecharoHQ/anubis/internal"
 	chall "github.com/TecharoHQ/anubis/lib/challenge"
-	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/web"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/a-h/templ"
 )
+
+//go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
 	chall.Register("fast", &Impl{Algorithm: "fast"})
@@ -24,20 +25,17 @@ type Impl struct {
 	Algorithm string
 }
 
-func (i *Impl) Setup(mux *http.ServeMux) {
-	/* no implementation required */
+func (i *Impl) Setup(mux *http.ServeMux) {}
+
+func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
+	loc := localization.GetLocalizer(r)
+	return page(loc), nil
 }
 
-func (i *Impl) Issue(r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
-	component, err := web.BaseWithChallengeAndOGTags("Making sure you're not a bot!", web.Index(), in.Impressum, in.Challenge, in.Rule.Challenge, in.OGTags)
-	if err != nil {
-		return nil, fmt.Errorf("can't render page: %w", err)
-	}
+func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInput) error {
+	rule := in.Rule
+	challenge := in.Challenge.RandomData
 
-	return component, nil
-}
-
-func (i *Impl) Validate(r *http.Request, lg *slog.Logger, rule *policy.Bot, challenge string) error {
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w nonce", chall.ErrMissingField))

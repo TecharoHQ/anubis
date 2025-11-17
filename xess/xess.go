@@ -12,13 +12,12 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 )
 
-//go:generate go tool github.com/a-h/templ/cmd/templ generate
-
 var (
 	//go:embed *.css static
 	Static embed.FS
 
-	URL = "/.within.website/x/xess/xess.css"
+	BasePrefix = "/.within.website/x/xess/"
+	URL        = "/.within.website/x/xess/xess.css"
 )
 
 func init() {

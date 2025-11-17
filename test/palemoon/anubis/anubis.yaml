@@ -1,0 +1,12 @@
+bots:
+  - name: palemoon
+    user_agent_regex: PaleMoon
+    action: CHALLENGE
+    challenge:
+      difficulty: 2
+      report_as: 2
+      algorithm: fast
+
+status_codes:
+  CHALLENGE: 401
+  DENY: 403

@@ -22,9 +22,9 @@ type TestCase struct {
 type TestOptions struct {
 	format           string
 	action           string
-	crawlDelayWeight int
 	policyName       string
 	deniedAction     string
+	crawlDelayWeight int
 }
 
 func TestDataFileConversion(t *testing.T) {
@@ -77,6 +77,12 @@ func TestDataFileConversion(t *testing.T) {
 			robotsFile:   "complex.robots.txt",
 			expectedFile: "complex.yaml",
 			options:      TestOptions{format: "yaml", crawlDelayWeight: 5},
+		},
+		{
+			name:         "consecutive_user_agents",
+			robotsFile:   "consecutive.robots.txt",
+			expectedFile: "consecutive.yaml",
+			options:      TestOptions{format: "yaml", crawlDelayWeight: 3},
 		},
 	}
 

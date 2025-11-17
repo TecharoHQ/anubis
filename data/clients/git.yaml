@@ -2,13 +2,19 @@
   action: ALLOW
   expression:
     all:
-    - >
-      (  
-        userAgent.startsWith("git/") ||
-        userAgent.contains("libgit") ||
-        userAgent.startsWith("go-git") ||
-        userAgent.startsWith("JGit/") ||
-        userAgent.startsWith("JGit-")
-      )
-    - '"Git-Protocol" in headers'
-    - headers["Git-Protocol"] == "version=2"
+      - >
+        (  
+          userAgent.startsWith("git/") ||
+          userAgent.contains("libgit") ||
+          userAgent.startsWith("go-git") ||
+          userAgent.startsWith("JGit/") ||
+          userAgent.startsWith("JGit-")
+        )
+      - '"Accept" in headers'
+      - headers["Accept"] == "*/*"
+      - '"Cache-Control" in headers'
+      - headers["Cache-Control"] == "no-cache"
+      - '"Pragma" in headers'
+      - headers["Pragma"] == "no-cache"
+      - '"Accept-Encoding" in headers'
+      - headers["Accept-Encoding"].contains("gzip")

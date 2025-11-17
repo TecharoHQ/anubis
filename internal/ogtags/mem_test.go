@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 	"golang.org/x/net/html"
 )
 
@@ -30,7 +31,7 @@ func BenchmarkGetTarget(b *testing.B) {
 
 	for _, tt := range tests {
 		b.Run(tt.name, func(b *testing.B) {
-			cache := NewOGTagCache(tt.target, config.OpenGraph{})
+			cache := NewOGTagCache(tt.target, config.OpenGraph{}, memory.New(b.Context()))
 			urls := make([]*url.URL, len(tt.paths))
 			for i, path := range tt.paths {
 				u, _ := url.Parse(path)
@@ -66,7 +67,7 @@ func BenchmarkExtractOGTags(b *testing.B) {
 		</head><body><div><p>Content</p></div></body></html>`,
 	}
 
-	cache := NewOGTagCache("http://example.com", config.OpenGraph{})
+	cache := NewOGTagCache("http://example.com", config.OpenGraph{}, memory.New(b.Context()))
 	docs := make([]*html.Node, len(htmlSamples))
 
 	for i, sample := range htmlSamples {
@@ -84,7 +85,7 @@ func BenchmarkExtractOGTags(b *testing.B) {
 
 // Memory usage test
 func TestMemoryUsage(t *testing.T) {
-	cache := NewOGTagCache("http://example.com", config.OpenGraph{})
+	cache := NewOGTagCache("http://example.com", config.OpenGraph{}, memory.New(t.Context()))
 
 	// Force GC and wait for it to complete
 	runtime.GC()

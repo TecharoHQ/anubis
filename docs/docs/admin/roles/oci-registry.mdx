@@ -1,0 +1,10 @@
+# OCI Registries
+
+If you are serving an OCI registry behind Anubis, you will need to import the `(data)/clients/docker-client.yaml` file in order to make sure that OCI registry clients can download images:
+
+```yaml
+bots:
+  - import: (data)/meta/default-config.yaml
+  - import: (data)/clients/docker-client.yaml
+# ... the rest of your config
+```

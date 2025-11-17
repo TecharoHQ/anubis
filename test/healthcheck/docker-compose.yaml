@@ -1,0 +1,15 @@
+services:
+  web:
+    image: ghcr.io/xe/nginx-micro:v1.29.0
+
+  anubis:
+    image: ko.local/anubis
+    environment:
+      TARGET: http://web:80
+      USE_REMOTE_ADDRESS: "true"
+    healthcheck:
+      test: ["CMD", "anubis", "--healthcheck"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 500ms

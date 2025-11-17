@@ -30,5 +30,6 @@ start_pre() {
 		return 1
 	fi
 
-	checkpath -d -o "${command_user?}" "/run/anubis_${instance?}"
+	rm -rf "/run/anubis_${instance?}"
+	checkpath -D -o "${command_user?}" "/run/anubis_${instance?}"
 }

@@ -1,0 +1,63 @@
+name: Smoke tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    strategy:
+      matrix:
+        test:
+          - default-config-macro
+          - docker-registry
+          - double_slash
+          - forced-language
+          - git-clone
+          - git-push
+          - healthcheck
+          - i18n
+          - palemoon/amd64
+          #- palemoon/i386
+          - robots_txt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: latest
+
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: stable
+
+      - uses: ko-build/setup-ko@d006021bd0c28d1ce33a07e7943d48b079944c8d # v0.9
+
+      - name: Install utils
+        run: |
+          go install ./utils/cmd/...
+
+      - name: Run test
+        run: |
+          cd test/${{ matrix.test }}
+          backoff-retry --try-count 10 ./test.sh
+
+      - name: Sanitize artifact name
+        if: always()
+        run: echo "ARTIFACT_NAME=${{ matrix.test }}" | sed 's|/|-|g' >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        if: always()
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: test/${{ matrix.test }}/var

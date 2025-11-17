@@ -1,0 +1,75 @@
+---
+slug: 2025/file-abuse-reports
+title: Taking steps to end abusive traffic from cloud providers
+description: "Learn how to effectively file abuse reports with cloud providers to stop malicious traffic at its source and protect your services from automated abuse."
+authors: [xe]
+tags: [abuse, cloud, security, networking]
+image: goose-pond.webp
+---
+
+![A peaceful goose pond](./goose-pond.webp)
+
+As part of Anubis's ongoing development, I've been working to reduce friction for legitimate users by minimizing unnecessary challenge pages. While this improves the user experience, it can potentially expose services to increased abuse from public cloud infrastructure. To help administrators better protect their services, I want to share my strategies for filing abuse reports with IP space owners, enabling us to address malicious scraping at its source.
+
+{/* truncate */}
+
+In general, there are two kinds of IP addresses:
+
+- Residential IP addresses: IP addresses that are allocated to residential customers such as home internet connections and cellular data plans. These IP addresses are increasingly shared between customers due to technologies like [CGNAT](https://en.wikipedia.org/wiki/Carrier-grade_NAT).
+- Commercial IP addresses: IP addresses that are allocated to commercial customers such as cloud providers, VPS providers, root server providers, and other such business to business companies. These IP addresses are almost always statically allocated to one customer for a very long period of time (typically the lifetime of the server unless they are using things like dedicated IP addresses).
+
+In general, filing abuse reports to residential IP addresses is a waste of time. The administrators do appreciate knowing what kinds of abusive traffic is causing grief, but many times the users of those IP addresses don't know that their computer is sending abusive traffic to your services. A lot of malware botnets that used to be used with DDOS for hire services are now being used as residential proxies. Those "free VPN apps" are almost certainly making you pay for your usage by making your computer a zombie in a botnet. At some level I really respect the hustle as they manage to sell other people's bandwidth for rates as ludicrous as $1.00 per gigabyte ingressed and egressed.
+
+:::note
+
+Keep in mind, I'm talking about the things you can find by searching "free VPN", not infrastructure for the public good like the Tor browser or I2P.
+
+:::
+
+What you should really focus on is traffic from commercial IP addresses, such as cloud providers. That's a case where the cloud customer is in direct violation of the acceptable use policy of the provider. Filing abuse reports gets the abuse team of the cloud provider to reach out to that customer and demand corrective action under threat of contractual violence.
+
+## How to make an abuse report
+
+In general, the best abuse reports contain the following information:
+
+- Time of abusive requests.
+- IP address, User-Agent header, or other unique identifiers that can help the abuse team educate the customer about their misbehaving infrastructure.
+- Does the abusive IP address request robots.txt? If not, be sure to include that information.
+- A brief description of the impact to your system such as high system load, pages not rendering, or database system crashes. This helps the provider establish the fact that their customer is causing you measurable harm.
+- Context as to what your service is, what it does, and why they should care.
+
+For example, let's say that someone was giving the Anubis docs a series of requests that caused the server to fall over and experience extended downtime. Here's what I would write to the abuse contact:
+
+> Hello,
+>
+> I have received abusive traffic from one of your customers that has resulted in a denial of service to the users of the Anubis documentation website. Anubis is a web application firewall that administrators use to protect their websites against mass scraping and this documentation website helps administrators get started.
+>
+> On or about Thursday, October 30th at 04:00 UTC, A flurry of requests from the IP range `127.34.0.0/24` started to hit the `/admin/` routes, which caused unreasonable database load and ended up crashing PostgreSQL. This caused the documentation website to go down for three hours as it happened while the administrators were asleep. Based on logs, this caused 353 distinct users to not be able to load the documentation and the users filed bugs about it.
+>
+> I have attached the HTTP frontend logs for the abusive requests from your IP range. To protect our systems in the meantime while we perform additional hardening, I have blocked that IP address range in both our IP firewall and web application firewall configuration. Based on these logs, your customer seems to not have requested the standard `robots.txt` file, which includes instructions to deny access to those routes.
+>
+> Please let me know what other information you need on your end.
+>
+> Sincerely,
+>
+> [normal email signature]
+
+Then in order to figure out where to send it, look the IP addresses up in the `whois` database. For example, if you want to find the abuse contact for the IP address `1.1.1.1`, use the [whois command](https://packages.debian.org/sid/whois) to find the abuse contact:
+
+```
+$ whois 1.1.1.1 | grep -i abuse
+% Abuse contact for '1.1.1.0 - 1.1.1.255' is 'helpdesk@apnic.net'
+abuse-c:        AA1412-AP
+remarks:        All Cloudflare abuse reporting can be done via
+remarks:        resolver-abuse@cloudflare.com
+abuse-mailbox:  helpdesk@apnic.net
+role:           ABUSE APNICRANDNETAU
+abuse-mailbox:  helpdesk@apnic.net
+mnt-by:         APNIC-ABUSE
+```
+
+The abuse contact will be named either `abuse-c` or `abuse-mailbox`. For greatest effect, I suggest including all listed email addresses in your email to the abuse contact.
+
+Once you send your email, you should expect a response within 2 business days at most. If they don't get back to you, please feel free to [contact me](https://xeiaso.net/contact/) so that the default set of Anubis rules can be edited according to patterns I'm seeing across the ecosystem.
+
+Just remember that many cloud providers do not know how bad the scraping problem is. Filing abuse complaints makes it their problem. They don't want it to be their problem.

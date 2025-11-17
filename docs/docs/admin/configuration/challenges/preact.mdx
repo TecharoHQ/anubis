@@ -1,0 +1,19 @@
+# Preact
+
+The `preact` challenge sends the browser a simple challenge that makes it run very lightweight JavaScript that proves the client is able to execute client-side JavaScript. It uses [Preact](https://www.npmjs.com/package/preact) (a lightweight client side web framework in the vein of React) to do this.
+
+To use it in your Anubis configuration:
+
+```yaml
+# Generic catchall rule
+- name: generic-browser
+  user_agent_regex: >-
+    Mozilla|Opera
+  action: CHALLENGE
+  challenge:
+    difficulty: 1 # Number of seconds to wait before refreshing the page
+    report_as: 4 # Unused by this challenge method
+    algorithm: preact
+```
+
+This is the default challenge method for most clients.

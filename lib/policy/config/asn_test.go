@@ -8,9 +8,9 @@ import (
 
 func TestASNsValid(t *testing.T) {
 	for _, tt := range []struct {
-		name  string
-		input *ASNs
 		err   error
+		input *ASNs
+		name  string
 	}{
 		{
 			name: "basic valid",

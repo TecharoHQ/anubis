@@ -1,0 +1,341 @@
+---
+title: "Commercial support and an unbranded version"
+---
+
+If you want to use Anubis but organizational policies prevent you from using the branding that the open source project ships, we offer a commercial version of Anubis named BotStopper. BotStopper builds off of the open source core of Anubis and offers organizations more control over the branding, including but not limited to:
+
+- Custom images for different states of the challenge process (in process, success, failure)
+- Custom CSS and fonts
+- Custom titles for the challenge and error pages
+- "Anubis" replaced with "BotStopper" across the UI
+- A private bug tracker for issues
+
+In the near future this will expand to:
+
+- A private challenge implementation that does advanced fingerprinting to check if the client is a genuine browser or not
+- Advanced fingerprinting via [Thoth-based advanced checks](./thoth.mdx)
+
+In order to sign up for BotStopper, please do one of the following:
+
+- Sign up [on GitHub Sponsors](https://github.com/sponsors/Xe) at the $50 per month tier or higher
+- Email [sales@techaro.lol](mailto:sales@techaro.lol) with your requirements for invoicing, please note that custom invoicing will cost more than using GitHub Sponsors for understandable overhead reasons
+
+## Installation
+
+Install BotStopper like you would Anubis, but replace the image reference. EG:
+
+```diff
+-ghcr.io/techarohq/anubis:latest
++ghcr.io/techarohq/botstopper/anubis:latest
+```
+
+### Binary packages
+
+Binary packages are available [in the GitHub Releases page](https://github.com/TecharoHQ/botstopper/releases), the main difference is that the package name is `techaro-botstopper`, the systemd service is `techaro-botstopper@your-instance.service`, the binary is `/usr/bin/botstopper`, and the configuration is in `/etc/techaro-botstopper`. All other instructions in the [native package install guide](./native-install.mdx) apply.
+
+### Docker / Podman
+
+In order to pull the BotStopper image, you need to [authenticate with GitHub's Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry).
+
+```text
+docker login ghcr.io -u your-username --password-stdin
+```
+
+Then you can use the image as normal.
+
+### Kubernetes
+
+If you are using Kubernetes, you will need to create an image pull secret:
+
+```text
+kubectl create secret docker-registry \
+  techarohq-botstopper \
+  --docker-server ghcr.io \
+  --docker-username your-username \
+  --docker-password your-access-token \
+  --docker-email your@email.address
+```
+
+Then attach it to your Deployment:
+
+```diff
+     spec:
+       securityContext:
+         fsGroup: 1000
++      imagePullSecrets:
++      - name: techarohq-botstopper
+```
+
+## Configuration
+
+### Docker compose
+
+Follow [the upstream Docker compose directions](https://anubis.techaro.lol/docs/admin/environments/docker-compose) with the following additional options:
+
+```diff
+   anubis:
+     image: ghcr.io/techarohq/botstopper/anubis:latest
+     environment:
+       BIND: ":8080"
+       DIFFICULTY: "4"
+       METRICS_BIND: ":9090"
+       SERVE_ROBOTS_TXT: "true"
+       TARGET: "http://nginx"
+       OG_PASSTHROUGH: "true"
+       OG_EXPIRY_TIME: "24h"
+
++      # botstopper config here
++      CHALLENGE_TITLE: "Doing math for your connnection!"
++      ERROR_TITLE: "Something went wrong!"
++      OVERLAY_FOLDER: /assets
++    volumes:
++      - "./your_folder:/assets"
+```
+
+#### Example
+
+There is an example in [docker-compose.yaml](https://github.com/TecharoHQ/botstopper/blob/main/docker-compose.yaml). Start the example with `docker compose up`:
+
+```text
+docker compose up -d
+```
+
+And then open [https://botstopper.local.cetacean.club:8443](https://botstopper.local.cetacean.club:8443) in your browser.
+
+> [!NOTE]  
+> This uses locally signed sacrificial TLS certificates stored in `./demo/pki`. Your browser will rightly reject these. Here is what the example looks like:
+>
+> ![](/img/botstopper/example-screenshot.webp)
+
+## Custom images and CSS
+
+Anubis uses an internal filesystem that contains CSS, JavaScript, and images. The BotStopper variant of Anubis lets you specify an overlay folder with the environment variable `OVERLAY_FOLDER`. The contents of this folder will be overlaid on top of Anubis' internal filesystem, allowing you to easily customize the images and CSS.
+
+Your directory tree should look like this, assuming your data is in `./your_folder`:
+
+```text
+./your_folder
+└── static
+    ├── css
+    │   └── custom.css
+    └── img
+        ├── happy.webp
+        ├── pensive.webp
+        └── reject.webp
+```
+
+For an example directory tree using some off-the-shelf images the Tango icon set, see the [testdata](https://github.com/TecharoHQ/botstopper/tree/main/testdata/static/img) folder.
+
+### Header-based overlay dispatch
+
+If you run BotStopper in a multi-tenant environment where each tenant needs its own branding, BotStopper supports the ability to use request header values to direct asset reads to different folders under your `OVERLAY_FOLDER`. One of the most common ways to do this is based on the HTTP Host of the request. For example, if you set `ASSET_LOOKUP_HEADER=Host` in BotStopper's environment:
+
+```text
+$OVERLAY_FOLDER
+├── static
+│   ├── css
+│   │   ├── custom.css
+│   │   └── eyesore.css
+│   └── img
+│       ├── happy.webp
+│       ├── pensive.webp
+│       └── reject.webp
+└── test.anubis.techaro.lol
+    └── static
+        ├── css
+        │   └── custom.css
+        └── img
+            ├── happy.webp
+            ├── pensive.webp
+            └── reject.webp
+```
+
+Requests to `test.anubis.techaro.lol` will load assets in `$OVERLAY_FOLDER/test.anubis.techaro.lol/static` and all other requests will load them from `$OVERLAY_FOLDER/static`.
+
+For an example, look at [the testdata folder in the BotStopper repo](https://github.com/TecharoHQ/botstopper/tree/main/testdata).
+
+### Custom CSS
+
+CSS customization is done mainly with CSS variables. View [the example custom CSS file](https://github.com/TecharoHQ/botstopper/blob/main/testdata/static/css/custom.css) for more information about what can be customized.
+
+### Custom fonts
+
+If you want to add custom fonts, copy the `woff2` files alongside your `custom.css` file and then include them with the [`@font-face` CSS at-rule](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face):
+
+```css
+@font-face {
+  font-family: "Oswald";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("./fonts/oswald.woff2") format("woff2");
+}
+```
+
+Then adjust your CSS variables accordingly:
+
+```css
+:root {
+  --body-sans-font: Oswald, sans-serif;
+  --body-preformatted-font: monospace;
+  --body-title-font: serif;
+}
+```
+
+To convert `.ttf` fonts to [Web-optimized woff2 fonts](https://www.w3.org/TR/WOFF2/), use the `woff2_compress` command from the `woff2` or `woff2-tools` package:
+
+```console
+$ woff2_compress oswald.ttf
+Processing oswald.ttf => oswald.woff2
+Compressed 159517 to 70469.
+```
+
+Then you can import and use it as normal.
+
+### Customizing images
+
+Anubis uses three images to visually communicate the state of the program. These are:
+
+| Image name     | Intended message                                 | Example                           |
+| :------------- | :----------------------------------------------- | :-------------------------------- |
+| `happy.webp`   | You have passed validation, all is good          | ![](/img/botstopper/happy.webp)   |
+| `pensive.webp` | Checking is running, hold steady until it's done | ![](/img/botstopper/pensive.webp) |
+| `reject.webp`  | Something went wrong, this is a terminal state   | ![](/img/botstopper/reject.webp)  |
+
+To make your own images at the optimal quality, use the following ffmpeg command:
+
+```text
+ffmpeg -i /path/to/image -vf scale=-1:384 happy.webp
+```
+
+`ffprobe` should report something like this on the generated images:
+
+```text
+Input #0, webp_pipe, from 'happy.webp':
+  Duration: N/A, bitrate: N/A
+  Stream #0:0: Video: webp, none, 25 fps, 25 tbr, 25 tbn
+```
+
+In testing 384 by 384 pixels gives the best balance between filesize, quality, and clarity.
+
+```text
+$ du -hs *
+4.0K    happy.webp
+ 12K    pensive.webp
+8.0K    reject.webp
+```
+
+## Custom HTML templates
+
+If you need to completely control the HTML layout of all Anubis pages, you can customize the entire page with `USE_TEMPLATES=true`. This uses Go's standard library [html/template](https://pkg.go.dev/html/template) package to template HTML responses. Your templates can contain whatever HTML you want. The only catch is that you MUST include `{{ .Head }}` in the `<head>` element for challenge pages, and you MUST include `{{ .Body }}` in the `<body>` element for all pages.
+
+In order to use this, you must define the following templates:
+
+| Template path                              | Usage                                           |
+| :----------------------------------------- | :---------------------------------------------- |
+| `$OVERLAY_FOLDER/templates/challenge.tmpl` | Challenge pages                                 |
+| `$OVERLAY_FOLDER/templates/error.tmpl`     | Error pages                                     |
+| `$OVERLAY_FOLDER/templates/impressum.tmpl` | [Impressum](./configuration/impressum.mdx) page |
+
+:::note
+
+Currently HTML templates don't work together with [Header-based overlay dispatch](#header-based-overlay-dispatch). This is a known issue that will be fixed soon. If you enable header-based overlay dispatch, BotStopper will use the global `templates` folder instead of using the templates present in the overlay.
+
+:::
+
+Here are minimal (but working) examples for each template:
+
+<details>
+<summary>`challenge.tmpl`</summary>
+
+:::note
+
+You **MUST** include the `{{.Head}}` segment in a `<head>` tag. It contains important information for challenges to execute. If you don't include this, no clients will be able to pass challenges.
+
+:::
+
+```html
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <head>
+    {{ .Head }}
+  </head>
+  <body>
+    {{ .Body }}
+  </body>
+</html>
+```
+
+</details>
+
+<details>
+<summary>`error.tmpl`</summary>
+
+```html
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <body>
+    {{ .Body }}
+  </body>
+</html>
+```
+
+</details>
+
+<details>
+<summary>`impressum.tmpl`</summary>
+
+```html
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <body>
+    {{ .Body }}
+  </body>
+</html>
+```
+
+</details>
+
+### Template functions
+
+In order to make life easier, the following template functions are defined:
+
+#### `Asset`
+
+Constructs the path for a static asset in the [overlay folder](#custom-images-and-css)'s `static` directory.
+
+```go
+func Asset(string) string
+```
+
+Usage:
+
+```html
+<link rel="stylesheet" href="{{ Asset "css/example.css" }}" />
+```
+
+Generates:
+
+```html
+<link
+  rel="stylesheet"
+  href="/.within.website/x/cmd/anubis/static/css/example.css"
+/>
+```
+
+## Customizing messages
+
+You can customize messages using the following environment variables:
+
+| Message              | Environment variable | Default                                    |
+| :------------------- | :------------------- | :----------------------------------------- |
+| Challenge page title | `CHALLENGE_TITLE`    | `Ensuring the security of your connection` |
+| Error page title     | `ERROR_TITLE`        | `Error`                                    |
+
+For example:
+
+```sh
+# /etc/techaro-botstopper/gitea.env
+CHALLENGE_TITLE="Wait a moment please!"
+ERROR_TITLE="Client error"
+```

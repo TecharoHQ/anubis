@@ -61,6 +61,8 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	switch name {
 	case "remoteAddress":
 		return cr.Header.Get("X-Real-Ip"), true
+	case "contentLength":
+		return cr.ContentLength, true
 	case "host":
 		return cr.Host, true
 	case "method":
@@ -73,6 +75,12 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 		return expressions.URLValues{Values: cr.URL.Query()}, true
 	case "headers":
 		return expressions.HTTPHeaders{Header: cr.Header}, true
+	case "load_1m":
+		return expressions.Load1(), true
+	case "load_5m":
+		return expressions.Load5(), true
+	case "load_15m":
+		return expressions.Load15(), true
 	default:
 		return nil, false
 	}

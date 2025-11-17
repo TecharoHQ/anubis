@@ -45,6 +45,21 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://gitlab.postmarketos.org/
 - https://wiki.koha-community.org/
 - https://extensions.typo3.org/
+- https://ebird.org/
+- https://fabulous.systems/
+- https://coinhoards.org/
+- https://pluralpedia.org/
+- https://git.aya.so/
+- https://marginalia-search.com/
+- https://repositorio.ufrn.br/home/
+- https://mozillazine.org/
+- https://clew.se/
+- https://tumfatig.net/
+- https://rpmfusion.org/
+- https://wiki.freepascal.org/
+- https://azurlane.koumakan.jp/
+- https://lab.civicrm.org/
+- https://git.door43.org/
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
@@ -81,4 +96,31 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://tufind.hds.hebis.de/
   - https://karla.hds.hebis.de/
   - and many more (see https://www.hebis.de/dienste/hebis-discovery-system/)
+  </details>
+- <details>
+  <summary>Duke University</summary>
+  - https://repository.duke.edu/
+  - https://archives.lib.duke.edu/
+  - https://find.library.duke.edu/
+  - https://nicholas.duke.edu/
+  </details>
+- <details>
+  <summary>Forschungszentrum Jülich</summary>
+  - https://juser.fz-juelich.de/
+  </details>
+- <details>
+  <summary>archlinux32.org</summary>
+  - https://www.archlinux32.org/packages/
+  - https://bbs.archlinux32.org/
+  - https://bugs.archlinux32.org/
+  </details>
+- <details>
+  <summary>HackLab.TO</summary>
+  - https://hacklab.to/
+  - https://knowledge.hacklab.to/
+  </details>
+- <details>
+  <summary>Slackware</summary>
+  - https://git.slackware.nl/
+  - https://git.liveslak.org/
   </details>

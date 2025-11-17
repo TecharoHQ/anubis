@@ -5,49 +5,50 @@ import styles from "./styles.module.css";
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<"svg">>;
+  imageURL: string;
   description: ReactNode;
 };
 
 const FeatureList: FeatureItem[] = [
   {
     title: "Easy to Use",
-    Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
+    imageURL: require("@site/static/img/anubis/happy.webp").default,
     description: (
       <>
-        Anubis is easy to set up, lightweight, and helps get rid of the lowest
-        hanging fruit so you can sleep at night.
+        Anubis sits in the background and weighs the risk of incoming requests.
+        If it asks a client to complete a challenge, no user interaction is
+        required.
       </>
     ),
   },
   {
     title: "Lightweight",
-    Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
+    imageURL: require("@site/static/img/anubis/pensive.webp").default,
     description: (
       <>
-        Anubis is efficient and as lightweight as possible, blocking the worst
-        of the bots on the internet and makes it easy to protect what you host
-        online.
+        Anubis is so lightweight you'll forget it's there until you look at your
+        hosting bill. On average it uses less than 128 MB of ram.
       </>
     ),
   },
   {
-    title: "Multi-threaded",
-    Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
+    title: "Block the scrapers",
+    imageURL: require("@site/static/img/anubis/reject.webp").default,
     description: (
       <>
-        Anubis uses a multi-threaded proof of work check to ensure that users
-        browsers are up to date and support modern standards.
+        Anubis uses a combination of heuristics to identify and block bots
+        before they take your website down. You can customize the rules with{" "}
+        <a href="/docs/admin/policies">your own policies</a>.
       </>
     ),
   },
 ];
 
-function Feature({ title, Svg, description }: FeatureItem) {
+function Feature({ title, description, imageURL }: FeatureItem) {
   return (
     <div className={clsx("col col--4")}>
       <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
+        <img src={imageURL} className={styles.featureSvg} role="img" />
       </div>
       <div className="text--center padding-horiz--md">
         <Heading as="h3">{title}</Heading>

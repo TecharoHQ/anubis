@@ -30,14 +30,15 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/internal/thoth"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
@@ -46,8 +47,16 @@ var (
 	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
 	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
 	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookieDynamicDomain      = flag.Bool("cookie-dynamic-domain", false, "if set, automatically set the cookie Domain value based on the request domain")
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
+	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
+	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
+	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
+	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
+	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
+	cookieSameSite           = flag.String("cookie-same-site", "None", "sets the same site option on Anubis cookies, will auto-downgrade None to Lax if cookie-secure is false. Valid values are None, Lax, Strict, and Default.")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
 	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
@@ -59,9 +68,10 @@ var (
 	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
 	stripBasePrefix          = flag.Bool("strip-base-prefix", false, "if true, strips the base prefix from requests forwarded to the target server")
 	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
-	targetSNI                = flag.String("target-sni", "", "if set, the value of the TLS handshake hostname when forwarding requests to the target")
+	targetSNI                = flag.String("target-sni", "", "if set, TLS handshake hostname when forwarding requests to the target, if set to auto, use Host header")
 	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
 	targetInsecureSkipVerify = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
+	targetDisableKeepAlive   = flag.Bool("target-disable-keepalive", false, "if true, disables HTTP keep-alive for the backend")
 	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
 	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
 	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
@@ -71,11 +81,14 @@ var (
 	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
 	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
+	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
+	customRealIPHeader       = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
-	thothInsecure = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
-	thothURL      = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
-	thothToken    = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
+	thothInsecure        = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
+	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
+	thothToken           = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
+	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -92,7 +105,7 @@ func keyFromHex(value string) (ed25519.PrivateKey, error) {
 }
 
 func doHealthCheck() error {
-	resp, err := http.Get("http://localhost" + *metricsBind + anubis.BasePrefix + "/metrics")
+	resp, err := http.Get("http://localhost" + *metricsBind + "/healthz")
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
@@ -105,8 +118,57 @@ func doHealthCheck() error {
 	return nil
 }
 
+// parseBindNetFromAddr determine bind network and address based on the given network and address.
+func parseBindNetFromAddr(address string) (string, string) {
+	defaultScheme := "http://"
+	if !strings.Contains(address, "://") {
+		if strings.HasPrefix(address, ":") {
+			address = defaultScheme + "localhost" + address
+		} else {
+			address = defaultScheme + address
+		}
+	}
+
+	bindUri, err := url.Parse(address)
+	if err != nil {
+		log.Fatal(fmt.Errorf("failed to parse bind URL: %w", err))
+	}
+
+	switch bindUri.Scheme {
+	case "unix":
+		return "unix", bindUri.Path
+	case "tcp", "http", "https":
+		return "tcp", bindUri.Host
+	default:
+		log.Fatal(fmt.Errorf("unsupported network scheme %s in address %s", bindUri.Scheme, address))
+	}
+	return "", address
+}
+
+func parseSameSite(s string) http.SameSite {
+	switch strings.ToLower(s) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "default":
+		return http.SameSiteDefaultMode
+	default:
+		log.Fatalf("invalid cookie same-site mode: %s, valid values are None, Lax, Strict, and Default", s)
+	}
+	return http.SameSiteDefaultMode
+}
+
 func setupListener(network string, address string) (net.Listener, string) {
 	formattedAddress := ""
+
+	if network == "" {
+		// keep compatibility
+		network, address = parseBindNetFromAddr(address)
+	}
+
 	switch network {
 	case "unix":
 		formattedAddress = "unix:" + address
@@ -146,13 +208,17 @@ func setupListener(network string, address string) (net.Listener, string) {
 	return listener, formattedAddress
 }
 
-func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool) (http.Handler, error) {
+func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool) (http.Handler, error) {
 	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
+
+	if targetDisableKeepAlive {
+		transport.DisableKeepAlives = true
+	}
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
 	if targetUri.Scheme == "unix" {
@@ -170,41 +236,32 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 
 	if insecureSkipVerify || targetSNI != "" {
 		transport.TLSClientConfig = &tls.Config{}
-		if insecureSkipVerify {
-			slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
-			transport.TLSClientConfig.InsecureSkipVerify = true
-		}
-		if targetSNI != "" {
-			transport.TLSClientConfig.ServerName = targetSNI
-		}
+	}
+	if insecureSkipVerify {
+		slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
+		transport.TLSClientConfig.InsecureSkipVerify = true
+	}
+	if targetSNI != "" && targetSNI != "auto" {
+		transport.TLSClientConfig.ServerName = targetSNI
 	}
 
 	rp := httputil.NewSingleHostReverseProxy(targetUri)
 	rp.Transport = transport
 
-	if targetHost != "" {
+	if targetHost != "" || targetSNI == "auto" {
 		originalDirector := rp.Director
 		rp.Director = func(req *http.Request) {
 			originalDirector(req)
-			req.Host = targetHost
+			if targetHost != "" {
+				req.Host = targetHost
+			}
+			if targetSNI == "auto" {
+				transport.TLSClientConfig.ServerName = req.Host
+			}
 		}
 	}
 
 	return rp, nil
-}
-
-func startDecayMapCleanup(ctx context.Context, s *libanubis.Server) {
-	ticker := time.NewTicker(1 * time.Hour)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			s.CleanupDecayMap()
-		case <-ctx.Done():
-			return
-		}
-	}
 }
 
 func main() {
@@ -217,6 +274,15 @@ func main() {
 	}
 
 	internal.InitSlog(*slogLevel)
+	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
+
+	if *healthcheck {
+		log.Println("running healthcheck")
+		if err := doHealthCheck(); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	if *extractResources != "" {
 		if err := extractEmbedFS(data.BotPolicies, ".", *extractResources); err != nil {
@@ -229,17 +295,30 @@ func main() {
 		return
 	}
 
+	// install signal handler
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	wg := new(sync.WaitGroup)
+
+	if *metricsBind != "" {
+		wg.Add(1)
+		go metricsServer(ctx, wg.Done)
+	}
+
 	var rp http.Handler
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
 		var err error
-		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify)
+		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify, *targetDisableKeepAlive)
 		if err != nil {
 			log.Fatalf("can't make reverse proxy: %v", err)
 		}
 	}
 
-	ctx := context.Background()
+	if *cookieDomain != "" && *cookieDynamicDomain {
+		log.Fatalf("you can't set COOKIE_DOMAIN and COOKIE_DYNAMIC_DOMAIN at the same time")
+	}
 
 	// Thoth configuration
 	switch {
@@ -260,6 +339,16 @@ func main() {
 	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty)
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
+	}
+
+	// Warn if persistent storage is used without a configured signing key
+	if policy.Store.IsPersistent() {
+		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
+			slog.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
+				"Challenges will be invalidated when Anubis restarts. " +
+				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
+				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		}
 	}
 
 	ruleErrorIDs := make(map[string]string)
@@ -290,11 +379,15 @@ func main() {
 			"this may result in unexpected behavior")
 	}
 
-	var priv ed25519.PrivateKey
-	if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
+	var ed25519Priv ed25519.PrivateKey
+	if *hs512Secret != "" && (*ed25519PrivateKeyHex != "" || *ed25519PrivateKeyHexFile != "") {
+		log.Fatal("do not specify both HS512 and ED25519 secrets")
+	} else if *hs512Secret != "" {
+		ed25519Priv = ed25519.PrivateKey(*hs512Secret)
+	} else if *ed25519PrivateKeyHex != "" && *ed25519PrivateKeyHexFile != "" {
 		log.Fatal("do not specify both ED25519_PRIVATE_KEY_HEX and ED25519_PRIVATE_KEY_HEX_FILE")
 	} else if *ed25519PrivateKeyHex != "" {
-		priv, err = keyFromHex(*ed25519PrivateKeyHex)
+		ed25519Priv, err = keyFromHex(*ed25519PrivateKeyHex)
 		if err != nil {
 			log.Fatalf("failed to parse and validate ED25519_PRIVATE_KEY_HEX: %v", err)
 		}
@@ -304,12 +397,12 @@ func main() {
 			log.Fatalf("failed to read ED25519_PRIVATE_KEY_HEX_FILE %s: %v", *ed25519PrivateKeyHexFile, err)
 		}
 
-		priv, err = keyFromHex(string(bytes.TrimSpace(hexFile)))
+		ed25519Priv, err = keyFromHex(string(bytes.TrimSpace(hexFile)))
 		if err != nil {
 			log.Fatalf("failed to parse and validate content of ED25519_PRIVATE_KEY_HEX_FILE: %v", err)
 		}
 	} else {
-		_, priv, err = ed25519.GenerateKey(rand.Reader)
+		_, ed25519Priv, err = ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
@@ -331,6 +424,11 @@ func main() {
 		slog.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
+	anubis.CookieName = *cookiePrefix + "-auth"
+	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
+	anubis.ForcedLanguage = *forcedLanguage
+	anubis.UseSimplifiedExplanation = *useSimplifiedExplanation
+
 	// If OpenGraph configuration values are not set in the config file, use the
 	// values from flags / envvars.
 	if !policy.OpenGraph.Enabled {
@@ -341,39 +439,38 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		BasePrefix:        *basePrefix,
-		StripBasePrefix:   *stripBasePrefix,
-		Next:              rp,
-		Policy:            policy,
-		ServeRobotsTXT:    *robotsTxt,
-		PrivateKey:        priv,
-		CookieDomain:      *cookieDomain,
-		CookieExpiration:  *cookieExpiration,
-		CookiePartitioned: *cookiePartitioned,
-		RedirectDomains:   redirectDomainsList,
-		Target:            *target,
-		WebmasterEmail:    *webmasterEmail,
+		BasePrefix:           *basePrefix,
+		StripBasePrefix:      *stripBasePrefix,
+		Next:                 rp,
+		Policy:               policy,
+		ServeRobotsTXT:       *robotsTxt,
+		ED25519PrivateKey:    ed25519Priv,
+		HS512Secret:          []byte(*hs512Secret),
+		CookieDomain:         *cookieDomain,
+		CookieDynamicDomain:  *cookieDynamicDomain,
+		CookieExpiration:     *cookieExpiration,
+		CookiePartitioned:    *cookiePartitioned,
+		RedirectDomains:      redirectDomainsList,
+		Target:               *target,
+		WebmasterEmail:       *webmasterEmail,
+		OpenGraph:            policy.OpenGraph,
+		CookieSecure:         *cookieSecure,
+		CookieSameSite:       parseSameSite(*cookieSameSite),
+		PublicUrl:            *publicUrl,
+		JWTRestrictionHeader: *jwtRestrictionHeader,
+		DifficultyInJWT:      *difficultyInJWT,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
 	}
 
-	wg := new(sync.WaitGroup)
-	// install signal handler
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	if *metricsBind != "" {
-		wg.Add(1)
-		go metricsServer(ctx, wg.Done)
-	}
-	go startDecayMapCleanup(ctx, s)
-
 	var h http.Handler
 	h = s
+	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
+	h = internal.JA4H(h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
@@ -391,6 +488,7 @@ func main() {
 		"base-prefix", *basePrefix,
 		"cookie-expiration-time", *cookieExpiration,
 		"rule-error-ids", ruleErrorIDs,
+		"public-url", *publicUrl,
 	)
 
 	go func() {
@@ -402,6 +500,8 @@ func main() {
 		}
 	}()
 
+	internal.SetHealth("anubis", healthv1.HealthCheckResponse_SERVING)
+
 	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
@@ -412,19 +512,29 @@ func metricsServer(ctx context.Context, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
-	mux.Handle(anubis.BasePrefix+"/metrics", promhttp.Handler())
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		st, ok := internal.GetHealth("anubis")
+		if !ok {
+			slog.Error("health service anubis does not exist, file a bug")
+		}
+
+		switch st {
+		case healthv1.HealthCheckResponse_NOT_SERVING:
+			http.Error(w, "NOT OK", http.StatusInternalServerError)
+			return
+		case healthv1.HealthCheckResponse_SERVING:
+			fmt.Fprintln(w, "OK")
+			return
+		default:
+			http.Error(w, "UNKNOWN", http.StatusFailedDependency)
+			return
+		}
+	})
 
 	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
 	slog.Debug("listening for metrics", "url", metricsUrl)
-
-	if *healthcheck {
-		log.Println("running healthcheck")
-		if err := doHealthCheck(); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
 
 	go func() {
 		<-ctx.Done()

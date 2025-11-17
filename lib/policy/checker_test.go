@@ -22,6 +22,20 @@ func TestRemoteAddrChecker(t *testing.T) {
 			err:   nil,
 		},
 		{
+			name:  "match_ipv4_in_ipv6",
+			cidrs: []string{"0.0.0.0/0"},
+			ip:    "::ffff:1.1.1.1",
+			ok:    true,
+			err:   nil,
+		},
+		{
+			name:  "match_ipv4_in_ipv6_hex",
+			cidrs: []string{"0.0.0.0/0"},
+			ip:    "::ffff:101:101",
+			ok:    true,
+			err:   nil,
+		},
+		{
 			name:  "match_ipv6",
 			cidrs: []string{"::/0"},
 			ip:    "cafe:babe::",
@@ -194,6 +208,99 @@ func TestHeaderExistsChecker(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("err: %v", err)
+			}
+		})
+	}
+}
+
+func TestPathChecker_XOriginalURI(t *testing.T) {
+	tests := []struct {
+		name          string
+		regex         string
+		xOriginalURI  string
+		urlPath       string
+		headerKey     string
+		expectedMatch bool
+		expectError   bool
+	}{
+		{
+			name:          "X-Original-URI matches regex (with trailing space - current typo)",
+			regex:         "^/api/.*",
+			xOriginalURI:  "/api/users",
+			urlPath:       "/different/path",
+			headerKey:     "X-Original-URI",
+			expectedMatch: true,
+			expectError:   false,
+		},
+		{
+			name:          "X-Original-URI doesn't match, falls back to URL.Path",
+			regex:         "^/admin/.*",
+			xOriginalURI:  "/api/users",
+			urlPath:       "/admin/dashboard",
+			headerKey:     "X-Original-URI",
+			expectedMatch: true,
+			expectError:   false,
+		},
+		{
+			name:          "Neither X-Original-URI nor URL.Path match",
+			regex:         "^/admin/.*",
+			xOriginalURI:  "/api/users",
+			urlPath:       "/public/info",
+			headerKey:     "X-Original-URI ",
+			expectedMatch: false,
+			expectError:   false,
+		},
+		{
+			name:          "Empty X-Original-URI, URL.Path matches",
+			regex:         "^/static/.*",
+			xOriginalURI:  "",
+			urlPath:       "/static/css/style.css",
+			headerKey:     "X-Original-URI",
+			expectedMatch: true,
+			expectError:   false,
+		},
+		{
+			name:          "Complex regex matching X-Original-URI",
+			regex:         `^/api/v[0-9]+/(users|posts)/[0-9]+$`,
+			xOriginalURI:  "/api/v1/users/123",
+			urlPath:       "/different",
+			headerKey:     "X-Original-URI",
+			expectedMatch: true,
+			expectError:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create the PathChecker
+			pc, err := NewPathChecker(tt.regex)
+			if err != nil {
+				if !tt.expectError {
+					t.Fatalf("NewPathChecker() unexpected error: %v", err)
+				}
+				return
+			}
+
+			if tt.expectError {
+				t.Fatal("NewPathChecker() expected error but got none")
+			}
+
+			req, err := http.NewRequest("GET", "http://example.com"+tt.urlPath, nil)
+			if err != nil {
+				t.Fatalf("Failed to create request: %v", err)
+			}
+
+			if tt.xOriginalURI != "" {
+				req.Header.Set(tt.headerKey, tt.xOriginalURI)
+			}
+
+			match, err := pc.Check(req)
+			if err != nil {
+				t.Fatalf("Check() unexpected error: %v", err)
+			}
+
+			if match != tt.expectedMatch {
+				t.Errorf("Check() = %v, want %v", match, tt.expectedMatch)
 			}
 		})
 	}

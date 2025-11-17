@@ -11,9 +11,12 @@
 ## /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
 
 bots:
+  # You can import the entire default config with this macro:
+  # - import: (data)/meta/default-config.yaml
+
   # Pathological bots to deny
-  - # This correlates to data/bots/deny-pathological.yaml in the source tree
-    # https://github.com/TecharoHQ/anubis/blob/main/data/bots/deny-pathological.yaml
+  - # This correlates to data/bots/_deny-pathological.yaml in the source tree
+    # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
     import: (data)/bots/_deny-pathological.yaml
   - import: (data)/bots/aggressive-brazilian-scrapers.yaml
 
@@ -74,6 +77,69 @@ bots:
     weight:
       adjust: 10
 
+  # ## System load based checks.
+  # # If the system is under high load, add weight.
+  # - name: high-load-average
+  #   action: WEIGH
+  #   expression: load_1m >= 10.0 # make sure to end the load comparison in a .0
+  #   weight:
+  #     adjust: 20
+
+  ## If your backend service is running on the same operating system as Anubis,
+  ## you can uncomment this rule to make the challenge easier when the system is
+  ## under low load.
+  ##
+  ## If it is not, remove weight.
+  # - name: low-load-average
+  #   action: WEIGH
+  #   expression: load_15m <= 4.0 # make sure to end the load comparison in a .0
+  #   weight:
+  #     adjust: -10
+
+  # Assert behaviour that only genuine browsers display. This ensures that Chrome
+  # or Firefox versions
+  - name: realistic-browser-catchall
+    expression:
+      all:
+        - '"User-Agent" in headers'
+        - '( userAgent.contains("Firefox") ) || ( userAgent.contains("Chrome") ) || ( userAgent.contains("Safari") )'
+        - '"Accept" in headers'
+        - '"Sec-Fetch-Dest" in headers'
+        - '"Sec-Fetch-Mode" in headers'
+        - '"Sec-Fetch-Site" in headers'
+        - '"Accept-Encoding" in headers'
+        - '( headers["Accept-Encoding"].contains("zstd") || headers["Accept-Encoding"].contains("br") )'
+        - '"Accept-Language" in headers'
+    action: WEIGH
+    weight:
+      adjust: -10
+
+  # The Upgrade-Insecure-Requests header is typically sent by browsers, but not always
+  - name: upgrade-insecure-requests
+    expression: '"Upgrade-Insecure-Requests" in headers'
+    action: WEIGH
+    weight:
+      adjust: -2
+
+  # Chrome should behave like Chrome
+  - name: chrome-is-proper
+    expression:
+      all:
+        - userAgent.contains("Chrome")
+        - '"Sec-Ch-Ua" in headers'
+        - 'headers["Sec-Ch-Ua"].contains("Chromium")'
+        - '"Sec-Ch-Ua-Mobile" in headers'
+        - '"Sec-Ch-Ua-Platform" in headers'
+    action: WEIGH
+    weight:
+      adjust: -5
+
+  - name: should-have-accept
+    expression: '!("Accept" in headers)'
+    action: WEIGH
+    weight:
+      adjust: 5
+
   # Generic catchall rule
   - name: generic-browser
     user_agent_regex: >-
@@ -88,7 +154,7 @@ dnsbl: false
 # impressum:
 #   # Displayed at the bottom of every page rendered by Anubis.
 #   footer: >-
-#     This website is hosted by Zonbocom. If you have any complaints or notes
+#     This website is hosted by Zombocom. If you have any complaints or notes
 #     about the service, please contact
 #     <a href="mailto:contact@domainhere.example">contact@domainhere.example</a>
 #     and we will assist you as soon as possible.
@@ -145,6 +211,14 @@ status_codes:
   CHALLENGE: 200
   DENY: 200
 
+# Anubis can store temporary data in one of a few backends. See the storage
+# backends section of the docs for more information:
+#
+# https://anubis.techaro.lol/docs/admin/policies#storage-backends
+store:
+  backend: memory
+  parameters: {}
+
 # The weight thresholds for when to trigger individual challenges. Any
 # CHALLENGE will take precedence over this.
 #
@@ -189,12 +263,23 @@ thresholds:
       algorithm: fast
       difficulty: 2 # two leading zeros, very fast for most clients
       report_as: 2
-  # For clients that are browser like and have gained many points from custom rules
-  - name: extreme-suspicion
-    expression: weight >= 20
+  - name: mild-proof-of-work
+    expression:
+      all:
+        - weight >= 20
+        - weight < 30
     action: CHALLENGE
     challenge:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
       algorithm: fast
       difficulty: 4
       report_as: 4
+  # For clients that are browser like and have gained many points from custom rules
+  - name: extreme-suspicion
+    expression: weight >= 30
+    action: CHALLENGE
+    challenge:
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
+      algorithm: fast
+      difficulty: 6
+      report_as: 6

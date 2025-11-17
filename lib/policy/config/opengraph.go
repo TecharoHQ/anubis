@@ -13,17 +13,17 @@ var (
 )
 
 type openGraphFileConfig struct {
+	Override     map[string]string `json:"override,omitempty" yaml:"override,omitempty"`
+	TimeToLive   string            `json:"ttl" yaml:"ttl"`
 	Enabled      bool              `json:"enabled" yaml:"enabled"`
 	ConsiderHost bool              `json:"considerHost" yaml:"enabled"`
-	TimeToLive   string            `json:"ttl" yaml:"ttl"`
-	Override     map[string]string `json:"override,omitempty" yaml:"override,omitempty"`
 }
 
 type OpenGraph struct {
-	Enabled      bool              `json:"enabled" yaml:"enabled"`
-	ConsiderHost bool              `json:"considerHost" yaml:"enabled"`
 	Override     map[string]string `json:"override,omitempty" yaml:"override,omitempty"`
 	TimeToLive   time.Duration     `json:"ttl" yaml:"ttl"`
+	Enabled      bool              `json:"enabled" yaml:"enabled"`
+	ConsiderHost bool              `json:"considerHost" yaml:"enabled"`
 }
 
 func (og *openGraphFileConfig) Valid() error {

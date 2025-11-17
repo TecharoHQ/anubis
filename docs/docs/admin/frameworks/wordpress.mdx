@@ -1,6 +1,6 @@
-# Wordpress
+# WordPress
 
-Wordpress is the most popular blog engine on the planet.
+WordPress is the most popular blog engine on the planet.
 
 ## Using a multi-site setup with Anubis
 
@@ -27,7 +27,7 @@ flowchart LR
     US --> |whatever you're doing| B
 ```
 
-Wordpress may not realize that the underlying connection is being done over HTTPS. This could lead to a redirect loop in the `/wp-admin/` routes. In order to fix this, add the following to your `wp-config.php` file:
+WordPress may not realize that the underlying connection is being done over HTTPS. This could lead to a redirect loop in the `/wp-admin/` routes. In order to fix this, add the following to your `wp-config.php` file:
 
 ```php
 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
@@ -36,4 +36,4 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
 }
 ```
 
-This will make Wordpress think that your connection is over HTTPS instead of plain HTTP.
+This will make WordPress think that your connection is over HTTPS instead of plain HTTP.

@@ -15,11 +15,10 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
-	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/web"
@@ -28,20 +27,27 @@ import (
 )
 
 type Options struct {
-	Next              http.Handler
-	Policy            *policy.ParsedConfig
-	Target            string
-	CookieDomain      string
-	CookieName        string
-	BasePrefix        string
-	WebmasterEmail    string
-	RedirectDomains   []string
-	PrivateKey        ed25519.PrivateKey
-	CookieExpiration  time.Duration
-	StripBasePrefix   bool
-	OpenGraph         config.OpenGraph
-	CookiePartitioned bool
-	ServeRobotsTXT    bool
+	Next                 http.Handler
+	Policy               *policy.ParsedConfig
+	Logger               *slog.Logger
+	OpenGraph            config.OpenGraph
+	PublicUrl            string
+	CookieDomain         string
+	JWTRestrictionHeader string
+	BasePrefix           string
+	WebmasterEmail       string
+	Target               string
+	RedirectDomains      []string
+	ED25519PrivateKey    ed25519.PrivateKey
+	HS512Secret          []byte
+	CookieExpiration     time.Duration
+	CookieSameSite       http.SameSite
+	ServeRobotsTXT       bool
+	CookieSecure         bool
+	StripBasePrefix      bool
+	CookiePartitioned    bool
+	CookieDynamicDomain  bool
+	DifficultyInJWT      bool
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int) (*policy.ParsedConfig, error) {
@@ -88,32 +94,31 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 }
 
 func New(opts Options) (*Server, error) {
-	if opts.PrivateKey == nil {
-		slog.Debug("opts.PrivateKey not set, generating a new one")
+	if opts.Logger == nil {
+		opts.Logger = slog.With("subsystem", "anubis")
+	}
+
+	if opts.ED25519PrivateKey == nil && opts.HS512Secret == nil {
+		opts.Logger.Debug("opts.PrivateKey not set, generating a new one")
 		_, priv, err := ed25519.GenerateKey(rand.Reader)
 		if err != nil {
 			return nil, fmt.Errorf("lib: can't generate private key: %v", err)
 		}
-		opts.PrivateKey = priv
+		opts.ED25519PrivateKey = priv
 	}
 
-	anubis.BasePrefix = opts.BasePrefix
-
-	cookieName := anubis.CookieName
-
-	if opts.CookieDomain != "" {
-		cookieName = anubis.WithDomainCookieName + opts.CookieDomain
-	}
+	anubis.BasePrefix = strings.TrimRight(opts.BasePrefix, "/")
+	anubis.PublicUrl = opts.PublicUrl
 
 	result := &Server{
-		next:       opts.Next,
-		priv:       opts.PrivateKey,
-		pub:        opts.PrivateKey.Public().(ed25519.PublicKey),
-		policy:     opts.Policy,
-		opts:       opts,
-		DNSBLCache: decaymap.New[string, dnsbl.DroneBLResponse](),
-		OGTags:     ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph),
-		cookieName: cookieName,
+		next:        opts.Next,
+		ed25519Priv: opts.ED25519PrivateKey,
+		hs512Secret: opts.HS512Secret,
+		policy:      opts.Policy,
+		opts:        opts,
+		OGTags:      ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store),
+		store:       opts.Policy.Store,
+		logger:      opts.Logger,
 	}
 
 	mux := http.NewServeMux()
@@ -153,7 +158,7 @@ func New(opts Options) (*Server, error) {
 	if opts.Policy.Impressum != nil {
 		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
-				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum),
+				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
 		}), "GET")
 	}

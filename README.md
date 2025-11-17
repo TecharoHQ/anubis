@@ -9,6 +9,7 @@
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/TecharoHQ/anubis)
 ![language count](https://img.shields.io/github/languages/count/TecharoHQ/anubis)
 ![repo size](https://img.shields.io/github/repo-size/TecharoHQ/anubis)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/Xe)](https://github.com/sponsors/Xe)
 
 ## Sponsors
 
@@ -40,6 +41,20 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://wildbase.xyz/">
   <img src="./docs/static/img/sponsors/wildbase-logo.webp" alt="Wildbase" height="64">
 </a>
+<a href="https://emma.pet">
+  <img
+    src="./docs/static/img/sponsors/nepeat-logo.webp"
+    alt="Cat eyes over the word Emma in a serif font"
+    height="64"
+  />
+</a>
+<a href="https://fabulous.systems/">
+  <img
+    src="./docs/static/img/sponsors/fabulous-systems.webp"
+    alt="Cat eyes over the word Emma in a serif font"
+    height="64"
+  />
+</a>
 
 ## Overview
 
@@ -51,7 +66,7 @@ Anubis is a bit of a nuclear response. This will result in your website being bl
 
 In most cases, you should not need this and can probably get by using Cloudflare to protect a given origin. However, for circumstances where you can't or won't use Cloudflare, Anubis is there for you.
 
-If you want to try this out, connect to [anubis.techaro.lol](https://anubis.techaro.lol).
+If you want to try this out, visit the Anubis documentation site at [anubis.techaro.lol](https://anubis.techaro.lol).
 
 ## Support
 

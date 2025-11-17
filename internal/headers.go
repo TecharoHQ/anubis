@@ -38,6 +38,22 @@ func UnchangingCache(next http.Handler) http.Handler {
 	})
 }
 
+// CustomXRealIPHeader sets the X-Real-IP header to the value of a
+// different header.
+// Used in environments where the upstream proxy sets the request's
+// origin IP in a custom header.
+func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.Handler {
+	if customRealIPHeaderValue == "" {
+		slog.Debug("skipping middleware, customRealIPHeaderValue is empty")
+		return next
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("X-Real-IP", r.Header.Get(customRealIPHeaderValue))
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
 // the setting is enabled by the user.
 func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
@@ -71,7 +87,7 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-Ip") == "" && xffHeader != "" {
 			ip := xff.Parse(xffHeader)
-			slog.Debug("setting x-real-ip", "val", ip)
+			slog.Debug("setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
 			r.Header.Set("X-Real-Ip", ip)
 		}
 
@@ -113,6 +129,8 @@ func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
 		} else {
 			r.Header.Set("X-Forwarded-For", xffHeaderString)
 		}
+
+		slog.Debug("updating X-Forwarded-For", "original", origXFFHeader, "new", xffHeaderString)
 	})
 }
 
@@ -153,7 +171,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 	// generally they'd be expected to do these two things on
 	// their own end to find the first non-spoofed IP
 	for i := len(origForwardedList) - 1; i >= 0; i-- {
-		segmentIP, err := netip.ParseAddr(origForwardedList[i])
+		segmentIP, err := netip.ParseAddr(strings.TrimSpace(origForwardedList[i]))
 		if err != nil {
 			// can't assess this element, so the remainder of the chain
 			// can't be trusted. not a fatal error, since anyone can
