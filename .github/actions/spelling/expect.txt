@@ -9,6 +9,7 @@ amazonbot
 anthro
 anubis
 anubistest
+apk
 apnic
 APNICRANDNETAU
 Applebot
@@ -267,7 +268,6 @@ qwantbot
 rac
 rawler
 rcvar
-rdb
 redhat
 redir
 redirectscheme
