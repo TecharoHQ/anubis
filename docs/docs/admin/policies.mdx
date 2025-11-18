@@ -225,10 +225,10 @@ Using this backend will cause a lot of S3 operations, at least one for creating 
 
 The `s3api` backend takes the following configuration options:
 
-| Name         | Type    | Example                                                              | Description                                                                                                                                 |
-| :----------- | :------ | :------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| `bucketName` | string  | The name of the dedicated bucket for Anubis to store information in. |
-| `pathStyle`  | boolean | `false`                                                              | If true, use path-style S3 API operations. Please consult your storage provider's documentation if you don't know what you should put here. |
+| Name         | Type    | Example       | Description                                                                                                                                 |
+| :----------- | :------ | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketName` | string  | `anubis-data` | (Required) The name of the dedicated bucket for Anubis to store information in.                                                             |
+| `pathStyle`  | boolean | `false`       | If true, use path-style S3 API operations. Please consult your storage provider's documentation if you don't know what you should put here. |
 
 :::note
 
@@ -279,7 +279,7 @@ store:
 
 :::note
 
-You can also use [Redis](http://redis.io/) with Anubis.
+You can also use [Redis™](http://redis.io/) with Anubis.
 
 :::
 
@@ -291,15 +291,17 @@ This backend is ideal if you are running multiple instances of Anubis in a worke
 | Does your service get a lot of traffic?                       | ✅ Yes |
 | Do you want to store data persistently when Anubis restarts?  | ✅ Yes |
 | Do you run Anubis without mutable filesystem storage?         | ✅ Yes |
-| Do you have Redis or Valkey installed?                        | ✅ Yes |
+| Do you have Redis™ or Valkey installed?                       | ✅ Yes |
 
 #### Configuration
 
 The `valkey` backend takes the following configuration options:
 
-| Name  | Type   | Example                 | Description                                                                                                                                      |
-| :---- | :----- | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url` | string | `redis://valkey:6379/0` | The URL for the instance of Redis or Valkey that Anubis should store data in. This is in the same format as `REDIS_URL` in many cloud providers. |
+| Name       | Type   | Example                 | Description                                                                                                                                       |
+| :--------- | :----- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cluster`  | bool   | `false`                 | If true, use [Redis™ Clustering](https://redis.io/topics/cluster-spec) for storing Anubis data.                                                   |
+| `sentinel` | object | `{}`                    | See [Redis™ Sentinel docs](#redis-sentinel) for more detail and examples                                                                          |
+| `url`      | string | `redis://valkey:6379/0` | The URL for the instance of Redis™ or Valkey that Anubis should store data in. This is in the same format as `REDIS_URL` in many cloud providers. |
 
 Example:
 
@@ -313,6 +315,18 @@ store:
 ```
 
 This would have the Valkey client connect to host `valkey.int.techaro.lol` on port `6379` with database `0` (the default database).
+
+#### Redis™ Sentinel
+
+If you are using [Redis™ Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/) for a high availability setup, you need to configure the `sentinel` object. This object takes the following configuration options:
+
+| Name         | Type                     | Example               | Description                                                                                                                                               |
+| :----------- | :----------------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addr`       | string or list of string | `10.43.208.130:26379` | (Required) The host and port of the Redis™ Sentinel server. When possible, use DNS names for this. If you have multiple addresses, supply a list of them. |
+| `clientName` | string                   | `Anubis`              | The client name reported to Redis™ Sentinel. Set this if you want to track Anubis connections to your Redis™ Sentinel.                                    |
+| `masterName` | string                   | `mymaster`            | (Required) The name of the master in the Redis™ Sentinel configuration. This is used to discover where to find client connection hosts/ports.             |
+| `username`   | string                   | `azurediamond`        | The username used to authenticate against the Redis™ Sentinel and Redis™ servers.                                                                         |
+| `password`   | string                   | `hunter2`             | (Required) The password used to authenticate against the Redis™ Sentinel and Redis™ servers.                                                              |
 
 ## Risk calculation for downstream services
 
