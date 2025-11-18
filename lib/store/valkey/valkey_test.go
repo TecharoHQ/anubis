@@ -91,7 +91,7 @@ func TestFactoryValid(t *testing.T) {
 		{
 			name:        "sentinel missing password",
 			jsonData:    `{"sentinel": {"masterName": "mymaster", "addr": ["localhost:26379"]}}`,
-			expectError: ErrSentinelPasswordRequired,
+			expectError: nil,
 		},
 		{
 			name:        "sentinel with optional fields",

@@ -24,7 +24,6 @@ var (
 	// Sentinel validation errors
 	ErrSentinelMasterNameRequired = errors.New("valkey.Sentinel: masterName is required")
 	ErrSentinelAddrRequired       = errors.New("valkey.Sentinel: addr is required")
-	ErrSentinelPasswordRequired   = errors.New("valkey.Sentinel: password is required")
 	ErrSentinelAddrEmpty          = errors.New("valkey.Sentinel: addr cannot be empty")
 )
 
@@ -68,7 +67,7 @@ type Sentinel struct {
 	Addr       internal.ListOr[string] `json:"addr"`
 	ClientName string                  `json:"clientName,omitempty"`
 	Username   string                  `json:"username,omitempty"`
-	Password   string                  `json:"password"`
+	Password   string                  `json:"password,omitempty"`
 }
 
 func (s Sentinel) Valid() error {
@@ -92,10 +91,6 @@ func (s Sentinel) Valid() error {
 		if allEmpty {
 			errs = append(errs, ErrSentinelAddrEmpty)
 		}
-	}
-
-	if s.Password == "" {
-		errs = append(errs, ErrSentinelPasswordRequired)
 	}
 
 	if len(errs) > 0 {
