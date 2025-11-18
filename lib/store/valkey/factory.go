@@ -66,8 +66,8 @@ func (c Config) Valid() error {
 type Sentinel struct {
 	MasterName string                  `json:"masterName"`
 	Addr       internal.ListOr[string] `json:"addr"`
-	ClientName string                  `json:"clientName,omitempty"` // if not set, default to Anubis or anubis.ProductName.
-	Username   string                  `json:"username,omitempty"`   // if not set, ignored
+	ClientName string                  `json:"clientName,omitempty"`
+	Username   string                  `json:"username,omitempty"`
 	Password   string                  `json:"password"`
 }
 
