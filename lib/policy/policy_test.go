@@ -19,7 +19,7 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 	}
 	defer fin.Close()
 
-	if _, err := ParseConfig(ctx, fin, "botPolicies.yaml", anubis.DefaultDifficulty); err != nil {
+	if _, err := ParseConfig(ctx, fin, "botPolicies.yaml", anubis.DefaultDifficulty, "info"); err != nil {
 		t.Fatalf("can't parse config: %v", err)
 	}
 }
@@ -42,7 +42,7 @@ func TestGoodConfigs(t *testing.T) {
 				defer fin.Close()
 
 				ctx := thothmock.WithMockThoth(t)
-				if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
+				if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty, "info"); err != nil {
 					t.Fatal(err)
 				}
 			})
@@ -54,7 +54,7 @@ func TestGoodConfigs(t *testing.T) {
 				}
 				defer fin.Close()
 
-				if _, err := ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
+				if _, err := ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty, "info"); err != nil {
 					t.Fatal(err)
 				}
 			})
@@ -79,7 +79,7 @@ func TestBadConfigs(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty); err == nil {
+			if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty, "info"); err == nil {
 				t.Fatal(err)
 			} else {
 				t.Log(err)

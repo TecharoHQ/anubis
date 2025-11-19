@@ -595,7 +595,7 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
 	})
 
-	policy, err := libanubis.LoadPoliciesOrDefault(t.Context(), "", anubis.DefaultDifficulty)
+	policy, err := libanubis.LoadPoliciesOrDefault(t.Context(), "", anubis.DefaultDifficulty, "info")
 	if err != nil {
 		t.Fatal(err)
 	}

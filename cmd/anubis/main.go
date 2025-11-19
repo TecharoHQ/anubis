@@ -338,10 +338,14 @@ func main() {
 		ctx = thoth.With(ctx, thothClient)
 	}
 
-	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty)
+	lg.Info("loading policy file", "fname", *policyFname)
+	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty, *slogLevel)
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
+	lg = policy.Logger
+	lg.Debug("swapped to new logger")
+	slog.SetDefault(lg)
 
 	// Warn if persistent storage is used without a configured signing key
 	if policy.Store.IsPersistent() {
@@ -463,7 +467,7 @@ func main() {
 		CookieSameSite:           parseSameSite(*cookieSameSite),
 		PublicUrl:                *publicUrl,
 		JWTRestrictionHeader:     *jwtRestrictionHeader,
-		Logger:                   lg.With("subsystem", "anubis"),
+		Logger:                   policy.Logger.With("subsystem", "anubis"),
 		DifficultyInJWT:          *difficultyInJWT,
 	})
 	if err != nil {
