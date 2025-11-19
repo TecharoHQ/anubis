@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis/data"
-	. "github.com/TecharoHQ/anubis/lib/policy/config"
+	. "github.com/TecharoHQ/anubis/lib/config"
 )
 
 func p[V any](v V) *V { return &v }

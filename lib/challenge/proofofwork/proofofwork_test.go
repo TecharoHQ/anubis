@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/policy/config"
 )
 
 func mkRequest(t *testing.T, values map[string]string) *http.Request {

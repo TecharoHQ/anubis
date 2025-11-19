@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/store/bbolt"
 	"github.com/TecharoHQ/anubis/lib/store/valkey"
 )

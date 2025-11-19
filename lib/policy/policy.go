@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"sync/atomic"
 
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
-	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/prometheus/client_golang/prometheus"

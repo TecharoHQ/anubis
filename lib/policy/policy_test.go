@@ -26,7 +26,7 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 
 func TestGoodConfigs(t *testing.T) {
 
-	finfos, err := os.ReadDir("config/testdata/good")
+	finfos, err := os.ReadDir("../config/testdata/good")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestGoodConfigs(t *testing.T) {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
 			t.Run("with-thoth", func(t *testing.T) {
-				fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
+				fin, err := os.Open(filepath.Join("..", "config", "testdata", "good", st.Name()))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -48,7 +48,7 @@ func TestGoodConfigs(t *testing.T) {
 			})
 
 			t.Run("without-thoth", func(t *testing.T) {
-				fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
+				fin, err := os.Open(filepath.Join("..", "config", "testdata", "good", st.Name()))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -65,7 +65,7 @@ func TestGoodConfigs(t *testing.T) {
 func TestBadConfigs(t *testing.T) {
 	ctx := thothmock.WithMockThoth(t)
 
-	finfos, err := os.ReadDir("config/testdata/bad")
+	finfos, err := os.ReadDir("../config/testdata/bad")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestBadConfigs(t *testing.T) {
 	for _, st := range finfos {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
-			fin, err := os.Open(filepath.Join("config", "testdata", "bad", st.Name()))
+			fin, err := os.Open(filepath.Join("..", "config", "testdata", "bad", st.Name()))
 			if err != nil {
 				t.Fatal(err)
 			}
