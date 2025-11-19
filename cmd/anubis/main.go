@@ -273,8 +273,10 @@ func main() {
 		return
 	}
 
-	internal.InitSlog(*slogLevel)
 	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
+
+	lg := internal.InitSlog(*slogLevel, os.Stderr)
+	lg.Info("starting up Anubis")
 
 	if *healthcheck {
 		log.Println("running healthcheck")
@@ -303,7 +305,7 @@ func main() {
 
 	if *metricsBind != "" {
 		wg.Add(1)
-		go metricsServer(ctx, wg.Done)
+		go metricsServer(ctx, *lg.With("subsystem", "metrics"), wg.Done)
 	}
 
 	var rp http.Handler
@@ -323,11 +325,11 @@ func main() {
 	// Thoth configuration
 	switch {
 	case *thothURL != "" && *thothToken == "":
-		slog.Warn("THOTH_URL is set but no THOTH_TOKEN is set")
+		lg.Warn("THOTH_URL is set but no THOTH_TOKEN is set")
 	case *thothURL == "" && *thothToken != "":
-		slog.Warn("THOTH_TOKEN is set but no THOTH_URL is set")
+		lg.Warn("THOTH_TOKEN is set but no THOTH_URL is set")
 	case *thothURL != "" && *thothToken != "":
-		slog.Debug("connecting to Thoth")
+		lg.Debug("connecting to Thoth")
 		thothClient, err := thoth.New(ctx, *thothURL, *thothToken, *thothInsecure)
 		if err != nil {
 			log.Fatalf("can't dial thoth at %s: %v", *thothURL, err)
@@ -344,7 +346,7 @@ func main() {
 	// Warn if persistent storage is used without a configured signing key
 	if policy.Store.IsPersistent() {
 		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
-			slog.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
+			lg.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
 				"Challenges will be invalidated when Anubis restarts. " +
 				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
 				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
@@ -407,7 +409,7 @@ func main() {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
 
-		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		lg.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
 	}
 
 	var redirectDomainsList []string
@@ -421,7 +423,7 @@ func main() {
 			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
 	} else {
-		slog.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
+		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
 	anubis.CookieName = *cookiePrefix + "-auth"
@@ -461,6 +463,7 @@ func main() {
 		CookieSameSite:           parseSameSite(*cookieSameSite),
 		PublicUrl:                *publicUrl,
 		JWTRestrictionHeader:     *jwtRestrictionHeader,
+		Logger:                   lg.With("subsystem", "anubis"),
 		DifficultyInJWT:          *difficultyInJWT,
 	})
 	if err != nil {
@@ -469,15 +472,15 @@ func main() {
 
 	var h http.Handler
 	h = s
+	h = internal.JA4H(h)
 	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
-	h = internal.JA4H(h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
-	slog.Info(
+	lg.Info(
 		"listening",
 		"url", listenerUrl,
 		"difficulty", *challengeDifficulty,
@@ -511,7 +514,7 @@ func main() {
 	wg.Wait()
 }
 
-func metricsServer(ctx context.Context, done func()) {
+func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
@@ -537,7 +540,7 @@ func metricsServer(ctx context.Context, done func()) {
 
 	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
-	slog.Debug("listening for metrics", "url", metricsUrl)
+	lg.Debug("listening for metrics", "url", metricsUrl)
 
 	go func() {
 		<-ctx.Done()
