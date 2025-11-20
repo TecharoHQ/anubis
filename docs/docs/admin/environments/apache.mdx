@@ -92,6 +92,11 @@ Assuming you are protecting `anubistest.techaro.lol`, you need the following ser
        DocumentRoot /var/www/anubistest.techaro.lol
        ErrorLog /var/log/httpd/anubistest.techaro.lol_error.log
        CustomLog /var/log/httpd/anubistest.techaro.lol_access.log combined
+
+       # Pass the remote IP to the proxied application instead of 127.0.0.1
+       # This requires mod_remoteip
+       RemoteIPHeader X-Real-IP
+       RemoteIPTrustedProxy 127.0.0.1/32
 </VirtualHost>
 ```
 
