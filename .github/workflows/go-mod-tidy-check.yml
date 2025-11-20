@@ -1,0 +1,76 @@
+name: Go Mod Tidy Check
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  go_mod_tidy_check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: stable
+
+      - name: Check go.mod and go.sum in main directory
+        run: |
+          # Store original file state
+          cp go.mod go.mod.orig
+          cp go.sum go.sum.orig
+
+          # Run go mod tidy
+          go mod tidy
+
+          # Check if files changed
+          if ! diff -q go.mod.orig go.mod > /dev/null 2>&1; then
+            echo "ERROR: go.mod in main directory has changed after running 'go mod tidy'"
+            echo "Please run 'go mod tidy' locally and commit the changes"
+            diff go.mod.orig go.mod
+            exit 1
+          fi
+
+          if ! diff -q go.sum.orig go.sum > /dev/null 2>&1; then
+            echo "ERROR: go.sum in main directory has changed after running 'go mod tidy'"
+            echo "Please run 'go mod tidy' locally and commit the changes"
+            diff go.sum.orig go.sum
+            exit 1
+          fi
+
+          echo "SUCCESS: go.mod and go.sum in main directory are tidy"
+
+      - name: Check go.mod and go.sum in test directory
+        run: |
+          cd test
+
+          # Store original file state
+          cp go.mod go.mod.orig
+          cp go.sum go.sum.orig
+
+          # Run go mod tidy
+          go mod tidy
+
+          # Check if files changed
+          if ! diff -q go.mod.orig go.mod > /dev/null 2>&1; then
+            echo "ERROR: go.mod in test directory has changed after running 'go mod tidy'"
+            echo "Please run 'go mod tidy' locally and commit the changes"
+            diff go.mod.orig go.mod
+            exit 1
+          fi
+
+          if ! diff -q go.sum.orig go.sum > /dev/null 2>&1; then
+            echo "ERROR: go.sum in test directory has changed after running 'go mod tidy'"
+            echo "Please run 'go mod tidy' locally and commit the changes"
+            diff go.sum.orig go.sum
+            exit 1
+          fi
+
+          echo "SUCCESS: go.mod and go.sum in test directory are tidy"
