@@ -355,7 +355,7 @@ Anubis uses Go's [standard library `log/slog` package](https://pkg.go.dev/log/sl
 | :-------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DEBUG`   | The raw unfiltered torrent of doom. Only use this if you are actively working on Anubis or have very good reasons to use it.                              |
 | `INFO`    | The default logging level, fairly verbose in order to make it easier for automation to parse.                                                             |
-| `WARM`    | A "more silent" logging level. Much less verbose. Some things that are now at the `info` level need to be moved up to the `warn` level in future patches. |
+| `WARN`    | A "more silent" logging level. Much less verbose. Some things that are now at the `info` level need to be moved up to the `warn` level in future patches. |
 | `ERROR`   | Only log error messages.                                                                                                                                  |
 
 Additionally, you can set a "slightly higher" log level if you need to, such as:

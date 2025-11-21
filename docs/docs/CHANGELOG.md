@@ -21,8 +21,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow Renovate as an OCI registry client.
 - Properly handle 4in6 addresses so that IP matching works with those addresses.
 - Add support to simple Valkey/Redis cluster mode
-- Open Graph passthrough now reuses the configured target Host/SNI/TLS settings, so metadata fetches succeed when the upstream certificate differs from the public domain. ([1283](https://github.com/TecharoHQ/anubis/pull/1283)) 
+- Open Graph passthrough now reuses the configured target Host/SNI/TLS settings, so metadata fetches succeed when the upstream certificate differs from the public domain. ([1283](https://github.com/TecharoHQ/anubis/pull/1283))
 - Stabilize the CVE-2025-24369 regression test by always submitting an invalid proof instead of relying on random POW failures.
+
+### Logging customization
+
+Anubis now supports the ability to log to multiple backends ("sinks"). This allows you to have Anubis [log to a file](./admin/policies.mdx#file-sink) instead of just logging to standard out. You can also customize the [logging level](./admin/policies.mdx#log-levels) in the policy file:
+
+```yaml
+logging:
+  level: "warn" # much less verbose logging
+  sink: file # log to a file
+  parameters:
+    file: "./var/anubis.log"
+    maxBackups: 3 # keep at least 3 old copies
+    maxBytes: 67108864 # each file can have up to 64 Mi of logs
+    maxAge: 7 # rotate files out every n days
+    oldFileTimeFormat: 2006-01-02T15-04-05 # RFC 3339-ish
+    compress: true # gzip-compress old log files
+    useLocalTime: false # timezone for rotated files is UTC
+```
+
+Additionally, information about [how Anubis uses each logging level](./admin/policies.mdx#log-levels) has been added to the documentation.
 
 ## v1.23.1: Lyse Hext - Echo 1
 
