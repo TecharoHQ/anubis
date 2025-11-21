@@ -10,3 +10,4 @@ ABee
 tencent
 maintnotifications
 azurediamond
+cooldown
