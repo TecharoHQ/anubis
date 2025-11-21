@@ -4,15 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"time"
 )
 
 var (
-	ErrMissingLoggingFileConfig              = errors.New("config.Logging: missing value parameters in logging block")
-	ErrInvalidLoggingSink                    = errors.New("config.Logging: invalid sink")
-	ErrInvalidLoggingFileConfig              = errors.New("config.LoggingFileConfig: invalid parameters")
-	ErrInvalidLoggingFileConfigOldTimeFormat = errors.New("config.LoggingFileConfig: invalid old time format")
-	ErrOutOfRange                            = errors.New("config: error out of range")
+	ErrMissingLoggingFileConfig = errors.New("config.Logging: missing value parameters in logging block")
+	ErrInvalidLoggingSink       = errors.New("config.Logging: invalid sink")
+	ErrInvalidLoggingFileConfig = errors.New("config.LoggingFileConfig: invalid parameters")
+	ErrOutOfRange               = errors.New("config: error out of range")
 )
 
 type Logging struct {
@@ -58,13 +56,12 @@ func (Logging) Default() *Logging {
 }
 
 type LoggingFileConfig struct {
-	Filename          string `json:"file"`
-	OldFileTimeFormat string `json:"oldFileTimeFormat"`
-	MaxBackups        int    `json:"maxBackups"`
-	MaxBytes          int64  `json:"maxBytes"`
-	MaxAge            int    `json:"maxAge"`
-	Compress          bool   `json:"compress"`
-	UseLocalTime      bool   `json:"useLocalTime"`
+	Filename     string `json:"file"`
+	MaxBackups   int    `json:"maxBackups"`
+	MaxBytes     int64  `json:"maxBytes"`
+	MaxAge       int    `json:"maxAge"`
+	Compress     bool   `json:"compress"`
+	UseLocalTime bool   `json:"useLocalTime"`
 }
 
 func (lfc *LoggingFileConfig) Valid() error {
@@ -80,10 +77,6 @@ func (lfc *LoggingFileConfig) Valid() error {
 
 	if lfc.Filename == "" {
 		errs = append(errs, fmt.Errorf("%w: filename", ErrMissingValue))
-	}
-
-	if _, err := time.Parse(lfc.OldFileTimeFormat, time.Now().UTC().Format(time.RFC3339)); err != nil {
-		errs = append(errs, fmt.Errorf("%w: %w", ErrInvalidLoggingFileConfigOldTimeFormat, err))
 	}
 
 	if lfc.MaxBackups < 0 {
@@ -105,7 +98,6 @@ func (lfc *LoggingFileConfig) Valid() error {
 func (lfc LoggingFileConfig) Zero() bool {
 	for _, cond := range []bool{
 		lfc.Filename != "",
-		lfc.OldFileTimeFormat != "",
 		lfc.MaxBackups != 0,
 		lfc.MaxBytes != 0,
 		lfc.MaxAge != 0,
@@ -122,12 +114,11 @@ func (lfc LoggingFileConfig) Zero() bool {
 
 func (LoggingFileConfig) Default() *LoggingFileConfig {
 	return &LoggingFileConfig{
-		Filename:          "./var/anubis.log",
-		OldFileTimeFormat: time.RFC3339,
-		MaxBackups:        3,
-		MaxBytes:          104857600, // 100 Mi
-		MaxAge:            7,         // 7 days
-		Compress:          true,
-		UseLocalTime:      false,
+		Filename:     "./var/anubis.log",
+		MaxBackups:   3,
+		MaxBytes:     104857600, // 100 Mi
+		MaxAge:       7,         // 7 days
+		Compress:     true,
+		UseLocalTime: false,
 	}
 }

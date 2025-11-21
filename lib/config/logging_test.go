@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"testing"
-	"time"
 )
 
 func TestLoggingValid(t *testing.T) {
@@ -50,45 +49,27 @@ func TestLoggingValid(t *testing.T) {
 			input: &Logging{
 				Sink: LogSinkFile,
 				Parameters: &LoggingFileConfig{
-					Filename:          "",
-					OldFileTimeFormat: time.RFC3339,
-					MaxBackups:        3,
-					MaxBytes:          104857600, // 100 Mi
-					MaxAge:            7,         // 7 days
-					Compress:          true,
-					UseLocalTime:      false,
+					Filename:     "",
+					MaxBackups:   3,
+					MaxBytes:     104857600, // 100 Mi
+					MaxAge:       7,         // 7 days
+					Compress:     true,
+					UseLocalTime: false,
 				},
 			},
 			want: ErrMissingValue,
-		},
-		{
-			name: "file sink with wrong time format",
-			input: &Logging{
-				Sink: LogSinkFile,
-				Parameters: &LoggingFileConfig{
-					Filename:          "./var/anubis.log",
-					OldFileTimeFormat: "2025-01-01",
-					MaxBackups:        3,
-					MaxBytes:          104857600, // 100 Mi
-					MaxAge:            7,         // 7 days
-					Compress:          true,
-					UseLocalTime:      false,
-				},
-			},
-			want: ErrInvalidLoggingFileConfigOldTimeFormat,
 		},
 		{
 			name: "file sink with negative max backups",
 			input: &Logging{
 				Sink: LogSinkFile,
 				Parameters: &LoggingFileConfig{
-					Filename:          "./var/anubis.log",
-					OldFileTimeFormat: time.RFC3339,
-					MaxBackups:        -3,
-					MaxBytes:          104857600, // 100 Mi
-					MaxAge:            7,         // 7 days
-					Compress:          true,
-					UseLocalTime:      false,
+					Filename:     "./var/anubis.log",
+					MaxBackups:   -3,
+					MaxBytes:     104857600, // 100 Mi
+					MaxAge:       7,         // 7 days
+					Compress:     true,
+					UseLocalTime: false,
 				},
 			},
 			want: ErrOutOfRange,
@@ -98,13 +79,12 @@ func TestLoggingValid(t *testing.T) {
 			input: &Logging{
 				Sink: LogSinkFile,
 				Parameters: &LoggingFileConfig{
-					Filename:          "./var/anubis.log",
-					OldFileTimeFormat: time.RFC3339,
-					MaxBackups:        3,
-					MaxBytes:          104857600, // 100 Mi
-					MaxAge:            -7,        // 7 days
-					Compress:          true,
-					UseLocalTime:      false,
+					Filename:     "./var/anubis.log",
+					MaxBackups:   3,
+					MaxBytes:     104857600, // 100 Mi
+					MaxAge:       -7,        // 7 days
+					Compress:     true,
+					UseLocalTime: false,
 				},
 			},
 			want: ErrOutOfRange,

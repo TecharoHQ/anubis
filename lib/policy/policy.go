@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"sync/atomic"
+	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/config"
@@ -216,7 +217,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	case config.LogSinkFile:
 		out := &logrotate.Logger{
 			Filename:           c.Logging.Parameters.Filename,
-			FilenameTimeFormat: c.Logging.Parameters.OldFileTimeFormat,
+			FilenameTimeFormat: time.RFC3339,
 			MaxBytes:           c.Logging.Parameters.MaxBytes,
 			MaxAge:             c.Logging.Parameters.MaxAge,
 			MaxBackups:         c.Logging.Parameters.MaxBackups,

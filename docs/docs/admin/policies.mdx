@@ -372,15 +372,14 @@ This isn't currently used by Anubis, but will be in the future for "slightly imp
 
 The `file` sink makes Anubis write its logs to the filesystem and rotate them out when the log file meets certain thresholds. This logging sink takes the following parameters:
 
-| Name                | Type                  | Example               | Description                                                                                                                                                                                                                                 |
-| :------------------ | :-------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `file`              | string                | `/var/log/anubis.log` | The file where Anubis logs should be written to. Make sure the user Anubis is running as has write and file creation permissions to this directory.                                                                                         |
-| `maxBackups`        | number                | `3`                   | The number of old log files that should be maintained when log files are rotated out.                                                                                                                                                       |
-| `maxBytes`          | number of bytes       | `67108864` (64Mi)     | The maximum size of each log file before it is rotated out.                                                                                                                                                                                 |
-| `maxAge`            | number of days        | `7`                   | If a log file is more than this many days old, rotate it out.                                                                                                                                                                               |
-| `oldFileTimeFormat` | Go time format string | `2006-01-02T15-04-05` | A [Go time format string](https://pkg.go.dev/time#Layout) that describes how the filenames of old log files should be constructed. This default somewhat conforms to [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339).                    |
-| `compress`          | boolean               | `true`                | If true, compress old log files with gzip. This should be set to `true` and is only exposed as an option for dealing with legacy workflows where there is pre-existing magical thinking about log files at play.                            |
-| `useLocalTime`      | boolean               | `false`               | If true, use the system local time zone to create log filenames instead of UTC. This should almost always be set to `false` and is only exposed for legacy workflows where there is pre-existing magical thinking about time zones at play. |
+| Name           | Type            | Example               | Description                                                                                                                                                                                                                    |
+| :------------- | :-------------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`         | string          | `/var/log/anubis.log` | The file where Anubis logs should be written to. Make sure the user Anubis is running as has write and file creation permissions to this directory.                                                                            |
+| `maxBackups`   | number          | `3`                   | The number of old log files that should be maintained when log files are rotated out.                                                                                                                                          |
+| `maxBytes`     | number of bytes | `67108864` (64Mi)     | The maximum size of each log file before it is rotated out.                                                                                                                                                                    |
+| `maxAge`       | number of days  | `7`                   | If a log file is more than this many days old, rotate it out.                                                                                                                                                                  |
+| `compress`     | boolean         | `true`                | If true, compress old log files with gzip. This should be set to `true` and is only exposed as an option for dealing with legacy workflows where there is magical thinking about log files at play.                            |
+| `useLocalTime` | boolean         | `false`               | If true, use the system local time zone to create log filenames instead of UTC. This should almost always be set to `false` and is only exposed for legacy workflows where there is magical thinking about time zones at play. |
 
 ```yaml
 logging:
@@ -390,10 +389,11 @@ logging:
     maxBackups: 3 # keep at least 3 old copies
     maxBytes: 67108864 # each file can have up to 64 Mi of logs
     maxAge: 7 # rotate files out every n days
-    oldFileTimeFormat: 2006-01-02T15-04-05 # RFC 3339-ish
     compress: true # gzip-compress old log files
     useLocalTime: false # timezone for rotated files is UTC
 ```
+
+When files are rotated out, the old files will be named after the rotation timestamp in [RFC 3339 format](https://www.rfc-editor.org/rfc/rfc3339).
 
 ### `stdio` sink
 
