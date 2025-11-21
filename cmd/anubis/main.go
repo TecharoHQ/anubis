@@ -476,11 +476,11 @@ func main() {
 
 	var h http.Handler
 	h = s
-	h = internal.JA4H(h)
 	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
+	h = internal.JA4H(h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
