@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.90.2
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
+	github.com/fahedouch/go-logrotate v0.3.0
 	github.com/gaissmai/bart v0.26.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/cel-go v0.26.1
@@ -97,7 +98,6 @@ require (
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
-	github.com/fahedouch/go-logrotate v0.3.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
