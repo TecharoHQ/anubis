@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
 
@@ -111,7 +111,7 @@ func TestIntegrationGetOGTags(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			}, memory.New(t.Context()))
+			}, memory.New(t.Context()), TargetOptions{})
 
 			// Create URL for test
 			testURL, _ := url.Parse(ts.URL)

@@ -106,6 +106,7 @@ externalfetcher
 extldflags
 facebookgo
 Factset
+fahedouch
 fastcgi
 fediverse
 ffprobe
@@ -195,12 +196,14 @@ ldflags
 letsencrypt
 Lexentale
 lftp
+lfc
 lgbt
 licend
 licstart
 lightpanda
 limsa
 Linting
+listor
 LLU
 loadbalancer
 lol
@@ -218,6 +221,10 @@ mnt
 Mojeek
 mojeekbot
 mozilla
+myclient
+mymaster
+mypass
+myuser
 nbf
 nepeat
 netsurf
@@ -269,11 +276,11 @@ qwantbot
 rac
 rawler
 rcvar
-rdb
 redhat
 redir
 redirectscheme
 refactors
+remoteip
 reputational
 risc
 ruleset

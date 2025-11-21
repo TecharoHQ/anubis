@@ -1,0 +1,15 @@
+bots:
+  - name: simple
+    action: CHALLENGE
+    user_agent_regex: Mozilla
+
+logs:
+  sink: "file"
+  parameters:
+    file: "/var/log/botstopper/default.log"
+    maxBackups: 3 # keep at least 3 old copies
+    maxBytes: 67108864 # each file can have up to 64 MB of logs
+    maxAge: 7 # rotate files out every n days
+    oldFileTimeFormat: 2006-01-02T15-04-05 # RFC 3339-ish
+    compress: true
+    useLocalTime: false # timezone for rotated files is UTC

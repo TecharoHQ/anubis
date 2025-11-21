@@ -1,0 +1,18 @@
+bots:
+  - name: challenge
+    user_agent_regex: CHALLENGE
+    action: CHALLENGE
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
+
+logging:
+  sink: file
+  parameters:
+    file: "./var/anubis.log"
+    maxBackups: 3 # keep at least 3 old copies
+    maxBytes: 67108864 # each file can have up to 64 Mi of logs
+    maxAge: 7 # rotate files out every n days
+    compress: true
+    useLocalTime: false # timezone for rotated files is UTC

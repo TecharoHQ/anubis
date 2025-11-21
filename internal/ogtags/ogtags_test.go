@@ -2,19 +2,27 @@ package ogtags
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"errors"
 	"fmt"
+	"math/big"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
-	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
 
@@ -45,7 +53,7 @@ func TestNewOGTagCache(t *testing.T) {
 				Enabled:      tt.ogPassthrough,
 				TimeToLive:   tt.ogTimeToLive,
 				ConsiderHost: false,
-			}, memory.New(t.Context()))
+			}, memory.New(t.Context()), TargetOptions{})
 
 			if cache == nil {
 				t.Fatal("expected non-nil cache, got nil")
@@ -85,7 +93,7 @@ func TestNewOGTagCache_UnixSocket(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   5 * time.Minute,
 		ConsiderHost: false,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 
 	if cache == nil {
 		t.Fatal("expected non-nil cache, got nil")
@@ -170,7 +178,7 @@ func TestGetTarget(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			}, memory.New(t.Context()))
+			}, memory.New(t.Context()), TargetOptions{})
 
 			u := &url.URL{
 				Path:     tt.path,
@@ -243,7 +251,7 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 
 	// Create a dummy URL for the request (path and query matter)
 	testReqURL, _ := url.Parse("/some/page?query=1")
@@ -273,4 +281,245 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 	if !reflect.DeepEqual(cachedTags, expectedTags) {
 		t.Errorf("Expected cached OG tags %v, got %v", expectedTags, cachedTags)
 	}
+}
+
+func TestGetOGTagsWithTargetHostOverride(t *testing.T) {
+	originalHost := "example.test"
+	overrideHost := "backend.internal"
+	seenHosts := make(chan string, 10)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		seenHosts <- r.Host
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintln(w, `<!DOCTYPE html><html><head><meta property="og:title" content="HostOverride" /></head><body>ok</body></html>`)
+	}))
+	defer ts.Close()
+
+	targetURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	conf := config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+	}
+
+	t.Run("default host uses original", func(t *testing.T) {
+		cache := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{})
+		if _, err := cache.GetOGTags(t.Context(), targetURL, originalHost); err != nil {
+			t.Fatalf("GetOGTags failed: %v", err)
+		}
+		select {
+		case host := <-seenHosts:
+			if host != originalHost {
+				t.Fatalf("expected host %q, got %q", originalHost, host)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("server did not receive request")
+		}
+	})
+
+	t.Run("override host respected", func(t *testing.T) {
+		cache := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{
+			Host: overrideHost,
+		})
+		if _, err := cache.GetOGTags(t.Context(), targetURL, originalHost); err != nil {
+			t.Fatalf("GetOGTags failed: %v", err)
+		}
+		select {
+		case host := <-seenHosts:
+			if host != overrideHost {
+				t.Fatalf("expected host %q, got %q", overrideHost, host)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("server did not receive request")
+		}
+	})
+}
+
+func TestGetOGTagsWithInsecureSkipVerify(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintln(w, `<!DOCTYPE html><html><head><meta property="og:title" content="Self-Signed" /></head><body>hello</body></html>`)
+	})
+	ts := httptest.NewTLSServer(handler)
+	defer ts.Close()
+
+	parsedURL, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	conf := config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+	}
+
+	// Without skip verify we should get a TLS error
+	cacheStrict := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{})
+	if _, err := cacheStrict.GetOGTags(t.Context(), parsedURL, parsedURL.Host); err == nil {
+		t.Fatal("expected TLS verification error without InsecureSkipVerify")
+	}
+
+	cacheSkip := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{
+		InsecureSkipVerify: true,
+	})
+
+	tags, err := cacheSkip.GetOGTags(t.Context(), parsedURL, parsedURL.Host)
+	if err != nil {
+		t.Fatalf("expected successful fetch with InsecureSkipVerify, got: %v", err)
+	}
+	if tags["og:title"] != "Self-Signed" {
+		t.Fatalf("expected og:title to be %q, got %q", "Self-Signed", tags["og:title"])
+	}
+}
+
+func TestGetOGTagsWithTargetSNI(t *testing.T) {
+	originalHost := "hecate.test"
+	conf := config.OpenGraph{
+		Enabled:      true,
+		TimeToLive:   time.Minute,
+		ConsiderHost: false,
+	}
+
+	t.Run("explicit SNI override", func(t *testing.T) {
+		expectedSNI := "backend.internal"
+		ts, recorder := newSNIServer(t, `<!DOCTYPE html><html><head><meta property="og:title" content="SNI Works" /></head><body>ok</body></html>`)
+		defer ts.Close()
+
+		targetURL, err := url.Parse(ts.URL)
+		if err != nil {
+			t.Fatalf("failed to parse server URL: %v", err)
+		}
+
+		cacheExplicit := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{
+			SNI:                expectedSNI,
+			InsecureSkipVerify: true,
+		})
+		if _, err := cacheExplicit.GetOGTags(t.Context(), targetURL, originalHost); err != nil {
+			t.Fatalf("expected successful fetch with explicit SNI, got: %v", err)
+		}
+		if got := recorder.last(); got != expectedSNI {
+			t.Fatalf("expected server to see SNI %q, got %q", expectedSNI, got)
+		}
+	})
+
+	t.Run("auto SNI uses original host", func(t *testing.T) {
+		ts, recorder := newSNIServer(t, `<!DOCTYPE html><html><head><meta property="og:title" content="SNI Auto" /></head><body>ok</body></html>`)
+		defer ts.Close()
+
+		targetURL, err := url.Parse(ts.URL)
+		if err != nil {
+			t.Fatalf("failed to parse server URL: %v", err)
+		}
+
+		cacheAuto := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{
+			SNI:                "auto",
+			InsecureSkipVerify: true,
+		})
+		if _, err := cacheAuto.GetOGTags(t.Context(), targetURL, originalHost); err != nil {
+			t.Fatalf("expected successful fetch with auto SNI, got: %v", err)
+		}
+		if got := recorder.last(); got != originalHost {
+			t.Fatalf("expected server to see SNI %q with auto, got %q", originalHost, got)
+		}
+	})
+
+	t.Run("default SNI uses backend host", func(t *testing.T) {
+		ts, recorder := newSNIServer(t, `<!DOCTYPE html><html><head><meta property="og:title" content="SNI Default" /></head><body>ok</body></html>`)
+		defer ts.Close()
+
+		targetURL, err := url.Parse(ts.URL)
+		if err != nil {
+			t.Fatalf("failed to parse server URL: %v", err)
+		}
+
+		cacheDefault := NewOGTagCache(ts.URL, conf, memory.New(t.Context()), TargetOptions{
+			InsecureSkipVerify: true,
+		})
+		if _, err := cacheDefault.GetOGTags(t.Context(), targetURL, originalHost); err != nil {
+			t.Fatalf("expected successful fetch without explicit SNI, got: %v", err)
+		}
+		wantSNI := ""
+		if net.ParseIP(targetURL.Hostname()) == nil {
+			wantSNI = targetURL.Hostname()
+		}
+		if got := recorder.last(); got != wantSNI {
+			t.Fatalf("expected default SNI %q, got %q", wantSNI, got)
+		}
+	})
+}
+
+func newSNIServer(t *testing.T, body string) (*httptest.Server, *sniRecorder) {
+	t.Helper()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprint(w, body)
+	})
+
+	recorder := &sniRecorder{}
+	ts := httptest.NewUnstartedServer(handler)
+	cert := mustCertificateForHost(t, "sni.test")
+	ts.TLS = &tls.Config{
+		GetCertificate: func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			recorder.record(hello.ServerName)
+			return &cert, nil
+		},
+	}
+	ts.StartTLS()
+	return ts, recorder
+}
+
+func mustCertificateForHost(t *testing.T, host string) tls.Certificate {
+	t.Helper()
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to generate key: %v", err)
+	}
+
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			CommonName: host,
+		},
+		NotBefore:             time.Now().Add(-time.Hour),
+		NotAfter:              time.Now().Add(time.Hour),
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		BasicConstraintsValid: true,
+		DNSNames:              []string{host},
+	}
+
+	der, err := x509.CreateCertificate(rand.Reader, template, template, &priv.PublicKey, priv)
+	if err != nil {
+		t.Fatalf("failed to create certificate: %v", err)
+	}
+
+	return tls.Certificate{
+		Certificate: [][]byte{der},
+		PrivateKey:  priv,
+	}
+}
+
+type sniRecorder struct {
+	mu    sync.Mutex
+	names []string
+}
+
+func (r *sniRecorder) record(name string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.names = append(r.names, name)
+}
+
+func (r *sniRecorder) last() string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if len(r.names) == 0 {
+		return ""
+	}
+	return r.names[len(r.names)-1]
 }

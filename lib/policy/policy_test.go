@@ -19,14 +19,14 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 	}
 	defer fin.Close()
 
-	if _, err := ParseConfig(ctx, fin, "botPolicies.yaml", anubis.DefaultDifficulty); err != nil {
+	if _, err := ParseConfig(ctx, fin, "botPolicies.yaml", anubis.DefaultDifficulty, "info"); err != nil {
 		t.Fatalf("can't parse config: %v", err)
 	}
 }
 
 func TestGoodConfigs(t *testing.T) {
 
-	finfos, err := os.ReadDir("config/testdata/good")
+	finfos, err := os.ReadDir("../config/testdata/good")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,26 +35,26 @@ func TestGoodConfigs(t *testing.T) {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
 			t.Run("with-thoth", func(t *testing.T) {
-				fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
+				fin, err := os.Open(filepath.Join("..", "config", "testdata", "good", st.Name()))
 				if err != nil {
 					t.Fatal(err)
 				}
 				defer fin.Close()
 
 				ctx := thothmock.WithMockThoth(t)
-				if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
+				if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty, "info"); err != nil {
 					t.Fatal(err)
 				}
 			})
 
 			t.Run("without-thoth", func(t *testing.T) {
-				fin, err := os.Open(filepath.Join("config", "testdata", "good", st.Name()))
+				fin, err := os.Open(filepath.Join("..", "config", "testdata", "good", st.Name()))
 				if err != nil {
 					t.Fatal(err)
 				}
 				defer fin.Close()
 
-				if _, err := ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty); err != nil {
+				if _, err := ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty, "info"); err != nil {
 					t.Fatal(err)
 				}
 			})
@@ -65,7 +65,7 @@ func TestGoodConfigs(t *testing.T) {
 func TestBadConfigs(t *testing.T) {
 	ctx := thothmock.WithMockThoth(t)
 
-	finfos, err := os.ReadDir("config/testdata/bad")
+	finfos, err := os.ReadDir("../config/testdata/bad")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,13 +73,13 @@ func TestBadConfigs(t *testing.T) {
 	for _, st := range finfos {
 		st := st
 		t.Run(st.Name(), func(t *testing.T) {
-			fin, err := os.Open(filepath.Join("config", "testdata", "bad", st.Name()))
+			fin, err := os.Open(filepath.Join("..", "config", "testdata", "bad", st.Name()))
 			if err != nil {
 				t.Fatal(err)
 			}
 			defer fin.Close()
 
-			if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty); err == nil {
+			if _, err := ParseConfig(ctx, fin, fin.Name(), anubis.DefaultDifficulty, "info"); err == nil {
 				t.Fatal(err)
 			} else {
 				t.Log(err)

@@ -62,11 +62,14 @@ type BotConfig struct {
 	Expression     *ExpressionOrList `json:"expression,omitempty" yaml:"expression,omitempty"`
 	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
-	GeoIP          *GeoIP            `json:"geoip,omitempty"`
-	ASNs           *ASNs             `json:"asns,omitempty"`
-	Name           string            `json:"name" yaml:"name"`
-	Action         Rule              `json:"action" yaml:"action"`
-	RemoteAddr     []string          `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+
+	// Thoth features
+	GeoIP *GeoIP `json:"geoip,omitempty"`
+	ASNs  *ASNs  `json:"asns,omitempty"`
+
+	Name       string   `json:"name" yaml:"name"`
+	Action     Rule     `json:"action" yaml:"action"`
+	RemoteAddr []string `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -329,6 +332,7 @@ type fileConfig struct {
 	Thresholds  []Threshold         `json:"thresholds"`
 	StatusCodes StatusCodes         `json:"status_codes"`
 	DNSBL       bool                `json:"dnsbl"`
+	Logging     *Logging            `json:"logging"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -360,6 +364,10 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if err := c.Logging.Valid(); err != nil {
+		errs = append(errs, err)
+	}
+
 	if c.Store != nil {
 		if err := c.Store.Valid(); err != nil {
 			errs = append(errs, err)
@@ -382,6 +390,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		Store: &Store{
 			Backend: "memory",
 		},
+		Logging: (Logging{}).Default(),
 	}
 
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
@@ -401,6 +410,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		},
 		StatusCodes: c.StatusCodes,
 		Store:       c.Store,
+		Logging:     c.Logging,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -466,6 +476,7 @@ type Config struct {
 	Bots        []BotConfig
 	Thresholds  []Threshold
 	StatusCodes StatusCodes
+	Logging     *Logging
 	DNSBL       bool
 }
 

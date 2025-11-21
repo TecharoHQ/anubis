@@ -27,16 +27,29 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(ctx context.Context, urlStr stri
 	}
 
 	// Set the Host header to the original host
-	if originalHost != "" {
-		req.Host = originalHost
+	var hostForRequest string
+	switch {
+	case c.targetHost != "":
+		hostForRequest = c.targetHost
+	case originalHost != "":
+		hostForRequest = originalHost
+	}
+	if hostForRequest != "" {
+		req.Host = hostForRequest
 	}
 
 	// Add proxy headers
 	req.Header.Set("X-Forwarded-Proto", "https")
 	req.Header.Set("User-Agent", "Anubis-OGTag-Fetcher/1.0") // For tracking purposes
 
+	serverName := hostForRequest
+	if serverName == "" {
+		serverName = req.URL.Hostname()
+	}
+	client := c.clientForSNI(serverName)
+
 	// Send the request
-	resp, err := c.client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {

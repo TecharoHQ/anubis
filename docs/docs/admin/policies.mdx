@@ -225,10 +225,10 @@ Using this backend will cause a lot of S3 operations, at least one for creating 
 
 The `s3api` backend takes the following configuration options:
 
-| Name         | Type    | Example                                                              | Description                                                                                                                                 |
-| :----------- | :------ | :------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| `bucketName` | string  | The name of the dedicated bucket for Anubis to store information in. |
-| `pathStyle`  | boolean | `false`                                                              | If true, use path-style S3 API operations. Please consult your storage provider's documentation if you don't know what you should put here. |
+| Name         | Type    | Example       | Description                                                                                                                                 |
+| :----------- | :------ | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketName` | string  | `anubis-data` | (Required) The name of the dedicated bucket for Anubis to store information in.                                                             |
+| `pathStyle`  | boolean | `false`       | If true, use path-style S3 API operations. Please consult your storage provider's documentation if you don't know what you should put here. |
 
 :::note
 
@@ -279,7 +279,7 @@ store:
 
 :::note
 
-You can also use [Redis](http://redis.io/) with Anubis.
+You can also use [Redis™](http://redis.io/) with Anubis.
 
 :::
 
@@ -291,15 +291,17 @@ This backend is ideal if you are running multiple instances of Anubis in a worke
 | Does your service get a lot of traffic?                       | ✅ Yes |
 | Do you want to store data persistently when Anubis restarts?  | ✅ Yes |
 | Do you run Anubis without mutable filesystem storage?         | ✅ Yes |
-| Do you have Redis or Valkey installed?                        | ✅ Yes |
+| Do you have Redis™ or Valkey installed?                       | ✅ Yes |
 
 #### Configuration
 
 The `valkey` backend takes the following configuration options:
 
-| Name  | Type   | Example                 | Description                                                                                                                                      |
-| :---- | :----- | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url` | string | `redis://valkey:6379/0` | The URL for the instance of Redis or Valkey that Anubis should store data in. This is in the same format as `REDIS_URL` in many cloud providers. |
+| Name       | Type   | Example                 | Description                                                                                                                                       |
+| :--------- | :----- | :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cluster`  | bool   | `false`                 | If true, use [Redis™ Clustering](https://redis.io/topics/cluster-spec) for storing Anubis data.                                                   |
+| `sentinel` | object | `{}`                    | See [Redis™ Sentinel docs](#redis-sentinel) for more detail and examples                                                                          |
+| `url`      | string | `redis://valkey:6379/0` | The URL for the instance of Redis™ or Valkey that Anubis should store data in. This is in the same format as `REDIS_URL` in many cloud providers. |
 
 Example:
 
@@ -313,6 +315,96 @@ store:
 ```
 
 This would have the Valkey client connect to host `valkey.int.techaro.lol` on port `6379` with database `0` (the default database).
+
+#### Redis™ Sentinel
+
+If you are using [Redis™ Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/) for a high availability setup, you need to configure the `sentinel` object. This object takes the following configuration options:
+
+| Name         | Type                     | Example               | Description                                                                                                                                               |
+| :----------- | :----------------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addr`       | string or list of string | `10.43.208.130:26379` | (Required) The host and port of the Redis™ Sentinel server. When possible, use DNS names for this. If you have multiple addresses, supply a list of them. |
+| `clientName` | string                   | `Anubis`              | The client name reported to Redis™ Sentinel. Set this if you want to track Anubis connections to your Redis™ Sentinel.                                    |
+| `masterName` | string                   | `mymaster`            | (Required) The name of the master in the Redis™ Sentinel configuration. This is used to discover where to find client connection hosts/ports.             |
+| `username`   | string                   | `azurediamond`        | The username used to authenticate against the Redis™ Sentinel and Redis™ servers.                                                                         |
+| `password`   | string                   | `hunter2`             | The password used to authenticate against the Redis™ Sentinel and Redis™ servers.                                                                         |
+
+## Logging management
+
+Anubis has very verbose logging out of the box. This is intentional and allows administrators to be sure that it is working merely by watching it work in real time. Some administrators may not appreciate this level of logging out of the box. As such, Anubis lets you customize details about how it logs data.
+
+Anubis uses a practice called [structured logging](https://stackify.com/what-is-structured-logging-and-why-developers-need-it/) to emit log messages with key-value pair context. In order to make analyzing large amounts of log messages easier, Anubis encodes all logs in JSON. This allows you to use any tool that can parse JSON to perform analytics or monitor for issues.
+
+Anubis exposes the following logging settings in the policy file:
+
+| Name         | Type                     | Example         | Description                                                                                                                              |
+| :----------- | :----------------------- | :-------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| `level`      | [log level](#log-levels) | `info`          | The logging level threshold. Any logs that are at or above this threshold will be drained to the sink. Any other logs will be discarded. |
+| `sink`       | string                   | `stdio`, `file` | The sink where the logs drain to as they are being recorded in Anubis.                                                                   |
+| `parameters` | object                   |                 | Parameters for the given logging sink. This will vary based on the logging sink of choice. See below for more information.               |
+
+Anubis supports the following logging sinks:
+
+1. `file`: logs are emitted to a file that is rotated based on size and age. Old log files are compressed with gzip to save space. This allows for better integration with users that decide to use legacy service managers (OpenRC, FreeBSD's init, etc).
+2. `stdio`: logs are emitted to the standard error stream of the Anubis process. This allows runtimes such as Docker, Podman, Systemd, and Kubernetes to capture logs with their native logging subsystems without any additional configuration.
+
+### Log levels
+
+Anubis uses Go's [standard library `log/slog` package](https://pkg.go.dev/log/slog) to emit structured logs. By default, Anubis logs at the [Info level](https://pkg.go.dev/log/slog#Level), which is fairly verbose out of the box. Here are the possible logging levels in Anubis:
+
+| Log level | Use in Anubis                                                                                                                                             |
+| :-------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEBUG`   | The raw unfiltered torrent of doom. Only use this if you are actively working on Anubis or have very good reasons to use it.                              |
+| `INFO`    | The default logging level, fairly verbose in order to make it easier for automation to parse.                                                             |
+| `WARN`    | A "more silent" logging level. Much less verbose. Some things that are now at the `info` level need to be moved up to the `warn` level in future patches. |
+| `ERROR`   | Only log error messages.                                                                                                                                  |
+
+Additionally, you can set a "slightly higher" log level if you need to, such as:
+
+```yaml
+logging:
+  sink: stdio
+  level: "INFO+1"
+```
+
+This isn't currently used by Anubis, but will be in the future for "slightly important" information.
+
+### `file` sink
+
+The `file` sink makes Anubis write its logs to the filesystem and rotate them out when the log file meets certain thresholds. This logging sink takes the following parameters:
+
+| Name           | Type            | Example               | Description                                                                                                                                                                                                                    |
+| :------------- | :-------------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`         | string          | `/var/log/anubis.log` | The file where Anubis logs should be written to. Make sure the user Anubis is running as has write and file creation permissions to this directory.                                                                            |
+| `maxBackups`   | number          | `3`                   | The number of old log files that should be maintained when log files are rotated out.                                                                                                                                          |
+| `maxBytes`     | number of bytes | `67108864` (64Mi)     | The maximum size of each log file before it is rotated out.                                                                                                                                                                    |
+| `maxAge`       | number of days  | `7`                   | If a log file is more than this many days old, rotate it out.                                                                                                                                                                  |
+| `compress`     | boolean         | `true`                | If true, compress old log files with gzip. This should be set to `true` and is only exposed as an option for dealing with legacy workflows where there is magical thinking about log files at play.                            |
+| `useLocalTime` | boolean         | `false`               | If true, use the system local time zone to create log filenames instead of UTC. This should almost always be set to `false` and is only exposed for legacy workflows where there is magical thinking about time zones at play. |
+
+```yaml
+logging:
+  sink: file
+  parameters:
+    file: "./var/anubis.log"
+    maxBackups: 3 # keep at least 3 old copies
+    maxBytes: 67108864 # each file can have up to 64 Mi of logs
+    maxAge: 7 # rotate files out every n days
+    compress: true # gzip-compress old log files
+    useLocalTime: false # timezone for rotated files is UTC
+```
+
+When files are rotated out, the old files will be named after the rotation timestamp in [RFC 3339 format](https://www.rfc-editor.org/rfc/rfc3339).
+
+### `stdio` sink
+
+By default, Anubis logs everything to the standard error stream of its process. This requires no configuration:
+
+```yaml
+logging:
+  sink: stdio
+```
+
+If you use a service orchestration platform that does not capture the standard error stream of processes, you need to use a different logging sink.
 
 ## Risk calculation for downstream services
 

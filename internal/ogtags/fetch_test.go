@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TecharoHQ/anubis/lib/policy/config"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
 	"golang.org/x/net/html"
 )
@@ -87,7 +87,7 @@ func TestFetchHTMLDocument(t *testing.T) {
 				Enabled:      true,
 				TimeToLive:   time.Minute,
 				ConsiderHost: false,
-			}, memory.New(t.Context()))
+			}, memory.New(t.Context()), TargetOptions{})
 			doc, err := cache.fetchHTMLDocument(t.Context(), ts.URL, "anything")
 
 			if tt.expectError {
@@ -118,7 +118,7 @@ func TestFetchHTMLDocumentInvalidURL(t *testing.T) {
 		Enabled:      true,
 		TimeToLive:   time.Minute,
 		ConsiderHost: false,
-	}, memory.New(t.Context()))
+	}, memory.New(t.Context()), TargetOptions{})
 
 	doc, err := cache.fetchHTMLDocument(t.Context(), "http://invalid.url.that.doesnt.exist.example", "anything")
 

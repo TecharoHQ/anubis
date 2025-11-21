@@ -31,8 +31,8 @@ import (
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
+	"github.com/TecharoHQ/anubis/lib/config"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/policy/config"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
@@ -273,8 +273,10 @@ func main() {
 		return
 	}
 
-	internal.InitSlog(*slogLevel)
 	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
+
+	lg := internal.InitSlog(*slogLevel, os.Stderr)
+	lg.Info("starting up Anubis")
 
 	if *healthcheck {
 		log.Println("running healthcheck")
@@ -303,7 +305,7 @@ func main() {
 
 	if *metricsBind != "" {
 		wg.Add(1)
-		go metricsServer(ctx, wg.Done)
+		go metricsServer(ctx, *lg.With("subsystem", "metrics"), wg.Done)
 	}
 
 	var rp http.Handler
@@ -323,11 +325,11 @@ func main() {
 	// Thoth configuration
 	switch {
 	case *thothURL != "" && *thothToken == "":
-		slog.Warn("THOTH_URL is set but no THOTH_TOKEN is set")
+		lg.Warn("THOTH_URL is set but no THOTH_TOKEN is set")
 	case *thothURL == "" && *thothToken != "":
-		slog.Warn("THOTH_TOKEN is set but no THOTH_URL is set")
+		lg.Warn("THOTH_TOKEN is set but no THOTH_URL is set")
 	case *thothURL != "" && *thothToken != "":
-		slog.Debug("connecting to Thoth")
+		lg.Debug("connecting to Thoth")
 		thothClient, err := thoth.New(ctx, *thothURL, *thothToken, *thothInsecure)
 		if err != nil {
 			log.Fatalf("can't dial thoth at %s: %v", *thothURL, err)
@@ -336,15 +338,19 @@ func main() {
 		ctx = thoth.With(ctx, thothClient)
 	}
 
-	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty)
+	lg.Info("loading policy file", "fname", *policyFname)
+	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty, *slogLevel)
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
+	lg = policy.Logger
+	lg.Debug("swapped to new logger")
+	slog.SetDefault(lg)
 
 	// Warn if persistent storage is used without a configured signing key
 	if policy.Store.IsPersistent() {
 		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
-			slog.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
+			lg.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
 				"Challenges will be invalidated when Anubis restarts. " +
 				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
 				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
@@ -407,7 +413,7 @@ func main() {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
 
-		slog.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		lg.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
 	}
 
 	var redirectDomainsList []string
@@ -421,7 +427,7 @@ func main() {
 			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
 	} else {
-		slog.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
+		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
 	anubis.CookieName = *cookiePrefix + "-auth"
@@ -439,26 +445,30 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		BasePrefix:           *basePrefix,
-		StripBasePrefix:      *stripBasePrefix,
-		Next:                 rp,
-		Policy:               policy,
-		ServeRobotsTXT:       *robotsTxt,
-		ED25519PrivateKey:    ed25519Priv,
-		HS512Secret:          []byte(*hs512Secret),
-		CookieDomain:         *cookieDomain,
-		CookieDynamicDomain:  *cookieDynamicDomain,
-		CookieExpiration:     *cookieExpiration,
-		CookiePartitioned:    *cookiePartitioned,
-		RedirectDomains:      redirectDomainsList,
-		Target:               *target,
-		WebmasterEmail:       *webmasterEmail,
-		OpenGraph:            policy.OpenGraph,
-		CookieSecure:         *cookieSecure,
-		CookieSameSite:       parseSameSite(*cookieSameSite),
-		PublicUrl:            *publicUrl,
-		JWTRestrictionHeader: *jwtRestrictionHeader,
-		DifficultyInJWT:      *difficultyInJWT,
+		BasePrefix:               *basePrefix,
+		StripBasePrefix:          *stripBasePrefix,
+		Next:                     rp,
+		Policy:                   policy,
+		TargetHost:               *targetHost,
+		TargetSNI:                *targetSNI,
+		TargetInsecureSkipVerify: *targetInsecureSkipVerify,
+		ServeRobotsTXT:           *robotsTxt,
+		ED25519PrivateKey:        ed25519Priv,
+		HS512Secret:              []byte(*hs512Secret),
+		CookieDomain:             *cookieDomain,
+		CookieDynamicDomain:      *cookieDynamicDomain,
+		CookieExpiration:         *cookieExpiration,
+		CookiePartitioned:        *cookiePartitioned,
+		RedirectDomains:          redirectDomainsList,
+		Target:                   *target,
+		WebmasterEmail:           *webmasterEmail,
+		OpenGraph:                policy.OpenGraph,
+		CookieSecure:             *cookieSecure,
+		CookieSameSite:           parseSameSite(*cookieSameSite),
+		PublicUrl:                *publicUrl,
+		JWTRestrictionHeader:     *jwtRestrictionHeader,
+		Logger:                   policy.Logger.With("subsystem", "anubis"),
+		DifficultyInJWT:          *difficultyInJWT,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -474,7 +484,7 @@ func main() {
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
-	slog.Info(
+	lg.Info(
 		"listening",
 		"url", listenerUrl,
 		"difficulty", *challengeDifficulty,
@@ -508,7 +518,7 @@ func main() {
 	wg.Wait()
 }
 
-func metricsServer(ctx context.Context, done func()) {
+func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
@@ -534,7 +544,7 @@ func metricsServer(ctx context.Context, done func()) {
 
 	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
-	slog.Debug("listening for metrics", "url", metricsUrl)
+	lg.Debug("listening for metrics", "url", metricsUrl)
 
 	go func() {
 		<-ctx.Done()
