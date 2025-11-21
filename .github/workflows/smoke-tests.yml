@@ -22,6 +22,7 @@ jobs:
           - git-push
           - healthcheck
           - i18n
+          - log-file
           - palemoon/amd64
           #- palemoon/i386
           - robots_txt
