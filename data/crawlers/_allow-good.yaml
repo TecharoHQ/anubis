@@ -8,3 +8,4 @@
 - import: (data)/crawlers/marginalia.yaml
 - import: (data)/crawlers/mojeekbot.yaml
 - import: (data)/crawlers/commoncrawl.yaml
+- import: (data)/crawlers/yandexbot.yaml

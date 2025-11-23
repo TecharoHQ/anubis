@@ -16,8 +16,8 @@ type CELChecker struct {
 	src     string
 }
 
-func NewCELChecker(cfg *config.ExpressionOrList) (*CELChecker, error) {
-	env, err := expressions.BotEnvironment()
+func NewCELChecker(cfg *config.ExpressionOrList, dnsObj *internal.Dns) (*CELChecker, error) {
+	env, err := expressions.BotEnvironment(dnsObj)
 	if err != nil {
 		return nil, err
 	}

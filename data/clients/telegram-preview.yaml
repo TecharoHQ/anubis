@@ -1,0 +1,6 @@
+- name: telegrambot
+  action: ALLOW
+  expression:
+    all:
+      - userAgent.matches("TelegramBot")
+      - verifyFCrDNS(remoteAddress, "ptr\\.telegram\\.org$")

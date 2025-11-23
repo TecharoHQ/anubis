@@ -1,3 +1,4 @@
+
 acs
 Actorified
 actorifiedstore
@@ -13,6 +14,8 @@ apnic
 APNICRANDNETAU
 Applebot
 archlinux
+Arpa
+arpa
 asnc
 asnchecker
 asns
@@ -85,6 +88,7 @@ distros
 dnf
 dnsbl
 dnserr
+DNSTTL
 domainhere
 dracula
 dronebl
@@ -108,6 +112,7 @@ facebookgo
 Factset
 fahedouch
 fastcgi
+FCr
 fediverse
 ffprobe
 financials
@@ -240,6 +245,7 @@ oklch
 omgili
 omgilibot
 openai
+opendns
 opengraph
 openrc
 oswald
@@ -305,6 +311,7 @@ simprint
 sitemap
 sls
 sni
+snipster
 Spambot
 sparkline
 spyderbot
@@ -325,6 +332,7 @@ tbn
 tbr
 techaro
 techarohq
+telegrambot
 templ
 templruntime
 testarea
@@ -349,6 +357,7 @@ Varis
 Velen
 vendored
 vhosts
+vkbot
 VKE
 vnd
 VPS

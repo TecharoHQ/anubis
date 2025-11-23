@@ -1,0 +1,8 @@
+dns_ttl:
+  forward: 60.0
+  reverse: "600"
+
+bots:
+  - name: "test"
+    user_agent_regex: ".*"
+    action: "DENY"
