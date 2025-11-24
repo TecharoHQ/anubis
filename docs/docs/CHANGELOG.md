@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
+
 <!-- This changes the project to: -->
 
 ## v1.24.0: Y'shtola Rhul
