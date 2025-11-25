@@ -153,10 +153,10 @@ func BotEnvironment(dnsObj *dns.Dns) (*cel.Env, error) {
 			cel.Overload("regexSafe_string_string",
 				[]*cel.Type{cel.StringType},
 				cel.StringType,
-				cel.UnaryBinding(func(addr ref.Val) ref.Val {
-					s, ok := addr.(types.String)
+				cel.UnaryBinding(func(str ref.Val) ref.Val {
+					s, ok := str.(types.String)
 					if !ok {
-						return types.ValOrErr(addr, "addr is not a string")
+						return types.ValOrErr(str, "addr is not a string")
 					}
 
 					escapes := []string{"\\", ".", ":", "*", "?", "-", "[", "]", "(", ")", "+", "{", "}", "|", "^", "$"}
