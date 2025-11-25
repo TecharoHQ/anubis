@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/expressions"
 	"github.com/google/cel-go/cel"
@@ -16,7 +17,7 @@ type CELChecker struct {
 	src     string
 }
 
-func NewCELChecker(cfg *config.ExpressionOrList, dnsObj *internal.Dns) (*CELChecker, error) {
+func NewCELChecker(cfg *config.ExpressionOrList, dnsObj *dns.Dns) (*CELChecker, error) {
 	env, err := expressions.BotEnvironment(dnsObj)
 	if err != nil {
 		return nil, err

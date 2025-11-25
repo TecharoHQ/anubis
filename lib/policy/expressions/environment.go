@@ -4,7 +4,7 @@ import (
 	"math/rand/v2"
 	"strings"
 
-	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
@@ -16,7 +16,7 @@ import (
 // variables and functions that are passed into the CEL scope so that
 // Anubis can fail loudly and early when something is invalid instead
 // of blowing up at runtime.
-func BotEnvironment(dnsObj *internal.Dns) (*cel.Env, error) {
+func BotEnvironment(dnsObj *dns.Dns) (*cel.Env, error) {
 	return New(
 		// Variables exposed to CEL programs:
 		cel.Variable("remoteAddress", cel.StringType),

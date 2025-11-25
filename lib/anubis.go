@@ -24,6 +24,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/decaymap"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
@@ -72,6 +73,7 @@ type Server struct {
 	mux         *http.ServeMux
 	policy      *policy.ParsedConfig
 	OGTags      *ogtags.OGTagCache
+	dnsCache    *dns.DnsCache
 	logger      *slog.Logger
 	opts        Options
 	ed25519Priv ed25519.PrivateKey

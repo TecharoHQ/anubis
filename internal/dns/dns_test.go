@@ -1,12 +1,23 @@
-package internal
+package dns
 
 import (
+	"context"
 	"errors"
 	"net"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 )
+
+// newTestDNS is a helper function to create a new Dns object with an in-memory cache for testing.
+func newTestDNS(forwardTTL int, reverseTTL int) *Dns {
+	ctx := context.Background()
+	memStore := memory.New(ctx)
+	cache := NewDNSCache(forwardTTL, reverseTTL, memStore)
+	return New(ctx, cache)
+}
 
 // mockLookupAddr is a mock implementation of the net.LookupAddr function.
 func mockLookupAddr(addr string) ([]string, error) {
@@ -62,7 +73,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestDns_ArpaReverseIP(t *testing.T) {
-	d := NewDNS(0, 0)
+	d := newTestDNS(0, 0)
 	tests := []struct {
 		name    string
 		ip      string
@@ -89,7 +100,7 @@ func TestDns_ArpaReverseIP(t *testing.T) {
 }
 
 func TestDns_ReverseDNS(t *testing.T) {
-	d := NewDNS(1, 1) // short TTL for testing cache
+	d := newTestDNS(1, 1) // short TTL for testing cache
 
 	// First call - cache miss
 	t.Run("cache miss", func(t *testing.T) {
@@ -160,7 +171,7 @@ func TestDns_ReverseDNS(t *testing.T) {
 }
 
 func TestDns_LookupHost(t *testing.T) {
-	d := NewDNS(1, 1)
+	d := newTestDNS(1, 1)
 
 	t.Run("cache miss", func(t *testing.T) {
 		got, err := d.LookupHost("dns.google")
@@ -223,7 +234,7 @@ func TestDns_LookupHost(t *testing.T) {
 }
 
 func TestDns_VerifyFCrDNS(t *testing.T) {
-	d := NewDNS(1, 1)
+	d := newTestDNS(1, 1)
 
 	// Helper to convert string to *string
 	p := func(s string) *string {
@@ -243,7 +254,7 @@ func TestDns_VerifyFCrDNS(t *testing.T) {
 		{"reverse lookup fails no pattern", "1.2.3.4", nil, false},
 
 		// Cases with pattern
-		{"valid match", "8.8.8.8", p(`\.google$`), true},
+		{"valid match", "8.8.8.8", p(`.*\.google$`), true},
 		{"valid no match", "8.8.8.8", p(`\.com$`), false},
 		{"reverse lookup fails with pattern", "9.9.9.9", p(".*"), false},
 		{"invalid pattern", "8.8.8.8", p(`[`), false},

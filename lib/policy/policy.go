@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
@@ -42,7 +43,7 @@ type ParsedConfig struct {
 	StatusCodes       config.StatusCodes
 	DefaultDifficulty int
 	DNSBL             bool
-	Dns               *internal.Dns
+	Dns               *dns.Dns
 	Logger            *slog.Logger
 }
 
@@ -51,7 +52,6 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 		orig:        orig,
 		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
-		Dns:         internal.NewDNS(orig.DNSTTL.Forward, orig.DNSTTL.Reverse),
 	}
 }
 
@@ -208,6 +208,9 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	case false:
 		validationErrs = append(validationErrs, config.ErrUnknownStoreBackend)
 	}
+
+	dnsCache := dns.NewDNSCache(result.orig.DNSTTL.Forward, result.orig.DNSTTL.Reverse, result.Store)
+	result.Dns = dns.New(ctx, dnsCache)
 
 	if c.Logging.Level != nil {
 		logLevel = c.Logging.Level.String()
