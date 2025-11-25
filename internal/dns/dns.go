@@ -109,7 +109,7 @@ func (d *Dns) VerifyFCrDNS(addr string, pattern *string) bool {
 
 	var names []string
 	if names, _ = d.ReverseDNS(addr); len(names) == 0 {
-		return false
+		return pattern == nil // If no pattern specified, check is passed
 	}
 
 	// If a pattern is provided, check for a match.
