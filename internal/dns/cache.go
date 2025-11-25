@@ -32,6 +32,9 @@ func NewDNSCache(forwardTTL int, reverseTTL int, backend store.Interface) *DnsCa
 }
 
 func (d *Dns) getCachedForward(host string) ([]string, bool) {
+	if d.cache == nil {
+		return nil, false
+	}
 	if cached, err := d.cache.forward.Get(d.ctx, host); err == nil {
 		slog.Debug("DNS: forward cache hit", "name", host, "ips", cached)
 		return cached, true
@@ -41,6 +44,9 @@ func (d *Dns) getCachedForward(host string) ([]string, bool) {
 }
 
 func (d *Dns) getCachedReverse(addr string) ([]string, bool) {
+	if d.cache == nil {
+		return nil, false
+	}
 	if cached, err := d.cache.reverse.Get(d.ctx, addr); err == nil {
 		slog.Debug("DNS: reverse cache hit", "addr", addr, "names", cached)
 		return cached, true
@@ -50,9 +56,15 @@ func (d *Dns) getCachedReverse(addr string) ([]string, bool) {
 }
 
 func (d *Dns) forwardCachePut(host string, entries []string) {
+	if d.cache == nil {
+		return
+	}
 	d.cache.forward.Set(d.ctx, host, entries, d.cache.forwardTTL)
 }
 
 func (d *Dns) reverseCachePut(addr string, entries []string) {
+	if d.cache == nil {
+		return
+	}
 	d.cache.reverse.Set(d.ctx, addr, entries, d.cache.reverseTTL)
 }

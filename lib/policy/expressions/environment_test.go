@@ -1,18 +1,28 @@
 package expressions
 
 import (
+	"context"
 	"errors"
 	"net"
 	"strings"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/dns"
+	"github.com/TecharoHQ/anubis/lib/store/memory"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
 )
 
+// newTestDNS is a helper function to create a new Dns object with an in-memory cache for testing.
+func newTestDNS(forwardTTL int, reverseTTL int) *dns.Dns {
+	ctx := context.Background()
+	memStore := memory.New(ctx)
+	cache := dns.NewDNSCache(forwardTTL, reverseTTL, memStore)
+	return dns.New(ctx, cache)
+}
+
 func TestBotEnvironment(t *testing.T) {
-	dnsObj := internal.NewDNS(300, 300)
+	dnsObj := newTestDNS(300, 300)
 	env, err := BotEnvironment(dnsObj)
 	if err != nil {
 		t.Fatalf("failed to create bot environment: %v", err)
@@ -291,11 +301,11 @@ func TestBotEnvironment(t *testing.T) {
 	})
 
 	t.Run("dnsFunctions", func(t *testing.T) {
-		originalDNSLookupAddr := internal.DNSLookupAddr
-		originalDNSLookupHost := internal.DNSLookupHost
+		originalDNSLookupAddr := dns.DNSLookupAddr
+		originalDNSLookupHost := dns.DNSLookupHost
 		defer func() {
-			internal.DNSLookupAddr = originalDNSLookupAddr
-			internal.DNSLookupHost = originalDNSLookupHost
+			dns.DNSLookupAddr = originalDNSLookupAddr
+			dns.DNSLookupHost = originalDNSLookupHost
 		}()
 
 		t.Run("reverseDNS", func(t *testing.T) {
@@ -337,7 +347,7 @@ func TestBotEnvironment(t *testing.T) {
 
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
-					internal.DNSLookupAddr = func(addr string) ([]string, error) {
+					dns.DNSLookupAddr = func(addr string) ([]string, error) {
 						if addr == tt.addr {
 							return tt.mockReturn, tt.mockError
 						}
@@ -399,7 +409,7 @@ func TestBotEnvironment(t *testing.T) {
 
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
-					internal.DNSLookupHost = func(host string) ([]string, error) {
+					dns.DNSLookupHost = func(host string) ([]string, error) {
 						if host == tt.host {
 							return tt.mockReturn, tt.mockError
 						}
@@ -482,13 +492,13 @@ func TestBotEnvironment(t *testing.T) {
 
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
-					internal.DNSLookupAddr = func(addr string) ([]string, error) {
+					dns.DNSLookupAddr = func(addr string) ([]string, error) {
 						if addr == tt.addr {
 							return tt.reverseMockReturn, tt.reverseMockError
 						}
 						return nil, errors.New("unexpected address for reverse lookup")
 					}
-					internal.DNSLookupHost = func(host string) ([]string, error) {
+					dns.DNSLookupHost = func(host string) ([]string, error) {
 						host = strings.TrimSuffix(host, ".")
 						if ips, ok := tt.forwardMockReturn[host]; ok {
 							return ips, nil
