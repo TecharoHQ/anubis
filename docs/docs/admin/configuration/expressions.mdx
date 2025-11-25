@@ -233,6 +233,27 @@ This is best applied when doing explicit block rules, eg:
 
 It seems counter-intuitive to allow known bad clients through sometimes, but this allows you to confuse attackers by making Anubis' behavior random. Adjust the thresholds and numbers as facts and circumstances demand.
 
+### `regexSafe`
+
+Available in `bot` expressions.
+
+```ts
+function regexSafe(input: string): string;
+```
+
+`regexSafe` takes a string and escapes it for safe use inside of a regular expression. This is useful when you are creating regular expressions from headers or variables such as `remoteAddress`.
+
+| Input                     | Output                          |
+| :------------------------ | :------------------------------ |
+| `regexSafe("1.2.3.4")`    | `1\\.2\\.3\\.4`                 |
+| `regexSafe("techaro.lol")` | `techaro\\.lol`                 |
+| `regexSafe("star*")`      | `star\\*`                       |
+| `regexSafe("plus+")`      | `plus\\+`                       |
+| `regexSafe("{braces}")`   | `\\{braces\\}`                  |
+| `regexSafe("start^")`     | `start\\^`                      |
+| `regexSafe("back\\slash")` | `back\\\\slash`                 |
+| `regexSafe("dash-dash")`  | `dash\\-dash`                   |
+
 ### `segments`
 
 Available in `bot` expressions.
@@ -264,6 +285,99 @@ This is useful if you want to write rules that allow requests that have no query
     all:
       - size(query) == 0
       - size(segments(path)) < 2
+```
+
+### DNS Functions
+
+Anubis can also perform DNS lookups as a part of its expression evaluation. This can be useful for doing things like checking for a valid [Forward-confirmed reverse DNS (FCrDNS)](https://en.wikipedia.org/wiki/Forward-confirmed_reverse_DNS) record.
+
+#### `arpaReverseIP`
+
+Available in `bot` expressions.
+
+```ts
+function arpaReverseIP(ip: string): string;
+```
+
+`arpaReverseIP` takes an IP address and returns its value in [ARPA notation](https://www.ietf.org/rfc/rfc2317.html). This can be useful when matching PTR record patterns.
+
+| Input                          | Output                                                               |
+| :----------------------------- | :------------------------------------------------------------------- |
+| `arpaReverseIP("1.2.3.4")`     | `4.3.2.1`                                                            |
+| `arpaReverseIP("2001:db8::1")` | `1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2` |
+
+#### `lookupHost`
+
+Available in `bot` expressions.
+
+```ts
+function lookupHost(host: string): string[];
+```
+
+`lookupHost` performs a DNS lookup for the given hostname and returns a list of IP addresses.
+
+```yaml
+- name: cloudflare-ip-in-host-header
+  action: DENY
+  expression: '"104.16.0.0" in lookupHost(headers["Host"])'
+```
+
+#### `reverseDNS`
+
+Available in `bot` expressions.
+
+```ts
+function reverseDNS(ip: string): string[];
+```
+
+`reverseDNS` takes an IP address and returns the DNS names associated with it. This is useful when you want to check PTR records of an IP address.
+
+```yaml
+- name: allow-googlebot
+  action: ALLOW
+  expression: 'reverseDNS(remoteAddress).endsWith(".googlebot.com")'
+```
+
+::: warning
+
+Do not use this for validating the legitimacy of an IP address. It is possible for DNS records to be out of date or otherwise manipulated. Use [`verifyFCrDNS`](#verifyfcrdns) instead for a more reliable result.
+
+:::
+
+#### `verifyFCrDNS`
+
+Available in `bot` expressions.
+
+```ts
+function verifyFCrDNS(ip: string): bool;
+function verifyFCrDNS(ip: string, pattern: string): bool;
+```
+
+`verifyFCrDNS` checks if the reverse DNS of an IP address matches its forward DNS. This is a common technique to filter out spam and bot traffic. `verifyFCrDNS` comes in two forms:
+
+- `verifyFCrDNS(remoteAddress)` will check that the reverse DNS of the remote address resolves back to the remote address.
+- `verifyFCrDNS(remoteAddress, pattren)` will check that the reverse DNS of the remote address is matching with pattern and that name resolves back to the remote address.
+
+This is best used in rules like this:
+
+```yaml
+- name: require-fcrdns-for-post
+  action: DENY
+  expression:
+    all:
+      - method == "POST"
+      - "!verifyFCrDNS(remoteAddress)"
+```
+
+Here is an another example that allows requests from telegram:
+
+```yaml
+- name: telegrambot
+  action: ALLOW
+  expression:
+    all:
+      - userAgent.matches("TelegramBot")
+      - verifyFCrDNS(remoteAddress, "ptr\\.telegram\\.org$")
 ```
 
 ## Life advice
