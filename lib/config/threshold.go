@@ -24,7 +24,6 @@ var (
 			Challenge: &ChallengeRules{
 				Algorithm:  "fast",
 				Difficulty: anubis.DefaultDifficulty,
-				ReportAs:   anubis.DefaultDifficulty,
 			},
 		},
 	}

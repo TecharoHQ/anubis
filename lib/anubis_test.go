@@ -464,10 +464,6 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 			if bot.Challenge.Difficulty != i {
 				t.Errorf("Challenge.Difficulty is wrong, wanted %d, got: %d", i, bot.Challenge.Difficulty)
 			}
-
-			if bot.Challenge.ReportAs != i {
-				t.Errorf("Challenge.ReportAs is wrong, wanted %d, got: %d", i, bot.Challenge.ReportAs)
-			}
 		})
 	}
 }

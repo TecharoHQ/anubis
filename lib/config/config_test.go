@@ -110,7 +110,6 @@ func TestBotValid(t *testing.T) {
 				PathRegex: p("Mozilla"),
 				Challenge: &ChallengeRules{
 					Difficulty: -1,
-					ReportAs:   4,
 					Algorithm:  "fast",
 				},
 			},
@@ -124,7 +123,6 @@ func TestBotValid(t *testing.T) {
 				PathRegex: p("Mozilla"),
 				Challenge: &ChallengeRules{
 					Difficulty: 420,
-					ReportAs:   4,
 					Algorithm:  "fast",
 				},
 			},
@@ -361,7 +359,6 @@ func TestBotConfigZero(t *testing.T) {
 
 	b.Challenge = &ChallengeRules{
 		Difficulty: 4,
-		ReportAs:   4,
 		Algorithm:  DefaultAlgorithm,
 	}
 	if b.Zero() {

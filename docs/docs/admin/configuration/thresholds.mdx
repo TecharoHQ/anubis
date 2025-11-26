@@ -41,7 +41,6 @@ thresholds:
     challenge:
       algorithm: metarefresh
       difficulty: 1
-      report_as: 1
 
   - name: moderate-suspicion
     expression:
@@ -52,7 +51,6 @@ thresholds:
     challenge:
       algorithm: fast
       difficulty: 2
-      report_as: 2
 
   - name: extreme-suspicion
     expression: weight >= 20
@@ -60,7 +58,6 @@ thresholds:
     challenge:
       algorithm: fast
       difficulty: 4
-      report_as: 4
 ```
 
 This defines a suite of 4 thresholds:
@@ -130,7 +127,6 @@ action: CHALLENGE
 challenge:
   algorithm: metarefresh
   difficulty: 1
-  report_as: 1
 ```
 
     </td>

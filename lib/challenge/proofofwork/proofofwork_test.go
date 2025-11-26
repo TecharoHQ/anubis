@@ -36,7 +36,6 @@ func TestBasic(t *testing.T) {
 		Challenge: &config.ChallengeRules{
 			Algorithm:  "fast",
 			Difficulty: 0,
-			ReportAs:   0,
 		},
 	}
 	const challengeStr = "hunter"

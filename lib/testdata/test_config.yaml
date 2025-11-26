@@ -42,4 +42,3 @@ thresholds:
     challenge:
       algorithm: fast
       difficulty: 1
-      report_as: 1

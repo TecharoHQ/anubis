@@ -167,8 +167,8 @@ func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challen
 	if rule.Challenge.Difficulty == 0 {
 		rule.Challenge.Difficulty = chall.Difficulty
 	}
-	if rule.Challenge.ReportAs == 0 {
-		rule.Challenge.ReportAs = chall.Difficulty
+	if rule.Challenge.ReportAs != 0 {
+		s.logger.Warn("[DEPRECATION] the report_as field in this bot rule is deprecated, see https://github.com/TecharoHQ/anubis/issues/1310 for more information", "bot_name", rule.Name, "difficulty", rule.Challenge.Difficulty, "report_as", rule.Challenge.ReportAs)
 	}
 	if rule.Challenge.Algorithm == "" {
 		rule.Challenge.Algorithm = chall.Method
@@ -648,7 +648,6 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
-			ReportAs:   s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,
 		},
 		Rules: &checker.List{},

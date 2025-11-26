@@ -84,7 +84,6 @@ This rule has been known to have a high false positive rate in testing. Please u
   action: CHALLENGE
   challenge:
     difficulty: 16 # impossible
-    report_as: 4 # lie to the operator
     algorithm: slow # intentionally waste CPU cycles and time
 ```
 
@@ -93,7 +92,6 @@ Challenges can be configured with these settings:
 | Key          | Example  | Description                                                                                                                                                      |
 | :----------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `difficulty` | `4`      | The challenge difficulty (number of leading zeros) for proof-of-work. See [Why does Anubis use Proof-of-Work?](/docs/design/why-proof-of-work) for more details. |
-| `report_as`  | `4`      | What difficulty the UI should report to the user. Useful for messing with industrial-scale scraping efforts.                                                     |
 | `algorithm`  | `"fast"` | The challenge method to use. See [the list of challenge methods](./configuration/challenges/) for more information.                                              |
 
 ### Remote IP based filtering

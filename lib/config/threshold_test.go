@@ -32,7 +32,6 @@ func TestThresholdValid(t *testing.T) {
 				Challenge: &ChallengeRules{
 					Algorithm:  "fast",
 					Difficulty: 1,
-					ReportAs:   1,
 				},
 			},
 			err: nil,

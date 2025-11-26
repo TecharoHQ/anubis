@@ -49,7 +49,6 @@ bots:
   #   action: CHALLENGE
   #   challenge:
   #     difficulty: 16  # impossible
-  #     report_as: 4    # lie to the operator
   #     algorithm: slow # intentionally waste CPU cycles and time
 
   - name: rss-feed-blog
@@ -105,7 +104,6 @@ thresholds:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/metarefresh
       algorithm: metarefresh
       difficulty: 1
-      report_as: 1
   # For clients that are browser-like but have either gained points from custom rules or
   # report as a standard browser.
   - name: moderate-suspicion
@@ -122,7 +120,6 @@ thresholds:
       # challenge data, and forwards that to the client.
       algorithm: preact
       difficulty: 1
-      report_as: 1
   - name: mild-proof-of-work
     expression:
       all:
@@ -133,7 +130,6 @@ thresholds:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
       algorithm: fast
       difficulty: 2 # two leading zeros, very fast for most clients
-      report_as: 2
   # For clients that are browser like and have gained many points from custom rules
   - name: extreme-suspicion
     expression: weight >= 30
@@ -142,7 +138,6 @@ thresholds:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
       algorithm: fast
       difficulty: 4
-      report_as: 4
 
 dnsbl: false
 
