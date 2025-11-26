@@ -101,11 +101,11 @@ func (d *Dns) verifyFCrDNSInternal(addr string, names []string) bool {
 // VerifyFCrDNS performs a forward-confirmed reverse DNS (FCrDNS) lookup for the given IP address,
 // optionally matching against a provided pattern.
 func (d *Dns) VerifyFCrDNS(addr string, pattern *string) bool {
+	var patternVal string
 	if pattern != nil {
-		slog.Debug("DNS: performing FCrDNS lookup", "addr", addr, "pattern", *pattern)
-	} else {
-		slog.Debug("DNS: performing FCrDNS lookup", "addr", addr, "pattern", "")
+		patternVal = *pattern
 	}
+	slog.Debug("DNS: performing FCrDNS lookup", "addr", addr, "pattern", patternVal)
 
 	var names []string
 	if names, _ = d.ReverseDNS(addr); len(names) == 0 {
