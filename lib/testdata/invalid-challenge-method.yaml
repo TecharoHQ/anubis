@@ -4,5 +4,4 @@ bots:
     action: CHALLENGE
     challenge:
       difficulty: 16
-      report_as: 4
       algorithm: hunter2 # invalid algorithm

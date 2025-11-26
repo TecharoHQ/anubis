@@ -25,6 +25,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stabilize the CVE-2025-24369 regression test by always submitting an invalid proof instead of relying on random POW failures.
 - Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
 
+### Deprecate `report_as` in challenge configuration
+
+Previously Anubis let you lie to users about the difficulty of a challenge to interfere with operators of malicious scrapers as a psyops attack:
+
+```yaml
+bots:
+  # Punish any bot with "bot" in the user-agent string
+  # This is known to have a high false-positive rate, use at your own risk
+  - name: generic-bot-catchall
+    user_agent_regex: (?i:bot|crawler)
+    action: CHALLENGE
+    challenge:
+      difficulty: 16 # impossible
+      report_as: 4 # lie to the operator
+      algorithm: slow # intentionally waste CPU cycles and time
+```
+
+This has turned out to be a bad idea and has been removed.
+
+If you are using this setting, you will get a warning in your logs. To remove this warning, remove this setting from your policy file.
+
 ### Logging customization
 
 Anubis now supports the ability to log to multiple backends ("sinks"). This allows you to have Anubis [log to a file](./admin/policies.mdx#file-sink) instead of just logging to standard out. You can also customize the [logging level](./admin/policies.mdx#log-levels) in the policy file:

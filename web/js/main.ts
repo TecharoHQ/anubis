@@ -155,7 +155,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
     return;
   }
 
-  status.innerHTML = `${t('calculating_difficulty')} ${rules.report_as}, `;
+  status.innerHTML = `${t('calculating_difficulty')} ${rules.difficulty}, `;
   progress.style.display = "inline-block";
 
   // the whole text, including "Speed:", as a single node, because some browsers
@@ -166,7 +166,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
 
   let lastSpeedUpdate = 0;
   let showingApology = false;
-  const likelihood = Math.pow(16, -rules.report_as);
+  const likelihood = Math.pow(16, -rules.difficulty);
 
   try {
     const t0 = Date.now();

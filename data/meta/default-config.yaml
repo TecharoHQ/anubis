@@ -35,7 +35,6 @@
 #   action: CHALLENGE
 #   challenge:
 #     difficulty: 16  # impossible
-#     report_as: 4    # lie to the operator
 #     algorithm: slow # intentionally waste CPU cycles and time
 
 # Requires a subscription to Thoth to use, see

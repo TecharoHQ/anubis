@@ -145,7 +145,6 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		if b.Challenge == nil {
 			parsedBot.Challenge = &config.ChallengeRules{
 				Difficulty: defaultDifficulty,
-				ReportAs:   defaultDifficulty,
 				Algorithm:  "fast",
 			}
 		} else {
