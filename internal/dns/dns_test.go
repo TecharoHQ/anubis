@@ -30,6 +30,8 @@ func mockLookupAddr(addr string) ([]string, error) {
 		return []string{"resolver1.opendns.com."}, nil
 	case "9.9.9.9":
 		return nil, &net.DNSError{Err: "no such host", Name: "9.9.9.9", IsNotFound: true}
+	case "1.2.3.4":
+		return nil, errors.New("unknown error")
 	default:
 		return nil, &net.DNSError{Err: "no such host", Name: addr, IsNotFound: true}
 	}
@@ -250,13 +252,14 @@ func TestDns_VerifyFCrDNS(t *testing.T) {
 		// Cases without pattern
 		{"valid no pattern", "8.8.8.8", nil, true},
 		{"valid partial no pattern", "1.1.1.1", nil, true},
-		{"invalid no pattern", "9.9.9.9", nil, false},
-		{"reverse lookup fails no pattern", "1.2.3.4", nil, false},
+		{"not found no pattern", "9.9.9.9", nil, true},
+		{"unknown error no pattern", "1.2.3.4", nil, false},
 
 		// Cases with pattern
 		{"valid match", "8.8.8.8", p(`.*\.google$`), true},
 		{"valid no match", "8.8.8.8", p(`\.com$`), false},
-		{"reverse lookup fails with pattern", "9.9.9.9", p(".*"), false},
+		{"not found with pattern", "9.9.9.9", p(".*"), false},
+		{"unknown error with pattern", "1.2.3.4", p(".*"), false},
 		{"invalid pattern", "8.8.8.8", p(`[`), false},
 	}
 	for _, tt := range tests {

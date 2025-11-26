@@ -107,8 +107,11 @@ func (d *Dns) VerifyFCrDNS(addr string, pattern *string) bool {
 	}
 	slog.Debug("DNS: performing FCrDNS lookup", "addr", addr, "pattern", patternVal)
 
-	var names []string
-	if names, _ = d.ReverseDNS(addr); len(names) == 0 {
+	names, err := d.ReverseDNS(addr)
+	if err != nil {
+		return false
+	}
+	if len(names) == 0 {
 		return pattern == nil // If no pattern specified, check is passed
 	}
 
