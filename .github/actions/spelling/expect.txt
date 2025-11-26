@@ -195,6 +195,7 @@ lcj
 ldflags
 letsencrypt
 Lexentale
+lftp
 lfc
 lgbt
 licend
@@ -260,6 +261,7 @@ podman
 Postgre
 poststart
 prebaked
+prefixtable
 privkey
 promauto
 promhttp

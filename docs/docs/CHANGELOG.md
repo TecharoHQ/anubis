@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add function `remoteAddrInList` to expressions. Tests for remoteAddress in list of CIDR ip ranges.
 - Fix panic when validating challenges after privacy-mode browsers strip headers and the follow-up request matches an `ALLOW` threshold.
 - Expose WEIGHT rule matches as Prometheus metrics.
 - Allow more OCI registry clients [based on feedback](https://github.com/TecharoHQ/anubis/pull/1253#issuecomment-3506744184).
