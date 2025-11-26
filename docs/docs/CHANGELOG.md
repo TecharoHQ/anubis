@@ -79,6 +79,7 @@ logging:
 ```
 
 Additionally, information about [how Anubis uses each logging level](./admin/policies.mdx#log-levels) has been added to the documentation.
+
 ### DNS Features
 
 - CEL expressions for:
