@@ -6,7 +6,12 @@ $`npm run assets`;
     "ppc64le",
     "riscv64",
 ].forEach(goarch => {
-    [deb, rpm, tarball].forEach(method => method.build({
+    [
+        apk,
+        deb,
+        rpm,
+        tarball,
+    ].forEach(method => method.build({
         name: "anubis",
         description: "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
         homepage: "https://anubis.techaro.lol",
@@ -19,11 +24,19 @@ $`npm run assets`;
             "./data/botPolicies.yaml": "botPolicies.yaml",
         },
 
-        build: ({ bin, etc, systemd, doc }) => {
+        build: ({ bin, etc, systemd, openrc, doc }) => {
             $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/anubis`;
             $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/robots2policy`;
 
-            file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
+            if (systemd) {
+                file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
+            }
+
+            if (openrc) {
+                file.install("./run/openrc/anubis.initd", `${openrc.initd}/anubis`)
+                file.install("./run/openrc/anubis.confd", `${openrc.confd}/anubis`)
+            }
+
             file.install("./run/default.env", `${etc}/default.env`);
 
             $`mkdir -p ${doc}/docs`
