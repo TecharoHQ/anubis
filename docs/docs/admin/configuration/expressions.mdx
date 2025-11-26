@@ -356,7 +356,7 @@ function verifyFCrDNS(ip: string, pattern: string): bool;
 `verifyFCrDNS` checks if the reverse DNS of an IP address matches its forward DNS. This is a common technique to filter out spam and bot traffic. `verifyFCrDNS` comes in two forms:
 
 - `verifyFCrDNS(remoteAddress)` will check that the reverse DNS of the remote address resolves back to the remote address. If no PTR records, returns true.
-- `verifyFCrDNS(remoteAddress, pattren)` will check that the reverse DNS of the remote address is matching with pattern and that name resolves back to the remote address.
+- `verifyFCrDNS(remoteAddress, pattern)` will check that the reverse DNS of the remote address is matching with pattern and that name resolves back to the remote address.
 
 This is best used in rules like this:
 

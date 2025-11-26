@@ -14,7 +14,6 @@ apnic
 APNICRANDNETAU
 Applebot
 archlinux
-Arpa
 arpa
 asnc
 asnchecker
@@ -113,6 +112,7 @@ Factset
 fahedouch
 fastcgi
 FCr
+fcrdns
 fediverse
 ffprobe
 financials
@@ -162,7 +162,6 @@ hostable
 htmlc
 htmx
 httpdebug
-Huawei
 huawei
 hypertext
 iaskspider
@@ -356,6 +355,7 @@ valkey
 Varis
 Velen
 vendored
+verify
 vhosts
 vkbot
 VKE
@@ -373,7 +373,6 @@ wildbase
 withthothmock
 wolfbeast
 wordpress
-Workaround
 workaround
 workdir
 wpbot
