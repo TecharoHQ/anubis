@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecate `report_as` in challenge configuration
 
-Previously Anubis let you lie to users about the difficulty of a challenge to interfere with operators of malicious scrapers as a psyops attack:
+Previously Anubis let you lie to users about the difficulty of a challenge to interfere with operators of malicious scrapers as a psychological attack:
 
 ```yaml
 bots:
@@ -42,9 +42,24 @@ bots:
       algorithm: slow # intentionally waste CPU cycles and time
 ```
 
-This has turned out to be a bad idea and has been removed.
+This has turned out to be a bad idea because it has caused massive user experience problems and has been removed. If you are using this setting, you will get a warning in your logs like this:
 
-If you are using this setting, you will get a warning in your logs. To remove this warning, remove this setting from your policy file.
+```json
+{
+  "time": "2025-11-25T23:10:31.092201549-05:00",
+  "level": "WARN",
+  "source": {
+    "function": "github.com/TecharoHQ/anubis/lib/policy.ParseConfig",
+    "file": "/home/xe/code/TecharoHQ/anubis/lib/policy/policy.go",
+    "line": 201
+  },
+  "msg": "use of deprecated report_as setting detected, please remove this from your policy file when possible",
+  "at": "config-validate",
+  "name": "mild-suspicion"
+}
+```
+
+To remove this warning, remove this setting from your policy file.
 
 ### Logging customization
 
