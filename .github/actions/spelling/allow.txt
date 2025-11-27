@@ -11,3 +11,4 @@ tencent
 maintnotifications
 azurediamond
 cooldown
+verifyfcrdns
