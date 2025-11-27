@@ -156,3 +156,68 @@ server {
 ```
 
 </details>
+
+## Caddy
+
+Anubis can be used with the [`forward_auth`](https://caddyserver.com/docs/caddyfile/directives/forward_auth) directive in Caddy.
+
+First, the `TARGET` environment variable in Anubis must be set to a space, eg:
+
+<Tabs>
+  <TabItem value="env-file" label="Environment file" default>
+
+```shell
+# anubis.env
+
+TARGET=" "
+# ...
+```
+
+  </TabItem>
+  <TabItem value="docker-compose" label="Docker Compose">
+
+```yaml
+services:
+  anubis-caddy:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      TARGET: " "
+      # ...
+```
+
+  </TabItem>
+  <TabItem value="k8s" label="Kubernetes">
+
+Inside your Deployment, StatefulSet, or Pod:
+
+```yaml
+- name: anubis
+  image: ghcr.io/techarohq/anubis:latest
+  env:
+    - name: TARGET
+      value: " "
+    # ...
+```
+
+  </TabItem>
+</Tabs>
+
+Then configure the necessary directives in your site block:
+
+```caddy
+route {
+    # Assumption: Anubis is running in the same network namespace as
+    # caddy on localhost TCP port 8923
+    reverse_proxy /.within.website/* 127.0.0.1:8923
+    forward_auth 127.0.0.1:8923 {
+        uri /.within.website/x/cmd/anubis/api/check
+        trusted_proxies private_ranges
+        @unauthorized status 401
+        handle_response @unauthorized {
+            redir * /.within.website/?redir={uri} 307
+        }
+    }
+}
+```
+
+If you want to use this for multiple sites, you can create a [snippet](https://caddyserver.com/docs/caddyfile/concepts#snippets) and import it in multiple site blocks.
