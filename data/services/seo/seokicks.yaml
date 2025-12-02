@@ -1,0 +1,8 @@
+# SEOkicks is a German commercial SEO company.
+#
+# Website: https://www.seokicks.de
+# Crawler info: https://www.seokicks.de/robot.html
+
+- name: seokicks
+  user_agent_regex: SEOkicks
+  action: DENY
