@@ -16,6 +16,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/honeypot/naive"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/config"
@@ -174,6 +175,9 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
+
+	bsgen := naive.New(result.store, result.logger)
+	registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", bsgen, http.MethodGet)
 
 	//goland:noinspection GoBoolExpressions
 	if anubis.Version == "devel" {
