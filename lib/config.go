@@ -179,6 +179,26 @@ func New(opts Options) (*Server, error) {
 	bsgen, err := naive.New(result.store, result.logger)
 	if err == nil {
 		registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", bsgen, http.MethodGet)
+
+		opts.Policy.Bots = append(
+			opts.Policy.Bots,
+			policy.Bot{
+				Rules:  bsgen.CheckNetwork(),
+				Action: config.RuleWeigh,
+				Weight: &config.Weight{
+					Adjust: 30,
+				},
+				Name: "honeypot/network",
+			},
+			policy.Bot{
+				Rules:  bsgen.CheckUA(),
+				Action: config.RuleWeigh,
+				Weight: &config.Weight{
+					Adjust: 30,
+				},
+				Name: "honeypot/user-agent",
+			},
+		)
 	} else {
 		result.logger.Error("can't init honeypot subsystem", "err", err)
 	}

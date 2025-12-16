@@ -1,16 +1,17 @@
 package naive
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
 	"net/http"
-	"net/netip"
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/honeypot"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -53,21 +54,65 @@ func New(st store.Interface, lg *slog.Logger) (*Impl, error) {
 	lg.Debug("initialized basic bullshit generator", "affirmations", affirmation.Count(), "bodies", body.Count(), "titles", title.Count())
 
 	return &Impl{
-		st:          st,
-		infos:       store.JSON[honeypot.Info]{Underlying: st, Prefix: "honeypot-infos"},
-		affirmation: affirmation,
-		body:        body,
-		title:       title,
-		lg:          lg.With("component", "honeypot/naive"),
+		st:            st,
+		infos:         store.JSON[honeypot.Info]{Underlying: st, Prefix: "honeypot:info"},
+		uaWeight:      store.JSON[int]{Underlying: st, Prefix: "honeypot:user-agent"},
+		networkWeight: store.JSON[int]{Underlying: st, Prefix: "honeypot:network"},
+		affirmation:   affirmation,
+		body:          body,
+		title:         title,
+		lg:            lg.With("component", "honeypot/naive"),
 	}, nil
 }
 
 type Impl struct {
-	st    store.Interface
-	infos store.JSON[honeypot.Info]
-	lg    *slog.Logger
+	st            store.Interface
+	infos         store.JSON[honeypot.Info]
+	uaWeight      store.JSON[int]
+	networkWeight store.JSON[int]
+	lg            *slog.Logger
 
 	affirmation, body, title spintax.Spintax
+}
+
+func (i *Impl) incrementUA(ctx context.Context, userAgent string) int {
+	result, _ := i.uaWeight.Get(ctx, internal.SHA256sum(userAgent))
+	result++
+	i.uaWeight.Set(ctx, internal.SHA256sum(userAgent), result, time.Hour)
+	return result
+}
+
+func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
+	result, _ := i.networkWeight.Get(ctx, internal.SHA256sum(network))
+	result++
+	i.networkWeight.Set(ctx, internal.SHA256sum(network), result, time.Hour)
+	return result
+}
+
+func (i *Impl) CheckUA() checker.Impl {
+	return checker.Func(func(r *http.Request) (bool, error) {
+		result, _ := i.uaWeight.Get(r.Context(), internal.SHA256sum(r.UserAgent()))
+		if result >= 25 {
+			return true, nil
+		}
+
+		return false, nil
+	})
+}
+
+func (i *Impl) CheckNetwork() checker.Impl {
+	return checker.Func(func(r *http.Request) (bool, error) {
+		result, _ := i.uaWeight.Get(r.Context(), internal.SHA256sum(r.UserAgent()))
+		if result >= 25 {
+			return true, nil
+		}
+
+		return false, nil
+	})
+}
+
+func (i *Impl) Hash() string {
+	return internal.SHA256sum("naive honeypot")
 }
 
 func (i *Impl) makeAffirmations() []string {
@@ -96,30 +141,9 @@ func (i *Impl) makeTitle() string {
 	return i.title.Spin()
 }
 
-func (i *Impl) clampIP(addr netip.Addr) netip.Prefix {
-	fallback := netip.MustParsePrefix(addr.String() + "/32")
-	switch {
-	case addr.Is4() || addr.Is4In6():
-		result, err := addr.Prefix(24)
-		if err != nil {
-			return fallback
-		}
-		return result
-
-	case addr.Is6():
-		result, err := addr.Prefix(48)
-		if err != nil {
-			return fallback
-		}
-		return result
-
-	default:
-		return fallback
-	}
-}
-
 func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
+	lg := internal.GetRequestLogger(i.lg, r)
 
 	id := r.PathValue("id")
 	if id == "" {
@@ -128,42 +152,31 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	realIP, _ := internal.RealIP(r)
 	if !realIP.IsValid() {
-		i.lg.Error("the real IP is somehow invalid, bad middleware stack?")
+		lg.Error("the real IP is somehow invalid, bad middleware stack?")
 		http.Error(w, "The cake is a lie", http.StatusTeapot)
 		return
 	}
 
-	network := i.clampIP(realIP)
+	network, ok := internal.ClampIP(realIP)
+	if !ok {
+		lg.Error("clampIP failed", "output", network, "ok", ok)
+		http.Error(w, "The cake is a lie", http.StatusTeapot)
+		return
+	}
+
+	networkCount := i.incrementNetwork(r.Context(), network.String())
+	uaCount := i.incrementUA(r.Context(), r.UserAgent())
 
 	stage := r.PathValue("stage")
 
-	var info honeypot.Info
-	var err error
-
 	if stage == "init" {
-		i.lg.Debug("found new entrance point", "id", id, "userAgent", r.UserAgent(), "clampedIP", network)
-
-		info = honeypot.Info{
-			CreatedAt: time.Now(),
-			UserAgent: r.UserAgent(),
-			IPAddress: realIP.String(),
-			HitCount:  1,
-		}
-
-		i.infos.Set(r.Context(), network.String(), info, time.Hour)
+		lg.Debug("found new entrance point", "id", id, "stage", stage, "userAgent", r.UserAgent(), "clampedIP", network)
 	} else {
-		info, err = i.infos.Get(r.Context(), network.String())
-		if err != nil {
-			info = honeypot.Info{
-				CreatedAt: time.Now(),
-				UserAgent: r.UserAgent(),
-				IPAddress: realIP.String(),
-				HitCount:  1,
-			}
-			i.infos.Set(r.Context(), network.String(), info, time.Hour)
-		} else {
-			info.HitCount++
-			i.infos.Set(r.Context(), network.String(), info, time.Hour)
+		if networkCount >= 50 && networkCount%256 == 0 {
+			lg.Warn("found possible crawler", "id", id)
+		}
+		if uaCount >= 50 && uaCount%256 == 0 {
+			lg.Warn("found possible crawler", "id", id)
 		}
 	}
 
