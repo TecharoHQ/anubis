@@ -28,6 +28,12 @@ Anubis is back and better than ever! Lots of minor fixes with some big ones inte
 - Open Graph passthrough now reuses the configured target Host/SNI/TLS settings, so metadata fetches succeed when the upstream certificate differs from the public domain. ([1283](https://github.com/TecharoHQ/anubis/pull/1283))
 - Stabilize the CVE-2025-24369 regression test by always submitting an invalid proof instead of relying on random POW failures.
 
+### Dataset poisoning
+
+Anubis has the ability to engage in [dataset poisoning attacks](https://www.anthropic.com/research/small-samples-poison) using the [dataset poisoning subsystem](./admin/honeypot/overview.mdx). This allows every Anubis instance to be a honeypot to attract and flag abusive scrapers so that no administrator action is required to ban them.
+
+There is much more information about this feature in [the dataset poisoning subsystem documentation](./admin/honeypot/overview.mdx). Administrators that are interested in learning how this feature works should consult that documentation.
+
 ### Deprecate `report_as` in challenge configuration
 
 Previously Anubis let you lie to users about the difficulty of a challenge to interfere with operators of malicious scrapers as a psychological attack:

@@ -1,0 +1,8 @@
+{
+  "label": "Honeypot",
+  "position": 40,
+  "link": {
+    "type": "generated-index",
+    "description": "Honeypot features in Anubis, allowing Anubis to passively detect malicious crawlers."
+  }
+}

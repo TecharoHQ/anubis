@@ -172,11 +172,9 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if stage == "init" {
 		lg.Debug("found new entrance point", "id", id, "stage", stage, "userAgent", r.UserAgent(), "clampedIP", network)
 	} else {
-		if networkCount >= 50 && networkCount%256 == 0 {
-			lg.Warn("found possible crawler", "id", id)
-		}
-		if uaCount >= 50 && uaCount%256 == 0 {
-			lg.Warn("found possible crawler", "id", id)
+		switch {
+		case networkCount%256 == 0, uaCount%256 == 0:
+			lg.Warn("found possible crawler", "id", id, "network", network)
 		}
 	}
 

@@ -12,3 +12,6 @@ maintnotifications
 azurediamond
 cooldown
 verifyfcrdns
+Spintax
+spintax
+clampip
