@@ -176,14 +176,14 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
-	bsgen, err := naive.New(result.store, result.logger)
+	mazeGen, err := naive.New(result.store, result.logger)
 	if err == nil {
-		registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", bsgen, http.MethodGet)
+		registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
 
 		opts.Policy.Bots = append(
 			opts.Policy.Bots,
 			policy.Bot{
-				Rules:  bsgen.CheckNetwork(),
+				Rules:  mazeGen.CheckNetwork(),
 				Action: config.RuleWeigh,
 				Weight: &config.Weight{
 					Adjust: 30,
@@ -191,7 +191,7 @@ func New(opts Options) (*Server, error) {
 				Name: "honeypot/network",
 			},
 			policy.Bot{
-				Rules:  bsgen.CheckUA(),
+				Rules:  mazeGen.CheckUA(),
 				Action: config.RuleWeigh,
 				Weight: &config.Weight{
 					Adjust: 30,
