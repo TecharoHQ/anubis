@@ -176,8 +176,12 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
-	bsgen := naive.New(result.store, result.logger)
-	registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", bsgen, http.MethodGet)
+	bsgen, err := naive.New(result.store, result.logger)
+	if err == nil {
+		registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", bsgen, http.MethodGet)
+	} else {
+		result.logger.Error("can't init honeypot subsystem", "err", err)
+	}
 
 	//goland:noinspection GoBoolExpressions
 	if anubis.Version == "devel" {

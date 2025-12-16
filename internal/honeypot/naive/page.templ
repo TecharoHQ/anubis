@@ -30,7 +30,7 @@ templ (i Impl) maze(body []string, links []link) {
 	}
 	<ul>
 		for _, link := range links {
-			<li><a href={ templ.SafeURL(fmt.Sprintf("./%s", link.href)) }></a>{ link.body }</li>
+			<li><a href={ templ.SafeURL(fmt.Sprintf("./%s", link.href)) }>{ link.body }</a></li>
 		}
 	</ul>
 }

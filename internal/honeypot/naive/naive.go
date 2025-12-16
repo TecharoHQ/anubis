@@ -2,16 +2,19 @@ package naive
 
 import (
 	_ "embed"
+	"fmt"
 	"log/slog"
 	"math/rand/v2"
 	"net/http"
+	"net/netip"
 	"time"
 
+	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/honeypot"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
-	"github.com/m1/gospin"
+	"github.com/nikandfor/spintax"
 )
 
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
@@ -31,52 +34,88 @@ var titles string
 //go:embed affirmations.txt
 var affirmations string
 
-func New(st store.Interface, lg *slog.Logger) *Impl {
-	spin := gospin.New(nil)
+func New(st store.Interface, lg *slog.Logger) (*Impl, error) {
+	affirmation, err := spintax.Parse(affirmations)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse affirmations: %w", err)
+	}
+
+	body, err := spintax.Parse(spintext)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse bodies: %w", err)
+	}
+
+	title, err := spintax.Parse(titles)
+	if err != nil {
+		return nil, fmt.Errorf("can't parse titles: %w", err)
+	}
+
+	lg.Debug("initialized basic bullshit generator", "affirmations", affirmation.Count(), "bodies", body.Count(), "titles", title.Count())
 
 	return &Impl{
-		st:    st,
-		infos: store.JSON[honeypot.Info]{Underlying: st, Prefix: "honeypot-infos"},
-		spin:  spin,
-		lg:    lg.With("component", "honeypot/naive"),
-	}
+		st:          st,
+		infos:       store.JSON[honeypot.Info]{Underlying: st, Prefix: "honeypot-infos"},
+		affirmation: affirmation,
+		body:        body,
+		title:       title,
+		lg:          lg.With("component", "honeypot/naive"),
+	}, nil
 }
 
 type Impl struct {
 	st    store.Interface
 	infos store.JSON[honeypot.Info]
-	spin  *gospin.Spinner
 	lg    *slog.Logger
+
+	affirmation, body, title spintax.Spintax
 }
 
 func (i *Impl) makeAffirmations() []string {
-	result, err := i.spin.SpinN(affirmations, rand.IntN(5)+1)
-	if err != nil {
-		i.lg.Debug("can't spin affirmations, using fallback", "err", err)
-		return []string{uuid.NewString()}
+	count := rand.IntN(5) + 1
+
+	var result []string
+	for j := 0; j < count; j++ {
+		result = append(result, i.affirmation.Spin())
 	}
 
 	return result
 }
 
 func (i *Impl) makeSpins() []string {
-	result, err := i.spin.SpinN(spintext, rand.IntN(8)+8)
-	if err != nil {
-		i.lg.Debug("can't spin text, using fallback", "err", err)
-		return []string{uuid.NewString()}
+	count := rand.IntN(5) + 1
+
+	var result []string
+	for j := 0; j < count; j++ {
+		result = append(result, i.body.Spin())
 	}
 
 	return result
 }
 
 func (i *Impl) makeTitle() string {
-	result, err := i.spin.Spin(titles)
-	if err != nil {
-		i.lg.Debug("can't spin titles, using fallback", "err", err)
-		return uuid.NewString()
-	}
+	return i.title.Spin()
+}
 
-	return result
+func (i *Impl) clampIP(addr netip.Addr) netip.Prefix {
+	fallback := netip.MustParsePrefix(addr.String() + "/32")
+	switch {
+	case addr.Is4() || addr.Is4In6():
+		result, err := addr.Prefix(24)
+		if err != nil {
+			return fallback
+		}
+		return result
+
+	case addr.Is6():
+		result, err := addr.Prefix(48)
+		if err != nil {
+			return fallback
+		}
+		return result
+
+	default:
+		return fallback
+	}
 }
 
 func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -87,9 +126,45 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		id = uuid.NewString()
 	}
 
+	realIP, _ := internal.RealIP(r)
+	if !realIP.IsValid() {
+		i.lg.Error("the real IP is somehow invalid, bad middleware stack?")
+		http.Error(w, "The cake is a lie", http.StatusTeapot)
+		return
+	}
+
+	network := i.clampIP(realIP)
+
 	stage := r.PathValue("stage")
+
+	var info honeypot.Info
+	var err error
+
 	if stage == "init" {
-		i.lg.Debug("found new entrance point", "id", id, "userAgent", r.UserAgent(), "ip", r.Header.Get("X-Real-Ip"))
+		i.lg.Debug("found new entrance point", "id", id, "userAgent", r.UserAgent(), "clampedIP", network)
+
+		info = honeypot.Info{
+			CreatedAt: time.Now(),
+			UserAgent: r.UserAgent(),
+			IPAddress: realIP.String(),
+			HitCount:  1,
+		}
+
+		i.infos.Set(r.Context(), network.String(), info, time.Hour)
+	} else {
+		info, err = i.infos.Get(r.Context(), network.String())
+		if err != nil {
+			info = honeypot.Info{
+				CreatedAt: time.Now(),
+				UserAgent: r.UserAgent(),
+				IPAddress: realIP.String(),
+				HitCount:  1,
+			}
+			i.infos.Set(r.Context(), network.String(), info, time.Hour)
+		} else {
+			info.HitCount++
+			i.infos.Set(r.Context(), network.String(), info, time.Hour)
+		}
 	}
 
 	spins := i.makeSpins()
