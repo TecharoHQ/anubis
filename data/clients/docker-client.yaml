@@ -58,3 +58,10 @@
     all:
       - path.startsWith("/v2/")
       - userAgent.contains("Renovate/")
+
+- name: allow-skopeo
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/v2/")
+      - userAgent.contains("skopeo/")
