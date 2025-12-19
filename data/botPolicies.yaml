@@ -134,7 +134,10 @@ bots:
       adjust: -5
 
   - name: should-have-accept
-    expression: '!("Accept" in headers)'
+    expression:
+      all:
+        - userAgent.contains("Mozilla")
+        - '!("Accept" in headers)'
     action: WEIGH
     weight:
       adjust: 5
