@@ -102,6 +102,11 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://wiki.scummvm.org/
   </details>
 - <details>
+  <summary>Slackware</summary>
+  - https://git.slackware.nl/
+  - https://git.liveslak.org/
+  </details>
+- <details>
   <summary>Sourceware</summary>
   - https://sourceware.org/cgit
   - https://sourceware.org/glibc/wiki
@@ -109,11 +114,6 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://patchwork.sourceware.org/
   - https://gcc.gnu.org/bugzilla/
   - https://gcc.gnu.org/cgit
-  </details>
-- <details>
-  <summary>Slackware</summary>
-  - https://git.slackware.nl/
-  - https://git.liveslak.org/
   </details>
 - <details>
   <summary>The Linux Foundation</summary>
