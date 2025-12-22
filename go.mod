@@ -1,6 +1,6 @@
 module github.com/TecharoHQ/anubis
 
-go 1.24.2
+go 1.25.0
 
 require (
 	github.com/TecharoHQ/thoth-proto v0.5.0
@@ -32,7 +32,7 @@ require (
 	golang.org/x/text v0.32.0
 	google.golang.org/grpc v1.77.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.34.3
+	k8s.io/apimachinery v0.35.0
 	sigs.k8s.io/yaml v1.6.0
 )
 
