@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-<!-- This changes the project to: -->
+- Bump minimum Go version to 1.25.5.
 
 ## v1.24.0 [pre1]: Y'shtola Rhul
 
