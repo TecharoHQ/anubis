@@ -4,13 +4,13 @@ title: List of known websites using Anubis
 
 This page contains a non-exhaustive list with all websites using Anubis.
 
-- http://code.hackerspace.pl/
 - https://azurlane.koumakan.jp/
 - https://bugs.winehq.org/
 - https://bugzilla.proxmox.com
 - https://canine.tools/
 - https://catgirl.click/
 - https://clew.se/
+- https://code.hackerspace.pl/
 - https://codeberg.org/
 - https://coinhoards.org/
 - https://dev.haiku-os.org
