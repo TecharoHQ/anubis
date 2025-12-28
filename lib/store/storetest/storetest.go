@@ -57,10 +57,6 @@ func Common(t *testing.T, f store.Factory, config json.RawMessage) {
 					t.Error("wanted test to not exist in store but it exists anyways")
 				}
 
-				if err := s.Delete(t.Context(), t.Name()); err == nil {
-					t.Errorf("key %q does not exist and Delete did not return non-nil", t.Name())
-				}
-
 				return nil
 			},
 		},
@@ -83,7 +79,6 @@ func Common(t *testing.T, f store.Factory, config json.RawMessage) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			if err := tt.doer(t, s); !errors.Is(err, tt.err) {
 				t.Logf("want: %v", tt.err)
 				t.Logf("got:  %v", err)

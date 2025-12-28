@@ -27,7 +27,7 @@ type impl struct {
 }
 
 func (i *impl) Delete(_ context.Context, key string) error {
-	if !i.store.Delete(key) {
+	if _, ok := i.store.Get(key); !ok {
 		return fmt.Errorf("%w: %q", store.ErrNotFound, key)
 	}
 

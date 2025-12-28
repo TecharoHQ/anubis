@@ -64,22 +64,19 @@ func (m *Impl[K, V]) expire(key K) bool {
 
 // Delete a value from the DecayMap by key.
 //
+// This defers deletions to a background thread for performance reasons.
+//
 // If the value does not exist, return false. Return true after
 // deletion.
 func (m *Impl[K, V]) Delete(key K) bool {
-	// Use a single write lock to avoid RUnlock->Lock convoy.
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	value, ok := m.data[key]
-	if ok {
-		select {
-		// Defer decay deletion to the background worker to avoid convoy.
-		case m.deleteCh <- deleteReq[K]{key: key, expiry: value.expiry}:
-		default:
-			// Channel full: drop request; a future Cleanup() or Get will retry.
-		}
+	select {
+	// Defer decay deletion to the background worker to avoid convoy.
+	case m.deleteCh <- deleteReq[K]{key: key, expiry: time.Now().Add(-1 * time.Second)}:
+		return m.expire(key)
+	default:
+		// Channel full: drop request; a future Cleanup() or Get will retry.
+		return true
 	}
-	return ok
 }
 
 // Get gets a value from the DecayMap by key.
