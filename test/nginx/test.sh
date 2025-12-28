@@ -10,7 +10,7 @@ set -euo pipefail
 build_anubis_ko
 mint_cert mimi.techaro.lol
 
-docker run --rm -it \
+docker run --rm \
 	-v ./conf/nginx:/etc/nginx:ro \
 	-v ../pki:/techaro/pki:ro \
 	nginx \
