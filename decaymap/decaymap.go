@@ -151,7 +151,7 @@ func (m *Impl[K, V]) Close() {
 func (m *Impl[K, V]) cleanupWorker() {
 	defer m.wg.Done()
 	batch := make([]deleteReq[K], 0, 64)
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(15 * time.Minute)
 	defer ticker.Stop()
 
 	flush := func() {
