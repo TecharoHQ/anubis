@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
+- Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309)).
+- Expose [pprof endpoints](https://pkg.go.dev/net/http/pprof) on the metrics listener to enable profiling Anubis in production.
 
 <!-- This changes the project to: -->
 
