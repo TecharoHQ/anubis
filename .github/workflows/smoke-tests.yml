@@ -23,6 +23,7 @@ jobs:
           - healthcheck
           - i18n
           - log-file
+          - nginx
           - palemoon/amd64
           #- palemoon/i386
           - robots_txt
@@ -35,10 +36,10 @@ jobs:
 
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
-          node-version: '24.11.0'
+          node-version: "24.11.0"
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
-          go-version: '1.25.4'
+          go-version: "1.25.4"
 
       - uses: ko-build/setup-ko@d006021bd0c28d1ce33a07e7943d48b079944c8d # v0.9
 
