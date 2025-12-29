@@ -7,7 +7,6 @@ source ../lib/lib.sh
 
 set -euo pipefail
 
-build_anubis_ko
 mint_cert mimi.techaro.lol
 
 docker run --rm \
@@ -15,10 +14,5 @@ docker run --rm \
 	-v ../pki:/techaro/pki:ro \
 	nginx \
 	nginx -t
-
-docker compose up -d
-
-docker compose down -t 1 || :
-docker compose rm -f || :
 
 exit 0

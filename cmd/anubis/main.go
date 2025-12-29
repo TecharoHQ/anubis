@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
@@ -541,6 +542,12 @@ func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
 			return
 		}
 	})
+
+	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
 
 	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
