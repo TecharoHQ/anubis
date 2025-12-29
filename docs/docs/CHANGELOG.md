@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The memory store now decays values every 15 minutes instead of every 10 milliseconds.
 - Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
 
 <!-- This changes the project to: -->
