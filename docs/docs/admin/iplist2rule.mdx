@@ -1,0 +1,50 @@
+---
+title: iplist2rule CLI tool
+---
+
+The `iplist2rule` tool converts IP blocklists into Anubis challenge policies. It reads common IP block list formats and generates the appropriate Anubis policy file for IP address filtering.
+
+## Installation
+
+Install directly with Go
+
+```bash
+go install github.com/TecharoHQ/anubis/utils/cmd/iplist2rule@latest
+```
+
+## Usage
+
+Basic conversion from URL:
+
+```bash
+iplist2rule https://raw.githubusercontent.com/7c/torfilter/refs/heads/main/lists/txt/torfilter-1m-flat.txt filter-tor.yaml
+```
+
+Explicitly allow every IP address on a list:
+
+```bash
+iplist2rule --action ALLOW https://raw.githubusercontent.com/7c/torfilter/refs/heads/main/lists/txt/torfilter-1m-flat.txt filter-tor.yaml
+```
+
+Add weight to requests matching IP addresses on a list:
+
+```bash
+iplist2rule --action WEIGH --weight 20 https://raw.githubusercontent.com/7c/torfilter/refs/heads/main/lists/txt/torfilter-1m-flat.txt filter-tor.yaml
+```
+
+## Options
+
+| Flag          | Description                                                                                      | Default                           |
+| :------------ | :----------------------------------------------------------------------------------------------- | :-------------------------------- |
+| `--action`    | The Anubis action to take for the IP address in question, must be in ALL CAPS.                   | `DENY` (forbids traffic)          |
+| `--rule-name` | The name for the generated Anubis rule, should be in kebab-case.                                 | (not set, inferred from filename) |
+| `--weight`    | When `--action=WEIGH`, how many weight points should be added or removed from matching requests? | 0 (not set)                       |
+
+## Using the Generated Policy
+
+Save the output and import it in your main policy file:
+
+```yaml
+bots:
+  - import: "./filter-tor.yaml"
+```

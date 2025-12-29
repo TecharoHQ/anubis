@@ -25,15 +25,19 @@ func init() {
 	flag.Usage = func() {
 		fmt.Printf(`Usage of %[1]s:
 
-	%[1]s [--action=DENY|ALLOW] [--rule-name=] <blocklist-url> <filename>
+	%[1]s [flags] <blocklist-url> <filename>
 
 Grabs the contents of the blocklist, converts it to an Anubis ruleset, and writes it to filename.
+
+Flags:
 `, filepath.Base(os.Args[0]))
+
+		flag.PrintDefaults()
 	}
 }
 
 var (
-	action         = flag.String("action", "DENY", "Anubis action to take (ALLOW / DENY)")
+	action         = flag.String("action", "DENY", "Anubis action to take (ALLOW / DENY / WEIGH)")
 	manualRuleName = flag.String("rule-name", "", "If set, prefer this name over inferring from filename")
 	weight         = flag.Int("weight", 0, "If set to any number, add/subtract this many weight points when --action=WEIGH")
 )
