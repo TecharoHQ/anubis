@@ -14,7 +14,7 @@ services:
     ports:
       - 3004:3004
     volumes:
-      - ../pki/registry.local.cetacean.club:/etc/techaro/pki/registry.local.cetacean.club
+      - ./pki/registry.local.cetacean.club:/etc/techaro/pki/registry.local.cetacean.club
 
   anubis:
     image: ko.local/anubis
