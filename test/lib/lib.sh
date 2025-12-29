@@ -1,6 +1,13 @@
 REPO_ROOT=$(git rev-parse --show-toplevel)
 (cd $REPO_ROOT && go install ./utils/cmd/...)
 
+if [ -z "${GITHUB_COMMIT}" ]; then
+	GITHUB_COMMIT="local"
+fi
+
+export KO_DOCKER_REPO=ko.local
+export VERSION=$GITHUB_COMMIT-test
+
 mkdir -p pki
 echo '*' >>./pki/.gitignore
 
