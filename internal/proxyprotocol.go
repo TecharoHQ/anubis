@@ -38,7 +38,6 @@ func ProxyProtoConnContext() func(ctx context.Context, c net.Conn) context.Conte
 		ctx = context.WithValue(ctx, proxyProtocolHeaderKey{}, hdr)
 
 		v, ok := ctx.Value(proxyProtocolHeaderKey{}).(proxyproto.Header)
-		println(v.DestinationAddr)
 		return ctx
 	}
 }
