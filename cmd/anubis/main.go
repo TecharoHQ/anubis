@@ -79,6 +79,7 @@ var (
 	proxyProtocolAllowedCIDRs      = flag.String("proxy-protocol-allowed-cidrs", "", "List of CIDRs or IPs seperated by commas from which to accept Proxy Headers to fill in the servers information about the requests source address")
 	proxyProtocolPolicy            = flag.String("proxy-protocol-policy", "", "The Policy to be used if the Connection doesn't come from allowed cidrs, possible: IGNORE, REJECT, IGNORE ignores the proxy headers, REJECT rejects the whole connection")
 	proxyProtocolReadHeaderTimeout = flag.Duration("proxy-protocol-read-header-timeout", 5*time.Second, "The Duration in which the ProxyHeaders should be received, if Proxy Protocol IGNORE is set to let traffic without Proxy Protcol Headers pass through this should be set lower")
+	proxyProtocolSendVersion       = flag.String("proxy-protocol-send-version", "", "The Version of Proxy Protocol and if to send to the target, possible values: v1, v2")
 	debugBenchmarkJS               = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
 	ogPassthrough                  = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
 	ogTimeToLive                   = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
@@ -499,7 +500,7 @@ func main() {
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
 	h = internal.JA4H(h)
-	h = internal.ProxyProtocol(*useProxyProtocol, h)
+	h = internal.ProxyProtocol(*useProxyProtocol, *proxyProtocolSendVersion, h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)

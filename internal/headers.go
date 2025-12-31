@@ -62,8 +62,8 @@ func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.
 	})
 }
 
-// ProxyProtocol sets the X-Real-Ip header to the request's real IP set from Proxy Protocol Headers
-func ProxyProtocol(useProxyProtocol bool, next http.Handler) http.Handler {
+// ProxyProtocol sets the X-Real-Ip header to the request's real IP set from Proxy Protocol Headers also it sets the request context with proxyProtocolInfo to send Proxy Protocol Heaaders
+func ProxyProtocol(useProxyProtocol bool, sendProxyProtocol string, next http.Handler) http.Handler {
 	if !useProxyProtocol {
 		slog.Debug("skipping middleware, useProxyProtocol is empty")
 		return next
@@ -84,11 +84,34 @@ func ProxyProtocol(useProxyProtocol bool, next http.Handler) http.Handler {
 		host, _, err := net.SplitHostPort(hdr.SourceAddr.String())
 		if err == nil {
 			r.Header.Set("X-Real-Ip", host)
-			if addr, err := netip.ParseAddr(host); err == nil {
+			if addr, err := netip.ParseAddrPort(host); err == nil {
 				r = r.WithContext(
-					context.WithValue(r.Context(), realIPKey{}, addr),
+					context.WithValue(r.Context(), proxyProtocolInfoKey{}, ProxyProtocolInfo{
+						AddrPort: addr,
+					}),
 				)
+
 			}
+		}
+		// stolen from caddyserver :)
+		if sendProxyProtocol != "" {
+			address := r.Header.Get("X-Real-Ip")
+			addrPort, err := netip.ParseAddrPort(address)
+			if err != nil {
+				// OK; probably didn't have a port
+				addr, err := netip.ParseAddr(address)
+				if err != nil {
+					// Doesn't seem like a valid ip address at all
+				} else {
+					// Ok, only the port was missing
+					addrPort = netip.AddrPortFrom(addr, 0)
+				}
+			}
+			r = r.WithContext(
+				context.WithValue(r.Context(), proxyProtocolInfoKey{}, ProxyProtocolInfo{
+					AddrPort: addrPort,
+				}),
+			)
 		}
 
 		next.ServeHTTP(w, r)
