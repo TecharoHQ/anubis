@@ -16,9 +16,9 @@ func ProxyProtocolUsed(ctx context.Context) bool {
 
 type proxyProtocolHeaderKey struct{}
 
-func ProxyProtocolHeader(ctx context.Context) (proxyproto.Header, bool) {
-	v, ok := ctx.Value(proxyProtocolUsedKey{}).(proxyproto.Header)
-	return v, ok
+func ProxyProtocolHeader(ctx context.Context) (*proxyproto.Header, bool) {
+	h, ok := ctx.Value(proxyProtocolHeaderKey{}).(*proxyproto.Header)
+	return h, ok
 }
 
 func ProxyProtoConnContext() func(ctx context.Context, c net.Conn) context.Context {
@@ -37,6 +37,8 @@ func ProxyProtoConnContext() func(ctx context.Context, c net.Conn) context.Conte
 
 		ctx = context.WithValue(ctx, proxyProtocolHeaderKey{}, hdr)
 
+		v, ok := ctx.Value(proxyProtocolHeaderKey{}).(proxyproto.Header)
+		println(v.DestinationAddr)
 		return ctx
 	}
 }
