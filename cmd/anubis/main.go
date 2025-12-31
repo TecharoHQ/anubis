@@ -214,7 +214,7 @@ func setupListener(network string, address string) (net.Listener, string) {
 	return listener, formattedAddress
 }
 
-func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool) (http.Handler, error) {
+func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool, proxyProtocolVersion string) (http.Handler, error) {
 	targetUri, err := url.Parse(target)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse target URL: %w", err)
@@ -233,11 +233,16 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 		targetUri.Path = ""
 		// tell transport how to dial unix sockets
 		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
-			dialer := net.Dialer{}
+			dialer := &net.Dialer{}
 			return dialer.DialContext(ctx, "unix", addr)
 		}
 		// tell transport how to handle the unix url scheme
 		transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
+	}
+
+	if proxyProtocolVersion != "" {
+		dialer := &net.Dialer{}
+		transport.DialContext = internal.SendProxyProtocolDialer(dialer, proxyProtocolVersion)
 	}
 
 	if insecureSkipVerify || targetSNI != "" {
@@ -318,7 +323,7 @@ func main() {
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
 		var err error
-		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify, *targetDisableKeepAlive)
+		rp, err = makeReverseProxy(*target, *targetSNI, *targetHost, *targetInsecureSkipVerify, *targetDisableKeepAlive, *proxyProtocolSendVersion)
 		if err != nil {
 			log.Fatalf("can't make reverse proxy: %v", err)
 		}
