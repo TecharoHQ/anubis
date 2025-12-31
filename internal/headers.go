@@ -62,6 +62,39 @@ func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.
 	})
 }
 
+// ProxyProtocol sets the X-Real-Ip header to the request's real IP set from Proxy Protocol Headers
+func ProxyProtocol(useProxyProtocol bool, next http.Handler) http.Handler {
+	if !useProxyProtocol {
+		slog.Debug("skipping middleware, useProxyProtocol is empty")
+		return next
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !ProxyProtocolUsed(r.Context()) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		hdr, ok := ProxyProtocolHeader(r.Context())
+		if !ok || hdr.SourceAddr == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		host, _, err := net.SplitHostPort(hdr.SourceAddr.String())
+		if err == nil {
+			r.Header.Set("X-Real-Ip", host)
+			if addr, err := netip.ParseAddr(host); err == nil {
+				r = r.WithContext(
+					context.WithValue(r.Context(), realIPKey{}, addr),
+				)
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
 // the setting is enabled by the user.
 func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {

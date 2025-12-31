@@ -37,53 +37,56 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/pires/go-proxyproto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
-	basePrefix               = flag.String("base-prefix", "", "base prefix (root URL) the application is served under e.g. /myapp")
-	bind                     = flag.String("bind", ":8923", "network address to bind HTTP to")
-	bindNetwork              = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
-	challengeDifficulty      = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
-	cookieDomain             = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
-	cookieDynamicDomain      = flag.Bool("cookie-dynamic-domain", false, "if set, automatically set the cookie Domain value based on the request domain")
-	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
-	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
-	cookiePartitioned        = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
-	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
-	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
-	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
-	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
-	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
-	cookieSameSite           = flag.String("cookie-same-site", "None", "sets the same site option on Anubis cookies, will auto-downgrade None to Lax if cookie-secure is false. Valid values are None, Lax, Strict, and Default.")
-	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
-	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
-	metricsBind              = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
-	metricsBindNetwork       = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
-	socketMode               = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
-	robotsTxt                = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
-	policyFname              = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
-	redirectDomains          = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
-	slogLevel                = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
-	stripBasePrefix          = flag.Bool("strip-base-prefix", false, "if true, strips the base prefix from requests forwarded to the target server")
-	target                   = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
-	targetSNI                = flag.String("target-sni", "", "if set, TLS handshake hostname when forwarding requests to the target, if set to auto, use Host header")
-	targetHost               = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
-	targetInsecureSkipVerify = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
-	targetDisableKeepAlive   = flag.Bool("target-disable-keepalive", false, "if true, disables HTTP keep-alive for the backend")
-	healthcheck              = flag.Bool("healthcheck", false, "run a health check against Anubis")
-	useRemoteAddress         = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
-	debugBenchmarkJS         = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
-	ogPassthrough            = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
-	ogTimeToLive             = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
-	ogCacheConsiderHost      = flag.Bool("og-cache-consider-host", false, "enable or disable the use of the host in the Open Graph tag cache")
-	extractResources         = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
-	webmasterEmail           = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
-	versionFlag              = flag.Bool("version", false, "print Anubis version")
-	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
-	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
-	customRealIPHeader       = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
+	basePrefix                = flag.String("base-prefix", "", "base prefix (root URL) the application is served under e.g. /myapp")
+	bind                      = flag.String("bind", ":8923", "network address to bind HTTP to")
+	bindNetwork               = flag.String("bind-network", "tcp", "network family to bind HTTP to, e.g. unix, tcp")
+	challengeDifficulty       = flag.Int("difficulty", anubis.DefaultDifficulty, "difficulty of the challenge")
+	cookieDomain              = flag.String("cookie-domain", "", "if set, the top-level domain that the Anubis cookie will be valid for")
+	cookieDynamicDomain       = flag.Bool("cookie-dynamic-domain", false, "if set, automatically set the cookie Domain value based on the request domain")
+	cookieExpiration          = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
+	cookiePrefix              = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
+	cookiePartitioned         = flag.Bool("cookie-partitioned", false, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	difficultyInJWT           = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
+	useSimplifiedExplanation  = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
+	forcedLanguage            = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
+	hs512Secret               = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
+	cookieSecure              = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
+	cookieSameSite            = flag.String("cookie-same-site", "None", "sets the same site option on Anubis cookies, will auto-downgrade None to Lax if cookie-secure is false. Valid values are None, Lax, Strict, and Default.")
+	ed25519PrivateKeyHex      = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
+	ed25519PrivateKeyHexFile  = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
+	metricsBind               = flag.String("metrics-bind", ":9090", "network address to bind metrics to")
+	metricsBindNetwork        = flag.String("metrics-bind-network", "tcp", "network family for the metrics server to bind to")
+	socketMode                = flag.String("socket-mode", "0770", "socket mode (permissions) for unix domain sockets.")
+	robotsTxt                 = flag.Bool("serve-robots-txt", false, "serve a robots.txt file that disallows all robots")
+	policyFname               = flag.String("policy-fname", "", "full path to anubis policy document (defaults to a sensible built-in policy)")
+	redirectDomains           = flag.String("redirect-domains", "", "list of domains separated by commas which anubis is allowed to redirect to. Leaving this unset allows any domain.")
+	slogLevel                 = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
+	stripBasePrefix           = flag.Bool("strip-base-prefix", false, "if true, strips the base prefix from requests forwarded to the target server")
+	target                    = flag.String("target", "http://localhost:3923", "target to reverse proxy to, set to an empty string to disable proxying when only using auth request")
+	targetSNI                 = flag.String("target-sni", "", "if set, TLS handshake hostname when forwarding requests to the target, if set to auto, use Host header")
+	targetHost                = flag.String("target-host", "", "if set, the value of the Host header when forwarding requests to the target")
+	targetInsecureSkipVerify  = flag.Bool("target-insecure-skip-verify", false, "if true, skips TLS validation for the backend")
+	targetDisableKeepAlive    = flag.Bool("target-disable-keepalive", false, "if true, disables HTTP keep-alive for the backend")
+	healthcheck               = flag.Bool("healthcheck", false, "run a health check against Anubis")
+	useRemoteAddress          = flag.Bool("use-remote-address", false, "read the client's IP address from the network request, useful for debugging and running Anubis on bare metal")
+	useProxyProtocol          = flag.Bool("use-proxy-protocol", false, "read the client's IP address from the proxy protocol header of an incoming connection (see https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt)")
+	proxyProtocolAllowedCIDRs = flag.String("proxy-protocol-allowed-cidrs", "", "List of CIDRs or IPs seperated by commas from which to accept Proxy Headers to fill in the servers information about the requests source address")
+	debugBenchmarkJS          = flag.Bool("debug-benchmark-js", false, "respond to every request with a challenge for benchmarking hashrate")
+	ogPassthrough             = flag.Bool("og-passthrough", false, "enable Open Graph tag passthrough")
+	ogTimeToLive              = flag.Duration("og-expiry-time", 24*time.Hour, "Open Graph tag cache expiration time")
+	ogCacheConsiderHost       = flag.Bool("og-cache-consider-host", false, "enable or disable the use of the host in the Open Graph tag cache")
+	extractResources          = flag.String("extract-resources", "", "if set, extract the static resources to the specified folder")
+	webmasterEmail            = flag.String("webmaster-email", "", "if set, displays webmaster's email on the reject page for appeals")
+	versionFlag               = flag.Bool("version", false, "print Anubis version")
+	publicUrl                 = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
+	xffStripPrivate           = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
+	customRealIPHeader        = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
 	thothInsecure        = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
@@ -430,6 +433,18 @@ func main() {
 		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
+	var proxyProtocolAllowedCIDRsList []string
+	if *proxyProtocolAllowedCIDRs != "" {
+		cidrs := strings.Split(*proxyProtocolAllowedCIDRs, ",")
+		for _, cidr := range cidrs {
+			_, _, err = net.ParseCIDR(cidr)
+			if err != nil {
+				log.Fatalf("cannot parse cidr %q: %s", cidr, err.Error())
+			}
+			proxyProtocolAllowedCIDRsList = append(proxyProtocolAllowedCIDRsList, strings.TrimSpace(cidr))
+		}
+	}
+
 	anubis.CookieName = *cookiePrefix + "-auth"
 	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
 	anubis.ForcedLanguage = *forcedLanguage
@@ -445,30 +460,31 @@ func main() {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		BasePrefix:               *basePrefix,
-		StripBasePrefix:          *stripBasePrefix,
-		Next:                     rp,
-		Policy:                   policy,
-		TargetHost:               *targetHost,
-		TargetSNI:                *targetSNI,
-		TargetInsecureSkipVerify: *targetInsecureSkipVerify,
-		ServeRobotsTXT:           *robotsTxt,
-		ED25519PrivateKey:        ed25519Priv,
-		HS512Secret:              []byte(*hs512Secret),
-		CookieDomain:             *cookieDomain,
-		CookieDynamicDomain:      *cookieDynamicDomain,
-		CookieExpiration:         *cookieExpiration,
-		CookiePartitioned:        *cookiePartitioned,
-		RedirectDomains:          redirectDomainsList,
-		Target:                   *target,
-		WebmasterEmail:           *webmasterEmail,
-		OpenGraph:                policy.OpenGraph,
-		CookieSecure:             *cookieSecure,
-		CookieSameSite:           parseSameSite(*cookieSameSite),
-		PublicUrl:                *publicUrl,
-		JWTRestrictionHeader:     *jwtRestrictionHeader,
-		Logger:                   policy.Logger.With("subsystem", "anubis"),
-		DifficultyInJWT:          *difficultyInJWT,
+		BasePrefix:                *basePrefix,
+		StripBasePrefix:           *stripBasePrefix,
+		Next:                      rp,
+		Policy:                    policy,
+		TargetHost:                *targetHost,
+		TargetSNI:                 *targetSNI,
+		TargetInsecureSkipVerify:  *targetInsecureSkipVerify,
+		ServeRobotsTXT:            *robotsTxt,
+		ED25519PrivateKey:         ed25519Priv,
+		HS512Secret:               []byte(*hs512Secret),
+		CookieDomain:              *cookieDomain,
+		CookieDynamicDomain:       *cookieDynamicDomain,
+		CookieExpiration:          *cookieExpiration,
+		CookiePartitioned:         *cookiePartitioned,
+		RedirectDomains:           redirectDomainsList,
+		ProxyProtocolAllowedCIDRs: proxyProtocolAllowedCIDRsList,
+		Target:                    *target,
+		WebmasterEmail:            *webmasterEmail,
+		OpenGraph:                 policy.OpenGraph,
+		CookieSecure:              *cookieSecure,
+		CookieSameSite:            parseSameSite(*cookieSameSite),
+		PublicUrl:                 *publicUrl,
+		JWTRestrictionHeader:      *jwtRestrictionHeader,
+		Logger:                    policy.Logger.With("subsystem", "anubis"),
+		DifficultyInJWT:           *difficultyInJWT,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
@@ -481,9 +497,21 @@ func main() {
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
 	h = internal.JA4H(h)
+	h = internal.ProxyProtocol(*useProxyProtocol, h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
+
+	if *useProxyProtocol {
+		srv.ConnContext = internal.ProxyProtoConnContext()
+		var policyFunc proxyproto.PolicyFunc
+		policyFunc = proxyproto.MustStrictWhiteListPolicy(proxyProtocolAllowedCIDRsList)
+		listener = &proxyproto.Listener{
+			Listener: listener,
+			Policy:   policyFunc,
+		}
+	}
+
 	lg.Info(
 		"listening",
 		"url", listenerUrl,
@@ -492,6 +520,7 @@ func main() {
 		"target", *target,
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
+		"use-proxy-protocol", *useProxyProtocol,
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
