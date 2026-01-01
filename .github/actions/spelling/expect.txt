@@ -73,6 +73,7 @@ Cromite
 crt
 Cscript
 daemonizing
+databento
 dayjob
 DDOS
 Debian
@@ -132,6 +133,7 @@ GHSA
 Ghz
 gipc
 gitea
+GLM
 godotenv
 goland
 gomod
@@ -232,6 +234,7 @@ nepeat
 netsurf
 nginx
 nicksnyder
+nikandfor
 nobots
 NONINFRINGEMENT
 nosleep
@@ -248,6 +251,7 @@ opengraph
 openrc
 oswald
 pag
+pagegen
 palemoon
 Pangu
 parseable
@@ -284,6 +288,7 @@ redirectscheme
 refactors
 remoteip
 reputational
+Rhul
 risc
 ruleset
 runlevels
@@ -303,6 +308,7 @@ Seo
 setsebool
 shellcheck
 shirou
+shoneypot
 shopt
 Sidetrade
 simprint
@@ -311,6 +317,7 @@ sls
 sni
 snipster
 Spambot
+spammer
 sparkline
 spyderbot
 srv
@@ -354,7 +361,6 @@ valkey
 Varis
 Velen
 vendored
-verify
 vhosts
 vkbot
 VKE
@@ -386,6 +392,7 @@ XNG
 XOB
 XOriginal
 XReal
+Y'shtola
 yae
 YAMLTo
 Yda
@@ -397,13 +404,3 @@ Zenos
 zizmor
 zombocom
 zos
-GLM
-iocaine
-nikandfor
-pagegen
-pseudoprofound
-reimagining
-Rhul
-shoneypot
-spammer
-Y'shtola
