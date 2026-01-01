@@ -3,5 +3,6 @@
 - name: qualys-ssl-labs
   action: ALLOW
   remote_addresses:
-  - 64.41.200.0/24
+  - 69.67.183.0/24
   - 2600:C02:1020:4202::/64
+  - 2602:fdaa:c6:2::/64
