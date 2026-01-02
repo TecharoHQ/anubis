@@ -95,8 +95,10 @@ func ProxyProtocol(useProxyProtocol bool, sendProxyProtocol string, next http.Ha
 		}
 		// stolen from caddyserver :)
 		if sendProxyProtocol != "" {
+			// this will not work correctly because when we dont get the infromation via the proxy protocol headers but instead trough x-real-ip we never have a port for the address and always will set it to 0
 			address := r.Header.Get("X-Real-Ip")
 			addrPort, err := netip.ParseAddrPort(address)
+			//this check would only make sense if there would be a port
 			if err != nil {
 				// OK; probably didn't have a port
 				addr, err := netip.ParseAddr(address)
