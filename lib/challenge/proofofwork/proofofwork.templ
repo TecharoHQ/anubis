@@ -7,13 +7,15 @@ import (
 
 templ page(localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
-		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
-		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
-		<p id="status">{ localizer.T("loading") }</p>
-		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
-		<div id="progress" role="progressbar" aria-labelledby="status">
-			<div class="bar-inner"></div>
+		<div id="app">
+			<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
+			<p id="status">{ localizer.T("loading") }</p>
+			<div id="progress" role="progressbar" aria-labelledby="status">
+				<div class="bar-inner"></div>
+			</div>
 		</div>
+		<img style="display:none;width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
+		<script async type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
 		<details>
 			if anubis.UseSimplifiedExplanation {
 				<p>
