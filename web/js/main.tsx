@@ -47,21 +47,6 @@ type AppState =
   | { type: "success"; userReadDetails: boolean; onContinue: () => void }
   | { type: "error"; message: string };
 
-const getAvailableLanguages = async (basePrefix: string): Promise<string[]> => {
-  try {
-    const response = await fetch(
-      `${basePrefix}/.within.website/x/cmd/anubis/static/locales/manifest.json`
-    );
-    if (response.ok) {
-      const manifest = await response.json();
-      return manifest.supportedLanguages || ["en"];
-    }
-  } catch {
-    // Fall through to default
-  }
-  return ["en"];
-};
-
 const loadTranslations = async (
   lang: string,
   basePrefix: string
@@ -105,7 +90,13 @@ const ProgressBar = ({
   </div>
 );
 
-const ContinueButton = ({ onClick }: { onClick: () => void }) => (
+const ContinueButton = ({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: any;
+}) => (
   <div
     id="progress"
     role="button"
@@ -125,7 +116,9 @@ const ContinueButton = ({ onClick }: { onClick: () => void }) => (
       width: "min(20rem, 90%)",
       margin: "1rem auto 2rem",
     }}
-  />
+  >
+    {children}
+  </div>
 );
 
 const App = () => {
@@ -348,8 +341,7 @@ const App = () => {
           src={getImageSrc("pensive")}
         />
         <p id="status">{t("calculating")}</p>
-        <ContinueButton onClick={state.onContinue} />
-        <span>{continueText}</span>
+        <ContinueButton onClick={state.onContinue}>{continueText}</ContinueButton>
       </>
     );
   }
