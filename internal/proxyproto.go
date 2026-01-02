@@ -100,15 +100,6 @@ func ProxyProtocolXRealIP(enabled bool, next http.Handler) http.Handler {
 
 type proxyProtoConnKey struct{}
 
-// StoreProxyProtoConn is a middleware that stores the underlying connection in the request context
-// for later extraction of PROXY protocol information.
-func StoreProxyProtoConn(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// The connection is already stored by the ConnContext in the http.Server
-		next.ServeHTTP(w, r)
-	})
-}
-
 // ProxyProtoConnContext returns a ConnContext function that stores the connection
 // in the request context for PROXY protocol header extraction.
 func ProxyProtoConnContext(enabled bool) func(ctx context.Context, c net.Conn) context.Context {
