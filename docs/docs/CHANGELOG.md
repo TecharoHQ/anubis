@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Bump minimum Go version to 1.25.5.
 - Add iplist2rule tool that lets admins turn an IP address blocklist into an Anubis ruleset.
 - Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
 
