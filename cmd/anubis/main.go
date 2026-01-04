@@ -89,6 +89,9 @@ var (
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
 	thothToken           = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
 	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
+
+	proxyProtocol        = flag.Bool("proxy-protocol", false, "if set, enables HAProxy PROXY protocol support to preserve client IP from upstream load balancers")
+	proxyProtocolTimeout = flag.Duration("proxy-protocol-timeout", 5*time.Second, "timeout for reading the PROXY protocol header")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -477,13 +480,23 @@ func main() {
 	var h http.Handler
 	h = s
 	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
+	h = internal.ProxyProtocolXRealIP(*proxyProtocol, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
 	h = internal.JA4H(h)
 
-	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
+	srv := http.Server{
+		Handler:     h,
+		ErrorLog:    internal.GetFilteredHTTPLogger(),
+		ConnContext: internal.ProxyProtoConnContext(*proxyProtocol),
+	}
 	listener, listenerUrl := setupListener(*bindNetwork, *bind)
+
+	listener = internal.WrapListenerWithProxyProtocol(listener, internal.ProxyProtocolConfig{
+		Enabled: *proxyProtocol,
+		Timeout: *proxyProtocolTimeout,
+	})
 	lg.Info(
 		"listening",
 		"url", listenerUrl,
@@ -492,6 +505,7 @@ func main() {
 		"target", *target,
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
+		"proxy-protocol", *proxyProtocol,
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
