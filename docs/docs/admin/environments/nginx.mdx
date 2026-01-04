@@ -1,5 +1,7 @@
 # Nginx
 
+import CodeBlock from "@theme/CodeBlock";
+
 Anubis is intended to be a filter proxy. The way to integrate this with nginx is to break your configuration up into two parts: TLS termination and then HTTP routing. Consider this diagram:
 
 ```mermaid
@@ -36,110 +38,26 @@ These examples assume that you are using a setup where your nginx configuration 
 
 Assuming that we are protecting `anubistest.techaro.lol`, here's what the server configuration file would look like:
 
-```nginx
-# /etc/nginx/conf.d/server-anubistest-techaro-lol.conf
+import anubisTest from "!!raw-loader!./nginx/server-anubistest-techaro-lol.conf";
 
-# HTTP - Redirect all HTTP traffic to HTTPS
-server {
-  listen 80;
-  listen [::]:80;
-
-  server_name anubistest.techaro.lol;
-
-  location / {
-    return 301 https://$host$request_uri;
-  }
-}
-
-# TLS termination server, this will listen over TLS (https) and then
-# proxy all traffic to the target via Anubis.
-server {
-  # Listen on TCP port 443 with TLS (https) and HTTP/2
-  listen 443 ssl;
-  listen [::]:443 ssl;
-  http2 on;
-
-  location / {
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Http-Version $server_protocol;
-    proxy_pass http://anubis;
-  }
-
-  server_name anubistest.techaro.lol;
-
-  ssl_certificate     /path/to/your/certs/anubistest.techaro.lol.crt;
-  ssl_certificate_key /path/to/your/certs/anubistest.techaro.lol.key;
-}
-
-# Backend server, this is where your webapp should actually live.
-server {
-  listen unix:/run/nginx/nginx.sock;
-
-  server_name anubistest.techaro.lol;
-  root "/srv/http/anubistest.techaro.lol";
-  index index.html;
-
-  # Get the visiting IP from the TLS termination server
-  set_real_ip_from unix:;
-  real_ip_header   X-Real-IP;
-  
-  # Your normal configuration can go here
-  # location .php { fastcgi...} etc.
-}
-```
+<CodeBlock language="nginx">{anubisTest}</CodeBlock>
 
 :::tip
 
 You can copy the `location /` block into a separate file named something like `conf-anubis.inc` and then include it inline to other `server` blocks:
 
-```nginx
-# /etc/nginx/conf.d/conf-anubis.inc
+import anubisInclude from "!!raw-loader!./nginx/conf-anubis.inc";
 
-# Forward to anubis
-location / {
-  proxy_set_header Host $host;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_pass http://anubis;
-}
-```
+<CodeBlock language="nginx">{anubisInclude}</CodeBlock>
 
 Then in a server block:
 
 <details>
 <summary>Full nginx config</summary>
 
-```nginx
-# /etc/nginx/conf.d/server-mimi-techaro-lol.conf
+import mimiTecharoLol from "!!raw-loader!./nginx/server-mimi-techaro-lol.conf";
 
-server {
-  # Listen on 443 with SSL
-  listen 443 ssl;
-  listen [::]:443 ssl;
-  http2 on;
-
-  # Slipstream via Anubis
-  include "conf-anubis.inc";
-
-  server_name mimi.techaro.lol;
-
-  ssl_certificate     /path/to/your/certs/mimi.techaro.lol.crt;
-  ssl_certificate_key /path/to/your/certs/mimi.techaro.lol.key;
-}
-
-server {
-  listen unix:/run/nginx/nginx.sock;
-
-  server_name mimi.techaro.lol;
-  
-  port_in_redirect off;
-  root "/srv/http/mimi.techaro.lol";
-  index index.html;
-
-  # Your normal configuration can go here
-  # location .php { fastcgi...} etc.
-}
-```
+<CodeBlock language="nginx">{mimiTecharoLol}</CodeBlock>
 
 </details>
 
@@ -147,24 +65,9 @@ server {
 
 Create an upstream for Anubis.
 
-```nginx
-# /etc/nginx/conf.d/upstream-anubis.conf
+import anubisUpstream from "!!raw-loader!./nginx/upstream-anubis.conf";
 
-upstream anubis {
-  # Make sure this matches the values you set for `BIND` and `BIND_NETWORK`.
-  # If this does not match, your services will not be protected by Anubis.
-
-  # Try anubis first over a UNIX socket
-  server unix:/run/anubis/nginx.sock;
-  #server 127.0.0.1:8923;
-
-  # Optional: fall back to serving the websites directly. This allows your
-  # websites to be resilient against Anubis failing, at the risk of exposing
-  # them to the raw internet without protection. This is a tradeoff and can
-  # be worth it in some edge cases.
-  #server unix:/run/nginx.sock backup;
-}
-```
+<CodeBlock language="nginx">{anubisUpstream}</CodeBlock>
 
 This can be repeated for multiple sites. Anubis does not care about the HTTP `Host` header and will happily cope with multiple websites via the same instance.
 

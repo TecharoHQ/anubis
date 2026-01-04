@@ -1,0 +1,36 @@
+package naive
+
+import "fmt"
+
+templ base(title string, body templ.Component) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<style>
+        html {
+          max-width: 70ch;
+          padding: 3em 1em;
+          margin: auto;
+          line-height: 1.75;
+          font-size: 1.25em;
+        }
+      </style>
+			<title>{ title }</title>
+		</head>
+		<body>
+			<h1>{ title }</h1>
+			@body
+		</body>
+	</html>
+}
+
+templ (i Impl) maze(body []string, links []link) {
+	for _, paragraph := range body {
+		<p>{ paragraph }</p>
+	}
+	<ul>
+		for _, link := range links {
+			<li><a href={ templ.SafeURL(fmt.Sprintf("./%s", link.href)) }>{ link.body }</a></li>
+		}
+	</ul>
+}

@@ -1,6 +1,10 @@
 package web
 
 import (
+	"context"
+	"fmt"
+	"io"
+
 	"github.com/a-h/templ"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
@@ -28,4 +32,11 @@ func ErrorPage(msg, mail, code string, localizer *localization.SimpleLocalizer) 
 
 func Bench(localizer *localization.SimpleLocalizer) templ.Component {
 	return bench(localizer)
+}
+
+func honeypotLink(href string) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		fmt.Fprintf(w, `<script type="ignore"><a href="%s">Don't click me</a></script>`, href)
+		return nil
+	})
 }

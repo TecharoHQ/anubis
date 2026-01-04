@@ -4,66 +4,82 @@ title: List of known websites using Anubis
 
 This page contains a non-exhaustive list with all websites using Anubis.
 
-- <details>
-  <summary>The Linux Foundation</summary>
-  - https://git.kernel.org/
-  - https://lore.kernel.org/
-  </details>
-- https://gitlab.gnome.org/
-- https://scioly.org/
+- https://azurlane.koumakan.jp/
 - https://bugs.winehq.org/
+- https://bugzilla.proxmox.com
+- https://canine.tools/
+- https://clew.se/
+- https://code.hackerspace.pl/
+- https://codeberg.org/
+- https://dev.haiku-os.org
+- https://dev.sanctum.geek.nz/
+- https://ebird.org/
+- https://extensions.typo3.org/
+- https://fabulous.systems/
+- https://git.aya.so/
+- https://git.devuan.org/
+- https://git.enlightenment.org/
+- https://gitea.com/
+- https://gitlab.freedesktop.org/
+- https://gitlab.gnome.org/
+- https://gitlab.postmarketos.org/
+- https://hosted.weblate.org/
+- https://hydra.nixos.org/
+- https://lab.civicrm.org/
+- https://marginalia-search.com/
+- https://mozillazine.org/
+- https://openwrt.org/
+- https://pluralpedia.org/
+- https://reddit.nerdvpn.de/
+- https://repositorio.ufrn.br/home/
+- https://rpmfusion.org/
+- https://scioly.org/
+- https://source.puri.sm/
+- https://squirreljme.cc/
+- https://superlove.sayitditto.net/
 - https://svnweb.freebsd.org/
 - https://trac.ffmpeg.org/
-- https://xeiaso.net/
-- https://source.puri.sm/
-- https://git.enlightenment.org/
-- https://superlove.sayitditto.net/
-- https://linktaco.com/
-- https://jaredallard.dev/
-- https://dev.sanctum.geek.nz/
-- https://canine.tools/
-- https://git.lupancham.net/
-- https://dev.haiku-os.org
-- http://code.hackerspace.pl/
-- https://wiki.archlinux.org/
-- https://git.devuan.org/
-- https://hydra.nixos.org/
-- https://codeberg.org/
-- https://www.cfaarchive.org/
-- https://gitlab.freedesktop.org/
-- https://bugzilla.proxmox.com
-- https://hofstede.io/
-- https://www.indiemag.fr/
-- https://reddit.nerdvpn.de/
-- https://hosted.weblate.org/
-- https://gitea.com/
-- https://openwrt.org/
-- https://minihoot.site
-- https://catgirl.click/
-- https://wiki.dolphin-emu.org/
-- https://squirreljme.cc/
-- https://gitlab.postmarketos.org/
-- https://wiki.koha-community.org/
-- https://extensions.typo3.org/
-- https://ebird.org/
-- https://fabulous.systems/
-- https://coinhoards.org/
-- https://pluralpedia.org/
-- https://git.aya.so/
-- https://marginalia-search.com/
-- https://repositorio.ufrn.br/home/
-- https://mozillazine.org/
-- https://clew.se/
 - https://tumfatig.net/
-- https://rpmfusion.org/
+- https://wiki.archlinux.org/
+- https://wiki.dolphin-emu.org/
 - https://wiki.freepascal.org/
-- https://azurlane.koumakan.jp/
-- https://lab.civicrm.org/
-- https://git.door43.org/
+- https://wiki.koha-community.org/
+- https://www.cfaarchive.org/
+- https://www.indiemag.fr/
+- https://xeiaso.net/
+- <details>
+  <summary>archlinux32.org</summary>
+  - https://www.archlinux32.org/packages/
+  - https://bbs.archlinux32.org/
+  - https://bugs.archlinux32.org/
+  </details>
+- <details>
+  <summary>Duke University</summary>
+  - https://repository.duke.edu/
+  - https://archives.lib.duke.edu/
+  - https://find.library.duke.edu/
+  - https://nicholas.duke.edu/
+  </details>
+- <details>
+  <summary>Forschungszentrum Jülich</summary>
+  - https://juser.fz-juelich.de/
+  </details>
 - <details>
   <summary>FreeCAD</summary>
   - https://forum.freecad.org/
   - https://wiki.freecad.org/
+  </details>
+- <details>
+  <summary>HackLab.TO</summary>
+  - https://hacklab.to/
+  - https://knowledge.hacklab.to/
+  </details>
+- <details>
+  <summary>hebis (Alliance of Hessian Libraries)</summary>
+  - https://ubmr.hds.hebis.de/
+  - https://tufind.hds.hebis.de/
+  - https://karla.hds.hebis.de/
+  - and many more (see https://www.hebis.de/dienste/hebis-discovery-system/)
   </details>
 - <details>
   <summary>ReactOS</summary>
@@ -78,6 +94,11 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://wiki.scummvm.org/
   </details>
 - <details>
+  <summary>Slackware</summary>
+  - https://git.slackware.nl/
+  - https://git.liveslak.org/
+  </details>
+- <details>
   <summary>Sourceware</summary>
   - https://sourceware.org/cgit
   - https://sourceware.org/glibc/wiki
@@ -87,40 +108,15 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://gcc.gnu.org/cgit
   </details>
 - <details>
+  <summary>The Linux Foundation</summary>
+  - https://git.kernel.org/
+  - https://lore.kernel.org/
+  </details>
+- <details>
   <summary>The United Nations</summary>
   - https://policytoolbox.iiep.unesco.org/
   </details>
 - <details>
-  <summary>hebis (Alliance of Hessian Libraries)</summary>
-  - https://ubmr.hds.hebis.de/
-  - https://tufind.hds.hebis.de/
-  - https://karla.hds.hebis.de/
-  - and many more (see https://www.hebis.de/dienste/hebis-discovery-system/)
-  </details>
-- <details>
-  <summary>Duke University</summary>
-  - https://repository.duke.edu/
-  - https://archives.lib.duke.edu/
-  - https://find.library.duke.edu/
-  - https://nicholas.duke.edu/
-  </details>
-- <details>
-  <summary>Forschungszentrum Jülich</summary>
-  - https://juser.fz-juelich.de/
-  </details>
-- <details>
-  <summary>archlinux32.org</summary>
-  - https://www.archlinux32.org/packages/
-  - https://bbs.archlinux32.org/
-  - https://bugs.archlinux32.org/
-  </details>
-- <details>
-  <summary>HackLab.TO</summary>
-  - https://hacklab.to/
-  - https://knowledge.hacklab.to/
-  </details>
-- <details>
-  <summary>Slackware</summary>
-  - https://git.slackware.nl/
-  - https://git.liveslak.org/
+  <summary>Valve Corporation</summary>
+  - https://developer.valvesoftware.com/wiki/Main_Page
   </details>

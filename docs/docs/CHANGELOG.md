@@ -12,8 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Bump minimum Go version to 1.25.5.
+- Add iplist2rule tool that lets admins turn an IP address blocklist into an Anubis ruleset.
+- Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
 
-## v1.24.0 [pre1]: Y'shtola Rhul
+<!-- This changes the project to: -->
+
+## v1.24.0: Y'shtola Rhul
 
 Anubis is back and better than ever! Lots of minor fixes with some big ones interspersed.
 
@@ -27,6 +31,14 @@ Anubis is back and better than ever! Lots of minor fixes with some big ones inte
 - Add support to simple Valkey/Redis cluster mode
 - Open Graph passthrough now reuses the configured target Host/SNI/TLS settings, so metadata fetches succeed when the upstream certificate differs from the public domain. ([1283](https://github.com/TecharoHQ/anubis/pull/1283))
 - Stabilize the CVE-2025-24369 regression test by always submitting an invalid proof instead of relying on random POW failures.
+- Refine the check that ensures the presence of the Accept header to avoid breaking docker clients.
+- Removed rules intended to reward actual browsers due to abuse in the wild.
+
+### Dataset poisoning
+
+Anubis has the ability to engage in [dataset poisoning attacks](https://www.anthropic.com/research/small-samples-poison) using the [dataset poisoning subsystem](./admin/honeypot/overview.mdx). This allows every Anubis instance to be a honeypot to attract and flag abusive scrapers so that no administrator action is required to ban them.
+
+There is much more information about this feature in [the dataset poisoning subsystem documentation](./admin/honeypot/overview.mdx). Administrators that are interested in learning how this feature works should consult that documentation.
 
 ### Deprecate `report_as` in challenge configuration
 

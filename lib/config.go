@@ -16,6 +16,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/honeypot/naive"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/config"
@@ -174,6 +175,33 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
+
+	mazeGen, err := naive.New(result.store, result.logger)
+	if err == nil {
+		registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
+
+		opts.Policy.Bots = append(
+			opts.Policy.Bots,
+			policy.Bot{
+				Rules:  mazeGen.CheckNetwork(),
+				Action: config.RuleWeigh,
+				Weight: &config.Weight{
+					Adjust: 30,
+				},
+				Name: "honeypot/network",
+			},
+			policy.Bot{
+				Rules:  mazeGen.CheckUA(),
+				Action: config.RuleWeigh,
+				Weight: &config.Weight{
+					Adjust: 30,
+				},
+				Name: "honeypot/user-agent",
+			},
+		)
+	} else {
+		result.logger.Error("can't init honeypot subsystem", "err", err)
+	}
 
 	//goland:noinspection GoBoolExpressions
 	if anubis.Version == "devel" {

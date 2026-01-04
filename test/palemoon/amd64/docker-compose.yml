@@ -26,7 +26,7 @@ services:
       KEY_FNAME: key.pem
       PROXY_TO: http://anubis:3000
     volumes:
-      - ../../pki/relayd:/techaro/pki:ro
+      - ./pki/relayd:/techaro/pki:ro
 
   # novnc:
   #   image: geek1011/easy-novnc
@@ -42,7 +42,7 @@ services:
     environment:
       DISPLAY: display:0
     volumes:
-      - ../../pki:/usr/local/share/ca-certificates/minica:ro
+      - ./pki:/usr/local/share/ca-certificates/minica:ro
       - ../scripts:/hack/scripts:ro
     depends_on:
       - anubis

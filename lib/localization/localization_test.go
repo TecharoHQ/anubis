@@ -3,6 +3,7 @@ package localization
 import (
 	"encoding/json"
 	"fmt"
+	"net/http/httptest"
 	"sort"
 	"testing"
 
@@ -24,6 +25,7 @@ func TestLocalizationService(t *testing.T) {
 		"nb":    "Laster inn...",
 		"nl":    "Laden...",
 		"nn":    "Lastar inn...",
+		"pl":    "Ładowanie...",
 		"pt-BR": "Carregando...",
 		"tr":    "Yükleniyor...",
 		"ru":    "Загрузка...",
@@ -133,6 +135,43 @@ func TestComprehensiveTranslations(t *testing.T) {
 						t.Error("key not defined")
 					}
 				})
+			}
+		})
+	}
+}
+
+func TestAcceptLanguageQualityFactors(t *testing.T) {
+	service := NewLocalizationService()
+
+	testCases := []struct {
+		name           string
+		acceptLanguage string
+		expectedLang   string
+	}{
+		{"simple_en", "en", "en"},
+		{"simple_de", "de", "de"},
+		{"en_GB_with_lower_priority_de", "en-GB,de-DE;q=0.5", "en"},
+		{"en_GB_only", "en-GB", "en"},
+		{"de_with_lower_priority_en", "de,en;q=0.5", "de"},
+		{"de_DE_with_lower_priority_en", "de-DE,en;q=0.5", "de"},
+		{"fr_with_lower_priority_de", "fr,de;q=0.5", "fr"},
+		{"zh_CN_regional", "zh-CN", "zh-CN"},
+		{"zh_TW_regional", "zh-TW", "zh-TW"},
+		{"pt_BR_regional", "pt-BR", "pt-BR"},
+		{"complex_header", "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7,de;q=0.5", "fr"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/", nil)
+			req.Header.Set("Accept-Language", tc.acceptLanguage)
+
+			localizer := service.GetLocalizerFromRequest(req)
+			sl := &SimpleLocalizer{Localizer: localizer}
+
+			gotLang := sl.GetLang()
+			if gotLang != tc.expectedLang {
+				t.Errorf("Accept-Language %q: expected %s, got %s", tc.acceptLanguage, tc.expectedLang, gotLang)
 			}
 		})
 	}

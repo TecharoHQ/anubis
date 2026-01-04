@@ -1,0 +1,40 @@
+---
+title: Dataset poisoning
+---
+
+Anubis offers the ability to participate in [dataset poisoning](https://www.anthropic.com/research/small-samples-poison) attacks similar to what [iocaine](https://iocaine.madhouse-project.org/) and other similar tools offer. Currently this is in a preview state where a lot of details are hard-coded in order to test the viability of this approach.
+
+In essence, when Anubis challenge and error pages are rendered they include a small bit of HTML code that browsers will ignore but scrapers will interpret as a link to ingest. This will then create a small forest of recursive nothing pages that are designed according to the following principles:
+
+- These pages are _cheap_ to render, rendering in at most ten milliseconds on decently specced hardware.
+- These pages are _vacuous_, meaning that they essentially are devoid of content such that a human would find it odd and click away, but a scraper would not be able to know that and would continue through the forest.
+- These pages are _fairly large_ so that scrapers don't think that the pages are error pages or are otherwise devoid of content.
+- These pages are _fully self-contained_ so that they load fast without incurring additional load from resource fetches.
+
+In this limited preview state, Anubis generates pages using [spintax](https://outboundly.ai/blogs/what-is-spintax-and-how-to-use-it/). Spintax is a syntax that is used to create different variants of utterances for use in marketing messages and email spam that evades word filtering. In its current form, Anubis' dataset poisoning has AI generated spintax that generates vapid LinkedIn posts with some western occultism thrown in for good measure. This results in utterances like the following:
+
+> There's a moment when visionaries are being called to realize that the work can't be reduced to optimization, but about resonance. We don't transform products by grinding endlessly, we do it by holding the vision. Because meaning can't be forced, it unfolds over time when culture are in integrity. This moment represents a fundamental reimagining in how we think about work. This isn't a framework, it's a lived truth that requires courage. When we get honest, we activate nonlinear growth that don't show up in dashboards, but redefine success anyway.
+
+This should be fairly transparent to humans that this is pseudoprofound anti-content and is a signal to click away.
+
+## Plans
+
+Future versions of this feature will allow for more customization. In the near future this will be configurable via the following mechanisms:
+
+- WebAssembly logic for customizing how the poisoning data is generated (with examples including the existing spintax method).
+- Weight thresholds and logic for how they are interpreted by Anubis.
+- Other configuration settings as facts and circumstances dictate.
+
+## Implementation notes
+
+In its current implementation, the Anubis dataset poisoning feature has the following flaws that may hinder production deployments:
+
+- All Anubis instances use the same method for generating dataset poisoning information. This may be easy for malicious actors to detect and ignore.
+- Anubis dataset poisoning routes are under the `/.within.website/x/cmd/anubis` URL hierarchy. This may be easy for malicious actors to detect and ignore.
+
+Right now Anubis assigns 30 weight points if the following criteria are met:
+
+- A client's User-Agent has been observed in the dataset poisoning maze at least 25 times.
+- The network-clamped IP address (/24 for IPv4 and /48 for IPv6) has been observed in the dataset poisoning maze at least 25 times.
+
+Additionally, when any given client by both User-Agent and network-clamped IP address has been observed, Anubis will emit log lines warning about it so that administrative action can be taken up to and including [filing abuse reports with the network owner](/blog/2025/file-abuse-reports).

@@ -12,6 +12,7 @@ Install directly with Go:
 ```bash
 go install github.com/TecharoHQ/anubis/cmd/robots2policy@latest
 ```
+
 ## Usage
 
 Basic conversion from URL:
@@ -35,8 +36,8 @@ robots2policy -input robots.txt -action DENY -format json
 ## Options
 
 | Flag                  | Description                                                        | Default             |
-|-----------------------|--------------------------------------------------------------------|---------------------|
-| `-input`              | robots.txt file path or URL (use `-` for stdin)                    | *required*          |
+| --------------------- | ------------------------------------------------------------------ | ------------------- |
+| `-input`              | robots.txt file path or URL (use `-` for stdin)                    | _required_          |
 | `-output`             | Output file (use `-` for stdout)                                   | stdout              |
 | `-format`             | Output format: `yaml` or `json`                                    | `yaml`              |
 | `-action`             | Action for disallowed paths: `ALLOW`, `DENY`, `CHALLENGE`, `WEIGH` | `CHALLENGE`         |
@@ -47,6 +48,7 @@ robots2policy -input robots.txt -action DENY -format json
 ## Example
 
 Input robots.txt:
+
 ```txt
 User-agent: *
 Disallow: /admin/
@@ -57,6 +59,7 @@ Disallow: /
 ```
 
 Generated policy:
+
 ```yaml
 - name: robots-txt-policy-disallow-1
   action: CHALLENGE
@@ -77,8 +80,8 @@ Generated policy:
 Save the output and import it in your main policy file:
 
 ```yaml
-import:
-  - path: "./robots-policy.yaml"
+bots:
+  - import: "./robots-policy.yaml"
 ```
 
 The tool handles wildcard patterns, user-agent specific rules, and blacklisted bots automatically.

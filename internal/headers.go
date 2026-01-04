@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,6 +13,13 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/sebest/xff"
 )
+
+type realIPKey struct{}
+
+func RealIP(r *http.Request) (netip.Addr, bool) {
+	result, ok := r.Context().Value(realIPKey{}).(netip.Addr)
+	return result, ok
+}
 
 // TODO: move into config
 type XFFComputePreferences struct {
@@ -77,6 +85,9 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 			panic(err) // this should never happen
 		}
 		r.Header.Set("X-Real-Ip", host)
+		if addr, err := netip.ParseAddr(host); err == nil {
+			r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
+		}
 		next.ServeHTTP(w, r)
 	})
 }
@@ -89,6 +100,9 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 			ip := xff.Parse(xffHeader)
 			slog.Debug("setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
 			r.Header.Set("X-Real-Ip", ip)
+			if addr, err := netip.ParseAddr(ip); err == nil {
+				r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
+			}
 		}
 
 		next.ServeHTTP(w, r)
@@ -129,8 +143,6 @@ func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
 		} else {
 			r.Header.Set("X-Forwarded-For", xffHeaderString)
 		}
-
-		slog.Debug("updating X-Forwarded-For", "original", origXFFHeader, "new", xffHeaderString)
 	})
 }
 
