@@ -9,6 +9,7 @@ amazonbot
 anthro
 anubis
 anubistest
+apk
 apnic
 APNICRANDNETAU
 Applebot
