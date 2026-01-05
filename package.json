@@ -29,6 +29,6 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.28.0"
+    "preact": "^10.28.1"
   }
 }
