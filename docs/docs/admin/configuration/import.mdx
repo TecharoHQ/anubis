@@ -13,6 +13,8 @@ bots:
   - # This correlates to data/bots/ai-catchall.yaml in the source tree
     import: (data)/bots/ai-catchall.yaml
   - import: (data)/bots/cloudflare-workers.yaml
+  # Import all the rules in the default configuration
+  - import: (data)/meta/default-config.yaml
 ```
 
 Of note, a bot rule can either have inline bot configuration or import a bot config snippet. You cannot do both in a single bot rule.
@@ -34,6 +36,33 @@ config.BotOrImport: rule definition is invalid, you must set either bot rules or
 ```
 
 Paths can either be prefixed with `(data)` to import from the [the data folder in the Anubis source tree](https://github.com/TecharoHQ/anubis/tree/main/data) or anywhere on the filesystem. If you don't have access to the Anubis source tree, check /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
+
+## Importing the default configuration
+
+If you want to base your configuration off of the default configuration, import `(data)/meta/default-config.yaml`:
+
+```yaml
+bots:
+  - import: (data)/meta/default-config.yaml
+  # Write your rules here
+```
+
+This will keep your configuration up to date as Anubis adapts to emerging threats.
+
+## How do I exempt most modern browsers from Anubis challenges?
+
+If you want to exempt most modern browsers from Anubis challenges, import `(data)/common/acts-like-browser.yaml`:
+
+```yaml
+bots:
+  - import: (data)/meta/default-config.yaml
+  - import: (data)/common/acts-like-browser.yaml
+  # Write your rules here
+```
+
+These rules will allow traffic that "looks like" it's from a modern copy of Edge, Safari, Chrome, or Firefox. These rules used to be enabled by default, however user reports have suggested that AI scraper bots have adapted to conform to these rules to scrape without regard for the infrastructure they are attacking.
+
+Use these rules at your own risk.
 
 ## Importing from imports
 
