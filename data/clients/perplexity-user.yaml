@@ -1,0 +1,12 @@
+# Acts on behalf of user requests
+# https://docs.perplexity.ai/guides/bots
+- name: perplexity-user
+  user_agent_regex: Perplexity-User/.+; \+https\://perplexity\.ai/perplexity-user
+  action: ALLOW
+  # https://www.perplexity.com/perplexity-user.json
+  remote_addresses: [
+    "44.208.221.197/32",
+    "34.193.163.52/32",
+    "18.97.21.0/30",
+    "18.97.43.80/29",
+  ]
