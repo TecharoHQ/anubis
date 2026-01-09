@@ -21,7 +21,7 @@ Anubis is brought to you by sponsors and donors like:
   <img src="./docs/static/img/sponsors/raptor-computing-logo.webp" alt="Raptor Computing Systems" height=64 />
 </a>
 <a href="https://databento.com/?utm_source=anubis&utm_medium=sponsor&utm_campaign=anubis">
-  <img src="./docs/static/img/sponsors/databento-logo.webp" alt="Databento" />
+  <img src="./docs/static/img/sponsors/databento-logo.webp" alt="Databento" height="64" />
 </a>
 
 ### Gold Tier
