@@ -34,6 +34,7 @@ func TestLocalizationService(t *testing.T) {
 		"zh-CN": "加载中...",
 		"zh-TW": "載入中...",
 		"sv":    "Laddar...",
+		"bg":    "Зареждане...",
 	}
 
 	var keys []string
