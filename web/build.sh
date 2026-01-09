@@ -39,12 +39,13 @@ for the JavaScript code in this page.
 mkdir -p static/locales
 cp ../lib/localization/locales/*.json static/locales/
 
-shopt -s nullglob globstar
-
-for file in js/**/*.ts js/**/*.mjs; do
-  out="static/${file}"
+process_file() {
+  local file="$1"
+  local out="static/${file}"
   if [[ "$file" == *.ts ]]; then
     out="static/${file%.ts}.mjs"
+  elif [[ "$file" == *.tsx ]]; then
+    out="static/${file%.tsx}.mjs"
   fi
 
   mkdir -p "$(dirname "$out")"
@@ -53,4 +54,9 @@ for file in js/**/*.ts js/**/*.mjs; do
   gzip -f -k -n "$out"
   zstd -f -k --ultra -22 "$out"
   brotli -fZk "$out"
+}
+
+# Use find for portability across bash versions
+find js -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.mjs" \) | while read -r file; do
+  process_file "$file"
 done
