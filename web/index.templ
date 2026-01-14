@@ -64,7 +64,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 			@templ.JSONScript("anubis_public_url", anubis.PublicUrl)
 		</head>
 		<body id="top">
-			@honeypotLink(fmt.Sprintf("%shoneypot/%s/init", anubis.APIPrefix, uuid.NewString()))
+			@honeypotLink(anubis.BasePrefix + fmt.Sprintf("%shoneypot/%s/init", anubis.APIPrefix, uuid.NewString()))
 			<main>
 				<h1 id="title" class="centered-div">{ title }</h1>
 				@body
@@ -79,7 +79,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 						if impressum != nil {
 							<p>
 								@templ.Raw(impressum.Footer)
-								-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
+								-- <a href={ templ.SafeURL(anubis.BasePrefix + fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
 							</p>
 						}
 						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
