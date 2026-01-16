@@ -1,0 +1,8 @@
+# SEOZoom is an Italian SEO company.
+#
+# Website: https://www.seozoom.com
+# Crawler info: https://www.seozoom.it/bot/
+
+- name: zoombot
+  user_agent_regex: ^zoombot
+  action: DENY
