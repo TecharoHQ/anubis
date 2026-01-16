@@ -64,7 +64,6 @@ ckie
 cloudflare
 Codespaces
 confd
-connnection
 containerbuild
 containerregistry
 coreutils
@@ -243,6 +242,7 @@ oci
 OCOB
 ogtag
 oklch
+oldstable
 omgili
 omgilibot
 openai
@@ -257,6 +257,7 @@ Pangu
 parseable
 passthrough
 Patreon
+perplexitybot
 pgrep
 phrik
 pidfile
