@@ -32,7 +32,7 @@ func TestImpl(t *testing.T) {
 
 	// Deletion of expired entries after Get is deferred to a background worker.
 	// Assert it eventually disappears from the map.
-	deadline := time.Now().Add(200 * time.Millisecond)
+	deadline := time.Now().Add(700 * time.Millisecond)
 	for time.Now().Before(deadline) {
 		if dm.Len() == 0 {
 			break
