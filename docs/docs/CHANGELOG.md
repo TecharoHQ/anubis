@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add iplist2rule tool that lets admins turn an IP address blocklist into an Anubis ruleset.
 - Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
 - Fix honeypot and imprint links missing `BASE_PREFIX` when deployed behind a path prefix ([#1402](https://github.com/TecharoHQ/anubis/issues/1402))
+- Add ANEXIA Sponsor logo to docs ([#1409](https://github.com/TecharoHQ/anubis/pull/1409))
 
 <!-- This changes the project to: -->
 

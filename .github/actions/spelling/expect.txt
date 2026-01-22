@@ -6,6 +6,7 @@ Aibrew
 alibaba
 alrest
 amazonbot
+anexia
 anthro
 anubis
 anubistest
@@ -62,6 +63,7 @@ chibi
 cidranger
 ckie
 cloudflare
+cloudsolutions
 Codespaces
 confd
 connnection
@@ -257,6 +259,7 @@ Pangu
 parseable
 passthrough
 Patreon
+perplexitybot
 pgrep
 phrik
 pidfile
