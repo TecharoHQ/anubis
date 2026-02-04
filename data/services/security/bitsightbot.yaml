@@ -1,0 +1,9 @@
+# BitSightBot is a web crawler operated by BitSight Technologies, a company
+# specializing in cybersecurity ratings. This bot is designed to scan and
+# collect data from websites to assess their security posture.
+#
+# Website: https://www.bitsight.com
+
+- name: bitsightbot
+  user_agent_regex: BitSightBot
+  action: DENY

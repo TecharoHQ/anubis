@@ -1,0 +1,7 @@
+# MixRank is a commercial data mining entity for large enterprise customers.
+#
+# Website: https://mixrank.com
+
+- name: mixrank
+  user_agent_regex: MixrankBot
+  action: DENY

@@ -1,0 +1,9 @@
+# zoominfo is a data mining and sales platform for enterprise use, feeding
+# the gathered information into a machine learning model, offering AI services
+# to customers.
+#
+# Website: https://www.zoominfo.com
+
+- name: zoominfo
+  user_agent_regex: ZoominfoBot
+  action: DENY
