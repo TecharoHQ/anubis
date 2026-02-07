@@ -1,5 +1,7 @@
 # Anubis
 
+This software is used on https://gitlab.gnome.org/ to block bots. Some people say they have problems
+
 <center>
 <img width=256 src="./web/static/img/happy.webp" alt="A smiling chibi dark-skinned anthro jackal with brown hair and tall ears looking victorious with a thumbs-up" />
 </center>
