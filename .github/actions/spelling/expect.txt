@@ -64,7 +64,6 @@ ckie
 cloudflare
 Codespaces
 confd
-connnection
 containerbuild
 containerregistry
 coreutils
@@ -257,6 +256,7 @@ Pangu
 parseable
 passthrough
 Patreon
+perplexitybot
 pgrep
 phrik
 pidfile
