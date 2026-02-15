@@ -14,15 +14,18 @@
     "container": "npm run assets && go run ./cmd/containerbuild",
     "package": "go tool yeet",
     "lint": "make lint",
-    "prepare": "go mod download",
-    "format": "prettier -w . 2>&1 >/dev/null"
+    "prepare": "husky && go mod download",
+    "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w ."
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
     "cssnano": "^7.1.2",
     "cssnano-preset-advanced": "^7.0.10",
     "esbuild": "^0.27.2",
+    "husky": "^9.1.7",
     "playwright": "^1.52.0",
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.1",
@@ -33,6 +36,27 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
     "preact": "^10.28.2"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "body-max-line-length": [
+        2,
+        "always",
+        99999
+      ],
+      "footer-max-line-length": [
+        2,
+        "always",
+        99999
+      ],
+      "signed-off-by": [
+        2,
+        "always"
+      ]
+    }
   },
   "prettier": {
     "singleQuote": false,
