@@ -1,4 +1,4 @@
-import { Sha256 } from '@aws-crypto/sha256-js';
+import { Sha256 } from "@aws-crypto/sha256-js";
 
 const calculateSHA256 = (text) => {
   const hash = new Sha256();
@@ -12,7 +12,7 @@ function toHexString(arr: Uint8Array): string {
     .join("");
 }
 
-addEventListener('message', async ({ data: eventData }) => {
+addEventListener("message", async ({ data: eventData }) => {
   const { data, difficulty, threads } = eventData;
   let nonce = eventData.nonce;
   const isMainThread = nonce === 0;
@@ -21,7 +21,7 @@ addEventListener('message', async ({ data: eventData }) => {
   const requiredZeroBytes = Math.floor(difficulty / 2);
   const isDifficultyOdd = difficulty % 2 !== 0;
 
-  for (; ;) {
+  for (;;) {
     const hashBuffer = await calculateSHA256(data + nonce);
     const hashArray = new Uint8Array(hashBuffer);
 
@@ -34,7 +34,7 @@ addEventListener('message', async ({ data: eventData }) => {
     }
 
     if (isValid && isDifficultyOdd) {
-      if ((hashArray[requiredZeroBytes] >> 4) !== 0) {
+      if (hashArray[requiredZeroBytes] >> 4 !== 0) {
         isValid = false;
       }
     }
@@ -55,7 +55,7 @@ addEventListener('message', async ({ data: eventData }) => {
 
     /* Truncate the decimal portion of the nonce. This is a bit of an evil bit
      * hack, but it works reliably enough. The core of why this works is:
-     * 
+     *
      * > 13.4 % 1 !== 0
      * true
      * > 13 % 1 !== 0

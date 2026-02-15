@@ -1,0 +1,2 @@
+lib/config/testdata/bad/*
+*.inc

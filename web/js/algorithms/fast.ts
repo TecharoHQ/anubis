@@ -6,7 +6,9 @@ interface ProcessOptions {
 }
 
 const getHardwareConcurrency = () =>
-  navigator.hardwareConcurrency !== undefined ? navigator.hardwareConcurrency : 1;
+  navigator.hardwareConcurrency !== undefined
+    ? navigator.hardwareConcurrency
+    : 1;
 
 export default function process(
   options: ProcessOptions,
@@ -25,7 +27,10 @@ export default function process(
     workerMethod = "webcrypto";
   }
 
-  if (navigator.userAgent.includes("Firefox") || navigator.userAgent.includes("Goanna")) {
+  if (
+    navigator.userAgent.includes("Firefox") ||
+    navigator.userAgent.includes("Goanna")
+  ) {
     console.log("Firefox detected, using pure-JS fallback");
     workerMethod = "purejs";
   }
