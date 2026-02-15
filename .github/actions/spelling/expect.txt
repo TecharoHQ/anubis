@@ -74,6 +74,7 @@ Cscript
 daemonizing
 databento
 dayjob
+dco
 DDOS
 Debian
 debrpm
@@ -134,6 +135,7 @@ gipc
 gitea
 GLM
 godotenv
+goimports
 goland
 gomod
 goodbot
@@ -367,6 +369,7 @@ VKE
 vnd
 VPS
 Vultr
+WAIFU
 weblate
 webmaster
 webpage
@@ -404,3 +407,4 @@ Zenos
 zizmor
 zombocom
 zos
+zst
