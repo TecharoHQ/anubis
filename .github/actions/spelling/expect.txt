@@ -7,6 +7,7 @@ Aibrew
 alibaba
 alrest
 amazonbot
+anexia
 anthro
 anubis
 anubistest
@@ -64,6 +65,7 @@ cidranger
 ckie
 CLAUDE
 cloudflare
+cloudsolutions
 Codespaces
 confd
 containerbuild
