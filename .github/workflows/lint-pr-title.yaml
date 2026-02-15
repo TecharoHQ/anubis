@@ -9,7 +9,7 @@ on:
       - reopened
 
 jobs:
-  main:
+  lint_pr_title:
     name: Validate PR title
     runs-on: ubuntu-latest
     permissions:
