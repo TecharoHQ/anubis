@@ -3,13 +3,13 @@ import { createInterface } from "readline";
 
 async function getPage(path) {
   return fetch(`http://localhost:8923${path}`)
-    .then(resp => {
+    .then((resp) => {
       if (resp.status !== 200) {
         throw new Error(`wanted status 200, got status: ${resp.status}`);
       }
       return resp;
     })
-    .then(resp => resp.text());
+    .then((resp) => resp.text());
 }
 
 (async () => {

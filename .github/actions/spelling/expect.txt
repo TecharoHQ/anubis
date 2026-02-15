@@ -2,6 +2,7 @@ acs
 Actorified
 actorifiedstore
 actorify
+agentic
 Aibrew
 alibaba
 alrest
@@ -62,11 +63,11 @@ checkresult
 chibi
 cidranger
 ckie
+CLAUDE
 cloudflare
 cloudsolutions
 Codespaces
 confd
-connnection
 containerbuild
 containerregistry
 coreutils
@@ -77,6 +78,7 @@ Cscript
 daemonizing
 databento
 dayjob
+dco
 DDOS
 Debian
 debrpm
@@ -137,6 +139,7 @@ gipc
 gitea
 GLM
 godotenv
+goimports
 goland
 gomod
 goodbot
@@ -358,6 +361,7 @@ unbreakdocker
 unifiedjs
 unmarshal
 unparseable
+updown
 uvx
 UXP
 valkey
@@ -370,6 +374,7 @@ VKE
 vnd
 VPS
 Vultr
+WAIFU
 weblate
 webmaster
 webpage
@@ -407,3 +412,4 @@ Zenos
 zizmor
 zombocom
 zos
+zst

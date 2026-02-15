@@ -5,5 +5,5 @@
 - name: searx-checker
   action: ALLOW
   remote_addresses:
-  - 167.235.158.251/32
-  - 2a01:4f8:1c1c:8fc2::1/128
+    - 167.235.158.251/32
+    - 2a01:4f8:1c1c:8fc2::1/128

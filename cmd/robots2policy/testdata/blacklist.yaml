@@ -25,6 +25,6 @@
 - action: CHALLENGE
   expression:
     all:
-    - userAgent.contains("Googlebot")
-    - path.startsWith("/search")
+      - userAgent.contains("Googlebot")
+      - path.startsWith("/search")
   name: robots-txt-policy-disallow-7

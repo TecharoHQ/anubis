@@ -4,7 +4,4 @@
   user_agent_regex: MistralAI-User/.+; \+https\://docs\.mistral\.ai/robots
   action: ALLOW
   # https://mistral.ai/mistralai-user-ips.json
-  remote_addresses: [
-    "20.240.160.161/32",
-    "20.240.160.1/32",
-  ]
+  remote_addresses: ["20.240.160.161/32", "20.240.160.1/32"]
