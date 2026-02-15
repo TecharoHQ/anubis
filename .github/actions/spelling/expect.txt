@@ -119,6 +119,7 @@ FCr
 fcrdns
 fediverse
 ffprobe
+fhdr
 financials
 finfos
 Firecrawl
@@ -156,6 +157,7 @@ grw
 gzw
 Hashcash
 hashrate
+hdr
 headermap
 healthcheck
 healthz
@@ -165,6 +167,7 @@ Hetzner
 hmc
 homelab
 hostable
+HSTS
 htmlc
 htmx
 httpdebug
@@ -331,6 +334,8 @@ stackoverflow
 startprecmd
 stoppostcmd
 storetest
+srcip
+strcmp
 subgrid
 subr
 subrequest
@@ -355,6 +360,7 @@ Timpibot
 TLog
 traefik
 trunc
+txn
 uberspace
 Unbreak
 unbreakdocker

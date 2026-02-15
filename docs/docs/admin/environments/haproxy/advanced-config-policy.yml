@@ -1,0 +1,15 @@
+# /etc/anubis/challenge-any.yml
+
+bots:
+  - name: any
+    action: CHALLENGE
+    user_agent_regex: .*
+
+status_codes:
+  CHALLENGE: 403
+  DENY: 403
+
+thresholds: []
+
+dnsbl: false
+
