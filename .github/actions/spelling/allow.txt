@@ -24,3 +24,5 @@ iplist
 NArg
 blocklists
 rififi
+prolocation
+Prolocation
