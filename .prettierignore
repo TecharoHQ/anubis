@@ -1,2 +1,4 @@
 lib/config/testdata/bad/*
 *.inc
+AGENTS.md
+CLAUDE.md
