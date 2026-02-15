@@ -2,6 +2,6 @@
   action: ALLOW
   expression:
     all:
-    - userAgent.startsWith("Go-http-client/")
-    - '"go-get" in query'
-    - query["go-get"] == "1"
+      - userAgent.startsWith("Go-http-client/")
+      - '"go-get" in query'
+      - query["go-get"] == "1"

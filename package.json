@@ -12,8 +12,10 @@
     "build": "npm run assets && go build -o ./var/anubis ./cmd/anubis",
     "dev": "npm run assets && go run ./cmd/anubis --use-remote-address --target http://localhost:3000",
     "container": "npm run assets && go run ./cmd/containerbuild",
-    "package": "yeet",
-    "lint": "make lint"
+    "package": "go tool yeet",
+    "lint": "make lint",
+    "prepare": "go mod download",
+    "format": "prettier -w . 2>&1 >/dev/null"
   },
   "author": "",
   "license": "ISC",

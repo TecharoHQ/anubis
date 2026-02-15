@@ -1,7 +1,7 @@
 bots:
-- name: cloudflare-workers
-  expression: '"Cf-Worker" in headers'
-  action: DENY
+  - name: cloudflare-workers
+    expression: '"Cf-Worker" in headers'
+    action: DENY
 
 status_codes:
   CHALLENGE: 401

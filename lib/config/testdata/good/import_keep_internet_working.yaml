@@ -1,2 +1,2 @@
 bots:
-- import: (data)/common/keep-internet-working.yaml
+  - import: (data)/common/keep-internet-working.yaml
