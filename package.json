@@ -25,7 +25,7 @@
     "baseline-browser-mapping": "^2.9.19",
     "cssnano": "^7.1.2",
     "cssnano-preset-advanced": "^7.0.10",
-    "esbuild": "^0.27.2",
+    "esbuild": "^0.27.3",
     "husky": "^9.1.7",
     "playwright": "^1.52.0",
     "postcss-cli": "^11.0.1",
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.28.2"
+    "preact": "^10.28.3"
   },
   "commitlint": {
     "extends": [
