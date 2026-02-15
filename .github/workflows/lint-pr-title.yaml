@@ -6,7 +6,6 @@ on:
       - opened
       - edited
       - synchronize
-      - reopened
 
 jobs:
   lint_pr_title:
