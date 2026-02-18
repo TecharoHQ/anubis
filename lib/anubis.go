@@ -304,7 +304,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 		return true
 	case config.RuleDeny:
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		lg.Info("explicit deny")
+		lg.Log(r.Context(), slog.LevelInfo-slog.Level(1), "explicit deny")
 		if rule == nil {
 			lg.Error("rule is nil, cannot calculate checksum")
 			s.respondWithError(w, r, fmt.Sprintf("%s \"maybeReverseProxy.RuleDeny\"", localizer.T("internal_server_error")), makeCode(ErrActualAnubisBug))
