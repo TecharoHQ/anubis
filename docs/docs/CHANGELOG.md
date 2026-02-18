@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix: prevent nil pointer panic in challenge validation when threshold rules match during PassChallenge (#1463)
+
 <!-- This changes the project to: -->
 
 ## v1.25.0: Necron

@@ -222,8 +222,12 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
 	if err != nil {
 		lg.Error("can't get challenge", "err", err)
+		algorithm := "unknown"
+		if rule.Challenge != nil {
+			algorithm = rule.Challenge.Algorithm
+		}
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
 		return
 	}
 
@@ -248,9 +252,13 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 
 	impl, ok := challenge.Get(chall.Method)
 	if !ok {
-		lg.Error("check failed", "err", "can't get algorithm", "algorithm", rule.Challenge.Algorithm)
+		algorithm := "unknown"
+		if rule.Challenge != nil {
+			algorithm = rule.Challenge.Algorithm
+		}
+		lg.Error("check failed", "err", "can't get algorithm", "algorithm", algorithm)
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
 		return
 	}
 

@@ -10,6 +10,7 @@ var (
 	ErrFailed        = errors.New("challenge: user failed challenge")
 	ErrMissingField  = errors.New("challenge: missing field")
 	ErrInvalidFormat = errors.New("challenge: field has invalid format")
+	ErrInvalidInput  = errors.New("challenge: input is nil or missing required fields")
 )
 
 func NewError(verb, publicReason string, privateReason error) *Error {
