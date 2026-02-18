@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
 	"github.com/google/cel-go/common/types/traits"
@@ -66,7 +67,9 @@ func (h HTTPHeaders) Get(key ref.Val) ref.Val {
 	return result
 }
 
-func (h HTTPHeaders) Iterator() traits.Iterator { panic("TODO(Xe): implement me") }
+func (h HTTPHeaders) Iterator() traits.Iterator {
+	return checker.NewMapIterator(h.Header)
+}
 
 func (h HTTPHeaders) IsZeroValue() bool {
 	return len(h.Header) == 0
