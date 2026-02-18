@@ -1,4 +1,4 @@
-package checker
+package expressions
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/google/cel-go/common/types/traits"
 )
 
-var ErrNotImplemented = errors.New("cel: functionality not implemented")
+var ErrNotImplemented = errors.New("expressions: not implemented")
 
 type stringSliceIterator struct {
 	keys []string
@@ -32,7 +32,6 @@ func (s *stringSliceIterator) ConvertToType(typeValue ref.Type) ref.Val {
 
 func (s *stringSliceIterator) Equal(other ref.Val) ref.Val {
 	return types.NewErr("can't compare %q to %q", types.IteratorType, other.Type())
-
 }
 
 func (s *stringSliceIterator) Type() ref.Type {
@@ -53,7 +52,7 @@ func (s *stringSliceIterator) Next() ref.Val {
 	return types.String(val)
 }
 
-func NewMapIterator(m map[string][]string) traits.Iterator {
+func newMapIterator(m map[string][]string) traits.Iterator {
 	return &stringSliceIterator{
 		keys: slices.Collect(maps.Keys(m)),
 		idx:  0,
