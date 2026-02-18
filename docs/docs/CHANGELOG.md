@@ -11,14 +11,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<!-- This changes the project to: -->
+
+## v1.25.0: Necron
+
+Hey all,
+
+I'm sure you've all been aware that things have been slowing down a little with Anubis development, and I want to apologize for that. A lot has been going on in my life lately (my blog will have a post out on Friday with more information), and as a result I haven't really had the energy to work on Anubis in publicly visible ways. There are things going on behind the scenes, but nothing is really shippable yet, sorry!
+
+I've also been feeling some burnout in the wake of perennial waves of anger directed towards me. I'm handling it, I'll be fine, I've just had a lot going on in my life and it's been rough.
+
+I've been missing the sense of wanderlust and discovery that comes with the artistic way I playfully develop software. I suspect that some of the stresses I've been through (setting up a complicated surgery in a country whose language you aren't fluent in is kind of an experience) have been sapping my energy. I'd gonna try to mess with things on my break, but realistically I'm probably just gonna be either watching Stargate SG-1 or doing unreasonable amounts of ocean fishing in Final Fantasy 14. Normally I'd love to keep the details about my medical state fairly private, but I'm more of a public figure now than I was this time last year so I don't really get the invisibility I'm used to for this.
+
+I've also had a fair amount of negativity directed at me for simply being much more visible than the anonymous threat actors running the scrapers that are ruining everything, which though understandable has not helped.
+
+Anyways, it all worked out and I'm about to be in the hospital for a week, so if things go really badly with this release please downgrade to the last version and/or upgrade to the main branch when the fix PR is inevitably merged. I hoped to have time to tame GPG and set up full release automation in the Anubis repo, but that didn't work out this time and that's okay.
+
+If I can challenge you all to do something, go out there and try to actually create something new somehow. Combine ideas you've never mixed before. Be creative, be human, make something purely for yourself to scratch an itch that you've always had yet never gotten around to actually mending.
+
+At the very least, try to be an example of how you want other people to act, even when you're in a situation where software written by someone else is configured to require a user agent to execute javascript to access a webpage.
+
+Be well,
+
+Xe
+
+PS: if you're well-versed in FFXIV lore, the release title should give you an idea of the kind of stuff I've been going through mentally.
+
 - Add iplist2rule tool that lets admins turn an IP address blocklist into an Anubis ruleset.
 - Add Polish locale ([#1292](https://github.com/TecharoHQ/anubis/pull/1309))
 - Fix honeypot and imprint links missing `BASE_PREFIX` when deployed behind a path prefix ([#1402](https://github.com/TecharoHQ/anubis/issues/1402))
 - Add ANEXIA Sponsor logo to docs ([#1409](https://github.com/TecharoHQ/anubis/pull/1409))
 - Improve idle performance in memory storage
 - Add HAProxy Configurations to Docs ([#1424](https://github.com/TecharoHQ/anubis/pull/1424))
-
-<!-- This changes the project to: -->
 
 ## v1.24.0: Y'shtola Rhul
 
