@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/TecharoHQ/anubis/lib/config"
@@ -210,11 +211,8 @@ func parseRobotsTxt(input io.Reader) ([]RobotsRule, error) {
 
 	// Mark blacklisted user agents (those with "Disallow: /")
 	for i := range rules {
-		for _, disallow := range rules[i].Disallows {
-			if disallow == "/" {
-				rules[i].IsBlacklist = true
-				break
-			}
+		if slices.Contains(rules[i].Disallows, "/") {
+			rules[i].IsBlacklist = true
 		}
 	}
 

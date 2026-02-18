@@ -36,7 +36,7 @@ func Glob(pattern, subj string) bool {
 	end := len(parts) - 1
 
 	// Go over the leading parts and ensure they match.
-	for i := 0; i < end; i++ {
+	for i := range end {
 		idx := strings.Index(subj, parts[i])
 
 		switch i {
