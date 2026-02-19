@@ -393,6 +393,32 @@ logging:
 
 When files are rotated out, the old files will be named after the rotation timestamp in [RFC 3339 format](https://www.rfc-editor.org/rfc/rfc3339).
 
+:::note
+
+If you are running Anubis in systemd via a native package, the default systemd unit settings are very restrictive and will forbid writing to folders in `/var/log`. In order to fix this, please make a [drop-in unit](https://www.flatcar.org/docs/latest/setup/systemd/drop-in-units/) like the following:
+
+```text
+# /etc/systemd/anubis@instance-name.service.d/50-var-log-readwrite.conf
+[Service]
+ReadWritePaths=/run /var/log/anubis
+```
+
+Once you write this to the correct place, reload the systemd configuration:
+
+```text
+sudo systemctl daemon-reload
+```
+
+And then restart Anubis:
+
+```text
+sudo systemctl restart anubis@instance-name
+```
+
+You may be required to make drop-ins for each Anubis instance depending on the facts and circumstances of your deployment.
+
+:::
+
 ### `stdio` sink
 
 By default, Anubis logs everything to the standard error stream of its process. This requires no configuration:
