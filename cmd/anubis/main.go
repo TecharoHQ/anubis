@@ -418,8 +418,8 @@ func main() {
 
 	var redirectDomainsList []string
 	if *redirectDomains != "" {
-		domains := strings.Split(*redirectDomains, ",")
-		for _, domain := range domains {
+		domains := strings.SplitSeq(*redirectDomains, ",")
+		for domain := range domains {
 			_, err = url.Parse(domain)
 			if err != nil {
 				log.Fatalf("cannot parse redirect-domain %q: %s", domain, err.Error())

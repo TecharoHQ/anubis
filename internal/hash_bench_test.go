@@ -184,7 +184,7 @@ func TestHashCollisions(t *testing.T) {
 	for _, prefix := range prefixes {
 		for _, suffix := range suffixes {
 			for _, variation := range variations {
-				for i := 0; i < 100; i++ {
+				for i := range 100 {
 					input := fmt.Sprintf("%s%s%s-%d", prefix, suffix, variation, i)
 					hash := XXHash64sum(input)
 					if existing, exists := xxhashHashes[hash]; exists {
@@ -211,7 +211,7 @@ func TestHashCollisions(t *testing.T) {
 
 	seqCount := 0
 	for _, pattern := range patterns {
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			input := fmt.Sprintf(pattern, i)
 			hash := XXHash64sum(input)
 			if existing, exists := xxhashHashes[hash]; exists {

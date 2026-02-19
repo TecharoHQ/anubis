@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"sync"
 	"testing"
 	"time"
@@ -36,9 +37,7 @@ func (m *mockS3) PutObject(ctx context.Context, in *s3.PutObjectInput, _ ...func
 	m.data[aws.ToString(in.Key)] = bytes.Clone(b)
 	if in.Metadata != nil {
 		m.meta[aws.ToString(in.Key)] = map[string]string{}
-		for k, v := range in.Metadata {
-			m.meta[aws.ToString(in.Key)][k] = v
-		}
+		maps.Copy(m.meta[aws.ToString(in.Key)], in.Metadata)
 	}
 	m.bucket = aws.ToString(in.Bucket)
 	return &s3.PutObjectOutput{}, nil

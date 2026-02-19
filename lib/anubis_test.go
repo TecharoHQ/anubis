@@ -38,8 +38,8 @@ func NewTLogWriter(t *testing.T) io.Writer {
 
 // Write splits input on newlines and logs each line separately.
 func (w *TLogWriter) Write(p []byte) (n int, err error) {
-	lines := strings.Split(string(p), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(string(p), "\n")
+	for line := range lines {
 		if line != "" {
 			w.t.Log(line)
 		}
