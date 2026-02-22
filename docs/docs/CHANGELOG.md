@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Demote "explicit deny" logs from the Info log level to Info minus one. To get those logs back, set `SLOG_LEVEL=INFO-1` in your environment variables.
+
 <!-- This changes the project to: -->
 
 ## v1.25.0: Necron
