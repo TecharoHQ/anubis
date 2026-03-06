@@ -38,10 +38,8 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://squirreljme.cc/
 - https://superlove.sayitditto.net/
 - https://svnweb.freebsd.org/
-- https://trac.ffmpeg.org/
 - https://tumfatig.net/
 - https://wiki.archlinux.org/
-- https://wiki.dolphin-emu.org/
 - https://wiki.freepascal.org/
 - https://wiki.koha-community.org/
 - https://www.cfaarchive.org/
@@ -54,11 +52,21 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://bugs.archlinux32.org/
   </details>
 - <details>
+  <summary>Dolphin Emulator</summary>
+  - https://forums.dolphin-emu.org/
+  - https://wiki.dolphin-emu.org/
+  </details>
+- <details>
   <summary>Duke University</summary>
   - https://repository.duke.edu/
   - https://archives.lib.duke.edu/
   - https://find.library.duke.edu/
   - https://nicholas.duke.edu/
+  </details>
+- <details>
+  <summary>FFmpeg</summary>
+  - https://git.ffmpeg.org/
+  - https://trac.ffmpeg.org/
   </details>
 - <details>
   <summary>Forschungszentrum Jülich</summary>
@@ -113,10 +121,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
   - https://lore.kernel.org/
   </details>
 - <details>
-  <summary>The United Nations</summary>
-  - https://policytoolbox.iiep.unesco.org/
-  </details>
-- <details>
   <summary>Valve Corporation</summary>
   - https://developer.valvesoftware.com/wiki/Main_Page
+  - https://wiki.teamfortress.com/
   </details>
