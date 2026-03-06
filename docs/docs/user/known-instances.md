@@ -123,5 +123,5 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - <details>
   <summary>Valve Corporation</summary>
   - https://developer.valvesoftware.com/wiki/Main_Page
-  - https://wiki.teamfortress.com/
+  - https://wiki.teamfortress.com/wiki/Main_Page
   </details>
