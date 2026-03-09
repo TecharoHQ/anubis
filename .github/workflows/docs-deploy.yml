@@ -53,14 +53,14 @@ jobs:
           push: true
 
       - name: Apply k8s manifests to limsa lominsa
-        uses: actions-hub/kubectl@3ece3793e7a9fe94effe257d03ac834c815ea87d # v1.35.1
+        uses: actions-hub/kubectl@5ada4e2c02eacc03978c2437e95c8b0f979a9619 # v1.35.2
         env:
           KUBE_CONFIG: ${{ secrets.LIMSA_LOMINSA_KUBECONFIG }}
         with:
           args: apply -k docs/manifest
 
       - name: Apply k8s manifests to limsa lominsa
-        uses: actions-hub/kubectl@3ece3793e7a9fe94effe257d03ac834c815ea87d # v1.35.1
+        uses: actions-hub/kubectl@5ada4e2c02eacc03978c2437e95c8b0f979a9619 # v1.35.2
         env:
           KUBE_CONFIG: ${{ secrets.LIMSA_LOMINSA_KUBECONFIG }}
         with:
