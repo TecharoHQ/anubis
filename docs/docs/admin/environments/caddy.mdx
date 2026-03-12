@@ -62,9 +62,9 @@ yourdomain.example.com {
   tls your@email.address
 
   reverse_proxy http://anubis:3000 {
-		header_up X-Real-Ip {remote_host}
-		header_up X-Http-Version {http.request.proto}
-	}
+    header_up X-Real-Ip {remote_host}
+    header_up X-Http-Version {http.request.proto}
+  }
 }
 ```
 

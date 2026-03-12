@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed mixed tab/space indentation in Caddy documentation code block
+
 <!-- This changes the project to: -->
 
 ## v1.25.0: Necron
