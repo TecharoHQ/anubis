@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"log/slog"
 	"net/http"
 	"net/textproto"
@@ -99,6 +100,9 @@ func (spoe *SpoeOptions) SpoeHandler(ctx context.Context, w *encoding.ActionWrit
 			metadata.Proto = string(k.ValueBytes())
 		}
 	}
+
+	// Some codepaths (like the cookie restriction check) require this header
+	metadata.Header.Set("X-Real-IP", metadata.RemoteAddr.String())
 
 	result, rule, err := spoe.Server.check(&metadata, lg)
 	if err != nil {

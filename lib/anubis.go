@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -592,16 +591,6 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *checker.RequestMetadata, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
-	host := r.Header.Get("X-Real-Ip")
-	if host == "" {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
-	}
-
-	addr := net.ParseIP(host)
-	if addr == nil {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
-	}
-
 	weight := 0
 
 	for _, b := range s.policy.Bots {
