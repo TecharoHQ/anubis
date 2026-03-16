@@ -119,6 +119,7 @@ FCr
 fcrdns
 fediverse
 ffprobe
+FFXIV
 fhdr
 financials
 finfos
@@ -238,6 +239,7 @@ mymaster
 mypass
 myuser
 nbf
+Necron
 nepeat
 netsurf
 nginx
@@ -329,12 +331,13 @@ Spambot
 spammer
 sparkline
 spyderbot
+srcip
 srv
 stackoverflow
+Stargate
 startprecmd
 stoppostcmd
 storetest
-srcip
 strcmp
 subgrid
 subr
