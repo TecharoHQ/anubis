@@ -333,7 +333,14 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, code string, status int) {
 	localizer := localization.GetLocalizer(r)
 
-	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
+	component := web.Base(
+		localizer.T("oh_noes"),
+		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
+		s.policy.Impressum,
+		localizer,
+	)
+	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
