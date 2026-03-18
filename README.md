@@ -26,6 +26,9 @@ Anubis is brought to you by sponsors and donors like:
 
 ### Gold Tier
 
+<a href="https://uvensys.de/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/uvensys.webp" alt="Uvensys" height="64">
+</a>
 <a href="https://distrust.co?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/distrust-logo.webp" alt="Distrust" height="64">
 </a>
