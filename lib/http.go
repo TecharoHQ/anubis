@@ -182,10 +182,7 @@ func makeCode(err error) string {
 	enc := base64.StdEncoding.EncodeToString(buf.Bytes())
 	var builder strings.Builder
 	for i := 0; i < len(enc); i += width {
-		end := i + width
-		if end > len(enc) {
-			end = len(enc)
-		}
+		end := min(i+width, len(enc))
 		builder.WriteString(enc[i:end])
 		builder.WriteByte('\n')
 	}

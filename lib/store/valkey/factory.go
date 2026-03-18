@@ -103,7 +103,7 @@ func (s Sentinel) Valid() error {
 // redisClient is satisfied by *valkey.Client and *valkey.ClusterClient.
 type redisClient interface {
 	Get(ctx context.Context, key string) *valkey.StringCmd
-	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *valkey.StatusCmd
+	Set(ctx context.Context, key string, value any, expiration time.Duration) *valkey.StatusCmd
 	Del(ctx context.Context, keys ...string) *valkey.IntCmd
 	Ping(ctx context.Context) *valkey.StatusCmd
 }

@@ -16,7 +16,7 @@ func (lo *ListOr[T]) UnmarshalJSON(data []byte) error {
 
 	// Check if first non-whitespace character is '['
 	firstChar := data[0]
-	for i := 0; i < len(data); i++ {
+	for i := range data {
 		if data[i] != ' ' && data[i] != '\t' && data[i] != '\n' && data[i] != '\r' {
 			firstChar = data[i]
 			break
