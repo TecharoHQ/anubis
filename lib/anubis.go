@@ -106,6 +106,13 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		//return nil, errors.New("[unexpected] this codepath should be impossible, asked to issue a challenge for a non-challenge rule")
 	}
 
+	if rule.Challenge == nil {
+		rule.Challenge = &config.ChallengeRules{
+			Difficulty: s.policy.DefaultDifficulty,
+			Algorithm:  config.DefaultAlgorithm,
+		}
+	}
+
 	id, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
@@ -491,7 +498,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.Error("getChallenge failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
+		algorithm := "unknown"
+		if rule.Challenge != nil {
+			algorithm = rule.Challenge.Algorithm
+		}
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
 		return
 	}
 
@@ -638,8 +649,16 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 		}
 
 		if matches {
+			challRules := t.Challenge
+			if challRules == nil {
+				// Non-CHALLENGE thresholds (ALLOW/DENY) don't have challenge config.
+				// Use an empty struct so hydrateChallengeRule can fill from stored
+				// challenge data during validation, rather than baking in defaults
+				// that could mismatch the difficulty the client actually solved for.
+				challRules = &config.ChallengeRules{}
+			}
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
-				Challenge: t.Challenge,
+				Challenge: challRules,
 				Rules:     &checker.List{},
 			}, nil
 		}
