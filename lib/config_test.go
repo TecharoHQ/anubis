@@ -24,7 +24,6 @@ func TestBadConfigs(t *testing.T) {
 	}
 
 	for _, st := range finfos {
-		st := st
 		t.Run(st.Name(), func(t *testing.T) {
 			if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("config", "testdata", "bad", st.Name()), anubis.DefaultDifficulty, "info"); err == nil {
 				t.Fatal(err)
@@ -42,7 +41,6 @@ func TestGoodConfigs(t *testing.T) {
 	}
 
 	for _, st := range finfos {
-		st := st
 		t.Run(st.Name(), func(t *testing.T) {
 			t.Run("with-thoth", func(t *testing.T) {
 				ctx := thothmock.WithMockThoth(t)

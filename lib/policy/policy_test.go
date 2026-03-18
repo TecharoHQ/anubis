@@ -32,7 +32,6 @@ func TestGoodConfigs(t *testing.T) {
 	}
 
 	for _, st := range finfos {
-		st := st
 		t.Run(st.Name(), func(t *testing.T) {
 			t.Run("with-thoth", func(t *testing.T) {
 				fin, err := os.Open(filepath.Join("..", "config", "testdata", "good", st.Name()))
@@ -71,7 +70,6 @@ func TestBadConfigs(t *testing.T) {
 	}
 
 	for _, st := range finfos {
-		st := st
 		t.Run(st.Name(), func(t *testing.T) {
 			fin, err := os.Open(filepath.Join("..", "config", "testdata", "bad", st.Name()))
 			if err != nil {

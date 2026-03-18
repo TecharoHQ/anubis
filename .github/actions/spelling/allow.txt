@@ -26,3 +26,8 @@ blocklists
 rififi
 prolocation
 Prolocation
+Necron
+Stargate
+FFXIV
+uvensys
+de

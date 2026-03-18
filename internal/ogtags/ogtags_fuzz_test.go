@@ -3,6 +3,7 @@ package ogtags
 import (
 	"context"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -78,7 +79,7 @@ func FuzzGetTarget(f *testing.F) {
 		}
 
 		// Ensure no memory corruption by calling multiple times
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			result2 := cache.getTarget(u)
 			if result != result2 {
 				t.Errorf("getTarget not deterministic: %q != %q", result, result2)
@@ -148,11 +149,8 @@ func FuzzExtractOGTags(f *testing.F) {
 				}
 			}
 			if !approved {
-				for _, tag := range cache.approvedTags {
-					if property == tag {
-						approved = true
-						break
-					}
+				if slices.Contains(cache.approvedTags, property) {
+					approved = true
 				}
 			}
 			if !approved {
@@ -260,11 +258,8 @@ func FuzzExtractMetaTagInfo(f *testing.F) {
 				}
 			}
 			if !approved {
-				for _, tag := range cache.approvedTags {
-					if property == tag {
-						approved = true
-						break
-					}
+				if slices.Contains(cache.approvedTags, property) {
+					approved = true
 				}
 			}
 			if !approved {

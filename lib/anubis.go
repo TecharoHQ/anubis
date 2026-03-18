@@ -81,11 +81,11 @@ type Server struct {
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 	// return ED25519 key if HS512 is not set
 	if len(s.hs512Secret) == 0 {
-		return func(token *jwt.Token) (interface{}, error) {
+		return func(token *jwt.Token) (any, error) {
 			return s.ed25519Priv.Public().(ed25519.PublicKey), nil
 		}
 	} else {
-		return func(token *jwt.Token) (interface{}, error) {
+		return func(token *jwt.Token) (any, error) {
 			return s.hs512Secret, nil
 		}
 	}

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - fix: prevent nil pointer panic in challenge validation when threshold rules match during PassChallenge (#1463)
+- Instruct reverse proxies to not cache error pages.
+- Fixed mixed tab/space indentation in Caddy documentation code block
 
 <!-- This changes the project to: -->
 

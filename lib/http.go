@@ -182,10 +182,7 @@ func makeCode(err error) string {
 	enc := base64.StdEncoding.EncodeToString(buf.Bytes())
 	var builder strings.Builder
 	for i := 0; i < len(enc); i += width {
-		end := i + width
-		if end > len(enc) {
-			end = len(enc)
-		}
+		end := min(i+width, len(enc))
 		builder.WriteString(enc[i:end])
 		builder.WriteByte('\n')
 	}
@@ -341,7 +338,14 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, code string, status int) {
 	localizer := localization.GetLocalizer(r)
 
-	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
+	component := web.Base(
+		localizer.T("oh_noes"),
+		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
+		s.policy.Impressum,
+		localizer,
+	)
+	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

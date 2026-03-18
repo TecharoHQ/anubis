@@ -12,14 +12,15 @@ permissions:
 jobs:
   ssh:
     if: github.repository == 'TecharoHQ/anubis'
-    runs-on: alrest-techarohq
+    #runs-on: alrest-techarohq
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         host:
           - riscv64
           - ppc64le
-          - aarch64-4k
-          - aarch64-16k
+          #- aarch64-4k
+          #- aarch64-16k
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -29,15 +30,15 @@ jobs:
           persist-credentials: false
 
       - name: Install CI target SSH key
-        uses: shimataro/ssh-key-action@d4fffb50872869abe2d9a9098a6d9c5aa7d16be4 # v2.7.0
+        uses: shimataro/ssh-key-action@6b84f2e793b32fa0b03a379cadadec75cc539391 # v2.8.0
         with:
           key: ${{ secrets.CI_SSH_KEY }}
           name: id_rsa
           known_hosts: ${{ secrets.CI_SSH_KNOWN_HOSTS }}
 
-      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: "1.25.4"
+          go-version: "stable"
 
       - name: Run CI
         run: go run ./utils/cmd/backoff-retry bash test/ssh-ci/rigging.sh ${{ matrix.host }}

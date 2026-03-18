@@ -270,7 +270,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 
 				var performedAction action
 				var err error
-				for i := 0; i < 5; i++ {
+				for i := range 5 {
 					performedAction, err = executeTestCase(t, tc, typ, anubisURL)
 					if performedAction == tc.action {
 						break

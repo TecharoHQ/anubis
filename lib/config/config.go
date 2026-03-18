@@ -228,8 +228,8 @@ type ImportStatement struct {
 }
 
 func (is *ImportStatement) open() (fs.File, error) {
-	if strings.HasPrefix(is.Import, "(data)/") {
-		fname := strings.TrimPrefix(is.Import, "(data)/")
+	if after, ok := strings.CutPrefix(is.Import, "(data)/"); ok {
+		fname := after
 		fin, err := data.BotPolicies.Open(fname)
 		return fin, err
 	}
@@ -325,7 +325,7 @@ func (sc StatusCodes) Valid() error {
 }
 
 type fileConfig struct {
-	OpenGraph   openGraphFileConfig `json:"openGraph,omitempty"`
+	OpenGraph   openGraphFileConfig `json:"openGraph"`
 	Impressum   *Impressum          `json:"impressum,omitempty"`
 	Store       *Store              `json:"store"`
 	Bots        []BotOrImport       `json:"bots"`
