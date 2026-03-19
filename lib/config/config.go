@@ -19,7 +19,7 @@ import (
 var (
 	ErrNoBotRulesDefined                 = errors.New("config: must define at least one (1) bot rule")
 	ErrBotMustHaveName                   = errors.New("config.Bot: must set name")
-	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set either user_agent_regex, path_regex, headers_regex, or remote_addresses")
+	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, expression, or Thoth keyword")
 	ErrBotMustHaveUserAgentOrPathNotBoth = errors.New("config.Bot: must set either user_agent_regex, path_regex, and not both")
 	ErrUnknownAction                     = errors.New("config.Bot: unknown action")
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")

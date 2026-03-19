@@ -427,7 +427,7 @@ func main() {
 			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
 	} else {
-		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
+		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will redirect to any domain, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
 	anubis.CookieName = *cookiePrefix + "-auth"
