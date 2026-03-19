@@ -27,31 +27,6 @@ const imageURL = (
     cacheBuster,
   });
 
-// Detect available languages by loading the manifest
-const getAvailableLanguages = async () => {
-  const basePrefix = j("anubis_base_prefix");
-  if (basePrefix === null) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${basePrefix}/.within.website/x/cmd/anubis/static/locales/manifest.json`,
-    );
-    if (response.ok) {
-      const manifest = await response.json();
-      return manifest.supportedLanguages || ["en"];
-    }
-  } catch (error) {
-    console.warn(
-      "Failed to load language manifest, falling back to default languages",
-    );
-  }
-
-  // Fallback to default languages if manifest loading fails
-  return ["en"];
-};
-
 // Use the browser language from the HTML lang attribute which is set by the server settings or request headers
 const getBrowserLanguage = async () => document.documentElement.lang;
 
@@ -91,7 +66,7 @@ const getRedirectUrl = () => {
 };
 
 let translations: Record<string, string> = {};
-let currentLang;
+let currentLang: string;
 
 // Initialize translations
 const initTranslations = async () => {
@@ -179,7 +154,16 @@ function App({ anubisVersion, basePrefix }: AppProps) {
       }
     }
 
-    const { challenge, rules } = j("anubis_challenge");
+    const challengeData = j("anubis_challenge");
+    if (!challengeData) {
+      showError(
+        t("challenge_error"),
+        t("challenge_data_missing"),
+        imageURL("reject", anubisVersion, basePrefix),
+      );
+      return;
+    }
+    const { challenge, rules } = challengeData;
 
     const process = algorithms[rules.algorithm];
     if (!process) {
