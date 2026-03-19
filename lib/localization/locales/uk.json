@@ -62,5 +62,6 @@
   "js_iterations": "ітерацій",
   "js_finished_reading": "Читання завершено, продовжити →",
   "js_calculation_error": "Помилка обчислення!",
-  "js_calculation_error_msg": "Не вдалося обчислити перевірку:"
+  "js_calculation_error_msg": "Не вдалося обчислити перевірку:",
+  "js_challenge_data_missing": "Дані перевірки відсутні. Будь ласка, перезавантажте сторінку."
 }

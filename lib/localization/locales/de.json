@@ -62,5 +62,6 @@
   "js_iterations": "Iterationen",
   "js_finished_reading": "Fertig gelesen – weiter zur Seite →",
   "js_calculation_error": "Berechnungsfehler!",
-  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:"
+  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:",
+  "js_challenge_data_missing": "Die Prüfungsdaten fehlen. Bitte laden Sie die Seite neu."
 }

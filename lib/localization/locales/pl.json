@@ -62,5 +62,6 @@
   "js_iterations": "iteracji",
   "js_finished_reading": "Skończyłem czytać, kontynuuj →",
   "js_calculation_error": "Błąd obliczeń!",
-  "js_calculation_error_msg": "Nie udało się obliczyć zadania:"
+  "js_calculation_error_msg": "Nie udało się obliczyć zadania:",
+  "js_challenge_data_missing": "Brak danych wyzwania. Proszę odświeżyć stronę."
 }

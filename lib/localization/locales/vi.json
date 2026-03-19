@@ -62,5 +62,6 @@
   "js_iterations": "lần lặp lại",
   "js_finished_reading": "Tôi đã đọc xong, tiếp tục →",
   "js_calculation_error": "Lỗi tính toán!",
-  "js_calculation_error_msg": "Không thể tính toán thử thách:"
+  "js_calculation_error_msg": "Không thể tính toán thử thách:",
+  "js_challenge_data_missing": "Thiếu dữ liệu thử thách. Vui lòng tải lại trang."
 }

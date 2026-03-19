@@ -60,5 +60,6 @@
   "js_iterations": "รอบ",
   "js_finished_reading": "อ่านจบแล้ว ดำเนินการต่อ →",
   "js_calculation_error": "เกิดข้อผิดพลาดในการคำนวณ!",
-  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:"
+  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:",
+  "js_challenge_data_missing": "ข้อมูลการท้าทายหายไป กรุณาโหลดหน้าใหม่"
 }

@@ -36,7 +36,7 @@
   "invalid_redirect": "Netinkamas nukreipimas",
   "redirect_not_parseable": "Nukreipimo adreso nepavyko išanalizuoti",
   "redirect_domain_not_allowed": "Nukreipimo domenas neleistinas",
-  "missing_required_forwarded_headers": "Trūksta būtinų „X-Forwarded-*“ antraščių",
+  "missing_required_forwarded_headers": "Trūksta privalomų X-Forwarded-* antraščių",
   "failed_to_sign_jwt": "nepavyko pasirašyti JWT",
   "invalid_invocation": "Netinkamas kreipinys į „MakeChallenge“",
   "client_error_browser": "Problema klientinėje dalyje: įsitikinkite, jog jūsų naršyklė nepasenusi ir bandykite dar kartą.",
@@ -63,5 +63,5 @@
   "js_finished_reading": "Viską perskaičiau, tęskime →",
   "js_calculation_error": "Skaičiavimo klaida!",
   "js_calculation_error_msg": "Nepavyko įveikti iššūkio:",
-  "missing_required_forwarded_headers": "Trūksta privalomų X-Forwarded-* antraščių"
+  "js_challenge_data_missing": "Trūksta iššūkio duomenų. Prašome perkrauti puslapį."
 }
