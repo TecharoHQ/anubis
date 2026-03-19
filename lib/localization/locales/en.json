@@ -62,5 +62,6 @@
   "js_iterations": "iterations",
   "js_finished_reading": "I've finished reading, continue →",
   "js_calculation_error": "Calculation error!",
-  "js_calculation_error_msg": "Failed to calculate challenge:"
+  "js_calculation_error_msg": "Failed to calculate challenge:",
+  "js_challenge_data_missing": "Challenge data is missing. Please reload the page."
 }

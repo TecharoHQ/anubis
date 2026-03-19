@@ -62,5 +62,6 @@
   "js_calculation_error": "Erreur de calcul !",
   "js_calculation_error_msg": "Échec du calcul du défi :",
   "missing_required_forwarded_headers": "En-têtes X-Forwarded-* manquants",
-  "simplified_explanation": "Ceci est une mesure contre les robots et les requêtes malveillantes, similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour confirmer qu'il est un client valide. Ce concept est nommé <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Preuve de travail</a>. La tâche s'effectue en quelques secondes, puis vous avez accès au site Web. Merci pour votre compréhension et votre patience."
+  "simplified_explanation": "Ceci est une mesure contre les robots et les requêtes malveillantes, similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour confirmer qu'il est un client valide. Ce concept est nommé <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Preuve de travail</a>. La tâche s'effectue en quelques secondes, puis vous avez accès au site Web. Merci pour votre compréhension et votre patience.",
+  "js_challenge_data_missing": "Les données du défi sont manquantes. Veuillez recharger la page."
 }
