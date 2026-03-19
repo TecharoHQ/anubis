@@ -15,7 +15,12 @@ const j = (id: string): any | null => {
     return null;
   }
 
-  return JSON.parse(elem.textContent);
+  const text = elem.textContent;
+  if (text == null || text.trim() === "") {
+    return null;
+  }
+
+  return JSON.parse(text);
 };
 
 const imageURL = (
@@ -66,11 +71,10 @@ const getRedirectUrl = () => {
 };
 
 let translations: Record<string, string> = {};
-let currentLang: string;
 
 // Initialize translations
 const initTranslations = async () => {
-  currentLang = await getBrowserLanguage();
+  const currentLang = await getBrowserLanguage();
   translations = await loadTranslations(currentLang);
 };
 
@@ -281,7 +285,7 @@ function App({ anubisVersion, basePrefix }: AppProps) {
         )}
       </p>
       {phase === "reading" ? (
-        <div
+        <button
           id="progress"
           style={{
             display: "flex",
@@ -297,11 +301,14 @@ function App({ anubisVersion, basePrefix }: AppProps) {
             outlineOffset: "2px",
             width: "min(20rem, 90%)",
             margin: "1rem auto 2rem",
+            border: "none",
+            fontSize: "inherit",
+            fontFamily: "inherit",
           }}
           onClick={() => redirectFn.current?.()}
         >
           {t("finished_reading")}
-        </div>
+        </button>
       ) : (
         <div
           id="progress"
