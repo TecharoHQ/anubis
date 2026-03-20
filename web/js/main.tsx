@@ -106,16 +106,6 @@ function App({ anubisVersion, basePrefix }: AppProps) {
   const redirectFn = useRef<(() => void) | null>(null);
   const detailsRead = useRef(false);
 
-  // Sync <h1 id="title"> when entering error state (it's outside the Preact tree)
-  useEffect(() => {
-    if (phase === "error") {
-      const titleEl = document.getElementById("title");
-      if (titleEl) {
-        titleEl.textContent = errorTitle;
-      }
-    }
-  }, [phase, errorTitle]);
-
   // Main initialization
   useEffect(() => {
     const details = document.querySelector("details");
@@ -132,6 +122,12 @@ function App({ anubisVersion, basePrefix }: AppProps) {
       setErrorMessage(message);
       setErrorImage(imageSrc);
       setPhase("error");
+
+      // sync title element (it's outside of the JSX tree)
+      const titleEl = document.getElementById("title");
+      if (titleEl) {
+        titleEl.textContent = title;
+      }
     };
 
     const dependencies = [
