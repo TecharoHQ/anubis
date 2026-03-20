@@ -1,3 +1,5 @@
+import { ChallengeResult } from "./types";
+
 type ProgressCallback = (nonce: number) => void;
 
 interface ProcessOptions {
@@ -17,7 +19,7 @@ export default function process(
   signal: AbortSignal | null = null,
   progressCallback?: ProgressCallback,
   threads: number = Math.trunc(Math.max(getHardwareConcurrency() / 2, 1)),
-): Promise<string> {
+): Promise<ChallengeResult> {
   console.debug("fast algo");
 
   // Choose worker based on secure context.
