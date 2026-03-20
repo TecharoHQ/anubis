@@ -36,7 +36,7 @@
   "invalid_redirect": "Netinkamas nukreipimas",
   "redirect_not_parseable": "Nukreipimo adreso nepavyko išanalizuoti",
   "redirect_domain_not_allowed": "Nukreipimo domenas neleistinas",
-  "missing_required_forwarded_headers": "Trūksta privalomų X-Forwarded-* antraščių",
+  "missing_required_forwarded_headers": "Trūksta būtinų „X-Forwarded-*“ antraščių",
   "failed_to_sign_jwt": "nepavyko pasirašyti JWT",
   "invalid_invocation": "Netinkamas kreipinys į „MakeChallenge“",
   "client_error_browser": "Problema klientinėje dalyje: įsitikinkite, jog jūsų naršyklė nepasenusi ir bandykite dar kartą.",
