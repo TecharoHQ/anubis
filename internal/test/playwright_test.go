@@ -225,6 +225,10 @@ func TestPlaywrightBrowser(t *testing.T) {
 	pw := setupPlaywright(t)
 	anubisConnection := spawnAnubis(t)
 
+	playwrightRunBrowserTest(t, pw, anubisConnection.URL)
+}
+
+func playwrightRunBrowserTest(t *testing.T, pw *playwright.Playwright, anubisURL string) {
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
 	for _, typ := range browsers {
@@ -256,7 +260,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 			defer page.Close()
 
 			timeout := 2.0
-			page.Goto(anubisConnection.URL, playwright.PageGotoOptions{
+			page.Goto(anubisURL, playwright.PageGotoOptions{
 				Timeout: &timeout,
 			})
 		})
@@ -272,7 +276,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 				var performedAction action
 				var err error
 				for i := 0; i < 5; i++ {
-					performedAction, err = executeTestCase(t, tc, typ, anubisConnection.URL)
+					performedAction, err = executeTestCase(t, tc, typ, anubisURL)
 					if performedAction == tc.action {
 						break
 					}
