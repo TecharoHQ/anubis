@@ -47,12 +47,12 @@
   "js_web_workers_error": "Tarayıcınız web işçilerini desteklemiyor (Anubis, tarayıcınızın donmaması için bunları kullanır). JShelter gibi bir eklenti mi kurulu?",
   "js_cookies_error": "Tarayıcınız çerezleri kaydetmiyor. Anubis, kullanıcıların zorlukları geçtiğini belirlemek için imzalı bir belirteci çerezde saklar. Lütfen bu alan adı için çerezleri etkinleştirin. Anubis’in kullandığı çerez adları önceden bildirilmeksizin değişebilir. Çerez adları ve değerleri resmi API’nin bir parçası değildir.",
   "js_context_not_secure": "Bağlantınız güvenli değil!",
-  "js_context_not_secure_msg": "HTTPS üzerinden bağlanmayı deneyin veya yöneticiden HTTPS kurulumu yapmasını isteyin. Daha fazla bilgi için bkz. <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "HTTPS üzerinden bağlanmayı deneyin veya yöneticiden HTTPS kurulumu yapmasını isteyin. Daha fazla bilgi için bkz. MDN.",
   "js_calculating": "Hesaplanıyor...",
   "js_missing_feature": "Eksik özellik",
   "js_challenge_error": "Hesaplama hatası!",
   "js_challenge_error_msg": "Algoritma çözümlemesi başarısız oldu. Sayfayı yeniden yüklemeyi deneyebilirsiniz.",
-  "js_calculating_difficulty": "Hesaplanıyor...<br/>Zorluk:",
+  "js_calculating_difficulty": "Hesaplanıyor... — Zorluk:",
   "js_speed": "Hız:",
   "js_verification_longer": "Doğrulama beklenenden uzun sürüyor. Lütfen sayfayı yenilemeyin.",
   "js_success": "Başarılı!",
@@ -62,6 +62,6 @@
   "js_calculation_error": "Hesaplama hatası!",
   "js_calculation_error_msg": "Zorluk hesaplaması başarısız oldu:",
   "missing_required_forwarded_headers": "Gerekli X-Forwarded-* başlıkları eksik",
-  "simplified_explanation": "Bu, botlara ve kötü niyetli isteklere karşı CAPTCHA'ya benzer bir önlemdir. Ancak, kendiniz çalışmak yerine, tarayıcınıza geçerli bir istemci olduğundan emin olmak için çözmesi gereken bir hesaplama görevi verilir. Bu kavrama <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">İş Kanıtı</a> denir. Görev birkaç saniye içinde hesaplanır ve web sitesine erişim hakkı kazanırsınız. Anlayışınız ve sabrınız için teşekkür ederiz.",
+  "simplified_explanation": "Bu, botlara ve kötü niyetli isteklere karşı CAPTCHA'ya benzer bir önlemdir. Ancak, kendiniz çalışmak yerine, tarayıcınıza geçerli bir istemci olduğundan emin olmak için çözmesi gereken bir hesaplama görevi verilir. Bu kavrama İş Kanıtı denir. Görev birkaç saniye içinde hesaplanır ve web sitesine erişim hakkı kazanırsınız. Anlayışınız ve sabrınız için teşekkür ederiz.",
   "js_challenge_data_missing": "Doğrulama verileri eksik. Lütfen sayfayı yeniden yükleyin."
 }

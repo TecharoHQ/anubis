@@ -47,12 +47,12 @@
   "js_web_workers_error": "Tu navegador no soporta web workers (Anubis los usa para evitar bloquear tu navegador). ¿Tienes un plugin como JShelter instalado?",
   "js_cookies_error": "Tu navegador no almacena cookies. Anubis usa cookies para determinar qué clientes han pasado los desafíos almacenando un token firmado en una cookie. Por favor habilita el almacenamiento de cookies para este dominio. Los nombres de las cookies que Anubis almacena pueden variar sin previo aviso. Los nombres y valores de las cookies no son parte de la API pública.",
   "js_context_not_secure": "¡Tu contexto no es seguro!",
-  "js_context_not_secure_msg": "Intenta conectarte a través de HTTPS o informa al administrador para configurar HTTPS. Para más información, consulta <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Intenta conectarte a través de HTTPS o informa al administrador para configurar HTTPS. Para más información, consulta MDN.",
   "js_calculating": "Calculando...",
   "js_missing_feature": "Característica faltante",
   "js_challenge_error": "¡Error de desafío!",
   "js_challenge_error_msg": "Falló al resolver el algoritmo de verificación. Puedes intentar recargar la página.",
-  "js_calculating_difficulty": "Calculando...<br/>Dificultad:",
+  "js_calculating_difficulty": "Calculando...\u2014Dificultad:",
   "js_speed": "Velocidad:",
   "js_verification_longer": "La verificación está tomando más tiempo del esperado. Por favor no actualices la página.",
   "js_success": "¡Éxito!",
@@ -62,6 +62,6 @@
   "js_calculation_error": "¡Error de cálculo!",
   "js_calculation_error_msg": "Falló al calcular el desafío:",
   "missing_required_forwarded_headers": "Faltan los encabezados X-Forwarded-* requeridos",
-  "simplified_explanation": "Esta es una medida contra bots y solicitudes maliciosas similar a un CAPTCHA. Sin embargo, en lugar de tener que hacer el trabajo usted mismo, a su navegador se le asigna una tarea de cálculo que debe resolver para garantizar que es un cliente válido. Este concepto se llama <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Prueba de trabajo</a>. La tarea se calcula en unos segundos y se le concede acceso al sitio web. Gracias por su comprensión y paciencia.",
+  "simplified_explanation": "Esta es una medida contra bots y solicitudes maliciosas similar a un CAPTCHA. Sin embargo, en lugar de tener que hacer el trabajo usted mismo, a su navegador se le asigna una tarea de cálculo que debe resolver para garantizar que es un cliente válido. Este concepto se llama Prueba de trabajo. La tarea se calcula en unos segundos y se le concede acceso al sitio web. Gracias por su comprensión y paciencia.",
   "js_challenge_data_missing": "Faltan los datos del desafío. Por favor, recargue la página."
 }

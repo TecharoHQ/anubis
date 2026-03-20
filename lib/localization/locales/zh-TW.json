@@ -47,12 +47,12 @@
   "js_web_workers_error": "您的瀏覽器並不支援 Web workers （Anubis 使用這個來避免凍結您的瀏覽器 ）您有安裝像是 JShelter 之類的插件嗎？",
   "js_cookies_error": "您的瀏覽器無法儲存 Cookie。 Anubis 會使用 Cookie 儲存簽署的憑證，以判斷使用者是否已通過驗證。請為此網域啟用 Cookie 儲存功能。 請注意，Anubis 儲存的 Cookie 名稱可能會變動，且其名稱與內容不屬於公開 API 的一部分。",
   "js_context_not_secure": "您的內容並不安全",
-  "js_context_not_secure_msg": "請嘗試使用 HTTPS 連線，或聯繫網站管理員設定 HTTPS。更多資訊請參見 <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>。",
+  "js_context_not_secure_msg": "請嘗試使用 HTTPS 連線，或聯繫網站管理員設定 HTTPS。更多資訊請參見 MDN。",
   "js_calculating": "計算中...",
   "js_missing_feature": "缺少功能",
   "js_challenge_error": "挑戰錯誤！",
   "js_challenge_error_msg": "解決檢查演算法失敗。 您可能會想要重整頁面。",
-  "js_calculating_difficulty": "計算中...<br/>難度：",
+  "js_calculating_difficulty": "計算中... — 難度：",
   "js_speed": "速度：",
   "js_verification_longer": "驗證所花的時間高於預期。 請不要重整頁面。",
   "js_success": "成功！",
@@ -62,6 +62,6 @@
   "js_calculation_error": "計算錯誤！",
   "js_calculation_error_msg": "計算挑戰失敗：",
   "missing_required_forwarded_headers": "缺少必要的 X-Forwarded-* 標頭",
-  "simplified_explanation": "這是一種類似於驗證碼的措施，用於防止機器人和惡意請求。但是，您無需自己動手，您的瀏覽器會收到一個計算任務，必須解決該任務以確保它是有效的客戶端。這個概念稱為<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">工作量證明</a>。該任務在幾秒鐘內計算完畢，您將被授予訪問網站的權限。感謝您的理解和耐心。",
+  "simplified_explanation": "這是一種類似於驗證碼的措施，用於防止機器人和惡意請求。但是，您無需自己動手，您的瀏覽器會收到一個計算任務，必須解決該任務以確保它是有效的客戶端。這個概念稱為工作量證明。該任務在幾秒鐘內計算完畢，您將被授予訪問網站的權限。感謝您的理解和耐心。",
   "js_challenge_data_missing": "驗證資料遺失。請重新載入頁面。"
 }
