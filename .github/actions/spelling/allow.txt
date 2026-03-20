@@ -31,5 +31,6 @@ Stargate
 FFXIV
 uvensys
 de
+resourced
 envoyproxy
 unipromos
