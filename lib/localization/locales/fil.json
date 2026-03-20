@@ -47,12 +47,12 @@
   "js_web_workers_error": "Hindi sinusuportahan ng iyong browser ang mga web worker (ginagamit ito ng Anubis upang maiwasan ang pag-freeze ng iyong browser). Mayroon ka bang naka-install na plugin tulad ng JShelter?",
   "js_cookies_error": "Ang iyong browser ay hindi nag-iimbak ng cookies. Gumagamit ang Anubis ng cookies upang matukoy kung aling mga kliyente ang nakapasa sa mga hamon sa pamamagitan ng pag-iimbak ng isang nilagdaang token sa isang cookie. Mangyaring paganahin ang pag-iimbak ng cookies para sa domain na ito. Ang mga pangalan ng cookies na iniimbak ng Anubis ay maaaring mag-iba nang walang abiso. Ang mga pangalan at value ng cookie ay hindi bahagi ng pampublikong API.",
   "js_context_not_secure": "Hindi secure ang iyong konteksto!",
-  "js_context_not_secure_msg": "Subukang kumonekta sa pamamagitan ng HTTPS o sabihin sa admin na i-set up ang HTTPS. Para sa karagdagang impormasyon, tignan ang <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Subukang kumonekta sa pamamagitan ng HTTPS o sabihin sa admin na i-set up ang HTTPS. Para sa karagdagang impormasyon, tignan ang MDN.",
   "js_calculating": "Kinakalkula...",
   "js_missing_feature": "Nawawalang feature",
   "js_challenge_error": "Error sa hamon!",
   "js_challenge_error_msg": "Nabigong iresolba ang algoritmo ng pagsusuri. Baka gusto mong i-reload ang pahina.",
-  "js_calculating_difficulty": "Kinakalkula...<br/>Kahirapan:",
+  "js_calculating_difficulty": "Kinakalkula...\u2014Kahirapan:",
   "js_speed": "Bilis:",
   "js_verification_longer": "Mas tumatagal ang pag-verify kaysa sa inaasahan. Mangyaring huwag i-refresh ang pahina.",
   "js_success": "Matagumpay!",
@@ -62,6 +62,6 @@
   "js_calculation_error": "Error sa pagkalkula!",
   "js_calculation_error_msg": "Nabigong ikalkula ang hamon:",
   "missing_required_forwarded_headers": "Nawawala ang kinakailangang X-Forwarded-* na mga header",
-  "simplified_explanation": "Ito ay isang panukala laban sa mga bot at malisyosong mga kahilingan na katulad ng isang CAPTCHA. Gayunpaman, sa halip na ikaw mismo ang gumawa ng trabaho, binibigyan ang iyong browser ng isang gawain sa pagkalkula na kailangan nitong lutasin upang matiyak na ito ay isang wastong kliyente. Ang konseptong ito ay tinatawag na <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Ang gawain ay kinakalkula sa loob ng ilang segundo at binibigyan ka ng access sa website. Salamat sa iyong pag-unawa at pasensya.",
+  "simplified_explanation": "Ito ay isang panukala laban sa mga bot at malisyosong mga kahilingan na katulad ng isang CAPTCHA. Gayunpaman, sa halip na ikaw mismo ang gumawa ng trabaho, binibigyan ang iyong browser ng isang gawain sa pagkalkula na kailangan nitong lutasin upang matiyak na ito ay isang wastong kliyente. Ang konseptong ito ay tinatawag na Proof of Work. Ang gawain ay kinakalkula sa loob ng ilang segundo at binibigyan ka ng access sa website. Salamat sa iyong pag-unawa at pasensya.",
   "js_challenge_data_missing": "Nawawala ang data ng hamon. Mangyaring i-reload ang pahina."
 }

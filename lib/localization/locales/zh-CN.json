@@ -47,12 +47,12 @@
   "js_web_workers_error": "您的浏览器并不支持 Web workers （Anubis 使用这个来避免冻结您的浏览器 ）您有安装像是 JShelter 之类的插件吗？",
   "js_cookies_error": "您的浏览器无法存储 Cookie。 Anubis 会使用 Cookie 存储签署的凭证，以判断用户是否已通过验证。请为此域名启用 Cookie 存储功能。 请注意，Anubis 存储的 Cookie 名称可能会变动，且其名称与内容不属于公开 API 的一部分。",
   "js_context_not_secure": "您的内容并不安全",
-  "js_context_not_secure_msg": "请尝试使用 HTTPS 连接，或联系网站管理员设置 HTTPS。更多信息请参见 <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>。",
+  "js_context_not_secure_msg": "请尝试使用 HTTPS 连接，或联系网站管理员设置 HTTPS。更多信息请参见 MDN。",
   "js_calculating": "计算中...",
   "js_missing_feature": "缺少功能",
   "js_challenge_error": "挑战错误！",
   "js_challenge_error_msg": "解决检查算法失败。 您可能会想要刷新页面。",
-  "js_calculating_difficulty": "计算中...<br/>难度：",
+  "js_calculating_difficulty": "计算中... — 难度：",
   "js_speed": "速度：",
   "js_verification_longer": "验证所花的时间高于预期。 请不要刷新页面。",
   "js_success": "成功！",
@@ -62,6 +62,6 @@
   "js_calculation_error": "计算错误！",
   "js_calculation_error_msg": "计算挑战失败：",
   "missing_required_forwarded_headers": "缺少必要的 X-Forwarded-* 头",
-  "simplified_explanation": "这是一种类似于验证码的措施，用于防止机器人和恶意请求。但是，您无需自己动手，您的浏览器会收到一个计算任务，必须解决该任务以确保它是有效的客户端。这个概念称为<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">工作量证明</a>。该任务在几秒钟内计算完毕，您将被授予访问网站的权限。感谢您的理解和耐心。",
+  "simplified_explanation": "这是一种类似于验证码的措施，用于防止机器人和恶意请求。但是，您无需自己动手，您的浏览器会收到一个计算任务，必须解决该任务以确保它是有效的客户端。这个概念称为工作量证明。该任务在几秒钟内计算完毕，您将被授予访问网站的权限。感谢您的理解和耐心。",
   "js_challenge_data_missing": "验证数据缺失。请重新加载页面。"
 }

@@ -47,12 +47,12 @@
   "js_web_workers_error": "Je browser ondersteunt geen web-takers (Anubis gebruikt dit om te voorkomen dat je browser bevriest). Heb je een plugin zoals JShelter geïnstalleerd?",
   "js_cookies_error": "Je browser slaat geen cookies op. Anubis gebruikt cookies om te bepalen welke bezoekers echte personen zijn. Schakel het opslaan van cookies voor dit domein in. De namen van de cookies die Anubis opslaat, kunnen in de toekomst veranderen. De namen en waarden van cookies maken geen deel uit van de openbare API.",
   "js_context_not_secure": "Je context is niet veilig!",
-  "js_context_not_secure_msg": "Probeer verbinding te maken via HTTPS of laat de beheerder weten dat HTTPS moet worden ingesteld. Zie <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a> voor meer informatie.",
+  "js_context_not_secure_msg": "Probeer verbinding te maken via HTTPS of laat de beheerder weten dat HTTPS moet worden ingesteld. Zie MDN voor meer informatie.",
   "js_calculating": "Berekenen...",
   "js_missing_feature": "Ontbrekende functie",
   "js_challenge_error": "Uitdagingsfout!",
   "js_challenge_error_msg": "De check is gefaald. Misschien wil je de pagina opnieuw laden.",
-  "js_calculating_difficulty": "Rekenen...<br/>Moeilijkheidsgraad:",
+  "js_calculating_difficulty": "Rekenen... — Moeilijkheidsgraad:",
   "js_speed": "Snelheid:",
   "js_verification_longer": "Verificatie duurt langer dan verwacht. Ververs de pagina niet.",
   "js_success": "Gelukt!",
@@ -62,6 +62,6 @@
   "js_calculation_error": "Rekenfout!",
   "js_calculation_error_msg": "Uitdaging niet berekend:",
   "missing_required_forwarded_headers": "Ontbrekende vereiste X-Forwarded-* headers",
-  "simplified_explanation": "Dit is een maatregel tegen bots en kwaadwillende verzoeken, vergelijkbaar met een CAPTCHA. In plaats van dat je zelf werk moet verrichten, krijgt je browser een rekentaak die moet worden opgelost om ervoor te zorgen dat het een geldige client is. Dit concept wordt <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a> genoemd. De taak wordt in een paar seconden berekend en u krijgt toegang tot de website. Bedankt voor je begrip en geduld.",
+  "simplified_explanation": "Dit is een maatregel tegen bots en kwaadwillende verzoeken, vergelijkbaar met een CAPTCHA. In plaats van dat je zelf werk moet verrichten, krijgt je browser een rekentaak die moet worden opgelost om ervoor te zorgen dat het een geldige client is. Dit concept wordt Proof of Work genoemd. De taak wordt in een paar seconden berekend en u krijgt toegang tot de website. Bedankt voor je begrip en geduld.",
   "js_challenge_data_missing": "Uitdagingsgegevens ontbreken. Herlaad de pagina."
 }

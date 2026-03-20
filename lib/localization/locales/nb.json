@@ -47,12 +47,12 @@
   "js_web_workers_error": "Nettleseren din støtter ikke nettarbeidere (Anubis bruker dette for å unngå å fryse nettleseren din). Har du et tillegg som JShelter installert?",
   "js_cookies_error": "Nettleseren lagrer ikke informasjonskapsler. Anubis bruker informasjonskapsler for å avgjøre hvilke klienter har lyktes i utfordringen ved å lagre en signert token i en informasjonskapsel. Vennligst slå på informasjonskapsler på dette domenet. Navnene på informasjonskapslene Anubis lagrer, kan variere uten varsel. Informasjonskapselnavn og -verdier er ikke en del av det offentlege API-et.",
   "js_context_not_secure": "Du bruker ikke en sikker tilkobling!",
-  "js_context_not_secure_msg": "Prøv å koble til over HTTPS eller fortell administratoren å opprette HTTPS. Se <a hreflang=\"en\" href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a> for mer informasjon.",
+  "js_context_not_secure_msg": "Prøv å koble til over HTTPS eller fortell administratoren å opprette HTTPS. Se MDN for mer informasjon.",
   "js_calculating": "Beregner…",
   "js_missing_feature": "Mangler funksjon",
   "js_challenge_error": "Utfordringsfeil!",
   "js_challenge_error_msg": "Mislyktes i å tolke sjekkalgoritmen. Du burde laste inn denne siden på nytt.",
-  "js_calculating_difficulty": "Beregner…<br/>Vanskelighetsnivå:",
+  "js_calculating_difficulty": "Beregner… — Vanskelighetsnivå:",
   "js_speed": "hastighet:",
   "js_verification_longer": "Verifisering tar lengre enn forventet. Vennligst ikke last inn denne siden på nytt.",
   "js_success": "Vellykket!",
@@ -62,6 +62,6 @@
   "js_calculation_error": "Beregningsfeil!",
   "js_calculation_error_msg": "Mislyktes i å beregne utfordring:",
   "missing_required_forwarded_headers": "Mangler nødvendige X-Forwarded-* header",
-  "simplified_explanation": "Dette er et tiltak mot roboter og ondsinnede forespørsler som ligner på en CAPTCHA. Men i stedet for å måtte gjøre arbeidet selv, får nettleseren din en beregningsoppgave som den må løse for å sikre at den er en gyldig klient. Dette konseptet kalles <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Oppgaven beregnes på noen få sekunder, og du får tilgang til nettstedet. Takk for din forståelse og tålmodighet.",
+  "simplified_explanation": "Dette er et tiltak mot roboter og ondsinnede forespørsler som ligner på en CAPTCHA. Men i stedet for å måtte gjøre arbeidet selv, får nettleseren din en beregningsoppgave som den må løse for å sikre at den er en gyldig klient. Dette konseptet kalles Proof of Work. Oppgaven beregnes på noen få sekunder, og du får tilgang til nettstedet. Takk for din forståelse og tålmodighet.",
   "js_challenge_data_missing": "Utfordringsdata mangler. Vennligst last inn siden på nytt."
 }
