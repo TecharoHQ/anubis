@@ -1,6 +1,6 @@
 import { render } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
-import algorithms from "./algorithms";
+import algorithms, { ChallengeResult } from "./algorithms";
 
 // from Xeact
 const u = (url: string = "", params: Record<string, any> = {}) => {
@@ -211,7 +211,7 @@ function App({ anubisVersion, basePrefix }: AppProps) {
         }
       },
     )
-      .then((result: any) => {
+      .then((result: ChallengeResult) => {
         const t1 = Date.now();
         const { hash, nonce } = result;
 
