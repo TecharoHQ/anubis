@@ -52,7 +52,7 @@
   "js_missing_feature": "Característica faltante",
   "js_challenge_error": "¡Error de desafío!",
   "js_challenge_error_msg": "Falló al resolver el algoritmo de verificación. Puedes intentar recargar la página.",
-  "js_calculating_difficulty": "Calculando...\u2014Dificultad:",
+  "js_calculating_difficulty": "Calculando... — Dificultad:",
   "js_speed": "Velocidad:",
   "js_verification_longer": "La verificación está tomando más tiempo del esperado. Por favor no actualices la página.",
   "js_success": "¡Éxito!",

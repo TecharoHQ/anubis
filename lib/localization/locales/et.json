@@ -52,7 +52,7 @@
   "js_missing_feature": "Puuduv brauseri omadus",
   "js_challenge_error": "Kontrolli viga!",
   "js_challenge_error_msg": "Ei suutnud tuvastada kontrollalgoritmi. Võiksid proovida lehe uuesti laadida.",
-  "js_calculating_difficulty": "Arvutan...\u2014Raskus:",
+  "js_calculating_difficulty": "Arvutan... — Raskus:",
   "js_speed": "Kiirus:",
   "js_verification_longer": "Kontrollimine võtab kauem kui tavaliselt. Palun ära lae lehte uuesti.",
   "js_success": "Õnnestus!",

@@ -53,7 +53,7 @@
   "js_missing_feature": "Chybějící funkce",
   "js_challenge_error": "Chyba výzvy!",
   "js_challenge_error_msg": "Nepodařilo se vyřešit kontrolní algoritmus. Možná budete chtít obnovit stránku.",
-  "js_calculating_difficulty": "Počítám...\u2014Obtížnost:",
+  "js_calculating_difficulty": "Počítám... — Obtížnost:",
   "js_speed": "Rychlost:",
   "js_verification_longer": "Ověřování trvá déle, než se očekávalo. Prosím neobnovujte stránku.",
   "js_success": "Úspěch!",
