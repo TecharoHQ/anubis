@@ -54,7 +54,7 @@
   "js_missing_feature": "Fehlendes Feature",
   "js_challenge_error": "Prüfung fehlgeschlagen!",
   "js_challenge_error_msg": "Der Prüf-Algorithmus konnte nicht geladen werden. Bitte lade die Seite neu.",
-  "js_calculating_difficulty": "Berechnung läuft...\u2014Schwierigkeit:",
+  "js_calculating_difficulty": "Berechnung läuft... — Schwierigkeit:",
   "js_speed": "Geschwindigkeit:",
   "js_verification_longer": "Die Prüfung dauert länger als erwartet. Bitte warte und lade die Seite nicht neu.",
   "js_success": "Erfolgreich!",

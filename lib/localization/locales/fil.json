@@ -52,7 +52,7 @@
   "js_missing_feature": "Nawawalang feature",
   "js_challenge_error": "Error sa hamon!",
   "js_challenge_error_msg": "Nabigong iresolba ang algoritmo ng pagsusuri. Baka gusto mong i-reload ang pahina.",
-  "js_calculating_difficulty": "Kinakalkula...\u2014Kahirapan:",
+  "js_calculating_difficulty": "Kinakalkula... — Kahirapan:",
   "js_speed": "Bilis:",
   "js_verification_longer": "Mas tumatagal ang pag-verify kaysa sa inaasahan. Mangyaring huwag i-refresh ang pahina.",
   "js_success": "Matagumpay!",

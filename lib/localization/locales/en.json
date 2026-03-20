@@ -54,7 +54,7 @@
   "js_missing_feature": "Missing feature",
   "js_challenge_error": "Challenge error!",
   "js_challenge_error_msg": "Failed to resolve check algorithm. You may want to reload the page.",
-  "js_calculating_difficulty": "Calculating...\u2014Difficulty:",
+  "js_calculating_difficulty": "Calculating... — Difficulty:",
   "js_speed": "Speed:",
   "js_verification_longer": "Verification is taking longer than expected. Please do not refresh the page.",
   "js_success": "Success!",

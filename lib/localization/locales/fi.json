@@ -52,7 +52,7 @@
   "js_missing_feature": "Puuttuva ominaisuus",
   "js_challenge_error": "Haastevirhe!",
   "js_challenge_error_msg": "Tarkistuskaavaa ei voitu ratkaista. Voit yrittää ladata sivua uudelleen.",
-  "js_calculating_difficulty": "Lasketaan...\u2014Vaikeus:",
+  "js_calculating_difficulty": "Lasketaan... — Vaikeus:",
   "js_speed": "Nopeus:",
   "js_verification_longer": "Vahvistus kestää odotettua pitempään. Ethän lataa sivua uudelleen.",
   "js_success": "Onnistui!",
