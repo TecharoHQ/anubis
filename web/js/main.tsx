@@ -109,12 +109,13 @@ function App({ anubisVersion, basePrefix }: AppProps) {
   // Main initialization
   useEffect(() => {
     const details = document.querySelector("details");
+    const onToggle = () => {
+      if (details?.open) {
+        detailsRead.current = true;
+      }
+    };
     if (details) {
-      details.addEventListener("toggle", () => {
-        if (details.open) {
-          detailsRead.current = true;
-        }
-      });
+      details.addEventListener("toggle", onToggle);
     }
 
     const showError = (title: string, message: string, imageSrc: string) => {
@@ -243,6 +244,12 @@ function App({ anubisVersion, basePrefix }: AppProps) {
           imageURL("reject", anubisVersion, basePrefix),
         );
       });
+
+    return () => {
+      if (details) {
+        details.removeEventListener("toggle", onToggle);
+      }
+    };
   }, []);
 
   const pensiveURL = imageURL("pensive", anubisVersion, basePrefix);
