@@ -214,7 +214,6 @@ function App({ anubisVersion, basePrefix }: AppProps) {
       .then((result: any) => {
         const t1 = Date.now();
         const { hash, nonce } = result;
-        console.log({ hash, nonce });
 
         const doRedirect = () => {
           const redir = getRedirectUrl();
