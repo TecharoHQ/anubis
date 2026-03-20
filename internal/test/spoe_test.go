@@ -3,9 +3,7 @@ package test
 import (
 	_ "embed"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"html/template"
-	"io"
 	"math/rand/v2"
 	"net"
 	"net/http"
@@ -23,9 +21,6 @@ var haproxyConfigTemplateContents string
 
 //go:embed testdata/anubis.cfg
 var haproxyAgentConfig string
-
-//go:embed testdata/ok.http
-var okResponse string
 
 var haproxyConfigTemplate = func() *template.Template {
 	template, err := template.New("haproxyConfig").Parse(haproxyConfigTemplateContents)
@@ -52,24 +47,13 @@ func TestWithRealHAProxy(t *testing.T) {
 	}
 
 	connInfo := spawnAnubisWithOptions(t, anubisTestOptions{enableSPOE: true})
-
 	listenURL := spawnHaproxy(t, connInfo)
 
-	client := http.Client{}
+	startPlaywright(t)
 
-	r, err := client.Get(listenURL)
-	if err != nil {
-		t.Fatal(err)
-	}
+	pw := setupPlaywright(t)
 
-	got, err := io.ReadAll(r.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(string(got), "OK"); diff != "" {
-		t.Fatalf("HTTP response mismatch (-want +got):\n%s", diff)
-	}
+	playwrightRunBrowserTest(t, pw, listenURL)
 }
 
 func spawnHaproxy(t *testing.T, anubis anubisConnectionInfo) string {
@@ -77,10 +61,24 @@ func spawnHaproxy(t *testing.T, anubis anubisConnectionInfo) string {
 
 	configPath := filepath.Join(workdir, "haproxy.cfg")
 	agentConfigPath := filepath.Join(workdir, "anubis.cfg")
-	okFile := filepath.Join(workdir, "ok.http")
 
 	// We need to pick a port for HAProxy, as we do not have the option to figure out which port it has bound to
 	haproxyPort := uint16((rand.Uint32() & 0xffff) | 0xc000)
+
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "text/html")
+		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
+	})
+
+	backendListener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("can't listen on random port: %v", err)
+	}
+
+	go http.Serve(backendListener, h)
+	t.Cleanup(func() {
+		backendListener.Close()
+	})
 
 	f, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -102,13 +100,13 @@ func spawnHaproxy(t *testing.T, anubis anubisConnectionInfo) string {
 		SPOAConfig      string
 		AnubisPort      uint16
 		AnubisSpoePort  uint16
-		OKResponse      string
+		BackendPort     uint16
 	}{
 		HAProxyBindPort: haproxyPort,
 		SPOAConfig:      agentConfigPath,
 		AnubisPort:      uint16(anubisPort),
 		AnubisSpoePort:  anubis.spoePort,
-		OKResponse:      okFile,
+		BackendPort:     uint16(backendListener.Addr().(*net.TCPAddr).Port),
 	}
 
 	if err := haproxyConfigTemplate.Execute(f, templateData); err != nil {
@@ -116,10 +114,6 @@ func spawnHaproxy(t *testing.T, anubis anubisConnectionInfo) string {
 	}
 
 	if err := os.WriteFile(agentConfigPath, []byte(haproxyAgentConfig), 0600); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.WriteFile(okFile, []byte(okResponse), 0600); err != nil {
 		t.Fatal(err)
 	}
 

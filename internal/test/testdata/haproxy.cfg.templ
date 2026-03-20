@@ -5,6 +5,11 @@ frontend http
 
   bind :{{ .HAProxyBindPort }}
 
+  http-request set-src hdr(X-Real-IP)
+
+  # To try to be as close to reality, we delete this header
+  http-request del-header X-Real-IP
+
   filter spoe engine anubis config {{ .SPOAConfig }}
 
   # This config does not use all those ACLs, they are only defined as an example
@@ -27,7 +32,7 @@ frontend http
 backend anubis-http
   mode http
 
-  http-request add-header X-Real-IP 127.0.0.1
+  option forwardfor header "X-Real-IP"
 
   server anubis1 127.0.0.1:{{ .AnubisPort }}
 
@@ -38,4 +43,4 @@ backend anubis-spoe
 
 backend web
   mode http
-  errorfile 503 {{ .OKResponse }}
+  server backend 127.0.0.1:{{ .BackendPort }}
