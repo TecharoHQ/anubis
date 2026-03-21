@@ -1,40 +1,54 @@
 $`npm run assets`;
 
 ["amd64", "arm64", "ppc64le", "riscv64"].forEach((goarch) => {
-  [deb, rpm, tarball].forEach((method) =>
-    method.build({
-      name: "anubis",
-      description:
-        "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
-      homepage: "https://anubis.techaro.lol",
-      license: "MIT",
-      goarch,
+  ["linux", "windows"].forEach((platform) => {
+    if (goarch == "ppc64le" && platform == "windows") {
+      return;
+    }
 
-      documentation: {
-        "./README.md": "README.md",
-        "./LICENSE": "LICENSE",
-        "./data/botPolicies.yaml": "botPolicies.yaml",
-      },
+    if (goarch == "riscv64" && platform == "windows") {
+      return;
+    }
 
-      build: ({ bin, etc, systemd, doc }) => {
-        $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/anubis`;
-        $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/robots2policy`;
+    const extension = platform == "windows" ? ".exe" : "";
 
-        file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
-        file.install("./run/default.env", `${etc}/default.env`);
+    [deb, rpm, tarball].forEach((method) =>
+      method.build({
+        name: "anubis",
+        description:
+          "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
+        homepage: "https://anubis.techaro.lol",
+        license: "MIT",
+        goarch,
+        platform,
 
-        $`mkdir -p ${doc}/docs`;
-        $`cp -a docs/docs ${doc}`;
-        $`find ${doc} -name _category_.json -delete`;
-        $`mkdir -p ${doc}/data`;
-        $`cp -a data/apps ${doc}/data/apps`;
-        $`cp -a data/bots ${doc}/data/bots`;
-        $`cp -a data/clients ${doc}/data/clients`;
-        $`cp -a data/common ${doc}/data/common`;
-        $`cp -a data/crawlers ${doc}/data/crawlers`;
-        $`cp -a data/meta ${doc}/data/meta`;
-      },
-    }),
+        documentation: {
+          "./README.md": "README.md",
+          "./LICENSE": "LICENSE",
+          "./data/botPolicies.yaml": "botPolicies.yaml",
+        },
+
+        build: ({ bin, etc, systemd, doc }) => {
+          $`go build -o ${bin}/anubis${extension} -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/anubis`;
+          $`go build -o ${bin}/anubis-robots2policy${extension} -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/robots2policy`;
+
+          file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
+          file.install("./run/default.env", `${etc}/default.env`);
+
+          $`mkdir -p ${doc}/docs`;
+          $`cp -a docs/docs ${doc}`;
+          $`find ${doc} -name _category_.json -delete`;
+          $`mkdir -p ${doc}/data`;
+          $`cp -a data/apps ${doc}/data/apps`;
+          $`cp -a data/bots ${doc}/data/bots`;
+          $`cp -a data/clients ${doc}/data/clients`;
+          $`cp -a data/common ${doc}/data/common`;
+          $`cp -a data/crawlers ${doc}/data/crawlers`;
+          $`cp -a data/meta ${doc}/data/meta`;
+        },
+      }),
+    )
+  }
   );
 });
 
