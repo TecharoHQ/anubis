@@ -5,10 +5,10 @@ metadata:
 spec:
   version: 3
   rules:
-  - port:
-      number: 80
-    backend:
-      service:
-        name: anubis-docs
-        port:
-          number: 80
+    - port:
+        number: 80
+      backend:
+        service:
+          name: anubis-docs
+          port:
+            number: 80

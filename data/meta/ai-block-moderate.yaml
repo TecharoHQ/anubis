@@ -3,5 +3,7 @@
 - import: (data)/bots/ai-catchall.yaml
 - import: (data)/crawlers/ai-training.yaml
 - import: (data)/crawlers/openai-searchbot.yaml
+- import: (data)/crawlers/perplexitybot.yaml
 - import: (data)/clients/openai-chatgpt-user.yaml
 - import: (data)/clients/mistral-mistralai-user.yaml
+- import: (data)/clients/perplexity-user.yaml

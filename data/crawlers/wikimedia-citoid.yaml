@@ -1,0 +1,18 @@
+# Wikimedia Foundation citation services
+# https://www.mediawiki.org/wiki/Citoid
+
+- name: wikimedia-citoid
+  user_agent_regex: "Citoid/WMF"
+  action: ALLOW
+  remote_addresses: [
+    "208.80.152.0/22",
+    "2620:0:860::/46",
+  ]
+
+- name: wikimedia-zotero-translation-server
+  user_agent_regex: "ZoteroTranslationServer/WMF"
+  action: ALLOW
+  remote_addresses: [
+    "208.80.152.0/22",
+    "2620:0:860::/46",
+  ]

@@ -1,5 +1,4 @@
 # /etc/nginx/conf-anubis.inc
-
 # Forward to anubis
 location / {
   proxy_set_header Host $host;

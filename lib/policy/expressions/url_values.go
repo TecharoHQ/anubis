@@ -1,7 +1,6 @@
 package expressions
 
 import (
-	"errors"
 	"net/url"
 	"reflect"
 	"strings"
@@ -10,8 +9,6 @@ import (
 	"github.com/google/cel-go/common/types/ref"
 	"github.com/google/cel-go/common/types/traits"
 )
-
-var ErrNotImplemented = errors.New("expressions: not implemented")
 
 // URLValues is a type wrapper to expose url.Values into CEL programs.
 type URLValues struct {
@@ -69,7 +66,9 @@ func (u URLValues) Get(key ref.Val) ref.Val {
 	return result
 }
 
-func (u URLValues) Iterator() traits.Iterator { panic("TODO(Xe): implement me") }
+func (u URLValues) Iterator() traits.Iterator {
+	return newMapIterator(u.Values)
+}
 
 func (u URLValues) IsZeroValue() bool {
 	return len(u.Values) == 0

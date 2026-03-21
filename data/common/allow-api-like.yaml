@@ -2,5 +2,5 @@
   action: ALLOW
   expression:
     all:
-    - '!(method == "HEAD" || method == "GET")'
-    - path.startsWith("/api/")
+      - '!(method == "HEAD" || method == "GET")'
+      - path.startsWith("/api/")

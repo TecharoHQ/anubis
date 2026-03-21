@@ -59,16 +59,16 @@ name: Check Spelling
 on:
   push:
     branches:
-      - '**'
+      - "**"
     tags-ignore:
-      - '**'
+      - "**"
   pull_request:
     branches:
-      - '**'
+      - "**"
     types:
-      - 'opened'
-      - 'reopened'
-      - 'synchronize'
+      - "opened"
+      - "reopened"
+      - "synchronize"
 
 jobs:
   spelling:

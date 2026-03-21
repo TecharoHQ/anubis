@@ -2,10 +2,12 @@ acs
 Actorified
 actorifiedstore
 actorify
+agentic
 Aibrew
 alibaba
 alrest
 amazonbot
+anexia
 anthro
 anubis
 anubistest
@@ -61,10 +63,11 @@ checkresult
 chibi
 cidranger
 ckie
+CLAUDE
 cloudflare
+cloudsolutions
 Codespaces
 confd
-connnection
 containerbuild
 containerregistry
 coreutils
@@ -75,6 +78,7 @@ Cscript
 daemonizing
 databento
 dayjob
+dco
 DDOS
 Debian
 debrpm
@@ -115,6 +119,8 @@ FCr
 fcrdns
 fediverse
 ffprobe
+FFXIV
+fhdr
 financials
 finfos
 Firecrawl
@@ -135,6 +141,7 @@ gipc
 gitea
 GLM
 godotenv
+goimports
 goland
 gomod
 goodbot
@@ -151,6 +158,7 @@ grw
 gzw
 Hashcash
 hashrate
+hdr
 headermap
 healthcheck
 healthz
@@ -160,6 +168,7 @@ Hetzner
 hmc
 homelab
 hostable
+HSTS
 htmlc
 htmx
 httpdebug
@@ -230,6 +239,7 @@ mymaster
 mypass
 myuser
 nbf
+Necron
 nepeat
 netsurf
 nginx
@@ -257,6 +267,7 @@ Pangu
 parseable
 passthrough
 Patreon
+perplexitybot
 pgrep
 phrik
 pidfile
@@ -320,11 +331,14 @@ Spambot
 spammer
 sparkline
 spyderbot
+srcip
 srv
 stackoverflow
+Stargate
 startprecmd
 stoppostcmd
 storetest
+strcmp
 subgrid
 subr
 subrequest
@@ -349,12 +363,14 @@ Timpibot
 TLog
 traefik
 trunc
+txn
 uberspace
 Unbreak
 unbreakdocker
 unifiedjs
 unmarshal
 unparseable
+updown
 uvx
 UXP
 valkey
@@ -367,6 +383,7 @@ VKE
 vnd
 VPS
 Vultr
+WAIFU
 weblate
 webmaster
 webpage
@@ -404,3 +421,4 @@ Zenos
 zizmor
 zombocom
 zos
+zst

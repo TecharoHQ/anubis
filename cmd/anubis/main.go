@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
@@ -418,8 +419,8 @@ func main() {
 
 	var redirectDomainsList []string
 	if *redirectDomains != "" {
-		domains := strings.Split(*redirectDomains, ",")
-		for _, domain := range domains {
+		domains := strings.SplitSeq(*redirectDomains, ",")
+		for domain := range domains {
 			_, err = url.Parse(domain)
 			if err != nil {
 				log.Fatalf("cannot parse redirect-domain %q: %s", domain, err.Error())
@@ -427,7 +428,7 @@ func main() {
 			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
 	} else {
-		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will only redirect to the same domain a request is coming from, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
+		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will redirect to any domain, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
 	anubis.CookieName = *cookiePrefix + "-auth"
@@ -522,6 +523,11 @@ func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
 	defer done()
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		st, ok := internal.GetHealth("anubis")

@@ -2,9 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
   "name": "Dev",
-  "dockerComposeFile": [
-    "./docker-compose.yaml"
-  ],
+  "dockerComposeFile": ["./docker-compose.yaml"],
   "service": "workspace",
   "workspaceFolder": "/workspace/anubis",
   "postStartCommand": "bash ./.devcontainer/poststart.sh",

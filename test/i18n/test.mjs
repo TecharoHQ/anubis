@@ -1,12 +1,14 @@
 async function fetchLanguages() {
-  return fetch("http://localhost:8923/.within.website/x/cmd/anubis/static/locales/manifest.json")
-    .then(resp => {
+  return fetch(
+    "http://localhost:8923/.within.website/x/cmd/anubis/static/locales/manifest.json",
+  )
+    .then((resp) => {
       if (resp.status !== 200) {
         throw new Error(`wanted status 200, got status: ${resp.status}`);
       }
       return resp;
     })
-    .then(resp => resp.json());
+    .then((resp) => resp.json());
 }
 
 async function getChallengePage(lang) {
@@ -14,15 +16,15 @@ async function getChallengePage(lang) {
     headers: {
       "Accept-Language": lang,
       "User-Agent": "CHALLENGE",
-    }
+    },
   })
-    .then(resp => {
+    .then((resp) => {
       if (resp.status !== 200) {
         throw new Error(`wanted status 200, got status: ${resp.status}`);
       }
       return resp;
     })
-    .then(resp => resp.text());
+    .then((resp) => resp.text());
 }
 
 (async () => {
@@ -42,7 +44,7 @@ async function getChallengePage(lang) {
     console.log(`getting for ${lang}`);
     const page = await getChallengePage(lang);
 
-    resultSheet[lang] = page.includes(`<html lang="${lang}">`)
+    resultSheet[lang] = page.includes(`<html lang="${lang}">`);
   }
 
   for (const [lang, result] of Object.entries(resultSheet)) {

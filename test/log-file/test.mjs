@@ -3,16 +3,16 @@ import { statSync } from "fs";
 async function getPage(path) {
   return fetch(`http://localhost:8923${path}`, {
     headers: {
-      'User-Agent': 'CHALLENGE'
-    }
+      "User-Agent": "CHALLENGE",
+    },
   })
-    .then(resp => {
+    .then((resp) => {
       if (resp.status !== 200) {
         throw new Error(`wanted status 200, got status: ${resp.status}`);
       }
       return resp;
     })
-    .then(resp => resp.text());
+    .then((resp) => resp.text());
 }
 
 async function getFileSize(filePath) {
@@ -63,7 +63,9 @@ async function getFileSize(filePath) {
 
   // Verify that log file size increased
   if (finalSize <= initialSize) {
-    console.error("ERROR: Log file size did not increase after making requests!");
+    console.error(
+      "ERROR: Log file size did not increase after making requests!",
+    );
     failed = true;
   }
 
@@ -79,10 +81,14 @@ async function getFileSize(filePath) {
   console.log(`Successful requests: ${successCount}/${requests.length}`);
 
   if (failed) {
-    console.error("Test failed: Some requests failed or log file size did not increase");
+    console.error(
+      "Test failed: Some requests failed or log file size did not increase",
+    );
     process.exit(1);
   } else {
-    console.log("Test passed: All requests succeeded and log file size increased");
+    console.log(
+      "Test passed: All requests succeeded and log file size increased",
+    );
     process.exit(0);
   }
 })();

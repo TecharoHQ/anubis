@@ -26,8 +26,20 @@ Anubis is brought to you by sponsors and donors like:
 
 ### Gold Tier
 
+<a href="https://www.unipromos.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/unipromos.webp" alt="Unipromos" height="64" />
+</a>
+<a href="https://uvensys.de/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/uvensys.webp" alt="Uvensys" height="64">
+</a>
 <a href="https://distrust.co?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/distrust-logo.webp" alt="Distrust" height="64">
+</a>
+<a href="https://about.gitea.com?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/gitea-logo.webp" alt="Gitea" height="64">
+</a>
+<a href="https://prolocation.net?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/prolocation-logo.svg" alt="Prolocation" height="64">
 </a>
 <a href="https://terminaltrove.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis&utm_source=abgh">
   <img src="./docs/static/img/sponsors/terminal-trove.webp" alt="Terminal Trove" height="64">
@@ -57,6 +69,9 @@ Anubis is brought to you by sponsors and donors like:
     alt="Cat eyes over the word Emma in a serif font"
     height="64"
   />
+</a>
+<a href="https://www.anexia.com/">
+  <img src="./docs/static/img/sponsors/anexia-cloudsolutions-logo.webp" alt="ANEXIA Cloud Solutions" height="64">
 </a>
 
 ## Overview

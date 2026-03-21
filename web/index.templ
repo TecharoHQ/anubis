@@ -40,16 +40,16 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
         }
 
         #progress {
-          display: none;
-          width: 90%;
-          width: min(20rem, 90%);
-          height: 2rem;
-          border-radius: 1rem;
-          overflow: hidden;
-          margin: 1rem 0 2rem;
-					outline-offset: 2px;
-					outline: #b16286 solid 4px;
-				}
+            display: none;
+            width: 90%;
+            width: min(20rem, 90%);
+            height: 2rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 1rem 0 2rem;
+            outline-offset: 2px;
+            outline: #b16286 solid 4px;
+        }
 
         .bar-inner {
             background-color: #b16286;
@@ -64,7 +64,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 			@templ.JSONScript("anubis_public_url", anubis.PublicUrl)
 		</head>
 		<body id="top">
-			@honeypotLink(fmt.Sprintf("%shoneypot/%s/init", anubis.APIPrefix, uuid.NewString()))
+			@honeypotLink(anubis.BasePrefix + fmt.Sprintf("%shoneypot/%s/init", anubis.APIPrefix, uuid.NewString()))
 			<main>
 				<h1 id="title" class="centered-div">{ title }</h1>
 				@body
@@ -79,7 +79,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, chal
 						if impressum != nil {
 							<p>
 								@templ.Raw(impressum.Footer)
-								-- <a href={ templ.SafeURL(fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
+								-- <a href={ templ.SafeURL(anubis.BasePrefix + fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
 							</p>
 						}
 						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>

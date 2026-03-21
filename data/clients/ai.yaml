@@ -4,5 +4,5 @@
 #  - Claude-User: No published IP allowlist
 - name: "ai-clients"
   user_agent_regex: >-
-    ChatGPT-User|Claude-User|MistralAI-User
+    ChatGPT-User|Claude-User|MistralAI-User|Perplexity-User
   action: DENY

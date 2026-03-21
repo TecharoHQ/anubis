@@ -182,10 +182,7 @@ func makeCode(err error) string {
 	enc := base64.StdEncoding.EncodeToString(buf.Bytes())
 	var builder strings.Builder
 	for i := 0; i < len(enc); i += width {
-		end := i + width
-		if end > len(enc) {
-			end = len(enc)
-		}
+		end := min(i+width, len(enc))
 		builder.WriteString(enc[i:end])
 		builder.WriteByte('\n')
 	}
@@ -222,8 +219,12 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
 	if err != nil {
 		lg.Error("can't get challenge", "err", err)
+		algorithm := "unknown"
+		if rule.Challenge != nil {
+			algorithm = rule.Challenge.Algorithm
+		}
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
 		return
 	}
 
@@ -248,9 +249,13 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 
 	impl, ok := challenge.Get(chall.Method)
 	if !ok {
-		lg.Error("check failed", "err", "can't get algorithm", "algorithm", rule.Challenge.Algorithm)
+		algorithm := "unknown"
+		if rule.Challenge != nil {
+			algorithm = rule.Challenge.Algorithm
+		}
+		lg.Error("check failed", "err", "can't get algorithm", "algorithm", algorithm)
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
 		return
 	}
 
@@ -333,7 +338,14 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, code string, status int) {
 	localizer := localization.GetLocalizer(r)
 
-	templ.Handler(web.Base(localizer.T("oh_noes"), web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer), s.policy.Impressum, localizer), templ.WithStatus(status)).ServeHTTP(w, r)
+	component := web.Base(
+		localizer.T("oh_noes"),
+		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
+		s.policy.Impressum,
+		localizer,
+	)
+	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

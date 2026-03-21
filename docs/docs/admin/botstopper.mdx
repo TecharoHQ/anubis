@@ -51,9 +51,8 @@ If you are using Kubernetes, you will need to create an image pull secret:
 kubectl create secret docker-registry \
   techarohq-botstopper \
   --docker-server ghcr.io \
-  --docker-username your-username \
-  --docker-password your-access-token \
-  --docker-email your@email.address
+  --docker-username any-username \
+  --docker-password <your-access-token> \
 ```
 
 Then attach it to your Deployment:
@@ -85,7 +84,7 @@ Follow [the upstream Docker compose directions](https://anubis.techaro.lol/docs/
        OG_EXPIRY_TIME: "24h"
 
 +      # botstopper config here
-+      CHALLENGE_TITLE: "Doing math for your connnection!"
++      CHALLENGE_TITLE: "Doing math for your connection!"
 +      ERROR_TITLE: "Something went wrong!"
 +      OVERLAY_FOLDER: /assets
 +    volumes:
