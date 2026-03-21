@@ -1,7 +1,7 @@
 bots:
-- name: everything
-  user_agent_regex: .*
-  action: DENY
+  - name: everything
+    user_agent_regex: .*
+    action: DENY
 
 status_codes:
   CHALLENGE: 200

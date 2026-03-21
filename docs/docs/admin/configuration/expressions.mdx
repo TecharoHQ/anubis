@@ -243,16 +243,16 @@ function regexSafe(input: string): string;
 
 `regexSafe` takes a string and escapes it for safe use inside of a regular expression. This is useful when you are creating regular expressions from headers or variables such as `remoteAddress`.
 
-| Input                     | Output                          |
-| :------------------------ | :------------------------------ |
-| `regexSafe("1.2.3.4")`    | `1\\.2\\.3\\.4`                 |
-| `regexSafe("techaro.lol")` | `techaro\\.lol`                 |
-| `regexSafe("star*")`      | `star\\*`                       |
-| `regexSafe("plus+")`      | `plus\\+`                       |
-| `regexSafe("{braces}")`   | `\\{braces\\}`                  |
-| `regexSafe("start^")`     | `start\\^`                      |
-| `regexSafe("back\\slash")` | `back\\\\slash`                 |
-| `regexSafe("dash-dash")`  | `dash\\-dash`                   |
+| Input                      | Output          |
+| :------------------------- | :-------------- |
+| `regexSafe("1.2.3.4")`     | `1\\.2\\.3\\.4` |
+| `regexSafe("techaro.lol")` | `techaro\\.lol` |
+| `regexSafe("star*")`       | `star\\*`       |
+| `regexSafe("plus+")`       | `plus\\+`       |
+| `regexSafe("{braces}")`    | `\\{braces\\}`  |
+| `regexSafe("start^")`      | `start\\^`      |
+| `regexSafe("back\\slash")` | `back\\\\slash` |
+| `regexSafe("dash-dash")`   | `dash\\-dash`   |
 
 ### `segments`
 
@@ -301,9 +301,9 @@ function arpaReverseIP(ip: string): string;
 
 `arpaReverseIP` takes an IP address and returns its value in [ARPA notation](https://www.ietf.org/rfc/rfc2317.html). This can be useful when matching PTR record patterns.
 
-| Input                          | Output                                                               |
-| :----------------------------- | :------------------------------------------------------------------- |
-| `arpaReverseIP("1.2.3.4")`     | `4.3.2.1`                                                            |
+| Input                          | Output                                                            |
+| :----------------------------- | :---------------------------------------------------------------- |
+| `arpaReverseIP("1.2.3.4")`     | `4.3.2.1`                                                         |
 | `arpaReverseIP("2001:db8::1")` | `1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2` |
 
 #### `lookupHost`

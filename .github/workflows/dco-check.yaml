@@ -1,0 +1,9 @@
+name: DCO Check
+
+on: [pull_request]
+
+jobs:
+  dco_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tisonkun/actions-dco@f1024cd563550b5632e754df11b7d30b73be54a5 # v1.1

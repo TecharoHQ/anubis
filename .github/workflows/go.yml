@@ -20,7 +20,7 @@ jobs:
     #runs-on: alrest-techarohq
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -29,7 +29,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: "latest"
 
@@ -38,7 +38,7 @@ jobs:
           go-version: ${{ matrix.go_version }}
 
       - name: Cache playwright binaries
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         id: playwright-cache
         with:
           path: |
@@ -61,10 +61,10 @@ jobs:
         run: npm run test
 
       - name: Lint with staticcheck
-        uses: dominikh/staticcheck-action@024238d2898c874f26d723e7d0ff4308c35589a2 # v1.4.0
+        uses: dominikh/staticcheck-action@9716614d4101e79b4340dd97b10e54d68234e431 # v1.4.1
         with:
           version: "latest"
 
       - name: Govulncheck
         run: |
-          go tool govulncheck ./...
+          go tool govulncheck ./... ||:

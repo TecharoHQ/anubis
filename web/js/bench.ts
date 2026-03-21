@@ -2,13 +2,27 @@ import algorithms from "./algorithms";
 
 const defaultDifficulty = 4;
 
-const status: HTMLParagraphElement = document.getElementById("status") as HTMLParagraphElement;
-const difficultyInput: HTMLInputElement = document.getElementById("difficulty-input") as HTMLInputElement;
-const algorithmSelect: HTMLSelectElement = document.getElementById("algorithm-select") as HTMLSelectElement;
-const compareSelect: HTMLSelectElement = document.getElementById("compare-select") as HTMLSelectElement;
-const header: HTMLTableRowElement = document.getElementById("table-header") as HTMLTableRowElement;
-const headerCompare: HTMLTableSectionElement = document.getElementById("table-header-compare") as HTMLTableSectionElement;
-const results: HTMLTableRowElement = document.getElementById("results") as HTMLTableRowElement;
+const status: HTMLParagraphElement = document.getElementById(
+  "status",
+) as HTMLParagraphElement;
+const difficultyInput: HTMLInputElement = document.getElementById(
+  "difficulty-input",
+) as HTMLInputElement;
+const algorithmSelect: HTMLSelectElement = document.getElementById(
+  "algorithm-select",
+) as HTMLSelectElement;
+const compareSelect: HTMLSelectElement = document.getElementById(
+  "compare-select",
+) as HTMLSelectElement;
+const header: HTMLTableRowElement = document.getElementById(
+  "table-header",
+) as HTMLTableRowElement;
+const headerCompare: HTMLTableSectionElement = document.getElementById(
+  "table-header-compare",
+) as HTMLTableSectionElement;
+const results: HTMLTableRowElement = document.getElementById(
+  "results",
+) as HTMLTableRowElement;
 
 const setupControls = () => {
   if (defaultDifficulty == null) {
@@ -41,7 +55,12 @@ const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
     .join("");
 
   const t0 = performance.now();
-  const { hash, nonce } = await process({ basePrefix: "/", version: "devel" }, challenge, Number(difficulty), signal);
+  const { hash, nonce } = await process(
+    { basePrefix: "/", version: "devel" },
+    challenge,
+    Number(difficulty),
+    signal,
+  );
   const t1 = performance.now();
   console.log({ hash, nonce });
 

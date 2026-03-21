@@ -8,9 +8,7 @@
           "userAgent.startsWith(\"git/\") || userAgent.contains(\"libgit\")",
           "\"Git-Protocol\" in headers && headers[\"Git-Protocol\"] == \"version=2\"\n"
         ],
-        "any": [
-          "userAgent.startsWith(\"evilbot/\")"
-        ]
+        "any": ["userAgent.startsWith(\"evilbot/\")"]
       }
     }
   ]

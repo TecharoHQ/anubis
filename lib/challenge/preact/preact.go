@@ -39,6 +39,10 @@ type impl struct{}
 func (i *impl) Setup(mux *http.ServeMux) {}
 
 func (i *impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *challenge.IssueInput) (templ.Component, error) {
+	if err := in.Valid(); err != nil {
+		return nil, err
+	}
+
 	u, err := r.URL.Parse(anubis.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
@@ -57,6 +61,10 @@ func (i *impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 }
 
 func (i *impl) Validate(r *http.Request, lg *slog.Logger, in *challenge.ValidateInput) error {
+	if err := in.Valid(); err != nil {
+		return challenge.NewError("validate", "invalid input", err)
+	}
+
 	wantTime := in.Challenge.IssuedAt.Add(time.Duration(in.Rule.Challenge.Difficulty) * 80 * time.Millisecond)
 
 	if time.Now().Before(wantTime) {

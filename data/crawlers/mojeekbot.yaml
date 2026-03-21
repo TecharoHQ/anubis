@@ -2,4 +2,4 @@
   user_agent_regex: \+https\://www\.mojeek\.com/bot\.html
   action: ALLOW
   # https://www.mojeek.com/bot.html
-  remote_addresses: [ "5.102.173.71/32" ]
+  remote_addresses: ["5.102.173.71/32"]

@@ -2,8 +2,6 @@
   {
     "name": "ipv6-ula",
     "action": "ALLOW",
-    "remote_addresses": [
-      "fc00::/7"
-    ]
+    "remote_addresses": ["fc00::/7"]
   }
 ]

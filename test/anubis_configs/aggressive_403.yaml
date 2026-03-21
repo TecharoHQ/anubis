@@ -1,11 +1,11 @@
 bots:
-- name: deny
-  user_agent_regex: DENY
-  action: DENY
+  - name: deny
+    user_agent_regex: DENY
+    action: DENY
 
-- name: challenge
-  user_agent_regex: CHALLENGE
-  action: CHALLENGE
+  - name: challenge
+    user_agent_regex: CHALLENGE
+    action: CHALLENGE
 
 status_codes:
   CHALLENGE: 401
