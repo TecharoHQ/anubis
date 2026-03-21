@@ -28,31 +28,33 @@ import (
 )
 
 type Options struct {
-	Next                     http.Handler
-	Policy                   *policy.ParsedConfig
-	Target                   string
-	TargetHost               string
-	TargetSNI                string
-	TargetInsecureSkipVerify bool
-	CookieDynamicDomain      bool
-	CookieDomain             string
-	CookieExpiration         time.Duration
-	CookiePartitioned        bool
-	BasePrefix               string
-	WebmasterEmail           string
-	RedirectDomains          []string
-	ED25519PrivateKey        ed25519.PrivateKey
-	HS512Secret              []byte
-	StripBasePrefix          bool
-	OpenGraph                config.OpenGraph
-	ServeRobotsTXT           bool
-	CookieSecure             bool
-	CookieSameSite           http.SameSite
-	Logger                   *slog.Logger
-	LogLevel                 string
-	PublicUrl                string
-	JWTRestrictionHeader     string
-	DifficultyInJWT          bool
+	Next                      http.Handler
+	Policy                    *policy.ParsedConfig
+	Target                    string
+	TargetHost                string
+	TargetSNI                 string
+	TargetInsecureSkipVerify  bool
+	CookieDynamicDomain       bool
+	CookieDomain              string
+	CookieExpiration          time.Duration
+	CookiePartitioned         bool
+	BasePrefix                string
+	WebmasterEmail            string
+	RedirectDomains           []string
+	ED25519PrivateKey         ed25519.PrivateKey
+	HS512Secret               []byte
+	StripBasePrefix           bool
+	OpenGraph                 config.OpenGraph
+	ServeRobotsTXT            bool
+	CookieSecure              bool
+	CookieSameSite            http.SameSite
+	Logger                    *slog.Logger
+	LogLevel                  string
+	PublicUrl                 string
+	JWTRestrictionHeader      string
+	DifficultyInJWT           bool
+	ProxyProtocolTimeout      time.Duration
+	ProxyProtocolAllowedCIDRs []string
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int, logLevel string) (*policy.ParsedConfig, error) {
