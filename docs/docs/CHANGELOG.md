@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: prevent nil pointer panic in challenge validation when threshold rules match during PassChallenge (#1463)
 - Instruct reverse proxies to not cache error pages.
 - Fixed mixed tab/space indentation in Caddy documentation code block
+- Rewrite main proof of work challenge to use Preact instead of Vanilla.js ([#1149](https://github.com/TecharoHQ/anubis/issues/1149))
 
 <!-- This changes the project to: -->
 

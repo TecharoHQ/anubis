@@ -141,7 +141,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		return nil, err
 	}
 
-	lg.Info("new challenge issued", "challenge", id.String())
+	lg.Info("new challenge issued", "challenge", id.String(), "method", chall.Method)
 
 	return &chall, err
 }

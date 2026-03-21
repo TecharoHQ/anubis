@@ -8,7 +8,7 @@
   "ai_companies_explanation": "Diese Seite wird angezeigt, da der Betreiber der Website Anubis eingerichtet hat, um sie vor aggressiven Webcrawlern von KI-Unternehmen zu schützen. Diese können Ausfälle verursachen, wodurch die Website für niemanden erreichbar ist.",
   "anubis_compromise": "Anubis stellt einen Kompromiss dar. Es verwendet eine Proof-of-Work-Methode nach dem Hashcash-Prinzip, das ursprünglich zur Bekämpfung von E-Mail-Spam entwickelt wurde. Die Idee dahinter: Für einen einzelnen Besucher ist die Verzögerung vernachlässigbar, aber massenhaftes Scraping wird dadurch aufwändig und teuer.",
   "hack_purpose": "Letztendlich ist dies eine Übergangslösung, um mehr Zeit für Browser-Fingerprinting und die Identifizierung von Headless-Browsern (z. B. anhand ihrer Schriftwiedergabe) zu gewinnen. So muss die Proof-of-Work-Seite nicht Nutzern angezeigt werden, die sehr wahrscheinlich legitim sind.",
-  "simplified_explanation": "Dies ist eine Maßnahme gegen Bots und bösartige Anfragen, ähnlich einem CAPTCHA. Anstatt jedoch selbst arbeiten zu müssen, erhält dein Browser eine Rechenaufgabe, um sicherzustellen, dass es sich um einen gültigen Client handelt. Dieses Konzept nennt sich <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Die Aufgabe wird in wenigen Sekunden berechnet und du erhältst Zugriff auf die Website. Danke für deine Geduld.",
+  "simplified_explanation": "Dies ist eine Maßnahme gegen Bots und bösartige Anfragen, ähnlich einem CAPTCHA. Anstatt jedoch selbst arbeiten zu müssen, erhält dein Browser eine Rechenaufgabe, um sicherzustellen, dass es sich um einen gültigen Client handelt. Dieses Konzept nennt sich Proof of Work. Die Aufgabe wird in wenigen Sekunden berechnet und du erhältst Zugriff auf die Website. Danke für deine Geduld.",
   "jshelter_note": "Anubis benötigt moderne JavaScript-Features, die von Plugins wie JShelter deaktiviert werden. Bitte deaktiviere JShelter oder ähnliche Plugins für diese Domain.",
   "version_info": "Diese Website läuft mit Anubis-Version",
   "try_again": "Erneut versuchen",
@@ -49,12 +49,12 @@
   "js_web_workers_error": "Dein Browser unterstützt keine Web-Worker (Anubis verwendet diese, damit der Browser nicht einfriert). Ist ein Plugin wie JShelter installiert?",
   "js_cookies_error": "Dein Browser speichert keine Cookies. Anubis verwendet Cookies, um nach bestandener Prüfung ein signiertes Token abzulegen. Bitte aktiviere Cookies für diese Domain. Die Cookie-Namen von Anubis können sich jederzeit ändern. Cookie-Namen und gespeicherte Werte sind nicht Teil der öffentlichen API.",
   "js_context_not_secure": "Diese Verbindung ist nicht sicher!",
-  "js_context_not_secure_msg": "Bitte versuche, dich über HTTPS zu verbinden, oder weise den Administrator darauf hin, HTTPS einzurichten. Mehr Informationen: <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Bitte versuche, dich über HTTPS zu verbinden, oder weise den Administrator darauf hin, HTTPS einzurichten. Mehr Informationen: MDN.",
   "js_calculating": "Berechnung läuft...",
   "js_missing_feature": "Fehlendes Feature",
   "js_challenge_error": "Prüfung fehlgeschlagen!",
   "js_challenge_error_msg": "Der Prüf-Algorithmus konnte nicht geladen werden. Bitte lade die Seite neu.",
-  "js_calculating_difficulty": "Berechnung läuft...<br/>Schwierigkeit:",
+  "js_calculating_difficulty": "Berechnung läuft... — Schwierigkeit:",
   "js_speed": "Geschwindigkeit:",
   "js_verification_longer": "Die Prüfung dauert länger als erwartet. Bitte warte und lade die Seite nicht neu.",
   "js_success": "Erfolgreich!",
@@ -62,5 +62,6 @@
   "js_iterations": "Iterationen",
   "js_finished_reading": "Fertig gelesen – weiter zur Seite →",
   "js_calculation_error": "Berechnungsfehler!",
-  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:"
+  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:",
+  "js_challenge_data_missing": "Die Prüfungsdaten fehlen. Bitte laden Sie die Seite neu."
 }

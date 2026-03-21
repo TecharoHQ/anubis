@@ -47,12 +47,12 @@
   "js_web_workers_error": "お使いのブラウザはWebワーカーをサポートしていません（Anubisはこれでブラウザのフリーズを防ぎます）。JShelterのようなプラグインを使用していませんか？",
   "js_cookies_error": "お使いのブラウザはCookieを保存しません。Anubisは、チャレンジを通過したクライアントを判別するために署名付きトークンをCookieに保存します。このドメインでCookieの保存を有効にしてください。Anubisが保存するCookie名は予告なく変更される場合があります。Cookie名や値は公開APIの一部ではありません。",
   "js_context_not_secure": "お使いのコンテキストは安全ではありません！",
-  "js_context_not_secure_msg": "HTTPSで接続するか、管理者にHTTPSの設定を依頼してください。詳細は<a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>をご覧ください。",
+  "js_context_not_secure_msg": "HTTPSで接続するか、管理者にHTTPSの設定を依頼してください。詳細はMDNをご覧ください。",
   "js_calculating": "計算中...",
   "js_missing_feature": "機能がありません",
   "js_challenge_error": "チャレンジエラー！",
   "js_challenge_error_msg": "チェックアルゴリズムの解決に失敗しました。ページを再読み込みしてください。",
-  "js_calculating_difficulty": "計算中...<br/>難易度:",
+  "js_calculating_difficulty": "計算中... — 難易度:",
   "js_speed": "速度:",
   "js_verification_longer": "検証に予想以上の時間がかかっています。ページをリフレッシュしないでください。",
   "js_success": "成功！",
@@ -62,5 +62,6 @@
   "js_calculation_error": "計算エラー！",
   "js_calculation_error_msg": "チャレンジの計算に失敗しました:",
   "missing_required_forwarded_headers": "必要な X-Forwarded-* ヘッダーがありません",
-  "simplified_explanation": "これは、CAPTCHAと同様の、ボットや悪意のあるリクエストに対する対策です。ただし、自分で作業する代わりに、ブラウザに計算タスクが与えられ、それを解決して有効なクライアントであることを確認する必要があります。この概念は<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>と呼ばれます。タスクは数秒で計算され、ウェブサイトへのアクセスが許可されます。ご理解とご協力をお願いいたします。"
+  "simplified_explanation": "これは、CAPTCHAと同様の、ボットや悪意のあるリクエストに対する対策です。ただし、自分で作業する代わりに、ブラウザに計算タスクが与えられ、それを解決して有効なクライアントであることを確認する必要があります。この概念はProof of Workと呼ばれます。タスクは数秒で計算され、ウェブサイトへのアクセスが許可されます。ご理解とご協力をお願いいたします。",
+  "js_challenge_data_missing": "チャレンジデータがありません。ページを再読み込みしてください。"
 }

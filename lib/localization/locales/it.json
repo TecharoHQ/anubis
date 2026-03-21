@@ -47,12 +47,12 @@
   "js_web_workers_error": "Il tuo browser non supporta web workers (Anubis li utilizza per evitare di rallentare il tuo browser). Hai installato un plugin come JShelter?",
   "js_cookies_error": "Il tuo browser non salva i cookie. Anubis utilizza i cookie per determinare quali client hanno superato la prova, salvando un identificativo firmato digitalmente in un cookie. Abilita il salvataggio dei cookie per questo dominio. Il nome del cookie salvato da Anubis potrebbe cambiare senza preavviso. I nomi dei cookie e il loro contenuto non fanno parte dell'API pubblica.",
   "js_context_not_secure": "La tua connessione non è sicura!",
-  "js_context_not_secure_msg": "Prova a connetterti tramite HTTPS, o fallo abilitare dall'amministratore del sito. Per maggiori informazioni, vedi <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Prova a connetterti tramite HTTPS, o fallo abilitare dall'amministratore del sito. Per maggiori informazioni, vedi MDN.",
   "js_calculating": "Calcolo in corso...",
   "js_missing_feature": "Funzionalità mancante",
   "js_challenge_error": "Errore nel test!",
   "js_challenge_error_msg": "Impossibile trovare l'algoritmo di controllo. Ricarica la pagina.",
-  "js_calculating_difficulty": "Calcolo in corso...<br/>Difficoltà:",
+  "js_calculating_difficulty": "Calcolo in corso... — Difficoltà:",
   "js_speed": "Velocità:",
   "js_verification_longer": "La verifica sta richiedendo più tempo del previsto. Non aggiornare la pagina: attendere.",
   "js_success": "Successo!",
@@ -62,5 +62,6 @@
   "js_calculation_error": "Errore nel calcolo!",
   "js_calculation_error_msg": "Impossibile superare il test:",
   "missing_required_forwarded_headers": "Mancano gli header X-Forwarded-* richiesti",
-  "simplified_explanation": "Questa è una misura contro bot e richieste dannose simile a un CAPTCHA. Tuttavia, invece di dover lavorare tu stesso, al tuo browser viene assegnato un compito di calcolo che deve risolvere per garantire che sia un client valido. Questo concetto è chiamato <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Il compito viene calcolato in pochi secondi e ti viene concesso l'accesso al sito web. Grazie per la tua comprensione e pazienza."
+  "simplified_explanation": "Questa è una misura contro bot e richieste dannose simile a un CAPTCHA. Tuttavia, invece di dover lavorare tu stesso, al tuo browser viene assegnato un compito di calcolo che deve risolvere per garantire che sia un client valido. Questo concetto è chiamato Proof of Work. Il compito viene calcolato in pochi secondi e ti viene concesso l'accesso al sito web. Grazie per la tua comprensione e pazienza.",
+  "js_challenge_data_missing": "I dati della sfida sono mancanti. Ricarica la pagina."
 }

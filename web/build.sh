@@ -41,15 +41,22 @@ cp ../lib/localization/locales/*.json static/locales/
 
 shopt -s nullglob globstar
 
-for file in js/**/*.ts js/**/*.mjs; do
+for file in js/**/*.ts js/**/*.tsx js/**/*.mjs; do
   out="static/${file}"
-  if [[ "$file" == *.ts ]]; then
+  if [[ "$file" == *.tsx ]]; then
+    out="static/${file%.tsx}.mjs"
+  elif [[ "$file" == *.ts ]]; then
     out="static/${file%.ts}.mjs"
   fi
 
   mkdir -p "$(dirname "$out")"
 
-  esbuild "$file" --sourcemap --bundle --minify --outfile="$out" --banner:js="$LICENSE"
+  JSX_FLAGS=""
+  if [[ "$file" == *.tsx ]]; then
+    JSX_FLAGS="--jsx=automatic --jsx-import-source=preact"
+  fi
+
+  esbuild "$file" --sourcemap --bundle --minify --outfile="$out" $JSX_FLAGS --banner:js="$LICENSE"
   gzip -f -k -n "$out"
   zstd -f -k --ultra -22 "$out"
   brotli -fZk "$out"
