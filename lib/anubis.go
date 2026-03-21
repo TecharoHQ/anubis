@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -207,7 +206,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	cr, rule, err := s.check(r, lg)
+	cr, rule, err := s.checkHTTPRequest(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		localizer := localization.GetLocalizer(r)
@@ -238,54 +237,8 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	if err := ckie.Valid(); err != nil {
-		lg.Debug("cookie is invalid", "err", err)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
-		lg.Debug("cookie expired", "path", r.URL.Path)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
-
-	if err != nil || !token.Valid {
-		lg.Debug("invalid token", "path", r.URL.Path, "err", err)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		lg.Debug("invalid token claims type", "path", r.URL.Path)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	policyRule, ok := claims["policyRule"].(string)
-	if !ok {
-		lg.Debug("policyRule claim is not a string")
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	if policyRule != rule.Hash() {
-		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
-		return
-	}
-
-	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(r.Header.Get(s.opts.JWTRestrictionHeader)) {
-		lg.Debug("JWT restriction header is invalid")
+	valid := ValidateCookie(ckie, lg, s, rule, r.URL.Path, r.Header)
+	if !valid {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
@@ -293,6 +246,49 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	r.Header.Add("X-Anubis-Status", "PASS")
 	s.ServeHTTPNext(w, r)
+}
+
+func ValidateCookie(ckie *http.Cookie, lg *slog.Logger, s *Server, rule *policy.Bot, path string, header http.Header) bool {
+	if err := ckie.Valid(); err != nil {
+		lg.Debug("cookie is invalid", "err", err)
+		return false
+	}
+
+	if time.Now().After(ckie.Expires) && !ckie.Expires.IsZero() {
+		lg.Debug("cookie expired", "path", path)
+		return false
+	}
+
+	token, err := jwt.ParseWithClaims(ckie.Value, jwt.MapClaims{}, s.getTokenKeyfunc(), jwt.WithExpirationRequired(), jwt.WithStrictDecoding())
+
+	if err != nil || !token.Valid {
+		lg.Debug("invalid token", "path", path, "err", err)
+		return false
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		lg.Debug("invalid token claims type", "path", path)
+		return false
+	}
+
+	policyRule, ok := claims["policyRule"].(string)
+	if !ok {
+		lg.Debug("policyRule claim is not a string")
+		return false
+	}
+
+	if policyRule != rule.Hash() {
+		lg.Debug("user originally passed with a different rule, issuing new challenge", "old", policyRule, "new", rule.Name)
+		return false
+	}
+
+	if s.opts.JWTRestrictionHeader != "" && claims["restriction"] != internal.SHA256sum(header.Get(s.opts.JWTRestrictionHeader)) {
+		lg.Debug("JWT restriction header is invalid")
+		return false
+	}
+
+	return true
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
@@ -385,7 +381,8 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = redir
 
 	encoder := json.NewEncoder(w)
-	cr, rule, err := s.check(r, lg)
+
+	cr, rule, err := s.checkHTTPRequest(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -487,7 +484,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cr, rule, err := s.check(r, lg)
+	cr, rule, err := s.checkHTTPRequest(r, lg)
 	if err != nil {
 		lg.Error("check failed", "err", err)
 		s.respondWithError(w, r, fmt.Sprintf("%s \"passChallenge\"", localizer.T("internal_server_error")), makeCode(err))
@@ -604,17 +601,7 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 }
 
 // Check evaluates the list of rules, and returns the result
-func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
-	host := r.Header.Get("X-Real-Ip")
-	if host == "" {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
-	}
-
-	addr := net.ParseIP(host)
-	if addr == nil {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] %q is not an IP address", host)
-	}
-
+func (s *Server) check(r *checker.RequestMetadata, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
 	weight := 0
 
 	for _, b := range s.policy.Bots {
@@ -636,7 +623,7 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 	}
 
 	for _, t := range s.policy.Thresholds {
-		result, _, err := t.Program.ContextEval(r.Context(), &policy.ThresholdRequest{Weight: weight})
+		result, _, err := t.Program.ContextEval(r.Context, &policy.ThresholdRequest{Weight: weight})
 		if err != nil {
 			lg.Error("error when evaluating threshold expression", "expression", t.Expression.String(), "err", err)
 			continue
@@ -671,4 +658,13 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 		},
 		Rules: &checker.List{},
 	}, nil
+}
+
+func (s *Server) checkHTTPRequest(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
+	meta, err := checker.MetadataFromRequest(r)
+	if err != nil {
+		return policy.CheckResult{}, nil, err
+	}
+
+	return s.check(meta, lg)
 }
