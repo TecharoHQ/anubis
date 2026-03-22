@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/policy"
 )
 
@@ -189,5 +190,36 @@ func TestRenderIndexUnauthorized(t *testing.T) {
 	}
 	if body := rr.Body.String(); body != "Authorization required" {
 		t.Errorf("expected body %q, got %q", "Authorization required", body)
+	}
+}
+
+func TestNoCacheOnError(t *testing.T) {
+	pol := loadPolicies(t, "testdata/useragent.yaml", 0)
+	srv := spawnAnubis(t, Options{Policy: pol})
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	for userAgent, expectedCacheControl := range map[string]string{
+		"DENY":      "no-store",
+		"CHALLENGE": "no-store",
+		"ALLOW":     "",
+	} {
+		t.Run(userAgent, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			req.Header.Set("User-Agent", userAgent)
+
+			resp, err := ts.Client().Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if resp.Header.Get("Cache-Control") != expectedCacheControl {
+				t.Errorf("wanted Cache-Control header %q, got %q", expectedCacheControl, resp.Header.Get("Cache-Control"))
+			}
+		})
 	}
 }

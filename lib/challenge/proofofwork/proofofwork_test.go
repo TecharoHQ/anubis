@@ -30,6 +30,62 @@ func mkRequest(t *testing.T, values map[string]string) *http.Request {
 	return req
 }
 
+// TestValidateNilRuleChallenge reproduces the panic from
+// https://github.com/TecharoHQ/anubis/issues/1463
+//
+// When a threshold rule matches during PassChallenge, check() can return
+// a policy.Bot with Challenge == nil. After hydrateChallengeRule fails to
+// run (or the error path hits before it), Validate dereferences
+// rule.Challenge.Difficulty and panics.
+func TestValidateNilRuleChallenge(t *testing.T) {
+	i := &Impl{Algorithm: "fast"}
+	lg := slog.With()
+
+	// This is the exact response for SHA256("hunter" + "0") with 0 leading zeros required.
+	const challengeStr = "hunter"
+	const response = "2652bdba8fb4d2ab39ef28d8534d7694c557a4ae146c1e9237bd8d950280500e"
+
+	req := mkRequest(t, map[string]string{
+		"nonce":       "0",
+		"elapsedTime": "69",
+		"response":    response,
+	})
+
+	for _, tc := range []struct {
+		name  string
+		input *challenge.ValidateInput
+	}{
+		{
+			name: "nil-rule-challenge",
+			input: &challenge.ValidateInput{
+				Rule:      &policy.Bot{},
+				Challenge: &challenge.Challenge{RandomData: challengeStr},
+			},
+		},
+		{
+			name: "nil-rule",
+			input: &challenge.ValidateInput{
+				Challenge: &challenge.Challenge{RandomData: challengeStr},
+			},
+		},
+		{
+			name:  "nil-challenge",
+			input: &challenge.ValidateInput{Rule: &policy.Bot{Challenge: &config.ChallengeRules{Algorithm: "fast"}}},
+		},
+		{
+			name:  "nil-input",
+			input: nil,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := i.Validate(req, lg, tc.input)
+			if !errors.Is(err, challenge.ErrInvalidInput) {
+				t.Fatalf("expected ErrInvalidInput, got: %v", err)
+			}
+		})
+	}
+}
+
 func TestBasic(t *testing.T) {
 	i := &Impl{Algorithm: "fast"}
 	bot := &policy.Bot{

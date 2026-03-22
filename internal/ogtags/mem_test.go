@@ -95,7 +95,7 @@ func TestMemoryUsage(t *testing.T) {
 
 	// Run getTarget many times
 	u, _ := url.Parse("/path/to/resource?query=1&foo=bar&baz=qux")
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		_ = cache.getTarget(u)
 	}
 
@@ -129,7 +129,7 @@ func TestMemoryUsage(t *testing.T) {
 	runtime.GC()
 	runtime.ReadMemStats(&m1)
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		_ = cache.extractOGTags(doc)
 	}
 
