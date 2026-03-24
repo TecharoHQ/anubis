@@ -92,7 +92,6 @@ function App({ anubisVersion, basePrefix }: AppProps) {
   >("loading");
 
   // Error info
-  const [errorTitle, setErrorTitle] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [errorImage, setErrorImage] = useState("");
 
@@ -119,7 +118,6 @@ function App({ anubisVersion, basePrefix }: AppProps) {
     }
 
     const showError = (title: string, message: string, imageSrc: string) => {
-      setErrorTitle(title);
       setErrorMessage(message);
       setErrorImage(imageSrc);
       setPhase("error");
