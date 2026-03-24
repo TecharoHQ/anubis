@@ -34,3 +34,4 @@ de
 resourced
 envoyproxy
 unipromos
+Samsung
