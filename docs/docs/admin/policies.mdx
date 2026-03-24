@@ -339,6 +339,7 @@ Anubis exposes the following logging settings in the policy file:
 | `level`      | [log level](#log-levels) | `info`          | The logging level threshold. Any logs that are at or above this threshold will be drained to the sink. Any other logs will be discarded. |
 | `sink`       | string                   | `stdio`, `file` | The sink where the logs drain to as they are being recorded in Anubis.                                                                   |
 | `parameters` | object                   |                 | Parameters for the given logging sink. This will vary based on the logging sink of choice. See below for more information.               |
+| `hideSource` | boolean                  | `false`         | If set, hide the details of which line of code triggered a log line. Setting this to `true` may make getting support more difficult.     |
 
 Anubis supports the following logging sinks:
 

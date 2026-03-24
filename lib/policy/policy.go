@@ -75,7 +75,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 	switch c.Logging.Sink {
 	case config.LogSinkStdio:
-		result.Logger = internal.InitSlog(logLevel, os.Stderr)
+		result.Logger = internal.InitSlog(logLevel, os.Stderr, c.Logging.HideSource)
 	case config.LogSinkFile:
 		out := &logrotate.Logger{
 			Filename:           c.Logging.Parameters.Filename,
@@ -87,7 +87,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			Compress:           c.Logging.Parameters.Compress,
 		}
 
-		result.Logger = internal.InitSlog(logLevel, out)
+		result.Logger = internal.InitSlog(logLevel, out, c.Logging.HideSource)
 	}
 
 	lg := result.Logger.With("at", "config-validate")

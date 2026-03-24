@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func InitSlog(level string, sink io.Writer) *slog.Logger {
+func InitSlog(level string, sink io.Writer, hideSource bool) *slog.Logger {
 	var programLevel slog.Level
 	if err := (&programLevel).UnmarshalText([]byte(level)); err != nil {
 		fmt.Fprintf(os.Stderr, "invalid log level %s: %v, using info\n", level, err)
@@ -20,10 +20,16 @@ func InitSlog(level string, sink io.Writer) *slog.Logger {
 	leveler := &slog.LevelVar{}
 	leveler.Set(programLevel)
 
-	h := slog.NewJSONHandler(sink, &slog.HandlerOptions{
+	opts := &slog.HandlerOptions{
 		AddSource: true,
 		Level:     leveler,
-	})
+	}
+
+	if hideSource {
+		opts.AddSource = false
+	}
+
+	h := slog.NewJSONHandler(sink, opts)
 	result := slog.New(h)
 	return result
 }
