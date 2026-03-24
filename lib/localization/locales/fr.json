@@ -47,12 +47,12 @@
   "js_web_workers_error": "Votre navigateur ne prend pas en charge les web workers (Anubis les utilise pour éviter de bloquer votre navigateur). Avez-vous installé un plugin comme JShelter ?",
   "js_cookies_error": "Votre navigateur ne stocke pas les cookies. Anubis a recours aux cookies pour déterminer quels clients ont réussi les défis en stockant un jeton signé dans un cookie. Veuillez activer le stockage des cookies pour ce domaine. Le nom des cookies stockés par Anubis peut varier à tout moment. Le nom et la valeur des cookies ne font pas partie de l'API publique.",
   "js_context_not_secure": "Votre contexte n'est pas sécurisé !",
-  "js_context_not_secure_msg": "Essayez de vous connecter via HTTPS ou demandez à l'administrateur·rice de configurer HTTPS. Pour plus d'informations, consultez <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Essayez de vous connecter via HTTPS ou demandez à l'administrateur·rice de configurer HTTPS. Pour plus d'informations, consultez MDN.",
   "js_calculating": "Calcul en cours...",
   "js_missing_feature": "Fonctionnalité manquante",
   "js_challenge_error": "Erreur de défi !",
   "js_challenge_error_msg": "Échec de la résolution de l'algorithme de vérification. Vous pouvez essayer de recharger la page.",
-  "js_calculating_difficulty": "Calcul en cours...<br/>Difficulté :",
+  "js_calculating_difficulty": "Calcul en cours... — Difficulté :",
   "js_speed": "Vitesse :",
   "js_verification_longer": "La vérification prend plus de temps que prévu. Veuillez ne pas actualiser la page.",
   "js_success": "Vérification réussie !",
@@ -62,5 +62,6 @@
   "js_calculation_error": "Erreur de calcul !",
   "js_calculation_error_msg": "Échec du calcul du défi :",
   "missing_required_forwarded_headers": "En-têtes X-Forwarded-* manquants",
-  "simplified_explanation": "Ceci est une mesure contre les robots et les requêtes malveillantes, similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour confirmer qu'il est un client valide. Ce concept est nommé <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Preuve de travail</a>. La tâche s'effectue en quelques secondes, puis vous avez accès au site Web. Merci pour votre compréhension et votre patience."
+  "simplified_explanation": "Ceci est une mesure contre les robots et les requêtes malveillantes, similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour confirmer qu'il est un client valide. Ce concept est nommé Preuve de travail. La tâche s'effectue en quelques secondes, puis vous avez accès au site Web. Merci pour votre compréhension et votre patience.",
+  "js_challenge_data_missing": "Les données du défi sont manquantes. Veuillez recharger la page."
 }

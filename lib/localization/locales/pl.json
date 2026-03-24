@@ -8,7 +8,7 @@
   "ai_companies_explanation": "Widzisz to, ponieważ administrator tej strony skonfigurował Anubisa, aby chronić serwer przed masowym skanowaniem treści przez firmy tworzące AI. Powoduje to obciążenie i przestoje, przez co zasoby strony stają się niedostępne dla wszystkich.",
   "anubis_compromise": "Anubis jest kompromisem. Używa mechanizmu Proof-of-Work w stylu Hashcash — proponowanego systemu ograniczania spamu e-mail. Pomysł polega na tym, że dla indywidualnych użytkowników dodatkowe obciążenie jest niezauważalne, ale w skali masowego skanowania koszt szybko rośnie.",
   "hack_purpose": "Docelowo jest to rozwiązanie tymczasowe, aby zyskać czas na ulepszenie metod identyfikacji przeglądarek bez interfejsu graficznego (np. poprzez analizę renderowania czcionek), by w przyszłości nie musieć wyświetlać strony z zadaniem Proof-of-Work użytkownikom, którzy najprawdopodobniej są prawidłowi.",
-  "simplified_explanation": "To zabezpieczenie przed botami i złośliwymi żądaniami, podobne do CAPTCHA. Jednak zamiast wykonywać zadanie samodzielnie, przeglądarka otrzymuje obliczenie do wykonania, aby potwierdzić, że jest prawidłowym klientem. Ten mechanizm to <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Zadanie trwa kilka sekund i uzyskujesz dostęp do strony. Dziękujemy za cierpliwość.",
+  "simplified_explanation": "To zabezpieczenie przed botami i złośliwymi żądaniami, podobne do CAPTCHA. Jednak zamiast wykonywać zadanie samodzielnie, przeglądarka otrzymuje obliczenie do wykonania, aby potwierdzić, że jest prawidłowym klientem. Ten mechanizm to Proof of Work. Zadanie trwa kilka sekund i uzyskujesz dostęp do strony. Dziękujemy za cierpliwość.",
   "jshelter_note": "Uwaga: Anubis wymaga nowoczesnych funkcji JavaScript, które wtyczki typu JShelter mogą blokować. Wyłącz JShelter lub podobne dodatki dla tej domeny.",
   "version_info": "Ta strona działa na Anubis w wersji",
   "try_again": "Spróbuj ponownie",
@@ -49,12 +49,12 @@
   "js_web_workers_error": "Twoja przeglądarka nie obsługuje web workers (Anubis ich używa, by nie zawieszać przeglądarki). Czy masz zainstalowaną wtyczkę typu JShelter?",
   "js_cookies_error": "Twoja przeglądarka nie zapisuje ciasteczek. Anubis używa ich do przechowywania podpisanego tokenu potwierdzającego przejście zabezpieczenia. Włącz zapis ciasteczek dla tej domeny. Nazwy ciasteczek mogą zmieniać się bez zapowiedzi. Nazwy oraz zawartość ciasteczek nie są cześcią publicznego API.",
   "js_context_not_secure": "Kontekst nie jest bezpieczny!",
-  "js_context_not_secure_msg": "Spróbuj połączyć się przez HTTPS lub poinformuj administratora, by skonfigurował HTTPS. Więcej informacji na <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Spróbuj połączyć się przez HTTPS lub poinformuj administratora, by skonfigurował HTTPS. Więcej informacji na MDN.",
   "js_calculating": "Obliczanie...",
   "js_missing_feature": "Brakująca funkcja",
   "js_challenge_error": "Błąd wyzwania!",
   "js_challenge_error_msg": "Nie udało się ustalić algorytmu sprawdzającego. Możesz spróbować odświeżyć stronę.",
-  "js_calculating_difficulty": "Obliczanie...<br/>Trudność:",
+  "js_calculating_difficulty": "Obliczanie... — Trudność:",
   "js_speed": "Prędkość:",
   "js_verification_longer": "Weryfikacja trwa dłużej niż zwykle. Proszę nie odświeżać strony.",
   "js_success": "Sukces!",
@@ -62,5 +62,6 @@
   "js_iterations": "iteracji",
   "js_finished_reading": "Skończyłem czytać, kontynuuj →",
   "js_calculation_error": "Błąd obliczeń!",
-  "js_calculation_error_msg": "Nie udało się obliczyć zadania:"
+  "js_calculation_error_msg": "Nie udało się obliczyć zadania:",
+  "js_challenge_data_missing": "Brak danych wyzwania. Proszę odświeżyć stronę."
 }

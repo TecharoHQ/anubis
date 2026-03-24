@@ -8,7 +8,7 @@
   "ai_companies_explanation": "Šią užsklandą matote, nes šią svetainę administruojantis asmuo įdiegė ir sukonfigūravo „Anubis“, siekdamas apsaugoti svetainę nuo DI kompanijų robotų, agresyviai siurbiančių visą svetainių turinį. Neretai toks elgesys sukelia svetainių veikimo trikdžius, todėl jos tampa nepasiekiamos niekam.",
   "anubis_compromise": "„Anubis“ – tai kompromisas. „Anubis“ naudoja „darbo įrodymo“ (angl. „Proof-of-Work“) metodą, panašų į „Hashcash“ – anksčiau siūlytą „darbo įrodymo“ principu pagrįstą apsaugą el. paštui. Šio sumanymo pagrindinė idėja paprasta: paprastiems lankytojams toks papildomas krūvis yra nežymus, tuo tarpu masiškai duomenis siurbiantiems robotams jis greitai pasijunta ir stipriai pabrangina siurbimą.",
   "hack_purpose": "Vis dėlto, šis metodas laikytinas tik laikinu tarpiniu sprendimu, suteikiančiu galimybę skirti daugiau laiko atrasti robotizuotų naršyklių ypatybėms (pavyzdžiui, šriftų atvaizdavimo savitumams), siekiant iššūkio „darbo įrodymu“ tinklalapį tiems naudotojams, kurie atrodo tikri, rodyti kuo rečiau.",
-  "simplified_explanation": "Tai – priemonė prieš robotus ir piktybines užklausas, panaši į „CAPTCHA“. Tačiau šiuo atveju užduotį turite atlikti ne jūs, o jūsų naršyklė, kuriai išspręsti pateikiama matematinė užduotis. Šis metodas vadinamas „darbo įrodymu“ (angl. <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">„Proof-of-work“</a>). Naršyklė atsakymą paprastai apskaičiuoja per kelias sekundes, o tuomet jums suteikiama prieiga prie svetainės. Dėkojame jums už supratingumą ir kantrybę.",
+  "simplified_explanation": "Tai – priemonė prieš robotus ir piktybines užklausas, panaši į „CAPTCHA“. Tačiau šiuo atveju užduotį turite atlikti ne jūs, o jūsų naršyklė, kuriai išspręsti pateikiama matematinė užduotis. Šis metodas vadinamas „darbo įrodymu“ (angl. „Proof-of-work“). Naršyklė atsakymą paprastai apskaičiuoja per kelias sekundes, o tuomet jums suteikiama prieiga prie svetainės. Dėkojame jums už supratingumą ir kantrybę.",
   "jshelter_note": "Turėkite omenyje, jog „Anubis“ reikalauja šiuolaikinių „JavaScript“ funkcijų, kurias tam tikri naršyklių įskiepiai, pavyzdžiui, „JShelter“, gali atjungti. Norint naršyti šią svetainę, teks joje „JShelter“ ar kitus analogiškus įskiepius atjungti.",
   "version_info": "Šioje svetainėje veikia „Anubis“ versija",
   "try_again": "Bandyti dar kartą",
@@ -49,12 +49,12 @@
   "js_web_workers_error": "Jūsų naršyklė nepalaiko aptarnavimo scenarijų, kuriuos „Anubis“ naudoja išvengti naršyklės strigčių. Gal turite įdiegtą „JShelter“ ar panašų įskiepį?",
   "js_cookies_error": "Jūsų naršyklė nepriima slapukų. „Anubis“ iššūkį jau praėjusius lankytojus atskiria pagal prieigos raktą, kurį įrašo slapuke. Prašom įjungti slapukus šiai svetainei. „Anubis“ slapuko pavadinimas gali kisti be įspėjimo. Slapuko pavadinimas ir reikšmė nėra viešosios programavimo sąsajos dalis.",
   "js_context_not_secure": "Jūsų kontekstas nėra saugus!",
-  "js_context_not_secure_msg": "Pabandykite prisijungti per HTTPS arba praneškite svetainės administratoriui, kad sukonfigūruotų HTTPS. Išsamesnės informacijos rasite <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a> (anglų k.).",
+  "js_context_not_secure_msg": "Pabandykite prisijungti per HTTPS arba praneškite svetainės administratoriui, kad sukonfigūruotų HTTPS. Išsamesnės informacijos rasite MDN (anglų k.).",
   "js_calculating": "Skaičiuojama...",
   "js_missing_feature": "Trūksta funkcionalumo",
   "js_challenge_error": "Iššūkio klaida!",
   "js_challenge_error_msg": "Nepavyko nustatyti patikros algoritmo. Pamėginkite įkelti tinklalapį iš naujo.",
-  "js_calculating_difficulty": "Skaičiuojama...<br/>Sudėtingumas:",
+  "js_calculating_difficulty": "Skaičiuojama... — Sudėtingumas:",
   "js_speed": "Sparta:",
   "js_verification_longer": "Patikra užtrunka ilgiau nei įprasta. Neskubėkite įkelti šio tinklalapio iš naujo.",
   "js_success": "Sėkmė!",
@@ -63,5 +63,5 @@
   "js_finished_reading": "Viską perskaičiau, tęskime →",
   "js_calculation_error": "Skaičiavimo klaida!",
   "js_calculation_error_msg": "Nepavyko įveikti iššūkio:",
-  "missing_required_forwarded_headers": "Trūksta privalomų X-Forwarded-* antraščių"
+  "js_challenge_data_missing": "Trūksta iššūkio duomenų. Prašome perkrauti puslapį."
 }

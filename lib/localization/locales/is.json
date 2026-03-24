@@ -47,12 +47,12 @@
   "js_web_workers_error": "Vafrinn þinn styður ekki vefvaktara (web workers - Anubis notar þetta til að koma í veg fyrir að vafrinn frjósi). Ertu með viðbót á borð við JShelter uppsetta?",
   "js_cookies_error": "Vafrinn þinn geymir ekki vefkökur. Anubis notar vefkökur til að ákvarða hvaða biðlaraforrit hafi leyst áskoranir og geymir þá undirritað teikn í vefköku. Vinsamlega virkjaðu geymslu á vefkökum fyrir þetta lén. Nöfnin á þeim vefkökum sem Anubis geymir geta breyst fyrirvaralaust. Heiti vefkakna og gildi þeirra eru ekki hluti opinbera API-kerfisviðmótsins.",
   "js_context_not_secure": "Umhverfið þitt er ekki öruggt!",
-  "js_context_not_secure_msg": "Prófaðu að tengjast í gegnum HTTPS eða láttu kerfisstjórann vita að hann þurfi að setja upp HTTPS. Fyrir nánari upplýsingar er hægt að skoða <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>.",
+  "js_context_not_secure_msg": "Prófaðu að tengjast í gegnum HTTPS eða láttu kerfisstjórann vita að hann þurfi að setja upp HTTPS. Fyrir nánari upplýsingar er hægt að skoða MDN.",
   "js_calculating": "Reikna...",
   "js_missing_feature": "Eiginleika vantar",
   "js_challenge_error": "Villa í áskorun!",
   "js_challenge_error_msg": "Mistókst að leysa reiknirit á prófunar. Þú gætir viljað endurlesa síðuna.",
-  "js_calculating_difficulty": "Reikna...<br/>Erfiðleikastig:",
+  "js_calculating_difficulty": "Reikna... — Erfiðleikastig:",
   "js_speed": "Hraði:",
   "js_verification_longer": "Sannvottun tók lengri tíma en búast má við. Ekki endurlesa síðuna.",
   "js_success": "Tókst!",
@@ -62,5 +62,6 @@
   "js_calculation_error": "Reiknivilla!",
   "js_calculation_error_msg": "Mistókst að reikna áskorun:",
   "missing_required_forwarded_headers": "Vantar nauðsynleg X-Forwarded-* hausar",
-  "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illa meinandi beiðnum, sem virkar svipað og CAPTCHA-mennskupróf. Hins vegar; í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Sönnun-á-vinnu</a>. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina."
+  "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illa meinandi beiðnum, sem virkar svipað og CAPTCHA-mennskupróf. Hins vegar; í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað Sönnun-á-vinnu. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina.",
+  "js_challenge_data_missing": "Áskorunargögn vantar. Vinsamlegast endurhlaðið síðuna."
 }
