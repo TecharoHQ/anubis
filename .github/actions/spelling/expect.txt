@@ -80,6 +80,7 @@ databento
 dayjob
 dco
 DDOS
+ddwrt
 Debian
 debrpm
 decaymap
@@ -102,6 +103,7 @@ duckduckbot
 eerror
 ellenjoe
 emacs
+embe
 enbyware
 etld
 everyones
@@ -119,7 +121,6 @@ FCr
 fcrdns
 fediverse
 ffprobe
-FFXIV
 fhdr
 financials
 finfos
@@ -221,7 +222,6 @@ LLU
 loadbalancer
 lol
 lominsa
-maintainership
 malware
 mcr
 memes
@@ -239,7 +239,6 @@ mymaster
 mypass
 myuser
 nbf
-Necron
 nepeat
 netsurf
 nginx
@@ -334,7 +333,6 @@ spyderbot
 srcip
 srv
 stackoverflow
-Stargate
 startprecmd
 stoppostcmd
 storetest
