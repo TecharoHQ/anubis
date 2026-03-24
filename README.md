@@ -73,6 +73,9 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://www.anexia.com/">
   <img src="./docs/static/img/sponsors/anexia-cloudsolutions-logo.webp" alt="ANEXIA Cloud Solutions" height="64">
 </a>
+<a href="https://dd-wrt.com/">
+  <img src="./docs/static/img/sponsors/ddwrt-logo.webp" alt="embeDD GmbH" height="64">
+</a>
 
 ## Overview
 
