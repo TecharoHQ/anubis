@@ -1,0 +1,4 @@
+- name: software-heritage
+  action: ALLOW
+  # https://docs.softwareheritage.org/user/faq/#which-ip-address-range-should-we-mark-as-safe-in-our-anti-bot-protection-systems
+  remote_addresses: [ "128.93.166.0/26" ]
