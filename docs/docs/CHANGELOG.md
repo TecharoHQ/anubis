@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Allow requests from Software Heritage
 - Expose [pprof endpoints](https://pkg.go.dev/net/http/pprof) on the metrics listener to enable profiling Anubis in production.
 - fix: prevent nil pointer panic in challenge validation when threshold rules match during PassChallenge (#1463)
 - Instruct reverse proxies to not cache error pages.
