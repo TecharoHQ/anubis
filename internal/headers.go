@@ -62,6 +62,64 @@ func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.
 	})
 }
 
+// ProxyProtocol sets the X-Real-Ip header to the request's real IP set from Proxy Protocol Headers also it sets the request context with proxyProtocolInfo to send Proxy Protocol Heaaders
+func ProxyProtocol(useProxyProtocol bool, sendProxyProtocol string, next http.Handler) http.Handler {
+	if !useProxyProtocol {
+		slog.Debug("skipping middleware, useProxyProtocol is empty")
+		return next
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !ProxyProtocolUsed(r.Context()) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		hdr, ok := ProxyProtocolHeader(r.Context())
+		if !ok || hdr.SourceAddr == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		host, _, err := net.SplitHostPort(hdr.SourceAddr.String())
+		if err == nil {
+			r.Header.Set("X-Real-Ip", host)
+			if addr, err := netip.ParseAddrPort(host); err == nil {
+				r = r.WithContext(
+					context.WithValue(r.Context(), proxyProtocolInfoKey{}, ProxyProtocolInfo{
+						AddrPort: addr,
+					}),
+				)
+
+			}
+		}
+		// stolen from caddyserver :)
+		if sendProxyProtocol != "" {
+			// this will not work correctly because when we dont get the infromation via the proxy protocol headers but instead trough x-real-ip we never have a port for the address and always will set it to 0
+			address := r.Header.Get("X-Real-Ip")
+			addrPort, err := netip.ParseAddrPort(address)
+			//this check would only make sense if there would be a port
+			if err != nil {
+				// OK; probably didn't have a port
+				addr, err := netip.ParseAddr(address)
+				if err != nil {
+					// Doesn't seem like a valid ip address at all
+				} else {
+					// Ok, only the port was missing
+					addrPort = netip.AddrPortFrom(addr, 0)
+				}
+			}
+			r = r.WithContext(
+				context.WithValue(r.Context(), proxyProtocolInfoKey{}, ProxyProtocolInfo{
+					AddrPort: addrPort,
+				}),
+			)
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
 // the setting is enabled by the user.
 func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
