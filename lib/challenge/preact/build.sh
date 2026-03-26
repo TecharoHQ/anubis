@@ -8,7 +8,7 @@ LICENSE='/*
 @licstart  The following is the entire license notice for the
 JavaScript code in this page.
 
-Copyright (c) 2025 Xe Iaso <xe.iaso@techaro.lol>
+Copyright (c) 2026 Xe Iaso <xe.iaso@techaro.lol>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -41,9 +41,9 @@ for the JavaScript code in this page.
 mkdir -p static/js
 
 for file in js/*.tsx; do
-  filename="${file##*/}"       # Extracts "app.jsx" from "./js/app.jsx"
-  output="${filename%.tsx}.js"  # Changes "app.jsx" to "app.js"
-  echo $output
+	filename="${file##*/}"       # Extracts "app.jsx" from "./js/app.jsx"
+	output="${filename%.tsx}.js" # Changes "app.jsx" to "app.js"
+	echo $output
 
-  esbuild "${file}" --minify --bundle --outfile=static/"${output}" --banner:js="${LICENSE}"
+	esbuild "${file}" --minify --bundle --outfile=static/"${output}" --banner:js="${LICENSE}"
 done
