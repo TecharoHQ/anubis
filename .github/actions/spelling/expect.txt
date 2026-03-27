@@ -252,6 +252,7 @@ oci
 OCOB
 ogtag
 oklch
+oldstable
 omgili
 omgilibot
 openai
