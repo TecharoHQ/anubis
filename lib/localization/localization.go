@@ -70,6 +70,12 @@ func NewLocalizationService() *LocalizationService {
 }
 
 func (ls *LocalizationService) GetLocalizer(lang string) *i18n.Localizer {
+	// XXX(Xe): This is a weird edge case in the Go language tag parsing library.
+	// Bodging around it with an ugly HACK.
+	if lang == "zh-TW" {
+		lang = "zh-Hant"
+	}
+
 	return i18n.NewLocalizer(ls.bundle, lang)
 }
 
