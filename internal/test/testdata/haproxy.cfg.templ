@@ -1,0 +1,46 @@
+frontend http
+  mode http
+  log stdout local0
+  option httplog
+
+  bind :{{ .HAProxyBindPort }}
+
+  http-request set-src hdr(X-Real-IP)
+
+  # To try to be as close to reality, we delete this header
+  http-request del-header X-Real-IP
+
+  filter spoe engine anubis config {{ .SPOAConfig }}
+
+  # This config does not use all those ACLs, they are only defined as an example
+  acl anubis_pass      var(req.anubis.result) -m int 0   # explicit pass rule
+  acl anubis_pass      var(req.anubis.result) -m int 1   # cookie ok
+  acl anubis_block     var(req.anubis.result) -m int 2   # explicit block rule
+  acl anubis_challenge var(req.anubis.result) -m int 3   # challenge requested
+  acl anubis_err       var(req.anubis.result) -m int 255 # an error occurred within anubis
+  acl anubis_response  var(req.anubis.result) -m found   # anubis did set a status, allows us to check if it is broken
+
+  # by ignoring error conditions and treating them same as pass we are implementing a fail open situation
+  # allowing requests to pass without being authenticated in case anubis goes offline
+  use_backend anubis-http if anubis_challenge
+  http-request deny if anubis_block
+
+  # Optionally: More HAProxy request routing logic
+
+  default_backend web
+
+backend anubis-http
+  mode http
+
+  option forwardfor header "X-Real-IP"
+
+  server anubis1 127.0.0.1:{{ .AnubisPort }}
+
+backend anubis-spoe
+  mode tcp
+
+  server anubis1 127.0.0.1:{{ .AnubisSpoePort }}
+
+backend web
+  mode http
+  server backend 127.0.0.1:{{ .BackendPort }}
