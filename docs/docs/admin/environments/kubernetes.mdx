@@ -130,3 +130,52 @@ Then point your Ingress to the Anubis port:
               # diff-add
               name: anubis
 ```
+
+## Envoy Gateway
+
+If you are using envoy-gateway, the `X-Real-Ip` header is not set by default, but Anubis does require it. You can resolve this by adding the header, either on the specific `HTTPRoute` where Anubis is listening, or on the `ClientTrafficPolicy` to apply it to any number of Gateways:
+
+HTTPRoute:
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app-route
+spec:
+  hostnames: ["app.domain.tld"]
+  parentRefs:
+    - name: envoy-external
+      namespace: network
+      sectionName: https
+  rules:
+    - backendRefs:
+        - identifier: *app
+          port: anubis
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Real-Ip
+                value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
+```
+
+Applying to any number of Gateways:
+```yaml
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: ClientTrafficPolicy
+metadata:
+  name: envoy
+spec:
+  headers:
+    earlyRequestHeaders:
+      set:
+        - name: X-Real-Ip
+          value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
+  clientIPDetection:
+    xForwardedFor:
+      trustedCIDRs:
+        - 10.96.0.0/16 # Cluster pod CIDR
+  targetSelectors: # These will apply to all Gateways
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+```

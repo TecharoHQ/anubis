@@ -119,6 +119,8 @@ import advancedSpoeAgent from "!!raw-loader!./haproxy/advanced-spoe/anubis.cfg";
 Due to the fact that HAProxy can decode JWT, we are able to verify the Anubis token directly in HAProxy and route the traffic to the specific backends ourselves.
 This Option works just fine and does not use the SPOE integration of HAProxy, with the disadvantage that Anubis cannot apply its ruleset.
 
+Mind that rule logic to allow Git HTTP and other legit bot traffic to bypass is delegated from Anubis to HAProxy then. If required, you should implement any whitelisting in HAProxy using `acl_anubis_ignore` yourself.
+
 In this example are three applications behind one HAProxy frontend. Only App1 and App2 are secured via Anubis; App3 is open for everyone. The path `/excluded/path` can also be accessed by anyone.
 
 ```mermaid

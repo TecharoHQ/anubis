@@ -80,11 +80,11 @@ type Server struct {
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
 	// return ED25519 key if HS512 is not set
 	if len(s.hs512Secret) == 0 {
-		return func(token *jwt.Token) (interface{}, error) {
+		return func(token *jwt.Token) (any, error) {
 			return s.ed25519Priv.Public().(ed25519.PublicKey), nil
 		}
 	} else {
-		return func(token *jwt.Token) (interface{}, error) {
+		return func(token *jwt.Token) (any, error) {
 			return s.hs512Secret, nil
 		}
 	}
@@ -103,6 +103,13 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	if cr.Rule != config.RuleChallenge {
 		slog.Error("this should be impossible, asked to issue a challenge but the rule is not a challenge rule", "cr", cr, "rule", rule)
 		//return nil, errors.New("[unexpected] this codepath should be impossible, asked to issue a challenge for a non-challenge rule")
+	}
+
+	if rule.Challenge == nil {
+		rule.Challenge = &config.ChallengeRules{
+			Difficulty: s.policy.DefaultDifficulty,
+			Algorithm:  config.DefaultAlgorithm,
+		}
 	}
 
 	id, err := uuid.NewV7()
@@ -488,7 +495,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.Error("getChallenge failed", "err", err)
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), rule.Challenge.Algorithm), makeCode(err))
+		algorithm := "unknown"
+		if rule.Challenge != nil {
+			algorithm = rule.Challenge.Algorithm
+		}
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
 		return
 	}
 
@@ -625,8 +636,16 @@ func (s *Server) check(r *checker.RequestMetadata, lg *slog.Logger) (policy.Chec
 		}
 
 		if matches {
+			challRules := t.Challenge
+			if challRules == nil {
+				// Non-CHALLENGE thresholds (ALLOW/DENY) don't have challenge config.
+				// Use an empty struct so hydrateChallengeRule can fill from stored
+				// challenge data during validation, rather than baking in defaults
+				// that could mismatch the difficulty the client actually solved for.
+				challRules = &config.ChallengeRules{}
+			}
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
-				Challenge: t.Challenge,
+				Challenge: challRules,
 				Rules:     &checker.List{},
 			}, nil
 		}

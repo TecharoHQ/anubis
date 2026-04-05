@@ -22,3 +22,24 @@ If you use a browser extension such as [JShelter](https://jshelter.org/), you wi
 ## Does Anubis mine Bitcoin?
 
 No. Anubis does not mine Bitcoin or any other cryptocurrency.
+
+## I disabled Just-in-time compilation in my browser. Why is Anubis slow?
+
+Anubis proof-of-work checks run an open source JavaScript program in your browser. These checks do a lot of complicated math and aim to be done quickly, so the execution speed depends on [Just-in-time (JIT) compilation](https://en.wikipedia.org/wiki/Just-in-time_compilation). JIT compiles JavaScript from the Internet into native machine code at runtime. The code produced by the JIT engine is almost as good as if it was written in a native programming language and compiled for your computer in particular. Without JIT, all JavaScript programs on every website you visit run through a slow interpreter.
+
+This interpreter is much slower than native code because it has to translate each low level JavaScript operation into many dozens of calls to execute. This means that using the interpreter incurs a massive performance hit by its very nature; it takes longer to add numbers than if the CPU just added the numbers directly.
+
+Some users choose to disable JIT as a hardening measure against theoretical browser exploits. This is a reasonable choice if you face targeted attacks from well-resourced adversaries (such as nation-state actors), but it comes with real performance costs.
+
+If you've disabled JIT and find Anubis checks slow, re-enabling JIT is the fix. There is no way for Anubis to work around this on our end.
+
+## What versions of browsers does Anubis support?
+
+Anubis is written mainly by a single person in a basement in Canada. As such it is impossible for Anubis to support every version of every browser on the planet. As such, here's a few rules of thumb for the browsers that Anubis focuses on supporting:
+
+- At least the two (2) most recent LTS releases of Firefox and Chrome.
+- At least the version of Chromium as used by the Samsung Browser on Android.
+- At least the last version of Chromium and Firefox that are known to run on Windows 7.
+- At least the version of Safari that runs on the second-to-oldest iPhone model currently on the market.
+
+We cannot give more cohesive version bounds than this. If you run into problems, please file an issue. Sometimes you may just need to upgrade hardware though.

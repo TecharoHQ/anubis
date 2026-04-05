@@ -120,7 +120,7 @@ func (i *Impl) makeAffirmations() []string {
 	count := rand.IntN(5) + 1
 
 	var result []string
-	for j := 0; j < count; j++ {
+	for range count {
 		result = append(result, i.affirmation.Spin())
 	}
 
@@ -131,7 +131,7 @@ func (i *Impl) makeSpins() []string {
 	count := rand.IntN(5) + 1
 
 	var result []string
-	for j := 0; j < count; j++ {
+	for range count {
 		result = append(result, i.body.Spin())
 	}
 

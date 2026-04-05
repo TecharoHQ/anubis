@@ -80,6 +80,7 @@ databento
 dayjob
 dco
 DDOS
+ddwrt
 Debian
 debrpm
 decaymap
@@ -102,6 +103,7 @@ duckduckbot
 eerror
 ellenjoe
 emacs
+embe
 enbyware
 etld
 everyones
@@ -220,7 +222,6 @@ LLU
 loadbalancer
 lol
 lominsa
-maintainership
 malware
 mcr
 memes
@@ -329,12 +330,12 @@ Spambot
 spammer
 sparkline
 spyderbot
+srcip
 srv
 stackoverflow
 startprecmd
 stoppostcmd
 storetest
-srcip
 strcmp
 subgrid
 subr

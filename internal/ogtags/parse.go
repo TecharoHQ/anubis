@@ -1,6 +1,7 @@
 package ogtags
 
 import (
+	"slices"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -65,10 +66,8 @@ func (c *OGTagCache) extractMetaTagInfo(n *html.Node) (property, content string)
 	}
 
 	// Check exact matches
-	for _, tag := range c.approvedTags {
-		if propertyKey == tag {
-			return propertyKey, content
-		}
+	if slices.Contains(c.approvedTags, propertyKey) {
+		return propertyKey, content
 	}
 
 	return "", content

@@ -1,6 +1,7 @@
 package challenge
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"sort"
@@ -50,10 +51,42 @@ type IssueInput struct {
 	Store     store.Interface
 }
 
+func (in *IssueInput) Valid() error {
+	if in == nil {
+		return fmt.Errorf("%w: IssueInput is nil", ErrInvalidInput)
+	}
+	if in.Rule == nil {
+		return fmt.Errorf("%w: Rule is nil", ErrInvalidInput)
+	}
+	if in.Rule.Challenge == nil {
+		return fmt.Errorf("%w: Rule.Challenge is nil", ErrInvalidInput)
+	}
+	if in.Challenge == nil {
+		return fmt.Errorf("%w: Challenge is nil", ErrInvalidInput)
+	}
+	return nil
+}
+
 type ValidateInput struct {
 	Rule      *policy.Bot
 	Challenge *Challenge
 	Store     store.Interface
+}
+
+func (in *ValidateInput) Valid() error {
+	if in == nil {
+		return fmt.Errorf("%w: ValidateInput is nil", ErrInvalidInput)
+	}
+	if in.Rule == nil {
+		return fmt.Errorf("%w: Rule is nil", ErrInvalidInput)
+	}
+	if in.Rule.Challenge == nil {
+		return fmt.Errorf("%w: Rule.Challenge is nil", ErrInvalidInput)
+	}
+	if in.Challenge == nil {
+		return fmt.Errorf("%w: Challenge is nil", ErrInvalidInput)
+	}
+	return nil
 }
 
 type Impl interface {
