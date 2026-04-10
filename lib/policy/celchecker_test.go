@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"net/http"
 	"testing"
 
@@ -23,9 +24,9 @@ func TestCELChecker_MapIterationWrappers(t *testing.T) {
 		Expression: `headers.exists(k, k == "Accept") && query.exists(k, k == "format")`,
 	}
 
-	checker, err := NewCELChecker(cfg, newTestDNS(t))
+	celChecker, err := NewCELChecker(cfg, newTestDNS(t))
 	if err != nil {
-		t.Fatalf("creating CEL checker failed: %v", err)
+		t.Fatalf("creating CEL celChecker failed: %v", err)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, "https://example.com/?format=json", nil)
@@ -34,7 +35,12 @@ func TestCELChecker_MapIterationWrappers(t *testing.T) {
 	}
 	req.Header.Set("Accept", "application/json")
 
-	got, err := checker.Check(req)
+	meta, err := checker.MetadataFromRequest(req)
+	if err != nil {
+		t.Fatalf("creating metadata from request failed: %v", err)
+	}
+
+	got, err := celChecker.Check(meta)
 	if err != nil {
 		t.Fatalf("checking expression failed: %v", err)
 	}

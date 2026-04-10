@@ -71,14 +71,9 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 }
 
 func (rac *RemoteAddrChecker) Check(r *checker.RequestMetadata) (bool, error) {
-	host := r.Header.Get("X-Real-Ip")
-	if host == "" {
-		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
-	}
-
-	addr, err := netip.ParseAddr(host)
-	if err != nil {
-		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
+	addr, ok := netip.AddrFromSlice(r.RemoteAddr)
+	if !ok {
+		return false, fmt.Errorf("%w: %s is not an IP address", ErrMisconfiguration, r.RemoteAddr)
 	}
 
 	// Convert IPv4-mapped IPv6 addresses to IPv4

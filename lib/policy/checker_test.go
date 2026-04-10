@@ -2,6 +2,7 @@ package policy
 
 import (
 	"errors"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"net/http"
 	"testing"
 )
@@ -85,7 +86,12 @@ func TestRemoteAddrChecker(t *testing.T) {
 				r.Header.Add("X-Real-Ip", tt.ip)
 			}
 
-			ok, err := rac.Check(r)
+			meta, err := checker.MetadataFromRequest(r)
+			if err != nil {
+				t.Fatalf("creating metadata from request failed: %v", err)
+			}
+
+			ok, err := rac.Check(meta)
 
 			if tt.ok != ok {
 				t.Errorf("ok: %v, wanted: %v", ok, tt.ok)
@@ -158,7 +164,12 @@ func TestHeaderMatchesChecker(t *testing.T) {
 
 			r.Header.Set(tt.reqHeaderKey, tt.reqHeaderValue)
 
-			ok, err := hmc.Check(r)
+			meta, err := checker.MetadataFromRequest(r)
+			if err != nil {
+				t.Fatalf("creating metadata from request failed: %v", err)
+			}
+
+			ok, err := hmc.Check(meta)
 
 			if tt.ok != ok {
 				t.Errorf("ok: %v, wanted: %v", ok, tt.ok)
@@ -200,7 +211,12 @@ func TestHeaderExistsChecker(t *testing.T) {
 
 			r.Header.Set(tt.reqHeader, "hunter2")
 
-			ok, err := hec.Check(r)
+			meta, err := checker.MetadataFromRequest(r)
+			if err != nil {
+				t.Fatalf("creating metadata from request failed: %v", err)
+			}
+
+			ok, err := hec.Check(meta)
 
 			if tt.ok != ok {
 				t.Errorf("ok: %v, wanted: %v", ok, tt.ok)
@@ -294,7 +310,12 @@ func TestPathChecker_XOriginalURI(t *testing.T) {
 				req.Header.Set(tt.headerKey, tt.xOriginalURI)
 			}
 
-			match, err := pc.Check(req)
+			meta, err := checker.MetadataFromRequest(req)
+			if err != nil {
+				t.Fatalf("creating metadata from request failed: %v", err)
+			}
+
+			match, err := pc.Check(meta)
 			if err != nil {
 				t.Fatalf("Check() unexpected error: %v", err)
 			}
