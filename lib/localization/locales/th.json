@@ -47,12 +47,12 @@
   "js_web_workers_error": "เบราว์เซอร์ของคุณไม่รองรับ web workers (Anubis ใช้เพื่อลดการค้างของเบราว์เซอร์) คุณใช้ปลั๊กอินเช่น JShelter หรือไม่?",
   "js_cookies_error": "เบราว์เซอร์ของคุณไม่เก็บคุกกี้ Anubis ใช้คุกกี้เพื่อเก็บโทเค็นที่เซ็นแล้วสำหรับไคลเอนต์ที่ผ่านการท้าทาย กรุณาเปิดใช้งานการเก็บคุกกี้สำหรับโดเมนนี้ ชื่อคุกกี้อาจเปลี่ยนแปลงได้โดยไม่แจ้งล่วงหน้า",
   "js_context_not_secure": "บริบทของคุณไม่ปลอดภัย!",
-  "js_context_not_secure_msg": "ลองเชื่อมต่อผ่าน HTTPS หรือแจ้งผู้ดูแลระบบให้ตั้งค่า HTTPS สำหรับข้อมูลเพิ่มเติมดูที่ <a href=\"https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure\">MDN</a>",
+  "js_context_not_secure_msg": "ลองเชื่อมต่อผ่าน HTTPS หรือแจ้งผู้ดูแลระบบให้ตั้งค่า HTTPS สำหรับข้อมูลเพิ่มเติมดูที่ MDN",
   "js_calculating": "กำลังคำนวณ...",
   "js_missing_feature": "ไม่มีคุณลักษณะนี้",
   "js_challenge_error": "เกิดข้อผิดพลาดในการท้าทาย!",
   "js_challenge_error_msg": "ไม่สามารถแก้ไขอัลกอริธึมการตรวจสอบ อาจต้องโหลดหน้าใหม่",
-  "js_calculating_difficulty": "กำลังคำนวณ...<br/>ความยาก:",
+  "js_calculating_difficulty": "กำลังคำนวณ... — ความยาก:",
   "js_speed": "ความเร็ว:",
   "js_verification_longer": "การตรวจสอบใช้เวลานานกว่าที่คาดไว้ กรุณาอย่ารีเฟรชหน้านี้",
   "js_success": "สำเร็จ!",
@@ -60,5 +60,6 @@
   "js_iterations": "รอบ",
   "js_finished_reading": "อ่านจบแล้ว ดำเนินการต่อ →",
   "js_calculation_error": "เกิดข้อผิดพลาดในการคำนวณ!",
-  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:"
+  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:",
+  "js_challenge_data_missing": "ข้อมูลการท้าทายหายไป กรุณาโหลดหน้าใหม่"
 }
