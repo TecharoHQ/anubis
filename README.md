@@ -76,6 +76,12 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://dd-wrt.com/">
   <img src="./docs/static/img/sponsors/ddwrt-logo.webp" alt="embeDD GmbH" height="64">
 </a>
+<a href="https://www.qwertiko.de?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/qwertiko-logo.webp" alt="Qwertiko" height="64">
+</a>
+<a href="https://wenet.pl/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+  <img src="./docs/static/img/sponsors/wenet-logo.webp" alt="Wenet" height="64">
+</a>
 
 ## Overview
 
