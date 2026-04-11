@@ -12,6 +12,11 @@ permissions:
 
 jobs:
   go_tests:
+    strategy:
+      matrix:
+        go_version:
+          - oldstable
+          - stable
     #runs-on: alrest-techarohq
     runs-on: ubuntu-24.04
     steps:
@@ -26,10 +31,11 @@ jobs:
 
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: "24.11.0"
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+          node-version: "latest"
+
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
-          go-version: "stable"
+          go-version: ${{ matrix.go_version }}
 
       - name: Cache playwright binaries
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
