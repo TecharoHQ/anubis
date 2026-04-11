@@ -28,7 +28,7 @@ func main() {
 	flagenv.Parse()
 	flag.Parse()
 
-	slog.SetDefault(internal.InitSlog(*slogLevel, os.Stderr))
+	slog.SetDefault(internal.InitSlog(*slogLevel, os.Stderr, false))
 
 	koDockerRepo := strings.TrimSuffix(*dockerRepo, "/"+filepath.Base(*dockerRepo))
 
@@ -159,8 +159,8 @@ func run(command string) (string, error) {
 }
 
 func setOutput(key, val string) {
-    github_output := os.Getenv("GITHUB_OUTPUT")
-    f, _ := os.OpenFile(github_output, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-    fmt.Fprintf(f, "%s=%s\n", key, val)
-    f.Close()
+	github_output := os.Getenv("GITHUB_OUTPUT")
+	f, _ := os.OpenFile(github_output, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	fmt.Fprintf(f, "%s=%s\n", key, val)
+	f.Close()
 }
