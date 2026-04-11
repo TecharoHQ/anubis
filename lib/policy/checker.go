@@ -3,7 +3,6 @@ package policy
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"net/netip"
 	"regexp"
 	"strings"
@@ -16,6 +15,37 @@ import (
 var (
 	ErrMisconfiguration = errors.New("[unexpected] policy: administrator misconfiguration")
 )
+
+type Checker interface {
+	Check(*checker.RequestMetadata) (bool, error)
+	Hash() string
+}
+
+type CheckerList []Checker
+
+func (cl CheckerList) Check(r *checker.RequestMetadata) (bool, error) {
+	for _, c := range cl {
+		ok, err := c.Check(r)
+		if err != nil {
+			return ok, err
+		}
+		if ok {
+			return ok, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (cl CheckerList) Hash() string {
+	var sb strings.Builder
+
+	for _, c := range cl {
+		fmt.Fprintln(&sb, c.Hash())
+	}
+
+	return internal.SHA256sum(sb.String())
+}
 
 type RemoteAddrChecker struct {
 	prefixTable *bart.Lite
@@ -40,15 +70,10 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 	}, nil
 }
 
-func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
-	host := r.Header.Get("X-Real-Ip")
-	if host == "" {
-		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
-	}
-
-	addr, err := netip.ParseAddr(host)
-	if err != nil {
-		return false, fmt.Errorf("%w: %s is not an IP address: %w", ErrMisconfiguration, host, err)
+func (rac *RemoteAddrChecker) Check(r *checker.RequestMetadata) (bool, error) {
+	addr, ok := netip.AddrFromSlice(r.RemoteAddr)
+	if !ok {
+		return false, fmt.Errorf("%w: %s is not an IP address", ErrMisconfiguration, r.RemoteAddr)
 	}
 
 	// Convert IPv4-mapped IPv6 addresses to IPv4
@@ -81,7 +106,7 @@ func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.FastHash(header + ": " + rexStr)}, nil
 }
 
-func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
+func (hmc *HeaderMatchesChecker) Check(r *checker.RequestMetadata) (bool, error) {
 	if hmc.regexp.MatchString(r.Header.Get(hmc.header)) {
 		return true, nil
 	}
@@ -106,7 +131,7 @@ func NewPathChecker(rexStr string) (checker.Impl, error) {
 	return &PathChecker{rex, internal.FastHash(rexStr)}, nil
 }
 
-func (pc *PathChecker) Check(r *http.Request) (bool, error) {
+func (pc *PathChecker) Check(r *checker.RequestMetadata) (bool, error) {
 	originalUrl := r.Header.Get("X-Original-URI")
 	if originalUrl != "" {
 		if pc.regexp.MatchString(originalUrl) {
@@ -114,7 +139,7 @@ func (pc *PathChecker) Check(r *http.Request) (bool, error) {
 		}
 	}
 
-	if pc.regexp.MatchString(r.URL.Path) {
+	if pc.regexp.MatchString(r.Path) {
 		return true, nil
 	}
 
@@ -133,7 +158,7 @@ type headerExistsChecker struct {
 	header string
 }
 
-func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
+func (hec headerExistsChecker) Check(r *checker.RequestMetadata) (bool, error) {
 	if r.Header.Get(hec.header) != "" {
 		return true, nil
 	}

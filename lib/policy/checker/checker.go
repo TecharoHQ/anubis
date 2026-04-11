@@ -3,20 +3,19 @@ package checker
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
 )
 
 type Impl interface {
-	Check(*http.Request) (bool, error)
+	Check(metadata *RequestMetadata) (bool, error)
 	Hash() string
 }
 
-type Func func(*http.Request) (bool, error)
+type Func func(metadata *RequestMetadata) (bool, error)
 
-func (f Func) Check(r *http.Request) (bool, error) {
+func (f Func) Check(r *RequestMetadata) (bool, error) {
 	return f(r)
 }
 
@@ -27,7 +26,7 @@ type List []Impl
 // Check runs each checker in the list against the request.
 // It returns true only if *all* checkers return true (AND semantics).
 // If any checker returns an error, the function returns false and the error.
-func (l List) Check(r *http.Request) (bool, error) {
+func (l List) Check(r *RequestMetadata) (bool, error) {
 	for _, c := range l {
 		ok, err := c.Check(r)
 		if err != nil {

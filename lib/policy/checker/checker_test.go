@@ -13,8 +13,8 @@ type Mock struct {
 	hash   string
 }
 
-func (m Mock) Check(r *http.Request) (bool, error) { return m.result, m.err }
-func (m Mock) Hash() string                        { return m.hash }
+func (m Mock) Check(r *RequestMetadata) (bool, error) { return m.result, m.err }
+func (m Mock) Hash() string                           { return m.hash }
 
 func TestListCheck_AndSemantics(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
@@ -45,7 +45,12 @@ func TestListCheck_AndSemantics(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.list.Check(req)
+			meta, err := MetadataFromRequest(req)
+			if err != nil {
+				t.Fatalf("creating metadata from request failed: %v", err)
+			}
+
+			got, err := tt.list.Check(meta)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("unexpected error state: %v", err)
 			}

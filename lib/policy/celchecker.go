@@ -2,14 +2,14 @@ package policy
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/policy/expressions"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
+	"strconv"
 )
 
 type CELChecker struct {
@@ -38,8 +38,8 @@ func (cc *CELChecker) Hash() string {
 	return internal.FastHash(cc.src)
 }
 
-func (cc *CELChecker) Check(r *http.Request) (bool, error) {
-	result, _, err := cc.program.ContextEval(r.Context(), &CELRequest{r})
+func (cc *CELChecker) Check(r *checker.RequestMetadata) (bool, error) {
+	result, _, err := cc.program.ContextEval(r.Context, &CELRequest{r})
 
 	if err != nil {
 		return false, err
@@ -53,7 +53,7 @@ func (cc *CELChecker) Check(r *http.Request) (bool, error) {
 }
 
 type CELRequest struct {
-	*http.Request
+	*checker.RequestMetadata
 }
 
 func (cr *CELRequest) Parent() cel.Activation { return nil }
@@ -61,19 +61,23 @@ func (cr *CELRequest) Parent() cel.Activation { return nil }
 func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	switch name {
 	case "remoteAddress":
-		return cr.Header.Get("X-Real-Ip"), true
+		return cr.RemoteAddr.String(), true
 	case "contentLength":
-		return cr.ContentLength, true
+		length, err := strconv.ParseInt(cr.Header.Get("Content-Length"), 10, 64)
+		if err != nil {
+			return -1, true
+		}
+		return length, true
 	case "host":
-		return cr.Host, true
+		return cr.Header.Get("Host"), true
 	case "method":
 		return cr.Method, true
 	case "userAgent":
-		return cr.UserAgent(), true
+		return cr.Header.Get("User-Agent"), true
 	case "path":
-		return cr.URL.Path, true
+		return cr.Path, true
 	case "query":
-		return expressions.URLValues{Values: cr.URL.Query()}, true
+		return expressions.URLValues{Values: cr.Query}, true
 	case "headers":
 		return expressions.HTTPHeaders{Header: cr.Header}, true
 	case "load_1m":

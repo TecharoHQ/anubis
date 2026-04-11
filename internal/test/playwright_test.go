@@ -18,6 +18,7 @@ package test
 import (
 	"flag"
 	"fmt"
+	"github.com/dropmorepackets/haproxy-go/spop"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -222,8 +223,12 @@ func TestPlaywrightBrowser(t *testing.T) {
 	startPlaywright(t)
 
 	pw := setupPlaywright(t)
-	anubisURL := spawnAnubis(t)
+	anubisConnection := spawnAnubis(t)
 
+	playwrightRunBrowserTest(t, pw, anubisConnection.URL)
+}
+
+func playwrightRunBrowserTest(t *testing.T, pw *playwright.Playwright, anubisURL string) {
 	browsers := []playwright.BrowserType{pw.Chromium, pw.Firefox, pw.WebKit}
 
 	for _, typ := range browsers {
@@ -305,7 +310,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	pw := setupPlaywright(t)
 	basePrefix := "/myapp"
-	anubisURL := spawnAnubisWithOptions(t, basePrefix)
+	anubisConnection := spawnAnubisWithOptions(t, anubisTestOptions{basePrefix: basePrefix})
 
 	// Reset BasePrefix after test
 	t.Cleanup(func() {
@@ -343,7 +348,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 			defer page.Close()
 
 			// Test accessing the base URL with prefix
-			_, err = page.Goto(anubisURL+basePrefix, playwright.PageGotoOptions{
+			_, err = page.Goto(anubisConnection.URL+basePrefix, playwright.PageGotoOptions{
 				Timeout: pwTimeout(testCases[0], time.Now().Add(5*time.Second)),
 			})
 			if err != nil {
@@ -583,11 +588,21 @@ func setupPlaywright(t *testing.T) *playwright.Playwright {
 	return pw
 }
 
-func spawnAnubis(t *testing.T) string {
-	return spawnAnubisWithOptions(t, "")
+func spawnAnubis(t *testing.T) anubisConnectionInfo {
+	return spawnAnubisWithOptions(t, anubisTestOptions{})
 }
 
-func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
+type anubisTestOptions struct {
+	basePrefix string
+	enableSPOE bool
+}
+
+type anubisConnectionInfo struct {
+	URL      string
+	spoePort uint16
+}
+
+func spawnAnubisWithOptions(t *testing.T, options anubisTestOptions) anubisConnectionInfo {
 	t.Helper()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -614,7 +629,7 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 		Policy:         policy,
 		ServeRobotsTXT: true,
 		Target:         "http://" + host + ":" + port,
-		BasePrefix:     basePrefix,
+		BasePrefix:     options.basePrefix,
 	})
 	if err != nil {
 		t.Fatalf("can't construct libanubis.Server: %v", err)
@@ -625,11 +640,34 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 		Config:   &http.Server{Handler: s},
 	}
 	ts.Start()
+
+	connInfo := anubisConnectionInfo{
+		URL: ts.URL,
+	}
+
+	if options.enableSPOE {
+		spoe := &libanubis.SpoeOptions{Server: s}
+
+		listener, err := net.Listen("tcp", ":0")
+		if err != nil {
+			t.Fatalf("can't listen on random port for spoe: %v", err)
+		}
+
+		addr := listener.Addr().(*net.TCPAddr)
+		connInfo.spoePort = uint16(addr.Port)
+
+		agent := spop.Agent{
+			Handler: spop.HandlerFunc(spoe.SpoeHandler),
+		}
+
+		go agent.Serve(listener)
+	}
+
 	t.Log(ts.URL)
 
 	t.Cleanup(func() {
 		ts.Close()
 	})
 
-	return ts.URL
+	return connInfo
 }
