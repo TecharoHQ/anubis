@@ -31,9 +31,6 @@ THE SOFTWARE.
 Includes code from https://www.npmjs.com/package/preact which is used under
 the terms of the MIT license.
 
-Includes code from https://github.com/aws/aws-sdk-js-crypto-helpers which is
-used under the terms of the Apache 2 license.
-
 @licend  The above is the entire license notice
 for the JavaScript code in this page.
 */'
