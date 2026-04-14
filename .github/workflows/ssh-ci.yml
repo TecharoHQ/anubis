@@ -30,13 +30,13 @@ jobs:
           persist-credentials: false
 
       - name: Install CI target SSH key
-        uses: shimataro/ssh-key-action@6b84f2e793b32fa0b03a379cadadec75cc539391 # v2.8.0
+        uses: shimataro/ssh-key-action@87a8f067114a8ce263df83e9ed5c849953548bc3 # v2.8.1
         with:
           key: ${{ secrets.CI_SSH_KEY }}
           name: id_rsa
           known_hosts: ${{ secrets.CI_SSH_KNOWN_HOSTS }}
 
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: "stable"
 
