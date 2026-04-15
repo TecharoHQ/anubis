@@ -18,7 +18,7 @@ func (c *Client) GeoIPCheckerFor(countries []string) checker.Impl {
 	var sb strings.Builder
 	fmt.Fprintln(&sb, "GeoIPChecker")
 	for _, cc := range countries {
-		countryMap[cc] = struct{}{}
+		countryMap[strings.ToLower(cc)] = struct{}{}
 		fmt.Fprintln(&sb, cc)
 	}
 
