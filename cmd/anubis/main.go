@@ -276,7 +276,7 @@ func main() {
 
 	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
 
-	lg := internal.InitSlog(*slogLevel, os.Stderr)
+	lg := internal.InitSlog(*slogLevel, os.Stderr, false)
 	lg.Info("starting up Anubis")
 
 	if *healthcheck {
