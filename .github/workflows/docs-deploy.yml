@@ -42,7 +42,7 @@ jobs:
 
       - name: Build and push
         id: build
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: ./docs
           cache-to: type=gha
@@ -53,14 +53,14 @@ jobs:
           push: true
 
       - name: Apply k8s manifests to limsa lominsa
-        uses: actions-hub/kubectl@934aaa4354bbbc3d2176ae8d7cae92d515032dff # v1.35.3
+        uses: actions-hub/kubectl@248102ecd7c9057f9aef1c458da0b1f0d80f2916 # v1.35.4
         env:
           KUBE_CONFIG: ${{ secrets.LIMSA_LOMINSA_KUBECONFIG }}
         with:
           args: apply -k docs/manifest
 
       - name: Apply k8s manifests to limsa lominsa
-        uses: actions-hub/kubectl@934aaa4354bbbc3d2176ae8d7cae92d515032dff # v1.35.3
+        uses: actions-hub/kubectl@248102ecd7c9057f9aef1c458da0b1f0d80f2916 # v1.35.4
         env:
           KUBE_CONFIG: ${{ secrets.LIMSA_LOMINSA_KUBECONFIG }}
         with:
