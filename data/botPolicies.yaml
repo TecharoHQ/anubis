@@ -166,6 +166,15 @@ status_codes:
   CHALLENGE: 200
   DENY: 200
 
+# # Configuration for the metrics server. See the docs for more information:
+# #
+# # https://anubis.techaro.lol/docs/admin/policies#metrics-server
+# #
+# # This is commented out by default so that command line flags take precedence.
+# metrics:
+#   bind: ":9090"
+#   network: "tcp"
+
 # Anubis can store temporary data in one of a few backends. See the storage
 # backends section of the docs for more information:
 #

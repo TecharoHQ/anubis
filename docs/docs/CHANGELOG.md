@@ -11,14 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<!-- This changes the project to: -->
+
+- Move metrics server configuration to [the policy file](./admin/policies.mdx#metrics-server).
 - Expose [pprof endpoints](https://pkg.go.dev/net/http/pprof) on the metrics listener to enable profiling Anubis in production.
 - fix: prevent nil pointer panic in challenge validation when threshold rules match during PassChallenge (#1463)
 - Instruct reverse proxies to not cache error pages.
 - Fixed mixed tab/space indentation in Caddy documentation code block
 - Improve error messages and fix broken REDIRECT_DOMAINS link in docs ([#1193](https://github.com/TecharoHQ/anubis/issues/1193))
 - Add Bulgarian locale ([#1394](https://github.com/TecharoHQ/anubis/pull/1394))
-
-<!-- This changes the project to: -->
 - Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
 
 ## v1.25.0: Necron

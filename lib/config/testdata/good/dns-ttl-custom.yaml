@@ -6,3 +6,7 @@ bots:
   - name: "test"
     user_agent_regex: ".*"
     action: "DENY"
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

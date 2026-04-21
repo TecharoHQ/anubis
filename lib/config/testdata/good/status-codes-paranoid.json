@@ -9,5 +9,9 @@
   "status_codes": {
     "CHALLENGE": 200,
     "DENY": 200
+  },
+  "metrics": {
+    "bind": ":9090",
+    "network": "tcp"
   }
 }

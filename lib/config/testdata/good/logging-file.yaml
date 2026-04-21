@@ -13,3 +13,7 @@ logs:
     oldFileTimeFormat: 2006-01-02T15-04-05 # RFC 3339-ish
     compress: true
     useLocalTime: false # timezone for rotated files is UTC
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

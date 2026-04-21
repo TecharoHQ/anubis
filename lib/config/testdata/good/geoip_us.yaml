@@ -4,3 +4,7 @@ bots:
     geoip:
       countries:
         - US
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

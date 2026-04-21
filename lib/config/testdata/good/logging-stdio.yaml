@@ -5,3 +5,7 @@ bots:
 
 logging:
   sink: "stdio"
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

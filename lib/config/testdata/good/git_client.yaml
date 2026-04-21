@@ -6,3 +6,7 @@ bots:
         - userAgent.startsWith("git/") || userAgent.contains("libgit")
         - >
           "Git-Protocol" in headers && headers["Git-Protocol"] == "version=2"
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

@@ -17,12 +17,10 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -33,12 +31,12 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/metrics"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -119,33 +117,6 @@ func doHealthCheck() error {
 	return nil
 }
 
-// parseBindNetFromAddr determine bind network and address based on the given network and address.
-func parseBindNetFromAddr(address string) (string, string) {
-	defaultScheme := "http://"
-	if !strings.Contains(address, "://") {
-		if strings.HasPrefix(address, ":") {
-			address = defaultScheme + "localhost" + address
-		} else {
-			address = defaultScheme + address
-		}
-	}
-
-	bindUri, err := url.Parse(address)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to parse bind URL: %w", err))
-	}
-
-	switch bindUri.Scheme {
-	case "unix":
-		return "unix", bindUri.Path
-	case "tcp", "http", "https":
-		return "tcp", bindUri.Host
-	default:
-		log.Fatal(fmt.Errorf("unsupported network scheme %s in address %s", bindUri.Scheme, address))
-	}
-	return "", address
-}
-
 func parseSameSite(s string) http.SameSite {
 	switch strings.ToLower(s) {
 	case "none":
@@ -160,53 +131,6 @@ func parseSameSite(s string) http.SameSite {
 		log.Fatalf("invalid cookie same-site mode: %s, valid values are None, Lax, Strict, and Default", s)
 	}
 	return http.SameSiteDefaultMode
-}
-
-func setupListener(network string, address string) (net.Listener, string) {
-	formattedAddress := ""
-
-	if network == "" {
-		// keep compatibility
-		network, address = parseBindNetFromAddr(address)
-	}
-
-	switch network {
-	case "unix":
-		formattedAddress = "unix:" + address
-	case "tcp":
-		if strings.HasPrefix(address, ":") { // assume it's just a port e.g. :4259
-			formattedAddress = "http://localhost" + address
-		} else {
-			formattedAddress = "http://" + address
-		}
-	default:
-		formattedAddress = fmt.Sprintf(`(%s) %s`, network, address)
-	}
-
-	listener, err := net.Listen(network, address)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to bind to %s: %w", formattedAddress, err))
-	}
-
-	// additional permission handling for unix sockets
-	if network == "unix" {
-		mode, err := strconv.ParseUint(*socketMode, 8, 0)
-		if err != nil {
-			listener.Close()
-			log.Fatal(fmt.Errorf("could not parse socket mode %s: %w", *socketMode, err))
-		}
-
-		err = os.Chmod(address, os.FileMode(mode))
-		if err != nil {
-			err := listener.Close()
-			if err != nil {
-				log.Printf("failed to close listener: %v", err)
-			}
-			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
-		}
-	}
-
-	return listener, formattedAddress
 }
 
 func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool) (http.Handler, error) {
@@ -304,11 +228,6 @@ func main() {
 
 	wg := new(sync.WaitGroup)
 
-	if *metricsBind != "" {
-		wg.Add(1)
-		go metricsServer(ctx, *lg.With("subsystem", "metrics"), wg.Done)
-	}
-
 	var rp http.Handler
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
@@ -347,6 +266,26 @@ func main() {
 	lg = policy.Logger
 	lg.Debug("swapped to new logger")
 	slog.SetDefault(lg)
+
+	if *metricsBind != "" || policy.Metrics != nil {
+		wg.Add(1)
+
+		ms := &metrics.Server{
+			Config: policy.Metrics,
+			Log:    lg,
+		}
+
+		if policy.Metrics == nil {
+			lg.Debug("migrating flags to metrics config", "bind", *metricsBind, "network", *metricsBindNetwork, "socket-mode", *socketMode)
+			ms.Config = &config.Metrics{
+				Bind:       *metricsBind,
+				Network:    *metricsBindNetwork,
+				SocketMode: *socketMode,
+			}
+		}
+
+		go ms.Run(ctx, wg.Done)
+	}
 
 	// Warn if persistent storage is used without a configured signing key
 	if policy.Store.IsPersistent() {
@@ -484,7 +423,11 @@ func main() {
 	h = internal.JA4H(h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
-	listener, listenerUrl := setupListener(*bindNetwork, *bind)
+	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)
+	if err != nil {
+		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
+	}
+
 	lg.Info(
 		"listening",
 		"url", listenerUrl,
@@ -517,53 +460,6 @@ func main() {
 		log.Fatal(err)
 	}
 	wg.Wait()
-}
-
-func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
-	defer done()
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
-	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
-	mux.Handle("/metrics", promhttp.Handler())
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		st, ok := internal.GetHealth("anubis")
-		if !ok {
-			slog.Error("health service anubis does not exist, file a bug")
-		}
-
-		switch st {
-		case healthv1.HealthCheckResponse_NOT_SERVING:
-			http.Error(w, "NOT OK", http.StatusInternalServerError)
-			return
-		case healthv1.HealthCheckResponse_SERVING:
-			fmt.Fprintln(w, "OK")
-			return
-		default:
-			http.Error(w, "UNKNOWN", http.StatusFailedDependency)
-			return
-		}
-	})
-
-	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
-	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
-	lg.Debug("listening for metrics", "url", metricsUrl)
-
-	go func() {
-		<-ctx.Done()
-		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(c); err != nil {
-			log.Printf("cannot shut down: %v", err)
-		}
-	}()
-
-	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal(err)
-	}
 }
 
 func extractEmbedFS(fsys embed.FS, root string, destDir string) error {

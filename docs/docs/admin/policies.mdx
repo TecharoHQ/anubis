@@ -117,6 +117,27 @@ remote_addresses:
   - 100.64.0.0/10
 ```
 
+## Metrics server
+
+Anubis includes support for [Prometheus-style metrics](https://prometheus.io/docs/introduction/overview/), allowing systems administrators to monitor Anubis' performance and effectiveness. This is a separate HTTP server with metrics, health checking, and debug routes.
+
+Anubis' metrics server is configured with the `metrics` block in the configuration file:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+```
+
+If you want to bind metrics to a Unix socket, make sure to set the network to `unix` and add a socket mode:
+
+```yaml
+metrics:
+  bind: "/tmp/anubis_metrics.sock"
+  network: unix
+  socketMode: "0700" # must be a string
+```
+
 ## Imprint / Impressum support
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.

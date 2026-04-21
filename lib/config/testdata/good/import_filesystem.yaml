@@ -1,2 +1,6 @@
 bots:
   - import: ./testdata/hack-test.yaml
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

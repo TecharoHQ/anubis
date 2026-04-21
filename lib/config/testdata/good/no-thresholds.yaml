@@ -6,3 +6,7 @@ bots:
       adjust: 5
 
 thresholds: []
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

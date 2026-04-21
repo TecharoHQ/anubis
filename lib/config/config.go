@@ -334,6 +334,7 @@ type fileConfig struct {
 	DNSBL       bool                `json:"dnsbl"`
 	DNSTTL      DnsTTL              `json:"dns_ttl"`
 	Logging     *Logging            `json:"logging"`
+	Metrics     *Metrics            `json:"metrics,omitempty"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -371,6 +372,12 @@ func (c *fileConfig) Valid() error {
 
 	if c.Store != nil {
 		if err := c.Store.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if c.Metrics != nil {
+		if err := c.Metrics.Valid(); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -417,6 +424,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		StatusCodes: c.StatusCodes,
 		Store:       c.Store,
 		Logging:     c.Logging,
+		Metrics:     c.Metrics,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -508,6 +516,7 @@ type Config struct {
 	Logging     *Logging
 	DNSBL       bool
 	DNSTTL      DnsTTL
+	Metrics     *Metrics
 }
 
 func (c Config) Valid() error {
