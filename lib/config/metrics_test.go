@@ -19,6 +19,28 @@ func TestMetricsValid(t *testing.T) {
 			},
 		},
 		{
+			name: "basic TCP4",
+			input: &Metrics{
+				Bind:    ":9090",
+				Network: "tcp4",
+			},
+		},
+		{
+			name: "basic TCP6",
+			input: &Metrics{
+				Bind:    ":9090",
+				Network: "tcp6",
+			},
+		},
+		{
+			name: "basic unix",
+			input: &Metrics{
+				Bind:       "/tmp/anubis-metrics.sock",
+				Network:    "unix",
+				SocketMode: "0770",
+			},
+		},
+		{
 			name:  "no bind",
 			input: &Metrics{},
 			err:   ErrNoMetricsBind,
@@ -27,6 +49,23 @@ func TestMetricsValid(t *testing.T) {
 			name:  "no network",
 			input: &Metrics{},
 			err:   ErrNoMetricsNetwork,
+		},
+		{
+			name: "no unix socket mode",
+			input: &Metrics{
+				Bind:    "/tmp/anubis-metrics.sock",
+				Network: "unix",
+			},
+			err: ErrNoMetricsSocketMode,
+		},
+		{
+			name: "invalid unix socket mode",
+			input: &Metrics{
+				Bind:       "/tmp/anubis-metrics.sock",
+				Network:    "unix",
+				SocketMode: "taco bell",
+			},
+			err: ErrInvalidMetricsSocketMode,
 		},
 		{
 			name: "invalid network",

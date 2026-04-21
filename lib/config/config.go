@@ -415,8 +415,9 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		},
 		Logging: (Logging{}).Default(),
 		Metrics: &Metrics{
-			Bind:    flagLookup("metrics-bind"),
-			Network: flagLookup("metrics-bind-network"),
+			Bind:       flagLookup("metrics-bind"),
+			Network:    flagLookup("metrics-bind-network"),
+			SocketMode: flagLookup("socket-mode"),
 		},
 	}
 
