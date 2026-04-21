@@ -75,5 +75,9 @@
       "user_agent_regex": "Mozilla",
       "action": "CHALLENGE"
     }
-  ]
+  ],
+  "metrics": {
+    "bind": ":9090",
+    "network": "tcp"
+  }
 }

@@ -8,5 +8,9 @@
       "action": "DENY"
     }
   ],
-  "dnsbl": false
+  "dnsbl": false,
+  "metrics": {
+    "bind": ":9090",
+    "network": "tcp"
+  }
 }

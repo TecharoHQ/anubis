@@ -8,3 +8,7 @@ impressum:
   page:
     title: Test
     body: <p>This is a test</p>
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

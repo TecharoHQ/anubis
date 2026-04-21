@@ -3,3 +3,7 @@ bots:
     headers_regex:
       CF-Worker: .*
     action: DENY
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

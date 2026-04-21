@@ -4,3 +4,7 @@ bots:
       - "0.0.0.0/0"
       - "::/0"
     action: ALLOW
+
+metrics:
+  bind: ":9090"
+  network: "tcp"
