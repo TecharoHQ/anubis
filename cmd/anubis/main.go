@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -119,33 +118,6 @@ func doHealthCheck() error {
 	return nil
 }
 
-// parseBindNetFromAddr determine bind network and address based on the given network and address.
-func parseBindNetFromAddr(address string) (string, string) {
-	defaultScheme := "http://"
-	if !strings.Contains(address, "://") {
-		if strings.HasPrefix(address, ":") {
-			address = defaultScheme + "localhost" + address
-		} else {
-			address = defaultScheme + address
-		}
-	}
-
-	bindUri, err := url.Parse(address)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to parse bind URL: %w", err))
-	}
-
-	switch bindUri.Scheme {
-	case "unix":
-		return "unix", bindUri.Path
-	case "tcp", "http", "https":
-		return "tcp", bindUri.Host
-	default:
-		log.Fatal(fmt.Errorf("unsupported network scheme %s in address %s", bindUri.Scheme, address))
-	}
-	return "", address
-}
-
 func parseSameSite(s string) http.SameSite {
 	switch strings.ToLower(s) {
 	case "none":
@@ -160,53 +132,6 @@ func parseSameSite(s string) http.SameSite {
 		log.Fatalf("invalid cookie same-site mode: %s, valid values are None, Lax, Strict, and Default", s)
 	}
 	return http.SameSiteDefaultMode
-}
-
-func setupListener(network string, address string) (net.Listener, string) {
-	formattedAddress := ""
-
-	if network == "" {
-		// keep compatibility
-		network, address = parseBindNetFromAddr(address)
-	}
-
-	switch network {
-	case "unix":
-		formattedAddress = "unix:" + address
-	case "tcp":
-		if strings.HasPrefix(address, ":") { // assume it's just a port e.g. :4259
-			formattedAddress = "http://localhost" + address
-		} else {
-			formattedAddress = "http://" + address
-		}
-	default:
-		formattedAddress = fmt.Sprintf(`(%s) %s`, network, address)
-	}
-
-	listener, err := net.Listen(network, address)
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to bind to %s: %w", formattedAddress, err))
-	}
-
-	// additional permission handling for unix sockets
-	if network == "unix" {
-		mode, err := strconv.ParseUint(*socketMode, 8, 0)
-		if err != nil {
-			listener.Close()
-			log.Fatal(fmt.Errorf("could not parse socket mode %s: %w", *socketMode, err))
-		}
-
-		err = os.Chmod(address, os.FileMode(mode))
-		if err != nil {
-			err := listener.Close()
-			if err != nil {
-				log.Printf("failed to close listener: %v", err)
-			}
-			log.Fatal(fmt.Errorf("could not change socket mode: %w", err))
-		}
-	}
-
-	return listener, formattedAddress
 }
 
 func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool) (http.Handler, error) {
@@ -484,7 +409,11 @@ func main() {
 	h = internal.JA4H(h)
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
-	listener, listenerUrl := setupListener(*bindNetwork, *bind)
+	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)
+	if err != nil {
+		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
+	}
+
 	lg.Info(
 		"listening",
 		"url", listenerUrl,
@@ -549,7 +478,10 @@ func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
 	})
 
 	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
-	listener, metricsUrl := setupListener(*metricsBindNetwork, *metricsBind)
+	listener, metricsUrl, err := internal.SetupListener(*metricsBindNetwork, *metricsBind, *socketMode)
+	if err != nil {
+		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
+	}
 	lg.Debug("listening for metrics", "url", metricsUrl)
 
 	go func() {
