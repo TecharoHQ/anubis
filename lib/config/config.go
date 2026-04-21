@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/fs"
@@ -390,16 +389,6 @@ func (c *fileConfig) Valid() error {
 	return nil
 }
 
-func flagLookup(name string) string {
-	fl := flag.CommandLine.Lookup(name)
-
-	if fl == nil {
-		return ""
-	}
-
-	return fl.Value.String()
-}
-
 func Load(fin io.Reader, fname string) (*Config, error) {
 	c := &fileConfig{
 		StatusCodes: StatusCodes{
@@ -414,11 +403,6 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			Backend: "memory",
 		},
 		Logging: (Logging{}).Default(),
-		Metrics: &Metrics{
-			Bind:       flagLookup("metrics-bind"),
-			Network:    flagLookup("metrics-bind-network"),
-			SocketMode: flagLookup("socket-mode"),
-		},
 	}
 
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {

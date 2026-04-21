@@ -17,7 +17,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
@@ -32,12 +31,12 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/metrics"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -229,11 +228,6 @@ func main() {
 
 	wg := new(sync.WaitGroup)
 
-	if *metricsBind != "" {
-		wg.Add(1)
-		go metricsServer(ctx, *lg.With("subsystem", "metrics"), wg.Done)
-	}
-
 	var rp http.Handler
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
 	if strings.TrimSpace(*target) != "" {
@@ -272,6 +266,26 @@ func main() {
 	lg = policy.Logger
 	lg.Debug("swapped to new logger")
 	slog.SetDefault(lg)
+
+	if *metricsBind != "" || policy.Metrics != nil {
+		wg.Add(1)
+
+		ms := &metrics.Server{
+			Config: policy.Metrics,
+			Log:    lg,
+		}
+
+		if policy.Metrics == nil {
+			lg.Debug("migrating flags to metrics config", "bind", *metricsBind, "network", *metricsBindNetwork, "socket-mode", *socketMode)
+			ms.Config = &config.Metrics{
+				Bind:       *metricsBind,
+				Network:    *metricsBindNetwork,
+				SocketMode: *socketMode,
+			}
+		}
+
+		go ms.Run(ctx, wg.Done)
+	}
 
 	// Warn if persistent storage is used without a configured signing key
 	if policy.Store.IsPersistent() {
@@ -446,56 +460,6 @@ func main() {
 		log.Fatal(err)
 	}
 	wg.Wait()
-}
-
-func metricsServer(ctx context.Context, lg slog.Logger, done func()) {
-	defer done()
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
-	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
-	mux.Handle("/metrics", promhttp.Handler())
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		st, ok := internal.GetHealth("anubis")
-		if !ok {
-			slog.Error("health service anubis does not exist, file a bug")
-		}
-
-		switch st {
-		case healthv1.HealthCheckResponse_NOT_SERVING:
-			http.Error(w, "NOT OK", http.StatusInternalServerError)
-			return
-		case healthv1.HealthCheckResponse_SERVING:
-			fmt.Fprintln(w, "OK")
-			return
-		default:
-			http.Error(w, "UNKNOWN", http.StatusFailedDependency)
-			return
-		}
-	})
-
-	srv := http.Server{Handler: mux, ErrorLog: internal.GetFilteredHTTPLogger()}
-	listener, metricsUrl, err := internal.SetupListener(*metricsBindNetwork, *metricsBind, *socketMode)
-	if err != nil {
-		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
-	}
-	lg.Debug("listening for metrics", "url", metricsUrl)
-
-	go func() {
-		<-ctx.Done()
-		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(c); err != nil {
-			log.Printf("cannot shut down: %v", err)
-		}
-	}()
-
-	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal(err)
-	}
 }
 
 func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
