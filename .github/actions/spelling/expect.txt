@@ -47,6 +47,7 @@ cachediptoasn
 Caddyfile
 caninetools
 Cardyb
+CAs
 celchecker
 celphase
 cerr
@@ -203,8 +204,10 @@ kagi
 kagibot
 Keyfunc
 keypair
+keypairreloader
 KHTML
 kinda
+kpr
 KUBECONFIG
 lcj
 ldflags
@@ -229,6 +232,7 @@ metarefresh
 metrix
 mimi
 Minfilia
+minica
 mistralai
 mnt
 Mojeek
@@ -313,6 +317,7 @@ searchbot
 searx
 sebest
 secretplans
+selfsigned
 Semrush
 Seo
 setsebool

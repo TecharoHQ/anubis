@@ -138,6 +138,39 @@ metrics:
   socketMode: "0700" # must be a string
 ```
 
+### TLS
+
+If you want to serve the metrics server over TLS, use the `tls` block:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  tls:
+    certificate: /path/to/tls.crt
+    key: /path/to/tls.key
+```
+
+The certificate and key will automatically be reloaded when the respective files change.
+
+### mTLS
+
+If you want to validate requests to ensure that they use a client certificate signed by a certificate authority (mutual TLS or mTLS), set the `ca` value in the `tls` block:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  tls:
+    certificate: /path/to/tls.crt
+    key: /path/to/tls.key
+    ca: /path/to/ca.crt
+```
+
+As it is not expected for certificate authority certificates to change often, the CA certificate will NOT be automatically reloaded when the respective file changes.
+
 ## Imprint / Impressum support
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.
