@@ -73,8 +73,15 @@ func (s *Server) Run(ctx context.Context, done func()) error {
 		}
 	}()
 
-	if err := srv.Serve(ln); !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("can't serve metrics server: %w", err)
+	switch s.Config.TLS != nil {
+	case true:
+		if err := srv.ServeTLS(ln, s.Config.TLS.Certificate, s.Config.TLS.Key); !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("can't serve TLS metrics server: %w", err)
+		}
+	case false:
+		if err := srv.Serve(ln); !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("can't serve metrics server: %w", err)
+		}
 	}
 
 	return nil
