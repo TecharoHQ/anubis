@@ -21,10 +21,16 @@ type Server struct {
 	Log    *slog.Logger
 }
 
-func (s *Server) Run(ctx context.Context, done func()) error {
+func (s *Server) Run(ctx context.Context, done func()) {
 	defer done()
 	lg := s.Log.With("subsystem", "metrics")
 
+	if err := s.run(ctx, lg); err != nil {
+		lg.Error("can't serve metrics server", "err", err)
+	}
+}
+
+func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
 	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
