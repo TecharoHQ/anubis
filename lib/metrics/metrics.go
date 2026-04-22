@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -62,6 +63,17 @@ func (s *Server) Run(ctx context.Context, done func()) error {
 
 	defer ln.Close()
 
+	if s.Config.TLS != nil {
+		kpr, err := NewKeypairReloader(s.Config.TLS.Certificate, s.Config.TLS.Key, lg)
+		if err != nil {
+			return fmt.Errorf("can't setup keypair reloader: %w", err)
+		}
+
+		srv.TLSConfig = &tls.Config{
+			GetCertificate: kpr.GetCertificate,
+		}
+	}
+
 	lg.Debug("listening for metrics", "url", metricsURL)
 
 	go func() {
@@ -75,7 +87,7 @@ func (s *Server) Run(ctx context.Context, done func()) error {
 
 	switch s.Config.TLS != nil {
 	case true:
-		if err := srv.ServeTLS(ln, s.Config.TLS.Certificate, s.Config.TLS.Key); !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.ServeTLS(ln, "", ""); !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("can't serve TLS metrics server: %w", err)
 		}
 	case false:
