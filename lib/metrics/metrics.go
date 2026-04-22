@@ -3,11 +3,13 @@ package metrics
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/pprof"
+	"os"
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
@@ -77,6 +79,21 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 
 		srv.TLSConfig = &tls.Config{
 			GetCertificate: kpr.GetCertificate,
+		}
+
+		if s.Config.TLS.CA != "" {
+			caCert, err := os.ReadFile(s.Config.TLS.CA)
+			if err != nil {
+				return fmt.Errorf("%w %s: %w", config.ErrCantReadFile, s.Config.TLS.CA, err)
+			}
+
+			certPool := x509.NewCertPool()
+			if !certPool.AppendCertsFromPEM(caCert) {
+				return fmt.Errorf("%w %s", config.ErrInvalidMetricsCACertificate, s.Config.TLS.CA)
+			}
+
+			srv.TLSConfig.ClientCAs = certPool
+			srv.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 	}
 
