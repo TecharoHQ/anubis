@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"os"
@@ -9,17 +10,18 @@ import (
 )
 
 var (
-	ErrInvalidMetricsConfig     = errors.New("config: invalid metrics configuration")
-	ErrInvalidMetricsTLSConfig  = errors.New("config: invalid metrics TLS configuration")
-	ErrNoMetricsBind            = errors.New("config.Metrics: must define bind")
-	ErrNoMetricsNetwork         = errors.New("config.Metrics: must define network")
-	ErrNoMetricsSocketMode      = errors.New("config.Metrics: must define socket mode when using unix sockets")
-	ErrInvalidMetricsSocketMode = errors.New("config.Metrics: invalid unix socket mode")
-	ErrInvalidMetricsNetwork    = errors.New("config.Metrics: invalid metrics network")
-	ErrNoMetricsTLSCertificate  = errors.New("config.Metrics.TLS: must define certificate file")
-	ErrNoMetricsTLSKey          = errors.New("config.Metrics.TLS: must define key file")
-	ErrInvalidMetricsTLSKeypair = errors.New("config.Metrics.TLS: keypair is invalid")
-	ErrCantReadFile             = errors.New("config: can't read required file")
+	ErrInvalidMetricsConfig        = errors.New("config: invalid metrics configuration")
+	ErrInvalidMetricsTLSConfig     = errors.New("config: invalid metrics TLS configuration")
+	ErrNoMetricsBind               = errors.New("config.Metrics: must define bind")
+	ErrNoMetricsNetwork            = errors.New("config.Metrics: must define network")
+	ErrNoMetricsSocketMode         = errors.New("config.Metrics: must define socket mode when using unix sockets")
+	ErrInvalidMetricsSocketMode    = errors.New("config.Metrics: invalid unix socket mode")
+	ErrInvalidMetricsNetwork       = errors.New("config.Metrics: invalid metrics network")
+	ErrNoMetricsTLSCertificate     = errors.New("config.Metrics.TLS: must define certificate file")
+	ErrNoMetricsTLSKey             = errors.New("config.Metrics.TLS: must define key file")
+	ErrInvalidMetricsTLSKeypair    = errors.New("config.Metrics.TLS: keypair is invalid")
+	ErrInvalidMetricsCACertificate = errors.New("config.Metrics.TLS: invalid CA certificate")
+	ErrCantReadFile                = errors.New("config: can't read required file")
 )
 
 type Metrics struct {
@@ -70,6 +72,7 @@ func (m *Metrics) Valid() error {
 type MetricsTLS struct {
 	Certificate string `json:"certificate" yaml:"certificate"`
 	Key         string `json:"key" yaml:"key"`
+	CA          string `json:"ca" yaml:"ca"`
 }
 
 func (mt *MetricsTLS) Valid() error {
@@ -93,6 +96,18 @@ func (mt *MetricsTLS) Valid() error {
 
 	if _, err := tls.LoadX509KeyPair(mt.Certificate, mt.Key); err != nil {
 		errs = append(errs, fmt.Errorf("%w: %w", ErrInvalidMetricsTLSKeypair, err))
+	}
+
+	if mt.CA != "" {
+		caCert, err := os.ReadFile(mt.CA)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%w %s: %w", ErrCantReadFile, mt.CA, err))
+		}
+
+		certPool := x509.NewCertPool()
+		if !certPool.AppendCertsFromPEM(caCert) {
+			errs = append(errs, fmt.Errorf("%w %s", ErrInvalidMetricsCACertificate, mt.CA))
+		}
 	}
 
 	if len(errs) != 0 {

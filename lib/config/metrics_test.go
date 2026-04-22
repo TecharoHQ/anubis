@@ -119,6 +119,44 @@ func TestMetricsValid(t *testing.T) {
 			},
 			err: ErrInvalidMetricsTLSKeypair,
 		},
+		{
+			name: "mTLS with CA",
+			input: &Metrics{
+				Bind:    ":9090",
+				Network: "tcp",
+				TLS: &MetricsTLS{
+					Certificate: "./testdata/tls/selfsigned.crt",
+					Key:         "./testdata/tls/selfsigned.key",
+					CA:          "./testdata/tls/minica.pem",
+				},
+			},
+		},
+		{
+			name: "mTLS with nonexistent CA",
+			input: &Metrics{
+				Bind:    ":9090",
+				Network: "tcp",
+				TLS: &MetricsTLS{
+					Certificate: "./testdata/tls/selfsigned.crt",
+					Key:         "./testdata/tls/selfsigned.key",
+					CA:          "./testdata/tls/nonexistent.crt",
+				},
+			},
+			err: ErrCantReadFile,
+		},
+		{
+			name: "mTLS with invalid CA",
+			input: &Metrics{
+				Bind:    ":9090",
+				Network: "tcp",
+				TLS: &MetricsTLS{
+					Certificate: "./testdata/tls/selfsigned.crt",
+					Key:         "./testdata/tls/selfsigned.key",
+					CA:          "./testdata/tls/invalid.crt",
+				},
+			},
+			err: ErrInvalidMetricsCACertificate,
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.input.Valid(); !errors.Is(err, tt.err) {
