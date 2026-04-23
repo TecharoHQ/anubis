@@ -175,6 +175,13 @@ status_codes:
 #   bind: ":9090"
 #   network: "tcp"
 #
+# # To protect your metrics server with basic auth, set credentials below:
+# #
+# # https://anubis.techaro.lol/docs/admin/policies#http-basic-authentication
+#   basicAuth:
+#     username: ""
+#     password: ""
+#
 # # To serve metrics over TLS, set the path to the right TLS certificate and key
 # # here. When the files change on disk, they will automatically be reloaded.
 # #

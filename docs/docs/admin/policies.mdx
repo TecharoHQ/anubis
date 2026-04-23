@@ -171,6 +171,24 @@ metrics:
 
 As it is not expected for certificate authority certificates to change often, the CA certificate will NOT be automatically reloaded when the respective file changes.
 
+### HTTP basic authentication
+
+Anubis' metrics server also supports setting HTTP basic auth as a lightweight protection against unauthorized users viewing metrics data. As the basic auth credentials are hardcoded in the configuration file, administrators SHOULD use randomly generated credentials, such as type-4 UUIDs or other high entropy strings. These credentials MUST NOT be sensitive or used to protect other high value systems.
+
+Configure it with the `basicAuth` block under `metrics`:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  basicAuth:
+    username: azurediamond
+    password: hunter2
+```
+
+If you have Python installed, you can generate a high entropy password with `python -c 'import secrets; print(secrets.token_urlsafe(32))'`.
+
 ## Imprint / Impressum support
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.

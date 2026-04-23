@@ -157,6 +157,79 @@ func TestMetricsValid(t *testing.T) {
 			},
 			err: ErrInvalidMetricsCACertificate,
 		},
+		{
+			name: "basic auth credentials set",
+			input: &Metrics{
+				Bind:    ":9090",
+				Network: "tcp",
+				BasicAuth: &MetricsBasicAuth{
+					Username: "admin",
+					Password: "hunter2",
+				},
+			},
+		},
+		{
+			name: "invalid basic auth config",
+			input: &Metrics{
+				Bind:      ":9090",
+				Network:   "tcp",
+				BasicAuth: &MetricsBasicAuth{},
+			},
+			err: ErrInvalidMetricsBasicAuthConfig,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.input.Valid(); !errors.Is(err, tt.err) {
+				t.Logf("wanted error: %v", tt.err)
+				t.Logf("got error:    %v", err)
+				t.Error("validation failed")
+			}
+		})
+	}
+}
+
+func TestMetricsBasicAuthValid(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		input *MetricsBasicAuth
+		err   error
+	}{
+		{
+			name: "both set",
+			input: &MetricsBasicAuth{
+				Username: "admin",
+				Password: "hunter2",
+			},
+		},
+		{
+			name:  "empty username and password",
+			input: &MetricsBasicAuth{},
+			err:   ErrInvalidMetricsBasicAuthConfig,
+		},
+		{
+			name: "missing username",
+			input: &MetricsBasicAuth{
+				Password: "hunter2",
+			},
+			err: ErrNoMetricsBasicAuthUsername,
+		},
+		{
+			name: "missing password",
+			input: &MetricsBasicAuth{
+				Username: "admin",
+			},
+			err: ErrNoMetricsBasicAuthPassword,
+		},
+		{
+			name:  "missing both surfaces wrapper error",
+			input: &MetricsBasicAuth{},
+			err:   ErrNoMetricsBasicAuthUsername,
+		},
+		{
+			name:  "missing both surfaces password error",
+			input: &MetricsBasicAuth{},
+			err:   ErrNoMetricsBasicAuthPassword,
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.input.Valid(); !errors.Is(err, tt.err) {

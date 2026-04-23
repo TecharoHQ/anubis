@@ -97,6 +97,13 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 		}
 	}
 
+	if s.Config.BasicAuth != nil {
+		var h http.Handler = mux
+		h = internal.BasicAuth("anubis-metrics", s.Config.BasicAuth.Username, s.Config.BasicAuth.Password, mux)
+
+		srv.Handler = h
+	}
+
 	lg.Debug("listening for metrics", "url", metricsURL)
 
 	go func() {
