@@ -187,6 +187,8 @@ metrics:
     password: hunter2
 ```
 
+If you have Python installed, you can generate a high entropy password with `python -c 'import secrets; print(secrets.token_urlsafe(32))'`.
+
 ## Imprint / Impressum support
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.
