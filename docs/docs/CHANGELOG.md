@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Bulgarian locale ([#1394](https://github.com/TecharoHQ/anubis/pull/1394))
 - Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
 - Enable [metrics serving via TLS](./admin/policies.mdx#tls), including [mutual TLS (mTLS)](./admin/policies.mdx#mtls).
+- Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
 
 ## v1.25.0: Necron
 
