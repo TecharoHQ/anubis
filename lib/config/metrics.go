@@ -10,25 +10,29 @@ import (
 )
 
 var (
-	ErrInvalidMetricsConfig        = errors.New("config: invalid metrics configuration")
-	ErrInvalidMetricsTLSConfig     = errors.New("config: invalid metrics TLS configuration")
-	ErrNoMetricsBind               = errors.New("config.Metrics: must define bind")
-	ErrNoMetricsNetwork            = errors.New("config.Metrics: must define network")
-	ErrNoMetricsSocketMode         = errors.New("config.Metrics: must define socket mode when using unix sockets")
-	ErrInvalidMetricsSocketMode    = errors.New("config.Metrics: invalid unix socket mode")
-	ErrInvalidMetricsNetwork       = errors.New("config.Metrics: invalid metrics network")
-	ErrNoMetricsTLSCertificate     = errors.New("config.Metrics.TLS: must define certificate file")
-	ErrNoMetricsTLSKey             = errors.New("config.Metrics.TLS: must define key file")
-	ErrInvalidMetricsTLSKeypair    = errors.New("config.Metrics.TLS: keypair is invalid")
-	ErrInvalidMetricsCACertificate = errors.New("config.Metrics.TLS: invalid CA certificate")
-	ErrCantReadFile                = errors.New("config: can't read required file")
+	ErrInvalidMetricsConfig          = errors.New("config: invalid metrics configuration")
+	ErrInvalidMetricsTLSConfig       = errors.New("config: invalid metrics TLS configuration")
+	ErrInvalidMetricsBasicAuthConfig = errors.New("config: invalid metrics basic auth configuration")
+	ErrNoMetricsBind                 = errors.New("config.Metrics: must define bind")
+	ErrNoMetricsNetwork              = errors.New("config.Metrics: must define network")
+	ErrNoMetricsSocketMode           = errors.New("config.Metrics: must define socket mode when using unix sockets")
+	ErrInvalidMetricsSocketMode      = errors.New("config.Metrics: invalid unix socket mode")
+	ErrInvalidMetricsNetwork         = errors.New("config.Metrics: invalid metrics network")
+	ErrNoMetricsTLSCertificate       = errors.New("config.Metrics.TLS: must define certificate file")
+	ErrNoMetricsTLSKey               = errors.New("config.Metrics.TLS: must define key file")
+	ErrInvalidMetricsTLSKeypair      = errors.New("config.Metrics.TLS: keypair is invalid")
+	ErrInvalidMetricsCACertificate   = errors.New("config.Metrics.TLS: invalid CA certificate")
+	ErrCantReadFile                  = errors.New("config: can't read required file")
+	ErrNoMetricsBasicAuthUsername    = errors.New("config.Metrics.BasicAuth: must define username")
+	ErrNoMetricsBasicAuthPassword    = errors.New("config.Metrics.BasicAuth: must define password")
 )
 
 type Metrics struct {
-	Bind       string      `json:"bind" yaml:"bind"`
-	Network    string      `json:"network" yaml:"network"`
-	SocketMode string      `json:"socketMode" yaml:"socketMode"`
-	TLS        *MetricsTLS `json:"tls" yaml:"tls"`
+	Bind       string            `json:"bind" yaml:"bind"`
+	Network    string            `json:"network" yaml:"network"`
+	SocketMode string            `json:"socketMode" yaml:"socketMode"`
+	TLS        *MetricsTLS       `json:"tls" yaml:"tls"`
+	BasicAuth  *MetricsBasicAuth `json:"basicAuth" yaml:"basicAuth"`
 }
 
 func (m *Metrics) Valid() error {
@@ -58,6 +62,12 @@ func (m *Metrics) Valid() error {
 
 	if m.TLS != nil {
 		if err := m.TLS.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if m.BasicAuth != nil {
+		if err := m.BasicAuth.Valid(); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -127,6 +137,29 @@ func canReadFile(fname string) error {
 	data := make([]byte, 64)
 	if _, err := fin.Read(data); err != nil {
 		return fmt.Errorf("can't read %s: %w", fname, err)
+	}
+
+	return nil
+}
+
+type MetricsBasicAuth struct {
+	Username string `json:"username" yaml:"username"`
+	Password string `json:"password" yaml:"password"`
+}
+
+func (mba *MetricsBasicAuth) Valid() error {
+	var errs []error
+
+	if mba.Username == "" {
+		errs = append(errs, ErrNoMetricsBasicAuthUsername)
+	}
+
+	if mba.Password == "" {
+		errs = append(errs, ErrNoMetricsBasicAuthPassword)
+	}
+
+	if len(errs) != 0 {
+		return errors.Join(ErrInvalidMetricsBasicAuthConfig, errors.Join(errs...))
 	}
 
 	return nil
