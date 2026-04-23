@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
 - Enable [metrics serving via TLS](./admin/policies.mdx#tls), including [mutual TLS (mTLS)](./admin/policies.mdx#mtls).
 - Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
+- Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 
 ## v1.25.0: Necron
 
