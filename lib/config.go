@@ -190,14 +190,6 @@ func New(opts Options) (*Server, error) {
 				},
 				Name: "honeypot/network",
 			},
-			policy.Bot{
-				Rules:  mazeGen.CheckUA(),
-				Action: config.RuleWeigh,
-				Weight: &config.Weight{
-					Adjust: 30,
-				},
-				Name: "honeypot/user-agent",
-			},
 		)
 	} else {
 		result.logger.Error("can't init honeypot subsystem", "err", err)
