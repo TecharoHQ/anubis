@@ -9,5 +9,9 @@
   "status_codes": {
     "CHALLENGE": 403,
     "DENY": 403
+  },
+  "metrics": {
+    "bind": ":9090",
+    "network": "tcp"
   }
 }

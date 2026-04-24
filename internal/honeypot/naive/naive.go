@@ -76,13 +76,6 @@ type Impl struct {
 	affirmation, body, title spintax.Spintax
 }
 
-func (i *Impl) incrementUA(ctx context.Context, userAgent string) int {
-	result, _ := i.uaWeight.Get(ctx, internal.SHA256sum(userAgent))
-	result++
-	i.uaWeight.Set(ctx, internal.SHA256sum(userAgent), result, time.Hour)
-	return result
-}
-
 func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
 	result, _ := i.networkWeight.Get(ctx, internal.SHA256sum(network))
 	result++
@@ -90,20 +83,19 @@ func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
 	return result
 }
 
-func (i *Impl) CheckUA() checker.Impl {
-	return checker.Func(func(r *http.Request) (bool, error) {
-		result, _ := i.uaWeight.Get(r.Context(), internal.SHA256sum(r.UserAgent()))
-		if result >= 25 {
-			return true, nil
-		}
-
-		return false, nil
-	})
-}
-
 func (i *Impl) CheckNetwork() checker.Impl {
 	return checker.Func(func(r *http.Request) (bool, error) {
-		result, _ := i.uaWeight.Get(r.Context(), internal.SHA256sum(r.UserAgent()))
+		realIP, _ := internal.RealIP(r)
+		if !realIP.IsValid() {
+			realIP = netip.MustParseAddr(r.Header.Get("X-Real-Ip"))
+		}
+
+		network, ok := internal.ClampIP(realIP)
+		if !ok {
+			return false, nil
+		}
+
+		result, _ := i.networkWeight.Get(r.Context(), internal.SHA256sum(network.String()))
 		if result >= 25 {
 			return true, nil
 		}
@@ -164,7 +156,6 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	networkCount := i.incrementNetwork(r.Context(), network.String())
-	uaCount := i.incrementUA(r.Context(), r.UserAgent())
 
 	stage := r.PathValue("stage")
 
@@ -172,8 +163,8 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("found new entrance point", "id", id, "stage", stage, "userAgent", r.UserAgent(), "clampedIP", network)
 	} else {
 		switch {
-		case networkCount%256 == 0, uaCount%256 == 0:
-			lg.Warn("found possible crawler", "id", id, "network", network)
+		case networkCount%256 == 0:
+			lg.Warn("found possible crawler", "id", id, "network", network, "userAgent", r.UserAgent())
 		}
 	}
 

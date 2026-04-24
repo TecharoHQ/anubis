@@ -46,6 +46,7 @@ type ParsedConfig struct {
 	DnsCache          *dns.DnsCache
 	Dns               *dns.Dns
 	Logger            *slog.Logger
+	Metrics           *config.Metrics
 }
 
 func newParsedConfig(orig *config.Config) *ParsedConfig {
@@ -53,6 +54,7 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 		orig:        orig,
 		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
+		Metrics:     orig.Metrics,
 	}
 }
 

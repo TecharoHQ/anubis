@@ -3,5 +3,9 @@
     {
       "import": "(data)/common/keep-internet-working.yaml"
     }
-  ]
+  ],
+  "metrics": {
+    "bind": ":9090",
+    "network": "tcp"
+  }
 }

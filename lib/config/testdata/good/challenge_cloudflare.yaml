@@ -4,3 +4,7 @@ bots:
     asns:
       match:
         - 13335 # Cloudflare
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

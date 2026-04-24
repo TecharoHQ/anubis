@@ -3,5 +3,9 @@
     {
       "import": "./testdata/hack-test.json"
     }
-  ]
+  ],
+  "metrics": {
+    "bind": ":9090",
+    "network": "tcp"
+  }
 }

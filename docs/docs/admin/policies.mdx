@@ -117,6 +117,78 @@ remote_addresses:
   - 100.64.0.0/10
 ```
 
+## Metrics server
+
+Anubis includes support for [Prometheus-style metrics](https://prometheus.io/docs/introduction/overview/), allowing systems administrators to monitor Anubis' performance and effectiveness. This is a separate HTTP server with metrics, health checking, and debug routes.
+
+Anubis' metrics server is configured with the `metrics` block in the configuration file:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+```
+
+If you want to bind metrics to a Unix socket, make sure to set the network to `unix` and add a socket mode:
+
+```yaml
+metrics:
+  bind: "/tmp/anubis_metrics.sock"
+  network: unix
+  socketMode: "0700" # must be a string
+```
+
+### TLS
+
+If you want to serve the metrics server over TLS, use the `tls` block:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  tls:
+    certificate: /path/to/tls.crt
+    key: /path/to/tls.key
+```
+
+The certificate and key will automatically be reloaded when the respective files change.
+
+### mTLS
+
+If you want to validate requests to ensure that they use a client certificate signed by a certificate authority (mutual TLS or mTLS), set the `ca` value in the `tls` block:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  tls:
+    certificate: /path/to/tls.crt
+    key: /path/to/tls.key
+    ca: /path/to/ca.crt
+```
+
+As it is not expected for certificate authority certificates to change often, the CA certificate will NOT be automatically reloaded when the respective file changes.
+
+### HTTP basic authentication
+
+Anubis' metrics server also supports setting HTTP basic auth as a lightweight protection against unauthorized users viewing metrics data. As the basic auth credentials are hardcoded in the configuration file, administrators SHOULD use randomly generated credentials, such as type-4 UUIDs or other high entropy strings. These credentials MUST NOT be sensitive or used to protect other high value systems.
+
+Configure it with the `basicAuth` block under `metrics`:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  basicAuth:
+    username: azurediamond
+    password: hunter2
+```
+
+If you have Python installed, you can generate a high entropy password with `python -c 'import secrets; print(secrets.token_urlsafe(32))'`.
+
 ## Imprint / Impressum support
 
 Anubis has support for showing imprint / impressum information. This is defined in the `impressum` block of your configuration. See [Imprint / Impressum configuration](./configuration/impressum.mdx) for more information.

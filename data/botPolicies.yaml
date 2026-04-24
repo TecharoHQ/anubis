@@ -166,6 +166,36 @@ status_codes:
   CHALLENGE: 200
   DENY: 200
 
+# # Configuration for the metrics server. See the docs for more information:
+# #
+# # https://anubis.techaro.lol/docs/admin/policies#metrics-server
+# #
+# # This is commented out by default so that command line flags take precedence.
+# metrics:
+#   bind: ":9090"
+#   network: "tcp"
+#
+# # To protect your metrics server with basic auth, set credentials below:
+# #
+# # https://anubis.techaro.lol/docs/admin/policies#http-basic-authentication
+#   basicAuth:
+#     username: ""
+#     password: ""
+#
+# # To serve metrics over TLS, set the path to the right TLS certificate and key
+# # here. When the files change on disk, they will automatically be reloaded.
+# #
+# # https://anubis.techaro.lol/docs/admin/policies#tls
+#   tls:
+#     certificate: /path/to/tls.crt
+#     key: /path/to/tls.key
+#
+#     # If you want to secure your metrics endpoint using mutual TLS (mTLS), set
+#     # the path to a certificate authority public certificate here.
+#     #
+#     # https://anubis.techaro.lol/docs/admin/policies#mtls
+#     ca: /path/to/ca.crt
+
 # Anubis can store temporary data in one of a few backends. See the storage
 # backends section of the docs for more information:
 #

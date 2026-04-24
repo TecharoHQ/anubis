@@ -1,0 +1,3 @@
+metrics:
+  bind: ":9090"
+  network: taco

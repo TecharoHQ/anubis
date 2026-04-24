@@ -4,5 +4,5 @@
 #  - Claude-SearchBot: No published IP allowlist
 - name: "ai-crawlers-search"
   user_agent_regex: >-
-    OAI-SearchBot|Claude-SearchBot|PerplexityBot
+    OAI-SearchBot|Claude-SearchBot|PerplexityBot|meta-webindexer
   action: DENY
