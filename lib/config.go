@@ -112,6 +112,15 @@ func New(opts Options) (*Server, error) {
 		opts.ED25519PrivateKey = priv
 	}
 
+	// Without a default, the zero value (0) flows into both the cookie's
+	// Expires attribute and the JWT's exp claim, producing
+	// expired-on-arrival cookies and an infinite challenge loop. The
+	// Anubis CLI fills this via a flag default; library consumers that
+	// construct Options directly need this fallback in lib.New().
+	if opts.CookieExpiration == 0 {
+		opts.CookieExpiration = anubis.CookieDefaultExpirationTime
+	}
+
 	anubis.BasePrefix = strings.TrimRight(opts.BasePrefix, "/")
 	anubis.PublicUrl = opts.PublicUrl
 
