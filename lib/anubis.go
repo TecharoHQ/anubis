@@ -672,3 +672,25 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 		Rules: &checker.List{},
 	}, nil
 }
+
+// ADDED FOR PUBLIC USE
+
+func AddCustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.Handler {
+	return internal.CustomRealIPHeader(customRealIPHeaderValue, next)
+}
+
+func AddRemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
+	return internal.RemoteXRealIP(useRemoteAddress, bindNetwork, next)
+}
+
+func AddXForwardedForToXRealIP(next http.Handler) http.Handler {
+	return internal.XForwardedForToXRealIP(next)
+}
+
+func AddXForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
+	return internal.XForwardedForUpdate(stripPrivate, next)
+}
+
+func AddJA4H(next http.Handler) http.Handler {
+	return internal.JA4H(next)
+}
