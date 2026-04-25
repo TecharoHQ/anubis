@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enable [metrics serving via TLS](./admin/policies.mdx#tls), including [mutual TLS (mTLS)](./admin/policies.mdx#mtls).
 - Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
+- fix(Makefile): use `$(CURDIR)` instead of `$(PWD)` in the `assets` target so `make -C anubis assets` works from a parent directory.
 
 ## v1.25.0: Necron
 
