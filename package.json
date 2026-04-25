@@ -35,7 +35,6 @@
     "prettier": "^3.8.1"
   },
   "dependencies": {
-    "@aws-crypto/sha256-js": "^5.2.0",
     "preact": "^10.29.1"
   },
   "commitlint": {

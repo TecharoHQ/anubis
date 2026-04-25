@@ -28,9 +28,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-Includes code from https://github.com/aws/aws-sdk-js-crypto-helpers which is
-used under the terms of the Apache 2 license.
-
 @licend  The above is the entire license notice
 for the JavaScript code in this page.
 */'
