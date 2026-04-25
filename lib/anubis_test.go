@@ -279,6 +279,54 @@ func TestCVE2025_24369(t *testing.T) {
 	}
 }
 
+// TestCookieDefaultExpirationFilled verifies that lib.New() fills
+// opts.CookieExpiration with anubis.CookieDefaultExpirationTime when the
+// caller leaves it at the zero value. Without this default, the cookie's
+// Expires attribute and the JWT's exp claim are both set to time.Now(),
+// producing an expired-on-arrival cookie that triggers an infinite
+// challenge loop on the next request.
+//
+// The Anubis CLI sidesteps this via the --cookie-expiration-time flag's
+// default value, but library consumers (e.g. plugins for other web
+// servers) that construct Options directly hit the zero-value bug.
+func TestCookieDefaultExpirationFilled(t *testing.T) {
+	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+		// CookieExpiration intentionally left unset (zero value).
+	})
+
+	if got, want := srv.opts.CookieExpiration, anubis.CookieDefaultExpirationTime; got != want {
+		t.Fatalf("opts.CookieExpiration default not applied: got %v, want %v", got, want)
+	}
+
+	// End-to-end sanity check: the cookie issued after a successful
+	// challenge has an Expires attribute well in the future, not now-ish.
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := httpClient(t)
+	chall := makeChallenge(t, ts, cli)
+	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
+
+	var ckie *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == anubis.CookieName {
+			ckie = c
+			break
+		}
+	}
+	if ckie == nil {
+		t.Fatalf("cookie %q not found in PassChallenge response", anubis.CookieName)
+	}
+	// Tolerate some clock skew; we just want to confirm it's not "now".
+	if !ckie.Expires.After(time.Now().Add(time.Hour)) {
+		t.Errorf("cookie Expires=%v should be ~7d in the future, not now-ish", ckie.Expires)
+	}
+}
+
 func TestCookieCustomExpiration(t *testing.T) {
 	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
 	ckieExpiration := 10 * time.Minute
