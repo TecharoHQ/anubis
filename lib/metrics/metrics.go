@@ -64,7 +64,7 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 		ErrorLog: internal.GetFilteredHTTPLogger(),
 	}
 
-	ln, metricsURL, err := internal.SetupListener(s.Config.Bind, s.Config.Network, s.Config.SocketMode)
+	ln, metricsURL, err := internal.SetupListener(s.Config.Network, s.Config.Bind, s.Config.SocketMode)
 	if err != nil {
 		return fmt.Errorf("can't setup listener: %w", err)
 	}
