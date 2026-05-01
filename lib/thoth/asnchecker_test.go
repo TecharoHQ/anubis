@@ -47,7 +47,12 @@ func TestASNChecker(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 			req.Header.Set("X-Real-Ip", cs.ipAddress)
 
-			match, err := asnc.Check(req)
+			meta, err := checker.MetadataFromRequest(req)
+			if err != nil {
+				t.Fatalf("creating metadata from request failed: %v", err)
+			}
+
+			match, err := asnc.Check(meta)
 
 			if match != cs.wantMatch {
 				t.Errorf("Wanted match: %v, got: %v", cs.wantMatch, match)
