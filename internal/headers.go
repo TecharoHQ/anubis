@@ -57,7 +57,11 @@ func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Set("X-Real-IP", r.Header.Get(customRealIPHeaderValue))
+		ip := r.Header.Get(customRealIPHeaderValue)
+		r.Header.Set("X-Real-Ip", ip)
+		if addr, err := netip.ParseAddr(ip); err == nil {
+			r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
+		}
 		next.ServeHTTP(w, r)
 	})
 }
