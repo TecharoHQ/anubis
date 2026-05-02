@@ -37,10 +37,24 @@ const App = () => {
     }
 
     setImageURL(state?.pensive_url);
+
+    crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(state.challenge))
+      .then((hash) => setChallenge(toHexString(new Uint8Array(hash))));
+  }, [state]);
+
+  /*
+  useEffect(() => {
+    if (state === undefined) {
+      return;
+    }
+
+    setImageURL(state?.pensive_url);
     const hash = new Sha256("");
     hash.update(state.challenge);
     setChallenge(toHexString(hash.digestSync()));
   }, [state]);
+  */
 
   useEffect(() => {
     if (state === undefined) {
