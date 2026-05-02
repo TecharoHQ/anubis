@@ -27,7 +27,7 @@ var (
 	Applications = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_policy_results",
 		Help: "The results of each policy rule",
-	}, []string{"rule", "action"})
+	}, []string{"rule", "action", "asn", "asn_description"})
 
 	ErrChallengeRuleHasWrongAlgorithm = errors.New("config.Bot.ChallengeRules: algorithm is invalid")
 	warnedAboutThresholds             = &atomic.Bool{}
@@ -47,6 +47,8 @@ type ParsedConfig struct {
 	Dns               *dns.Dns
 	Logger            *slog.Logger
 	Metrics           *config.Metrics
+	ThothClient       *thoth.Client
+	LogASN            bool
 }
 
 func newParsedConfig(orig *config.Config) *ParsedConfig {
@@ -70,6 +72,10 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 	result := newParsedConfig(c)
 	result.DefaultDifficulty = defaultDifficulty
+	result.LogASN = c.Logging.LogASN
+	if hasThothClient {
+		result.ThothClient = tc
+	}
 
 	if c.Logging.Level != nil {
 		logLevel = c.Logging.Level.String()
@@ -93,6 +99,10 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	}
 
 	lg := result.Logger.With("at", "config-validate")
+
+	if result.LogASN && !hasThothClient {
+		lg.Warn("logging.asn is enabled but no Thoth client is configured; ASN logging and metrics will be skipped. Please read https://anubis.techaro.lol/docs/admin/thoth for more information")
+	}
 
 	stFac, ok := store.Get(c.Store.Backend)
 	switch ok {

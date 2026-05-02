@@ -207,7 +207,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		return
 	}
 
-	lg := internal.GetRequestLogger(s.logger, r)
+	lg, r := s.getRequestLogger(r)
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") && randomChance(64) {
 		lg.Error("client was given a challenge but does not in fact support gzip compression")
@@ -215,7 +215,10 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		return
 	}
 
-	challengesIssued.WithLabelValues("embedded").Add(1)
+	{
+		asn, asnDesc := asnFromContext(r.Context())
+		challengesIssued.WithLabelValues("embedded", asn, asnDesc).Add(1)
+	}
 	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
 	if err != nil {
 		lg.Error("can't get challenge", "err", err)
@@ -306,14 +309,14 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 	case "http", "https":
 		// allowed
 	default:
-		lg := internal.GetRequestLogger(s.logger, r)
+		lg, _ := s.getRequestLogger(r)
 		lg.Warn("invalid protocol in X-Forwarded-Proto", "proto", proto)
 		return "", errors.New(localizer.T("invalid_redirect"))
 	}
 
 	// Check if host is allowed in RedirectDomains (supports '*' via glob)
 	if len(s.opts.RedirectDomains) > 0 && !matchRedirectDomain(s.opts.RedirectDomains, host) {
-		lg := internal.GetRequestLogger(s.logger, r)
+		lg, _ := s.getRequestLogger(r)
 		lg.Debug("domain not allowed", "domain", host)
 		return "", errors.New(localizer.T("redirect_domain_not_allowed"))
 	}
@@ -415,7 +418,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		case "", "http", "https":
 			// allowed: empty scheme means relative URL
 		default:
-			lg := internal.GetRequestLogger(s.logger, r)
+			lg, _ := s.getRequestLogger(r)
 			lg.Warn("XSS attempt blocked, invalid redirect scheme", "scheme", urlParsed.Scheme, "redir", redir)
 			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
 			return
@@ -427,7 +430,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		hostMismatch := r.URL.Host != "" && urlParsed.Host != "" && urlParsed.Host != r.URL.Host
 
 		if hostNotAllowed || hostMismatch {
-			lg := internal.GetRequestLogger(s.logger, r)
+			lg, _ := s.getRequestLogger(r)
 			lg.Debug("domain not allowed", "domain", urlParsed.Host)
 			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), makeCode(err), http.StatusBadRequest)
 			return
@@ -442,7 +445,8 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
 		).ServeHTTP(w, r)
 	} else {
-		requestsProxied.WithLabelValues(r.Host).Inc()
+		asn, asnDesc := asnFromContext(r.Context())
+		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
 		r = s.stripBasePrefixFromRequest(r)
 		s.next.ServeHTTP(w, r)
 	}
