@@ -17,6 +17,7 @@ type Logging struct {
 	Sink       string             `json:"sink"`       // Logging sink, either "stdio" or "file"
 	Level      *slog.Level        `json:"level"`      // Log level, if set supersedes the level in flags
 	Parameters *LoggingFileConfig `json:"parameters"` // Logging parameters, to be dynamic in the future
+	LogASN     bool               `json:"asn" yaml:"asn"`
 }
 
 const (

@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
+	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
 	// challenge implementations
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
@@ -39,31 +41,52 @@ import (
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 )
 
+type contextKey int
+
+const asnContextKey contextKey = iota
+
+type asnInfo struct {
+	ASN         string
+	Description string
+}
+
+func asnFromContext(ctx context.Context) (string, string) {
+	if v, ok := ctx.Value(asnContextKey).(asnInfo); ok {
+		return v.ASN, v.Description
+	}
+	return "", ""
+}
+
 var (
 	challengesIssued = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_challenges_issued",
 		Help: "The total number of challenges issued",
-	}, []string{"method"})
+	}, []string{"method", "asn", "asn_description"})
 
 	challengesValidated = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_challenges_validated",
 		Help: "The total number of challenges validated",
-	}, []string{"method"})
+	}, []string{"method", "asn", "asn_description"})
 
 	droneBLHits = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_dronebl_hits",
 		Help: "The total number of hits from DroneBL",
-	}, []string{"status"})
+	}, []string{"status", "asn", "asn_description"})
 
 	failedValidations = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_failed_validations",
 		Help: "The total number of failed validations",
-	}, []string{"method"})
+	}, []string{"method", "asn", "asn_description"})
 
 	requestsProxied = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "anubis_proxied_requests_total",
 		Help: "Number of requests proxied through Anubis to upstream targets",
-	}, []string{"host"})
+	}, []string{"host", "asn", "asn_description"})
+
+	requestsByASN = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "anubis_requests_by_asn_total",
+		Help: "Number of requests by ASN",
+	}, []string{"asn", "asn_description"})
 )
 
 type Server struct {
@@ -76,6 +99,28 @@ type Server struct {
 	opts        Options
 	ed25519Priv ed25519.PrivateKey
 	hs512Secret []byte
+}
+
+func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
+	lg := internal.GetRequestLogger(s.logger, r)
+
+	if s.policy.LogASN && s.policy.ThothClient != nil {
+		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
+		defer cancel()
+
+		ip := r.Header.Get("X-Real-Ip")
+		if info, err := s.policy.ThothClient.IPToASN.Lookup(ctx, &iptoasnv1.LookupRequest{IpAddress: ip}); err == nil && info.GetAnnounced() {
+			asn := strconv.FormatUint(uint64(info.GetAsNumber()), 10)
+			lg = lg.With("asn", info.GetAsNumber(), "asn_description", info.GetDescription())
+			requestsByASN.WithLabelValues(asn, info.GetDescription()).Inc()
+			r = r.WithContext(context.WithValue(r.Context(), asnContextKey, asnInfo{
+				ASN:         asn,
+				Description: info.GetDescription(),
+			}))
+		}
+	}
+
+	return lg, r
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
@@ -193,7 +238,7 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
-	lg := internal.GetRequestLogger(s.logger, r)
+	lg, r := s.getRequestLogger(r)
 
 	if val, _ := s.store.Get(r.Context(), fmt.Sprintf("ogtags:allow:%s%s", r.Host, r.URL.String())); val != nil {
 		lg.Debug("serving opengraph tag asset")
@@ -218,7 +263,10 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 	r.Header.Add("X-Anubis-Rule", cr.Name)
 	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg = lg.With("check_result", cr)
-	policy.Applications.WithLabelValues(cr.Name, string(cr.Rule)).Add(1)
+	{
+		asn, asnDesc := asnFromContext(r.Context())
+		policy.Applications.WithLabelValues(cr.Name, string(cr.Rule), asn, asnDesc).Add(1)
+	}
 
 	ip := r.Header.Get("X-Real-Ip")
 
@@ -348,7 +396,8 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 				lg.Error("can't look up ip in dnsbl", "err", err)
 			}
 			db.Set(r.Context(), ip, resp, 24*time.Hour)
-			droneBLHits.WithLabelValues(resp.String()).Inc()
+			asn, asnDesc := asnFromContext(r.Context())
+			droneBLHits.WithLabelValues(resp.String(), asn, asnDesc).Inc()
 		}
 
 		if resp != dnsbl.AllGood {
@@ -366,7 +415,7 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := internal.GetRequestLogger(s.logger, r)
+	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
@@ -435,11 +484,14 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lg.Debug("made challenge", "challenge", chall, "rules", rule.Challenge, "cr", cr)
-	challengesIssued.WithLabelValues("api").Inc()
+	{
+		asn, asnDesc := asnFromContext(r.Context())
+		challengesIssued.WithLabelValues("api", asn, asnDesc).Inc()
+	}
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
-	lg := internal.GetRequestLogger(s.logger, r)
+	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
@@ -530,7 +582,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := impl.Validate(r, lg, in); err != nil {
-		failedValidations.WithLabelValues(rule.Challenge.Algorithm).Inc()
+		asn, asnDesc := asnFromContext(r.Context())
+		failedValidations.WithLabelValues(rule.Challenge.Algorithm, asn, asnDesc).Inc()
 		var cerr *challenge.Error
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		lg.Debug("challenge validate call failed", "err", err)
@@ -590,7 +643,10 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		lg.Debug("can't update information about challenge", "err", err)
 	}
 
-	challengesValidated.WithLabelValues(rule.Challenge.Algorithm).Inc()
+	{
+		asn, asnDesc := asnFromContext(r.Context())
+		challengesValidated.WithLabelValues(rule.Challenge.Algorithm, asn, asnDesc).Inc()
+	}
 	lg.Debug("challenge passed, redirecting to app")
 	http.Redirect(w, r, redir, http.StatusFound)
 }
@@ -629,7 +685,8 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 				return cr("bot/"+b.Name, b.Action, weight), &b, nil
 			case config.RuleWeigh:
 				lg.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
-				policy.Applications.WithLabelValues("bot/"+b.Name, "WEIGH").Add(1)
+				asn, asnDesc := asnFromContext(r.Context())
+				policy.Applications.WithLabelValues("bot/"+b.Name, "WEIGH", asn, asnDesc).Add(1)
 				weight += b.Weight.Adjust
 			}
 		}

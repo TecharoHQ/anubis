@@ -411,6 +411,7 @@ Anubis exposes the following logging settings in the policy file:
 | `level`      | [log level](#log-levels) | `info`          | The logging level threshold. Any logs that are at or above this threshold will be drained to the sink. Any other logs will be discarded. |
 | `sink`       | string                   | `stdio`, `file` | The sink where the logs drain to as they are being recorded in Anubis.                                                                   |
 | `parameters` | object                   |                 | Parameters for the given logging sink. This will vary based on the logging sink of choice. See below for more information.               |
+| `asn`        | bool                     | `true`, `false` | Add ASN information to logs/metrics. (Requires a Thoth client configured)                                                                |
 
 Anubis supports the following logging sinks:
 
