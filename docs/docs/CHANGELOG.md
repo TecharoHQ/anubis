@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 - Add config option to add ASN to logs/metrics.
+- Log weight when issuing challenge
 
 ## v1.25.0: Necron
 
