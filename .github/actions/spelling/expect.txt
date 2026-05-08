@@ -120,6 +120,7 @@ fahedouch
 fastcgi
 FCr
 fcrdns
+fcvg
 fediverse
 ffprobe
 fhdr
@@ -238,6 +239,7 @@ mnt
 Mojeek
 mojeekbot
 mozilla
+mqvh
 myclient
 mymaster
 mypass
@@ -387,6 +389,7 @@ vnd
 VPS
 Vultr
 WAIFU
+wcg
 weblate
 webmaster
 webpage
