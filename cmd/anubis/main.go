@@ -259,7 +259,7 @@ func main() {
 	}
 
 	lg.Info("loading policy file", "fname", *policyFname)
-	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty, *slogLevel)
+	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty, *slogLevel, strings.TrimSpace(*target) == "")
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
 	}

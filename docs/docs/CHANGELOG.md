@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Patch [GHSA-6wcg-mqvh-fcvg](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-6wcg-mqvh-fcvg) by containing subrequest logic to Anubis instances in subrequest mode.
 - Move metrics server configuration to [the policy file](./admin/policies.mdx#metrics-server).
 - Expose [pprof endpoints](https://pkg.go.dev/net/http/pprof) on the metrics listener to enable profiling Anubis in production.
 - fix: prevent nil pointer panic in challenge validation when threshold rules match during PassChallenge (#1463)
