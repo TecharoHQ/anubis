@@ -60,7 +60,7 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 	}
 }
 
-func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int, logLevel string) (*ParsedConfig, error) {
+func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int, logLevel string, subrequestMode bool) (*ParsedConfig, error) {
 	c, err := config.Load(fin, fname)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		}
 
 		if b.PathRegex != nil {
-			c, err := NewPathChecker(*b.PathRegex)
+			c, err := NewPathChecker(*b.PathRegex, subrequestMode)
 			if err != nil {
 				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s path regex: %w", b.Name, err))
 			} else {

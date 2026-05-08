@@ -58,7 +58,7 @@ func loadPolicies(t *testing.T, fname string, difficulty int) *policy.ParsedConf
 
 	t.Logf("loading policy file: %s", fname)
 
-	anubisPolicy, err := LoadPoliciesOrDefault(ctx, fname, difficulty, "info")
+	anubisPolicy, err := LoadPoliciesOrDefault(ctx, fname, difficulty, "info", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +250,7 @@ func TestLoadPolicies(t *testing.T) {
 			}
 			defer fin.Close()
 
-			if _, err := policy.ParseConfig(t.Context(), fin, fname, 4, "info"); err != nil {
+			if _, err := policy.ParseConfig(t.Context(), fin, fname, 4, "info", false); err != nil {
 				t.Fatal(err)
 			}
 		})

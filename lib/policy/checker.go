@@ -94,23 +94,26 @@ func (hmc *HeaderMatchesChecker) Hash() string {
 }
 
 type PathChecker struct {
-	regexp *regexp.Regexp
-	hash   string
+	regexp         *regexp.Regexp
+	hash           string
+	subRequestMode bool
 }
 
-func NewPathChecker(rexStr string) (checker.Impl, error) {
+func NewPathChecker(rexStr string, subrequestMode bool) (checker.Impl, error) {
 	rex, err := regexp.Compile(strings.TrimSpace(rexStr))
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &PathChecker{rex, internal.FastHash(rexStr)}, nil
+	return &PathChecker{rex, internal.FastHash(rexStr), subrequestMode}, nil
 }
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
-	originalUrl := r.Header.Get("X-Original-URI")
-	if originalUrl != "" {
-		if pc.regexp.MatchString(originalUrl) {
-			return true, nil
+	if pc.subRequestMode {
+		originalUrl := r.Header.Get("X-Original-URI")
+		if originalUrl != "" {
+			if pc.regexp.MatchString(originalUrl) {
+				return true, nil
+			}
 		}
 	}
 
