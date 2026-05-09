@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
@@ -33,8 +34,7 @@ import (
 func init() {
 	caddy.RegisterModule(Middleware{})
 	httpcaddyfile.RegisterHandlerDirective("anubis", parseCaddyfile)
-	httpcaddyfile.RegisterDirectiveOrder("anubis", httpcaddyfile.Before, "reverse_proxy")
-}
+httpcaddyfile.RegisterDirectiveOrder("anubis", httpcaddyfile.After, "templates")}
 
 // contextKey is an unexported type used to store the Caddy next-handler in
 // the request context so that the Anubis lib.Server can call it without
@@ -159,8 +159,8 @@ func (Middleware) CaddyModule() caddy.ModuleInfo {
 func (m *Middleware) Provision(ctx caddy.Context) error {
 	// ctx.Logger() returns *zap.Logger; Anubis uses log/slog. We discard the
 	// Caddy logger here and let Anubis construct its own default slog logger.
-	_ = ctx.Logger()
-
+logger := ctx.Logger()
+logger.Info("anubis caddy middleware provisioned")
 	difficulty := m.Difficulty
 	if difficulty == 0 {
 		difficulty = 4 // anubis.DefaultDifficulty
@@ -309,11 +309,11 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			if !d.NextArg() {
 				return d.ArgErr()
 			}
-			var n int
-			if _, err := fmt.Sscanf(d.Val(), "%d", &n); err != nil {
-				return d.Errf("invalid difficulty %q: %v", d.Val(), err)
-			}
-			m.Difficulty = n
+					n, err := strconv.Atoi(d.Val())
+		if err != nil {
+			return d.Errf("invalid difficulty %q: %v", d.Val(), err)
+		}
+		m.Difficulty = n
 
 		case "cookie_domain":
 			if !d.NextArg() {
