@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 - Add config option to add ASN to logs/metrics.
 - Log weight when issuing challenge
-- Add a native Caddy HTTP middleware module under `plugins/caddy`.
+- Add a native Caddy HTTP middleware module under `plugins/caddy`, including Caddyfile global defaults and per-route overrides.
 
 ## v1.25.0: Necron
 

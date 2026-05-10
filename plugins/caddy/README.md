@@ -15,11 +15,18 @@ response-producing handlers such as `respond`, `reverse_proxy`, and
 ## Caddyfile
 
 ```caddyfile
+{
+	anubis {
+		difficulty 4
+		cookie_domain example.com
+		use_remote_addr
+	}
+}
+
 example.com {
 	anubis {
 		policy_file /etc/anubis/botPolicies.yaml
 		difficulty 5
-		use_remote_addr
 		redirect_domains example.com *.example.com
 	}
 
@@ -34,12 +41,14 @@ of Caddy, configure that proxy or Caddy to set `X-Real-Ip` instead.
 
 ## Configuration scope
 
-Each `anubis` directive provisions its own Anubis policy, cookie settings, and
-next-handler bridge, so Caddy matchers and routes can control where the
-middleware runs. The adapter applies Anubis' package-level rendering settings
-while provisioning or serving each handler, so `base_prefix`, `public_url`,
-`forced_language`, and `use_simplified_explanation` can differ between handlers
-in the same Caddy process.
+An `anubis` block in Caddy's global options sets defaults for later `anubis`
+handler directives. Each handler can override those defaults and provisions its
+own Anubis policy, cookie settings, and next-handler bridge, so Caddy matchers
+and routes can control where the middleware runs. The adapter applies Anubis'
+package-level rendering settings while provisioning or serving each handler, so
+`base_prefix`, `public_url`, `forced_language`, and
+`use_simplified_explanation` can differ between handlers in the same Caddy
+process.
 
 ## Directives
 

@@ -124,6 +124,100 @@ func TestUnmarshalCaddyfileRejectsInvalidConfig(t *testing.T) {
 	}
 }
 
+func TestCaddyfileGlobalDefaults(t *testing.T) {
+	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
+	out, _, err := adapter.Adapt([]byte(`{
+	anubis {
+		difficulty 7
+		cookie_domain example.com
+		public_url https://anubis.example.com
+		use_remote_addr
+	}
+}
+
+:8080 {
+	anubis {
+		difficulty 5
+	}
+	respond "hello"
+}`), nil)
+	if err != nil {
+		t.Fatalf("Adapt returned error: %v", err)
+	}
+
+	config := string(out)
+	for _, want := range []string{
+		`"handler":"anubis"`,
+		`"difficulty":5`,
+		`"cookie_domain":"example.com"`,
+		`"public_url":"https://anubis.example.com"`,
+		`"use_remote_addr":true`,
+	} {
+		if !strings.Contains(config, want) {
+			t.Fatalf("adapted config does not contain %s: %s", want, config)
+		}
+	}
+	if strings.Contains(config, `"difficulty":7`) {
+		t.Fatalf("local difficulty should override global default; config: %s", config)
+	}
+}
+
+func TestCaddyfileGlobalDefaultsSatisfyLocalValidation(t *testing.T) {
+	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
+	out, _, err := adapter.Adapt([]byte(`{
+	anubis {
+		base_prefix /gate
+	}
+}
+
+:8080 {
+	anubis {
+		strip_base_prefix
+	}
+	respond "hello"
+}`), nil)
+	if err != nil {
+		t.Fatalf("Adapt returned error: %v", err)
+	}
+
+	config := string(out)
+	for _, want := range []string{
+		`"base_prefix":"/gate"`,
+		`"strip_base_prefix":true`,
+	} {
+		if !strings.Contains(config, want) {
+			t.Fatalf("adapted config does not contain %s: %s", want, config)
+		}
+	}
+}
+
+func TestCaddyfileLocalConfigOverridesMutuallyExclusiveGlobalDefault(t *testing.T) {
+	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
+	out, _, err := adapter.Adapt([]byte(`{
+	anubis {
+		cookie_domain example.com
+	}
+}
+
+:8080 {
+	anubis {
+		cookie_dynamic_domain
+	}
+	respond "hello"
+}`), nil)
+	if err != nil {
+		t.Fatalf("Adapt returned error: %v", err)
+	}
+
+	config := string(out)
+	if !strings.Contains(config, `"cookie_dynamic_domain":true`) {
+		t.Fatalf("adapted config does not contain cookie_dynamic_domain: %s", config)
+	}
+	if strings.Contains(config, `"cookie_domain"`) {
+		t.Fatalf("local cookie_dynamic_domain should override global cookie_domain; config: %s", config)
+	}
+}
+
 func TestParseSameSite(t *testing.T) {
 	tests := map[string]http.SameSite{
 		"":         http.SameSiteNoneMode,

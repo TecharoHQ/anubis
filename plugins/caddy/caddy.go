@@ -30,6 +30,7 @@ import (
 
 func init() {
 	caddyserver.RegisterModule(Handler{})
+	httpcaddyfile.RegisterGlobalOption("anubis", parseGlobalOption)
 	httpcaddyfile.RegisterHandlerDirective("anubis", parseCaddyfile)
 	httpcaddyfile.RegisterDirectiveOrder("anubis", httpcaddyfile.After, "templates")
 }
@@ -213,6 +214,75 @@ func (h *Handler) Validate() error {
 	return h.validateConfig()
 }
 
+func (h *Handler) applyDefaults(defaults *Handler) {
+	if defaults == nil {
+		return
+	}
+	if h.PolicyFile == "" {
+		h.PolicyFile = defaults.PolicyFile
+	}
+	if h.Difficulty == 0 {
+		h.Difficulty = defaults.Difficulty
+	}
+	if h.LogLevel == "" {
+		h.LogLevel = defaults.LogLevel
+	}
+	if h.CookieDomain == "" && !h.CookieDynamicDomain {
+		h.CookieDomain = defaults.CookieDomain
+		h.CookieDynamicDomain = defaults.CookieDynamicDomain
+	}
+	if h.CookieExpiration == 0 {
+		h.CookieExpiration = defaults.CookieExpiration
+	}
+	if h.CookieSecure == nil && defaults.CookieSecure != nil {
+		secure := *defaults.CookieSecure
+		h.CookieSecure = &secure
+	}
+	if h.CookieSameSite == "" {
+		h.CookieSameSite = defaults.CookieSameSite
+	}
+	if !h.CookiePartitioned {
+		h.CookiePartitioned = defaults.CookiePartitioned
+	}
+	if h.BasePrefix == "" {
+		h.BasePrefix = defaults.BasePrefix
+	}
+	if !h.StripBasePrefix {
+		h.StripBasePrefix = defaults.StripBasePrefix
+	}
+	if len(h.RedirectDomains) == 0 {
+		h.RedirectDomains = append([]string(nil), defaults.RedirectDomains...)
+	}
+	if h.WebmasterEmail == "" {
+		h.WebmasterEmail = defaults.WebmasterEmail
+	}
+	if !h.ServeRobotsTXT {
+		h.ServeRobotsTXT = defaults.ServeRobotsTXT
+	}
+	if h.PublicURL == "" {
+		h.PublicURL = defaults.PublicURL
+	}
+	if h.HS512Secret == "" && h.ED25519PrivateKeyHex == "" {
+		h.HS512Secret = defaults.HS512Secret
+		h.ED25519PrivateKeyHex = defaults.ED25519PrivateKeyHex
+	}
+	if h.JWTRestrictionHeader == "" {
+		h.JWTRestrictionHeader = defaults.JWTRestrictionHeader
+	}
+	if !h.DifficultyInJWT {
+		h.DifficultyInJWT = defaults.DifficultyInJWT
+	}
+	if !h.UseRemoteAddr {
+		h.UseRemoteAddr = defaults.UseRemoteAddr
+	}
+	if !h.UseSimplifiedExplanation {
+		h.UseSimplifiedExplanation = defaults.UseSimplifiedExplanation
+	}
+	if h.ForcedLanguage == "" {
+		h.ForcedLanguage = defaults.ForcedLanguage
+	}
+}
+
 func (h *Handler) validateConfig() error {
 	var errs []error
 	if h.Difficulty < 0 || h.Difficulty > 64 {
@@ -299,6 +369,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 //	    use_simplified_explanation
 //	}
 func (h *Handler) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
+	return h.unmarshalCaddyfile(d, true)
+}
+
+func (h *Handler) unmarshalCaddyfile(d *caddyfile.Dispenser, validate bool) error {
 	d.Next()
 	if d.NextArg() {
 		h.PolicyFile = d.Val()
@@ -441,13 +515,36 @@ func (h *Handler) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			return d.Errf("unknown anubis subdirective %q", d.Val())
 		}
 	}
-	return h.validateConfig()
+	if validate {
+		return h.validateConfig()
+	}
+	return nil
+}
+
+func parseGlobalOption(d *caddyfile.Dispenser, existingVal any) (any, error) {
+	var defaults Handler
+	if existingVal != nil {
+		existingDefaults, ok := existingVal.(*Handler)
+		if !ok {
+			return nil, fmt.Errorf("anubis caddy: unexpected global defaults type %T", existingVal)
+		}
+		defaults = *existingDefaults
+	}
+	if err := defaults.UnmarshalCaddyfile(d); err != nil {
+		return nil, err
+	}
+	return &defaults, nil
 }
 
 func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
 	var m Handler
-	err := m.UnmarshalCaddyfile(h.Dispenser)
-	return &m, err
+	if err := m.unmarshalCaddyfile(h.Dispenser, false); err != nil {
+		return nil, err
+	}
+	if defaults, ok := h.Option("anubis").(*Handler); ok {
+		m.applyDefaults(defaults)
+	}
+	return &m, m.validateConfig()
 }
 
 func nextSingleArg(d *caddyfile.Dispenser) error {
