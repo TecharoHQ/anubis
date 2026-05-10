@@ -17,6 +17,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	libanubis "github.com/TecharoHQ/anubis/lib"
+	"github.com/TecharoHQ/anubis/lib/store"
 
 	caddyserver "github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -114,6 +115,8 @@ type Handler struct {
 	ForcedLanguage           string `json:"forced_language,omitempty"`
 
 	caddyfileFields map[string]struct{}
+	policyCancel    context.CancelFunc
+	policyStore     store.Interface
 	server          *libanubis.Server
 }
 
@@ -127,6 +130,9 @@ func (Handler) CaddyModule() caddyserver.ModuleInfo {
 
 // Provision implements caddy.Provisioner.
 func (h *Handler) Provision(ctx caddyserver.Context) error {
+	if err := h.replacePlaceholders(caddyserver.NewReplacer()); err != nil {
+		return err
+	}
 	if err := h.validateConfig(); err != nil {
 		return err
 	}
@@ -141,10 +147,15 @@ func (h *Handler) Provision(ctx caddyserver.Context) error {
 		logLevel = "INFO"
 	}
 
-	policy, err := libanubis.LoadPoliciesOrDefault(context.Background(), h.PolicyFile, difficulty, logLevel, false)
+	policyCtx, policyCancel := context.WithCancel(ctx)
+	h.policyCancel = policyCancel
+
+	policy, err := libanubis.LoadPoliciesOrDefault(policyCtx, h.PolicyFile, difficulty, logLevel, false)
 	if err != nil {
+		_ = h.cleanupPolicyResources()
 		return fmt.Errorf("anubis caddy: load policy: %w", err)
 	}
+	h.policyStore = policy.Store
 
 	logger := slog.New(zapslog.NewHandler(ctx.Logger().Core())).With("subsystem", "anubis", "adapter", "caddy")
 
@@ -201,6 +212,9 @@ func (h *Handler) Provision(ctx caddyserver.Context) error {
 		}
 		return nil
 	}); err != nil {
+		if cleanupErr := h.Cleanup(); cleanupErr != nil {
+			return fmt.Errorf("%w; additionally cleanup: %w", err, cleanupErr)
+		}
 		return err
 	}
 	h.server = server
@@ -213,6 +227,93 @@ func (h *Handler) Validate() error {
 		return errors.New("anubis caddy: server is not provisioned")
 	}
 	return h.validateConfig()
+}
+
+// Cleanup implements caddy.CleanerUpper.
+func (h *Handler) Cleanup() error {
+	h.server = nil
+	return h.cleanupPolicyResources()
+}
+
+func (h *Handler) cleanupPolicyResources() error {
+	if h.policyCancel != nil {
+		h.policyCancel()
+		h.policyCancel = nil
+	}
+
+	if h.policyStore == nil {
+		return nil
+	}
+	defer func() {
+		h.policyStore = nil
+	}()
+
+	switch closer := h.policyStore.(type) {
+	case interface{ Close() error }:
+		if err := closer.Close(); err != nil {
+			return fmt.Errorf("anubis caddy: close policy store: %w", err)
+		}
+	case interface{ Close() }:
+		closer.Close()
+	}
+
+	return nil
+}
+
+func (h *Handler) replacePlaceholders(repl *caddyserver.Replacer) error {
+	replaceString := func(field, value string) (string, error) {
+		if value == "" {
+			return "", nil
+		}
+		replaced, err := repl.ReplaceOrErr(value, true, true)
+		if err != nil {
+			return "", fmt.Errorf("anubis caddy: replace %s placeholders: %w", field, err)
+		}
+		return replaced, nil
+	}
+
+	var err error
+	if h.PolicyFile, err = replaceString("policy_file", h.PolicyFile); err != nil {
+		return err
+	}
+	if h.LogLevel, err = replaceString("log_level", h.LogLevel); err != nil {
+		return err
+	}
+	if h.CookieDomain, err = replaceString("cookie_domain", h.CookieDomain); err != nil {
+		return err
+	}
+	if h.CookieSameSite, err = replaceString("cookie_same_site", h.CookieSameSite); err != nil {
+		return err
+	}
+	if h.BasePrefix, err = replaceString("base_prefix", h.BasePrefix); err != nil {
+		return err
+	}
+	for i, domain := range h.RedirectDomains {
+		h.RedirectDomains[i], err = replaceString(fmt.Sprintf("redirect_domains[%d]", i), domain)
+		if err != nil {
+			return err
+		}
+	}
+	if h.WebmasterEmail, err = replaceString("webmaster_email", h.WebmasterEmail); err != nil {
+		return err
+	}
+	if h.PublicURL, err = replaceString("public_url", h.PublicURL); err != nil {
+		return err
+	}
+	if h.HS512Secret, err = replaceString("hs512_secret", h.HS512Secret); err != nil {
+		return err
+	}
+	if h.ED25519PrivateKeyHex, err = replaceString("ed25519_private_key_hex", h.ED25519PrivateKeyHex); err != nil {
+		return err
+	}
+	if h.JWTRestrictionHeader, err = replaceString("jwt_restriction_header", h.JWTRestrictionHeader); err != nil {
+		return err
+	}
+	if h.ForcedLanguage, err = replaceString("forced_language", h.ForcedLanguage); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (h *Handler) applyDefaults(defaults *Handler) {
@@ -304,7 +405,7 @@ func (h *Handler) validateConfig() error {
 	if h.CookieDomain != "" && h.CookieDynamicDomain {
 		errs = append(errs, errors.New("anubis caddy: cookie_domain and cookie_dynamic_domain are mutually exclusive"))
 	}
-	if h.BasePrefix != "" {
+	if h.BasePrefix != "" && !hasCaddyPlaceholder(h.BasePrefix) {
 		if !strings.HasPrefix(h.BasePrefix, "/") {
 			errs = append(errs, fmt.Errorf("anubis caddy: base_prefix must start with /, got %q", h.BasePrefix))
 		}
@@ -318,12 +419,16 @@ func (h *Handler) validateConfig() error {
 	if h.HS512Secret != "" && h.ED25519PrivateKeyHex != "" {
 		errs = append(errs, errors.New("anubis caddy: hs512_secret and ed25519_private_key_hex are mutually exclusive"))
 	}
-	if h.CookieSameSite != "" {
+	if h.CookieSameSite != "" && !hasCaddyPlaceholder(h.CookieSameSite) {
 		if _, err := parseSameSite(h.CookieSameSite); err != nil {
 			errs = append(errs, err)
 		}
 	}
 	return errors.Join(errs...)
+}
+
+func hasCaddyPlaceholder(value string) bool {
+	return strings.Contains(value, "{") && strings.Contains(value, "}")
 }
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
@@ -652,6 +757,7 @@ var (
 	_ caddyserver.Module          = (*Handler)(nil)
 	_ caddyserver.Provisioner     = (*Handler)(nil)
 	_ caddyserver.Validator       = (*Handler)(nil)
+	_ caddyserver.CleanerUpper    = (*Handler)(nil)
 	_ caddyhttp.MiddlewareHandler = (*Handler)(nil)
 	_ caddyfile.Unmarshaler       = (*Handler)(nil)
 )

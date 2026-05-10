@@ -15,6 +15,11 @@ type Store struct {
 
 var _ store.Interface = (*Store)(nil)
 
+// Close closes the underlying Valkey client.
+func (s *Store) Close() error {
+	return s.client.Close()
+}
+
 func (s *Store) Get(ctx context.Context, key string) ([]byte, error) {
 	cmd := s.client.Get(ctx, key)
 	if err := cmd.Err(); err != nil {

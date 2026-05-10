@@ -34,6 +34,9 @@ yourdomain.example.com {
 When `policy_file` is omitted, Anubis uses its built-in policy. Add
 `policy_file /etc/anubis/botPolicies.yaml` or another path if you want Caddy to
 load a custom Anubis policy file.
+Caddy placeholders are supported for string settings during provisioning, so
+you can use values such as `policy_file {env.ANUBIS_POLICY}` or
+`ed25519_private_key_hex {file./run/anubis-ed25519.hex}`.
 
 The global `anubis` block sets defaults. Each site or route can override those
 defaults:

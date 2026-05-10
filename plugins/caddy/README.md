@@ -49,6 +49,9 @@ When `policy_file` is omitted, Anubis uses its built-in policy. If Caddy is
 directly internet-facing, enable `use_remote_addr` so Anubis can populate
 `X-Real-Ip` from the client connection. If another trusted proxy sits in front
 of Caddy, configure that proxy or Caddy to set `X-Real-Ip` instead.
+Caddy placeholders such as `{env.ANUBIS_POLICY}` and `{file./run/anubis.key}`
+are expanded while the module is provisioned, so paths and signing keys can
+come from Caddy's normal secret sources.
 
 ## Configuration scope
 

@@ -39,6 +39,11 @@ type Store struct {
 	bdb *bbolt.DB
 }
 
+// Close closes the underlying bbolt database.
+func (s *Store) Close() error {
+	return s.bdb.Close()
+}
+
 // Delete a key from the datastore. If the key does not exist, return an error.
 func (s *Store) Delete(ctx context.Context, key string) error {
 	return s.bdb.Update(func(tx *bbolt.Tx) error {

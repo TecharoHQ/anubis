@@ -291,6 +291,30 @@ func TestCaddyfileMatcherToken(t *testing.T) {
 	}
 }
 
+func TestCaddyfileAllowsPlaceholdersInValidatedStrings(t *testing.T) {
+	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
+	out, _, err := adapter.Adapt([]byte(`:8080 {
+	anubis {
+		base_prefix {env.ANUBIS_CADDY_BASE_PREFIX}
+		cookie_same_site {env.ANUBIS_CADDY_SAME_SITE}
+	}
+	respond "hello"
+}`), nil)
+	if err != nil {
+		t.Fatalf("Adapt returned error: %v", err)
+	}
+
+	config := string(out)
+	for _, want := range []string{
+		`"base_prefix":"{env.ANUBIS_CADDY_BASE_PREFIX}"`,
+		`"cookie_same_site":"{env.ANUBIS_CADDY_SAME_SITE}"`,
+	} {
+		if !strings.Contains(config, want) {
+			t.Fatalf("adapted config does not contain %s: %s", want, config)
+		}
+	}
+}
+
 func TestParseSameSite(t *testing.T) {
 	tests := map[string]http.SameSite{
 		"":         http.SameSiteNoneMode,
@@ -370,6 +394,83 @@ func TestProvisionRestoresAnubisGlobals(t *testing.T) {
 	}
 	if !anubis.UseSimplifiedExplanation {
 		t.Fatal("UseSimplifiedExplanation leaked after Provision")
+	}
+}
+
+func TestProvisionReplacesCaddyPlaceholders(t *testing.T) {
+	policyFile, err := filepath.Abs(filepath.Join("..", "..", "lib", "testdata", "permissive.yaml"))
+	if err != nil {
+		t.Fatalf("Abs returned error: %v", err)
+	}
+	t.Setenv("ANUBIS_CADDY_POLICY", policyFile)
+	t.Setenv("ANUBIS_CADDY_KEY", "0000000000000000000000000000000000000000000000000000000000000000")
+	t.Setenv("ANUBIS_CADDY_DOMAIN", "example.com")
+	t.Setenv("ANUBIS_CADDY_HEADER", "X-Forwarded-For")
+	t.Setenv("ANUBIS_CADDY_BASE_PREFIX", "/gate")
+	t.Setenv("ANUBIS_CADDY_SAME_SITE", "Lax")
+
+	ctx, cancel := caddyserver.NewContext(caddyserver.Context{Context: context.Background()})
+	defer cancel()
+
+	h := Handler{
+		PolicyFile:           "{env.ANUBIS_CADDY_POLICY}",
+		CookieDomain:         "{env.ANUBIS_CADDY_DOMAIN}",
+		CookieSameSite:       "{env.ANUBIS_CADDY_SAME_SITE}",
+		BasePrefix:           "{env.ANUBIS_CADDY_BASE_PREFIX}",
+		ED25519PrivateKeyHex: "{env.ANUBIS_CADDY_KEY}",
+		JWTRestrictionHeader: "{env.ANUBIS_CADDY_HEADER}",
+	}
+	if err := h.Provision(ctx); err != nil {
+		t.Fatalf("Provision returned error: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := h.Cleanup(); err != nil {
+			t.Fatalf("Cleanup returned error: %v", err)
+		}
+	})
+
+	if h.PolicyFile != policyFile {
+		t.Fatalf("PolicyFile = %q, want %q", h.PolicyFile, policyFile)
+	}
+	if h.CookieDomain != "example.com" {
+		t.Fatalf("CookieDomain = %q", h.CookieDomain)
+	}
+	if h.CookieSameSite != "Lax" {
+		t.Fatalf("CookieSameSite = %q", h.CookieSameSite)
+	}
+	if h.BasePrefix != "/gate" {
+		t.Fatalf("BasePrefix = %q", h.BasePrefix)
+	}
+	if h.ED25519PrivateKeyHex != "0000000000000000000000000000000000000000000000000000000000000000" {
+		t.Fatalf("ED25519PrivateKeyHex = %q", h.ED25519PrivateKeyHex)
+	}
+	if h.JWTRestrictionHeader != "X-Forwarded-For" {
+		t.Fatalf("JWTRestrictionHeader = %q", h.JWTRestrictionHeader)
+	}
+}
+
+func TestCleanupClosesPolicyResources(t *testing.T) {
+	store := &closeTrackingStore{}
+	canceled := false
+	h := Handler{
+		policyCancel: func() { canceled = true },
+		policyStore:  store,
+	}
+
+	if err := h.Cleanup(); err != nil {
+		t.Fatalf("Cleanup returned error: %v", err)
+	}
+	if !canceled {
+		t.Fatal("expected policy cancel function to be called")
+	}
+	if !store.closed {
+		t.Fatal("expected policy store to be closed")
+	}
+	if h.policyCancel != nil {
+		t.Fatal("policyCancel was not cleared")
+	}
+	if h.policyStore != nil {
+		t.Fatal("policyStore was not cleared")
 	}
 }
 
@@ -644,4 +745,28 @@ func TestEmbeddedRuntimeAssetsPresent(t *testing.T) {
 			}
 		})
 	}
+}
+
+type closeTrackingStore struct {
+	closed bool
+}
+
+func (s *closeTrackingStore) Delete(context.Context, string) error {
+	return nil
+}
+
+func (s *closeTrackingStore) Get(context.Context, string) ([]byte, error) {
+	return nil, nil
+}
+
+func (s *closeTrackingStore) Set(context.Context, string, []byte, time.Duration) error {
+	return nil
+}
+
+func (s *closeTrackingStore) IsPersistent() bool {
+	return false
+}
+
+func (s *closeTrackingStore) Close() {
+	s.closed = true
 }

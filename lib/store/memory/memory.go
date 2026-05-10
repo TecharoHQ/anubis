@@ -23,7 +23,12 @@ func init() {
 }
 
 type impl struct {
-	store *decaymap.Impl[string, []byte]
+	store  *decaymap.Impl[string, []byte]
+	cancel context.CancelFunc
+}
+
+func (i *impl) Close() {
+	i.cancel()
 }
 
 func (i *impl) Delete(_ context.Context, key string) error {
@@ -68,11 +73,13 @@ func (i *impl) cleanupThread(ctx context.Context) {
 
 // New creates a simple in-memory store. This will not scale to multiple Anubis instances.
 func New(ctx context.Context) store.Interface {
+	cleanupCtx, cancel := context.WithCancel(ctx)
 	result := &impl{
-		store: decaymap.New[string, []byte](),
+		store:  decaymap.New[string, []byte](),
+		cancel: cancel,
 	}
 
-	go result.cleanupThread(ctx)
+	go result.cleanupThread(cleanupCtx)
 
 	return result
 }

@@ -106,6 +106,7 @@ type redisClient interface {
 	Set(ctx context.Context, key string, value any, expiration time.Duration) *valkey.StatusCmd
 	Del(ctx context.Context, keys ...string) *valkey.IntCmd
 	Ping(ctx context.Context) *valkey.StatusCmd
+	Close() error
 }
 
 type Factory struct{}
