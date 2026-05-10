@@ -113,7 +113,8 @@ type Handler struct {
 	UseSimplifiedExplanation bool   `json:"use_simplified_explanation,omitempty"`
 	ForcedLanguage           string `json:"forced_language,omitempty"`
 
-	server *libanubis.Server
+	caddyfileFields map[string]struct{}
+	server          *libanubis.Server
 }
 
 // CaddyModule implements caddy.Module.
@@ -218,69 +219,81 @@ func (h *Handler) applyDefaults(defaults *Handler) {
 	if defaults == nil {
 		return
 	}
-	if h.PolicyFile == "" {
+	if !h.isCaddyfileFieldSet("policy_file") {
 		h.PolicyFile = defaults.PolicyFile
 	}
-	if h.Difficulty == 0 {
+	if !h.isCaddyfileFieldSet("difficulty") {
 		h.Difficulty = defaults.Difficulty
 	}
-	if h.LogLevel == "" {
+	if !h.isCaddyfileFieldSet("log_level") {
 		h.LogLevel = defaults.LogLevel
 	}
-	if h.CookieDomain == "" && !h.CookieDynamicDomain {
+	if !h.isCaddyfileFieldSet("cookie_domain") && !h.isCaddyfileFieldSet("cookie_dynamic_domain") {
 		h.CookieDomain = defaults.CookieDomain
 		h.CookieDynamicDomain = defaults.CookieDynamicDomain
 	}
-	if h.CookieExpiration == 0 {
+	if !h.isCaddyfileFieldSet("cookie_expiration") {
 		h.CookieExpiration = defaults.CookieExpiration
 	}
 	if h.CookieSecure == nil && defaults.CookieSecure != nil {
 		secure := *defaults.CookieSecure
 		h.CookieSecure = &secure
 	}
-	if h.CookieSameSite == "" {
+	if !h.isCaddyfileFieldSet("cookie_same_site") {
 		h.CookieSameSite = defaults.CookieSameSite
 	}
-	if !h.CookiePartitioned {
+	if !h.isCaddyfileFieldSet("cookie_partitioned") {
 		h.CookiePartitioned = defaults.CookiePartitioned
 	}
-	if h.BasePrefix == "" {
+	if !h.isCaddyfileFieldSet("base_prefix") {
 		h.BasePrefix = defaults.BasePrefix
 	}
-	if !h.StripBasePrefix {
+	if !h.isCaddyfileFieldSet("strip_base_prefix") {
 		h.StripBasePrefix = defaults.StripBasePrefix
 	}
-	if len(h.RedirectDomains) == 0 {
+	if !h.isCaddyfileFieldSet("redirect_domains") {
 		h.RedirectDomains = append([]string(nil), defaults.RedirectDomains...)
 	}
-	if h.WebmasterEmail == "" {
+	if !h.isCaddyfileFieldSet("webmaster_email") {
 		h.WebmasterEmail = defaults.WebmasterEmail
 	}
-	if !h.ServeRobotsTXT {
+	if !h.isCaddyfileFieldSet("serve_robots_txt") {
 		h.ServeRobotsTXT = defaults.ServeRobotsTXT
 	}
-	if h.PublicURL == "" {
+	if !h.isCaddyfileFieldSet("public_url") {
 		h.PublicURL = defaults.PublicURL
 	}
-	if h.HS512Secret == "" && h.ED25519PrivateKeyHex == "" {
+	if !h.isCaddyfileFieldSet("hs512_secret") && !h.isCaddyfileFieldSet("ed25519_private_key_hex") {
 		h.HS512Secret = defaults.HS512Secret
 		h.ED25519PrivateKeyHex = defaults.ED25519PrivateKeyHex
 	}
-	if h.JWTRestrictionHeader == "" {
+	if !h.isCaddyfileFieldSet("jwt_restriction_header") {
 		h.JWTRestrictionHeader = defaults.JWTRestrictionHeader
 	}
-	if !h.DifficultyInJWT {
+	if !h.isCaddyfileFieldSet("difficulty_in_jwt") {
 		h.DifficultyInJWT = defaults.DifficultyInJWT
 	}
-	if !h.UseRemoteAddr {
+	if !h.isCaddyfileFieldSet("use_remote_addr") {
 		h.UseRemoteAddr = defaults.UseRemoteAddr
 	}
-	if !h.UseSimplifiedExplanation {
+	if !h.isCaddyfileFieldSet("use_simplified_explanation") {
 		h.UseSimplifiedExplanation = defaults.UseSimplifiedExplanation
 	}
-	if h.ForcedLanguage == "" {
+	if !h.isCaddyfileFieldSet("forced_language") {
 		h.ForcedLanguage = defaults.ForcedLanguage
 	}
+}
+
+func (h *Handler) markCaddyfileFieldSet(name string) {
+	if h.caddyfileFields == nil {
+		h.caddyfileFields = make(map[string]struct{})
+	}
+	h.caddyfileFields[name] = struct{}{}
+}
+
+func (h *Handler) isCaddyfileFieldSet(name string) bool {
+	_, ok := h.caddyfileFields[name]
+	return ok
 }
 
 func (h *Handler) validateConfig() error {
@@ -353,20 +366,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 //	    cookie_secure <bool>
 //	    cookie_insecure
 //	    cookie_same_site <None|Lax|Strict|Default>
-//	    cookie_partitioned
+//	    cookie_partitioned [<bool>]
 //	    base_prefix <prefix>
-//	    strip_base_prefix
+//	    strip_base_prefix [<bool>]
 //	    redirect_domains <domain> [<domain> ...]
 //	    webmaster_email <email>
-//	    serve_robots_txt
+//	    serve_robots_txt [<bool>]
 //	    public_url <url>
 //	    hs512_secret <secret>
 //	    ed25519_private_key_hex <hex>
 //	    jwt_restriction_header <header>
-//	    difficulty_in_jwt
-//	    use_remote_addr
+//	    difficulty_in_jwt [<bool>]
+//	    use_remote_addr [<bool>]
 //	    forced_language <language>
-//	    use_simplified_explanation
+//	    use_simplified_explanation [<bool>]
 //	}
 func (h *Handler) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	return h.unmarshalCaddyfile(d, true)
@@ -376,6 +389,7 @@ func (h *Handler) unmarshalCaddyfile(d *caddyfile.Dispenser, validate bool) erro
 	d.Next()
 	if d.NextArg() {
 		h.PolicyFile = d.Val()
+		h.markCaddyfileFieldSet("policy_file")
 		if d.NextArg() {
 			return d.ArgErr()
 		}
@@ -388,6 +402,7 @@ func (h *Handler) unmarshalCaddyfile(d *caddyfile.Dispenser, validate bool) erro
 				return err
 			}
 			h.PolicyFile = d.Val()
+			h.markCaddyfileFieldSet("policy_file")
 		case "difficulty":
 			if err := nextSingleArg(d); err != nil {
 				return err
@@ -397,21 +412,26 @@ func (h *Handler) unmarshalCaddyfile(d *caddyfile.Dispenser, validate bool) erro
 				return d.Errf("invalid difficulty %q: %v", d.Val(), err)
 			}
 			h.Difficulty = n
+			h.markCaddyfileFieldSet("difficulty")
 		case "log_level":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.LogLevel = d.Val()
+			h.markCaddyfileFieldSet("log_level")
 		case "cookie_domain":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.CookieDomain = d.Val()
+			h.markCaddyfileFieldSet("cookie_domain")
 		case "cookie_dynamic_domain":
-			if err := noArgs(d); err != nil {
+			dynamic, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.CookieDynamicDomain = true
+			h.CookieDynamicDomain = dynamic
+			h.markCaddyfileFieldSet("cookie_dynamic_domain")
 		case "cookie_expiration":
 			if err := nextSingleArg(d); err != nil {
 				return err
@@ -421,6 +441,7 @@ func (h *Handler) unmarshalCaddyfile(d *caddyfile.Dispenser, validate bool) erro
 				return d.Errf("invalid cookie_expiration %q: %v", d.Val(), err)
 			}
 			h.CookieExpiration = caddyserver.Duration(dur)
+			h.markCaddyfileFieldSet("cookie_expiration")
 		case "cookie_secure":
 			if err := nextSingleArg(d); err != nil {
 				return err
@@ -430,87 +451,110 @@ func (h *Handler) unmarshalCaddyfile(d *caddyfile.Dispenser, validate bool) erro
 				return d.Errf("invalid cookie_secure %q: %v", d.Val(), err)
 			}
 			h.CookieSecure = &secure
+			h.markCaddyfileFieldSet("cookie_secure")
 		case "cookie_insecure":
 			if err := noArgs(d); err != nil {
 				return err
 			}
 			secure := false
 			h.CookieSecure = &secure
+			h.markCaddyfileFieldSet("cookie_secure")
 		case "cookie_same_site":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.CookieSameSite = d.Val()
+			h.markCaddyfileFieldSet("cookie_same_site")
 		case "cookie_partitioned":
-			if err := noArgs(d); err != nil {
+			partitioned, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.CookiePartitioned = true
+			h.CookiePartitioned = partitioned
+			h.markCaddyfileFieldSet("cookie_partitioned")
 		case "base_prefix":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.BasePrefix = d.Val()
+			h.markCaddyfileFieldSet("base_prefix")
 		case "strip_base_prefix":
-			if err := noArgs(d); err != nil {
+			strip, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.StripBasePrefix = true
+			h.StripBasePrefix = strip
+			h.markCaddyfileFieldSet("strip_base_prefix")
 		case "redirect_domains":
 			h.RedirectDomains = append(h.RedirectDomains, d.RemainingArgs()...)
 			if len(h.RedirectDomains) == 0 {
 				return d.ArgErr()
 			}
+			h.markCaddyfileFieldSet("redirect_domains")
 		case "webmaster_email":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.WebmasterEmail = d.Val()
+			h.markCaddyfileFieldSet("webmaster_email")
 		case "serve_robots_txt":
-			if err := noArgs(d); err != nil {
+			serve, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.ServeRobotsTXT = true
+			h.ServeRobotsTXT = serve
+			h.markCaddyfileFieldSet("serve_robots_txt")
 		case "public_url":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.PublicURL = d.Val()
+			h.markCaddyfileFieldSet("public_url")
 		case "hs512_secret":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.HS512Secret = d.Val()
+			h.markCaddyfileFieldSet("hs512_secret")
 		case "ed25519_private_key_hex":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.ED25519PrivateKeyHex = d.Val()
+			h.markCaddyfileFieldSet("ed25519_private_key_hex")
 		case "jwt_restriction_header":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.JWTRestrictionHeader = d.Val()
+			h.markCaddyfileFieldSet("jwt_restriction_header")
 		case "difficulty_in_jwt":
-			if err := noArgs(d); err != nil {
+			inJWT, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.DifficultyInJWT = true
+			h.DifficultyInJWT = inJWT
+			h.markCaddyfileFieldSet("difficulty_in_jwt")
 		case "use_remote_addr":
-			if err := noArgs(d); err != nil {
+			useRemoteAddr, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.UseRemoteAddr = true
+			h.UseRemoteAddr = useRemoteAddr
+			h.markCaddyfileFieldSet("use_remote_addr")
 		case "forced_language":
 			if err := nextSingleArg(d); err != nil {
 				return err
 			}
 			h.ForcedLanguage = d.Val()
+			h.markCaddyfileFieldSet("forced_language")
 		case "use_simplified_explanation":
-			if err := noArgs(d); err != nil {
+			useSimplified, err := nextOptionalBoolArg(d, true)
+			if err != nil {
 				return err
 			}
-			h.UseSimplifiedExplanation = true
+			h.UseSimplifiedExplanation = useSimplified
+			h.markCaddyfileFieldSet("use_simplified_explanation")
 		default:
 			return d.Errf("unknown anubis subdirective %q", d.Val())
 		}
@@ -562,6 +606,20 @@ func noArgs(d *caddyfile.Dispenser) error {
 		return d.ArgErr()
 	}
 	return nil
+}
+
+func nextOptionalBoolArg(d *caddyfile.Dispenser, defaultValue bool) (bool, error) {
+	if !d.NextArg() {
+		return defaultValue, nil
+	}
+	value, err := strconv.ParseBool(d.Val())
+	if err != nil {
+		return false, d.Errf("invalid boolean %q: %v", d.Val(), err)
+	}
+	if d.NextArg() {
+		return false, d.ArgErr()
+	}
+	return value, nil
 }
 
 func parseSameSite(value string) (http.SameSite, error) {

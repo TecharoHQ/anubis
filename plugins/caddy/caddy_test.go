@@ -137,7 +137,8 @@ func TestCaddyfileGlobalDefaults(t *testing.T) {
 
 :8080 {
 	anubis {
-		difficulty 5
+		difficulty 0
+		use_remote_addr false
 	}
 	respond "hello"
 }`), nil)
@@ -148,17 +149,20 @@ func TestCaddyfileGlobalDefaults(t *testing.T) {
 	config := string(out)
 	for _, want := range []string{
 		`"handler":"anubis"`,
-		`"difficulty":5`,
 		`"cookie_domain":"example.com"`,
 		`"public_url":"https://anubis.example.com"`,
-		`"use_remote_addr":true`,
 	} {
 		if !strings.Contains(config, want) {
 			t.Fatalf("adapted config does not contain %s: %s", want, config)
 		}
 	}
-	if strings.Contains(config, `"difficulty":7`) {
-		t.Fatalf("local difficulty should override global default; config: %s", config)
+	for _, unwant := range []string{
+		`"difficulty"`,
+		`"use_remote_addr":true`,
+	} {
+		if strings.Contains(config, unwant) {
+			t.Fatalf("local value should override global default; found %s in config: %s", unwant, config)
+		}
 	}
 }
 

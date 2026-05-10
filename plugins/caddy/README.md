@@ -63,17 +63,17 @@ process.
 | `cookie_secure <bool>` | Set or clear the Secure cookie flag. Defaults to true. |
 | `cookie_insecure` | Shortcut for `cookie_secure false`. |
 | `cookie_same_site <mode>` | `None`, `Lax`, `Strict`, or `Default`. Defaults to `None`. |
-| `cookie_partitioned` | Enable partitioned cookies. |
+| `cookie_partitioned [<bool>]` | Enable or disable partitioned cookies. |
 | `base_prefix <prefix>` | Serve Anubis endpoints below a path prefix. |
-| `strip_base_prefix` | Strip `base_prefix` before forwarding allowed requests. |
+| `strip_base_prefix [<bool>]` | Strip `base_prefix` before forwarding allowed requests. |
 | `redirect_domains <domain>...` | Allowlist redirect destinations after a challenge. |
 | `webmaster_email <email>` | Contact address shown on challenge or deny pages. |
-| `serve_robots_txt` | Serve Anubis' built-in robots.txt. |
+| `serve_robots_txt [<bool>]` | Serve Anubis' built-in robots.txt. |
 | `public_url <url>` | Public URL used when constructing challenge redirects. |
 | `hs512_secret <secret>` | Sign JWTs with HS512. Mutually exclusive with ED25519 keys. |
 | `ed25519_private_key_hex <hex>` | Hex-encoded 32-byte ED25519 seed for stable JWT signing. |
 | `jwt_restriction_header <header>` | Bind JWTs to a request header. Defaults to `X-Real-IP`. |
-| `difficulty_in_jwt` | Include challenge difficulty in JWT claims. |
-| `use_remote_addr` | Populate `X-Real-Ip` from the TCP remote address when absent. |
+| `difficulty_in_jwt [<bool>]` | Include challenge difficulty in JWT claims. |
+| `use_remote_addr [<bool>]` | Populate `X-Real-Ip` from the TCP remote address when absent. |
 | `forced_language <language>` | Force Anubis UI localization. |
-| `use_simplified_explanation` | Use the simplified challenge explanation. |
+| `use_simplified_explanation [<bool>]` | Use the simplified challenge explanation. |
