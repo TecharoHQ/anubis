@@ -1,2 +1,7 @@
 *
+!main.mjs
+!bench.mjs
+!worker/
+!worker/sha256-purejs.mjs
+!worker/sha256-webcrypto.mjs
 !.gitignore

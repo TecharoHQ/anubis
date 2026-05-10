@@ -73,3 +73,4 @@ Assisted-by: GLM 4.6 via Claude Code
 - **Environment variables**: Parsed from flags via `flagenv`. Use `.env` files locally (loaded by `godotenv/autoload`). Never commit `.env` files.
 - **Assets must be built first**: JS/CSS assets are embedded into the Go binary. Always run `npm run assets` before `go test` or `go build`.
 - **CEL expressions**: Policy rules support CEL (Common Expression Language) expressions for advanced matching. See `lib/policy/expressions/`.
+- **Confirmed Caddy plugin workflow**: `plugins/caddy` is a root-module package. Verify it with `xcaddy build --with github.com/TecharoHQ/anubis/plugins/caddy` style builds; generated runtime assets under `lib/challenge/preact/static/`, `web/static/js/`, and `web/static/locales/` must stay tracked because Go module consumers compile and serve embedded challenge assets without running generators first.

@@ -1,1 +1,1 @@
-app.js
+# app.js is tracked so Go module consumers can build packages that embed it.
