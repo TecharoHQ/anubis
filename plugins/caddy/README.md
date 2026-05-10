@@ -34,6 +34,17 @@ example.com {
 }
 ```
 
+Like other Caddy handler directives, `anubis` accepts an optional matcher token
+before its block:
+
+```caddyfile
+@admin path /admin/*
+anubis @admin {
+	policy_file /etc/anubis/botPolicies.yaml
+	difficulty 5
+}
+```
+
 When `policy_file` is omitted, Anubis uses its built-in policy. If Caddy is
 directly internet-facing, enable `use_remote_addr` so Anubis can populate
 `X-Real-Ip` from the client connection. If another trusted proxy sits in front

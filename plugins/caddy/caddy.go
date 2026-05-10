@@ -356,7 +356,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
 //
-//	anubis [<policy_file>] {
+//	anubis [<matcher>] {
 //	    policy_file <path>
 //	    difficulty <n>
 //	    log_level <level>

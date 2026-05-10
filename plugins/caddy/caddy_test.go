@@ -22,7 +22,8 @@ import (
 func TestUnmarshalCaddyfile(t *testing.T) {
 	secure := false
 	d := caddyfile.NewTestDispenser(`
-anubis /etc/anubis/policy.yaml {
+anubis {
+	policy_file /etc/anubis/policy.yaml
 	difficulty 5
 	log_level DEBUG
 	cookie_domain example.com
@@ -260,6 +261,33 @@ func TestCaddyfileLocalConfigOverridesMutuallyExclusiveGlobalDefault(t *testing.
 	}
 	if strings.Contains(config, `"cookie_domain"`) {
 		t.Fatalf("local cookie_dynamic_domain should override global cookie_domain; config: %s", config)
+	}
+}
+
+func TestCaddyfileMatcherToken(t *testing.T) {
+	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
+	out, _, err := adapter.Adapt([]byte(`:8080 {
+	@admin path /admin/*
+	anubis @admin {
+		policy_file /etc/anubis/policy.yaml
+		difficulty 5
+	}
+	respond "hello"
+}`), nil)
+	if err != nil {
+		t.Fatalf("Adapt returned error: %v", err)
+	}
+
+	config := string(out)
+	for _, want := range []string{
+		`"path":["/admin/*"]`,
+		`"handler":"anubis"`,
+		`"policy_file":"/etc/anubis/policy.yaml"`,
+		`"difficulty":5`,
+	} {
+		if !strings.Contains(config, want) {
+			t.Fatalf("adapted config does not contain %s: %s", want, config)
+		}
 	}
 }
 
