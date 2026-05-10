@@ -1,6 +1,74 @@
 # Caddy
 
-To use Anubis with Caddy, stick Anubis between Caddy and your backend. For example, consider this application setup:
+Anubis can be used with Caddy in two ways:
+
+- Build Anubis into Caddy as a native Caddy module with `xcaddy`.
+- Run Anubis as a separate service between Caddy and your backend.
+
+## Native Caddy module
+
+To build Caddy with the native Anubis middleware module:
+
+```sh
+xcaddy build --with github.com/TecharoHQ/anubis/plugins/caddy
+```
+
+The module registers the `anubis` Caddyfile directive. Use it before your
+upstream handler:
+
+```Caddyfile
+{
+  anubis {
+    difficulty 4
+    use_remote_addr
+  }
+}
+
+yourdomain.example.com {
+  anubis
+
+  reverse_proxy localhost:3000
+}
+```
+
+When `policy_file` is omitted, Anubis uses its built-in policy. Add
+`policy_file /etc/anubis/botPolicies.yaml` or another path if you want Caddy to
+load a custom Anubis policy file.
+
+The global `anubis` block sets defaults. Each site or route can override those
+defaults:
+
+```Caddyfile
+{
+  anubis {
+    difficulty 4
+    use_remote_addr
+  }
+}
+
+yourdomain.example.com {
+  @admin path /admin/*
+  handle @admin {
+    anubis {
+      difficulty 5
+    }
+
+    reverse_proxy localhost:3000
+  }
+
+  handle {
+    reverse_proxy localhost:3000
+  }
+}
+```
+
+If Caddy is directly internet-facing, enable `use_remote_addr` so Anubis can
+populate `X-Real-Ip` from the client connection. If another trusted proxy sits
+in front of Caddy, configure that proxy or Caddy to set `X-Real-Ip` instead.
+
+## Separate Anubis service
+
+You can also stick Anubis between Caddy and your backend. For example, consider this application setup:
 
 ```mermaid
 ---
@@ -68,4 +136,4 @@ yourdomain.example.com {
 }
 ```
 
-If you want to protect multiple services with Anubis, you will need to either start multiple instances of Anubis (Anubis requires less than 32 MB of ram on average) or set up a two-tier routing setup where TLS termination is done with one instance of Caddy and the actual routing to services is done with another instance of Caddy. See the [nginx](./nginx.mdx) or [Apache](./apache.mdx) documentation to get ideas on how you would do this.
+If you want to protect multiple services this way, you will need to either start multiple instances of Anubis (Anubis requires less than 32 MB of ram on average) or set up a two-tier routing setup where TLS termination is done with one instance of Caddy and the actual routing to services is done with another instance of Caddy. See the [nginx](./nginx.mdx) or [Apache](./apache.mdx) documentation to get ideas on how you would do this.
