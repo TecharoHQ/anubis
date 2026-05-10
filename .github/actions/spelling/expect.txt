@@ -154,6 +154,7 @@ gomod
 goodbot
 googlebot
 gopsutil
+GOTOOLCHAIN
 govulncheck
 goyaml
 GPG
