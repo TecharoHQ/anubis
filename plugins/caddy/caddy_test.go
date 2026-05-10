@@ -19,6 +19,66 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 
+func init() {
+	caddyserver.RegisterModule(testReverseProxyHandler{})
+	caddyserver.RegisterModule(testFileServerHandler{})
+	httpcaddyfile.RegisterHandlerDirective("reverse_proxy", parseTestCaddyfileReverseProxy)
+	httpcaddyfile.RegisterHandlerDirective("file_server", parseTestCaddyfileFileServer)
+}
+
+type testReverseProxyHandler struct{}
+
+func (testReverseProxyHandler) CaddyModule() caddyserver.ModuleInfo {
+	return caddyserver.ModuleInfo{
+		ID:  "http.handlers.reverse_proxy",
+		New: func() caddyserver.Module { return new(testReverseProxyHandler) },
+	}
+}
+
+func (testReverseProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	return next.ServeHTTP(w, r)
+}
+
+type testFileServerHandler struct{}
+
+func (testFileServerHandler) CaddyModule() caddyserver.ModuleInfo {
+	return caddyserver.ModuleInfo{
+		ID:  "http.handlers.file_server",
+		New: func() caddyserver.Module { return new(testFileServerHandler) },
+	}
+}
+
+func (testFileServerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	return next.ServeHTTP(w, r)
+}
+
+func parseTestCaddyfileReverseProxy(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
+	if err := consumeTestCaddyfileArgs(h); err != nil {
+		return nil, err
+	}
+	return testReverseProxyHandler{}, nil
+}
+
+func parseTestCaddyfileFileServer(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
+	if err := consumeTestCaddyfileArgs(h); err != nil {
+		return nil, err
+	}
+	return testFileServerHandler{}, nil
+}
+
+func consumeTestCaddyfileArgs(h httpcaddyfile.Helper) error {
+	if !h.Next() {
+		return h.ArgErr()
+	}
+	for h.NextArg() {
+	}
+	for h.NextBlock(0) {
+		for h.NextArg() {
+		}
+	}
+	return nil
+}
+
 func TestUnmarshalCaddyfile(t *testing.T) {
 	secure := false
 	d := caddyfile.NewTestDispenser(`
@@ -702,27 +762,59 @@ func TestServeHTTPUseRemoteAddrPopulatesMissingRealIP(t *testing.T) {
 	}
 }
 
-func TestCaddyfileDirectiveRunsBeforeRespond(t *testing.T) {
-	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
-	out, _, err := adapter.Adapt([]byte(`:8080 {
+func TestCaddyfileDirectiveRunsBeforeResponseHandlers(t *testing.T) {
+	tests := []struct {
+		name              string
+		caddyfile         string
+		downstreamHandler string
+	}{
+		{
+			name: "respond",
+			caddyfile: `:8080 {
 	anubis
 	respond "hello"
-}`), nil)
-	if err != nil {
-		t.Fatalf("Adapt returned error: %v", err)
+}`,
+			downstreamHandler: `"handler":"static_response"`,
+		},
+		{
+			name: "reverse_proxy",
+			caddyfile: `:8080 {
+	anubis
+	reverse_proxy 127.0.0.1:65535
+}`,
+			downstreamHandler: `"handler":"reverse_proxy"`,
+		},
+		{
+			name: "file_server",
+			caddyfile: `:8080 {
+	anubis
+	file_server
+}`,
+			downstreamHandler: `"handler":"file_server"`,
+		},
 	}
 
-	config := string(out)
-	anubisIndex := strings.Index(config, `"handler":"anubis"`)
-	respondIndex := strings.Index(config, `"handler":"static_response"`)
-	if anubisIndex == -1 {
-		t.Fatalf("adapted config does not contain anubis handler: %s", config)
-	}
-	if respondIndex == -1 {
-		t.Fatalf("adapted config does not contain respond handler: %s", config)
-	}
-	if anubisIndex > respondIndex {
-		t.Fatalf("anubis handler must run before respond; config: %s", config)
+	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			out, _, err := adapter.Adapt([]byte(tc.caddyfile), nil)
+			if err != nil {
+				t.Fatalf("Adapt returned error: %v", err)
+			}
+
+			config := string(out)
+			anubisIndex := strings.Index(config, `"handler":"anubis"`)
+			downstreamIndex := strings.Index(config, tc.downstreamHandler)
+			if anubisIndex == -1 {
+				t.Fatalf("adapted config does not contain anubis handler: %s", config)
+			}
+			if downstreamIndex == -1 {
+				t.Fatalf("adapted config does not contain %s: %s", tc.downstreamHandler, config)
+			}
+			if anubisIndex > downstreamIndex {
+				t.Fatalf("anubis handler must run before %s; config: %s", tc.name, config)
+			}
+		})
 	}
 }
 
