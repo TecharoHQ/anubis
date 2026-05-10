@@ -34,7 +34,7 @@ func main() {
 	flagenv.Parse()
 	flag.Parse()
 
-	internal.InitSlog(*slogLevel)
+	slog.SetDefault(internal.InitSlog(*slogLevel, os.Stderr))
 
 	if *dir == "" && *socketPath == "" {
 		flag.Usage()
