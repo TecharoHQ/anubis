@@ -112,6 +112,12 @@ func TestUnmarshalCaddyfileRejectsInvalidConfig(t *testing.T) {
 			hs512_secret secret
 			ed25519_private_key_hex 0000000000000000000000000000000000000000000000000000000000000000
 		}`,
+		`anubis {
+			use_remote_addr maybe
+		}`,
+		`anubis {
+			serve_robots_txt true false
+		}`,
 	}
 
 	for _, input := range tests {
@@ -121,6 +127,41 @@ func TestUnmarshalCaddyfileRejectsInvalidConfig(t *testing.T) {
 				t.Fatalf("expected invalid config to fail")
 			}
 		})
+	}
+}
+
+func TestUnmarshalCaddyfileOptionalBooleanFalseValues(t *testing.T) {
+	d := caddyfile.NewTestDispenser(`
+anubis {
+	cookie_dynamic_domain false
+	cookie_partitioned false
+	strip_base_prefix false
+	serve_robots_txt false
+	difficulty_in_jwt false
+	use_remote_addr false
+	use_simplified_explanation false
+}
+`)
+	var h Handler
+	if err := h.UnmarshalCaddyfile(d); err != nil {
+		t.Fatalf("UnmarshalCaddyfile returned error: %v", err)
+	}
+
+	for _, field := range []string{
+		"cookie_dynamic_domain",
+		"cookie_partitioned",
+		"strip_base_prefix",
+		"serve_robots_txt",
+		"difficulty_in_jwt",
+		"use_remote_addr",
+		"use_simplified_explanation",
+	} {
+		if !h.isCaddyfileFieldSet(field) {
+			t.Fatalf("expected %s to be marked as explicitly set", field)
+		}
+	}
+	if h.CookieDynamicDomain || h.CookiePartitioned || h.StripBasePrefix || h.ServeRobotsTXT || h.DifficultyInJWT || h.UseRemoteAddr || h.UseSimplifiedExplanation {
+		t.Fatalf("optional boolean false values were not preserved: %#v", h)
 	}
 }
 
