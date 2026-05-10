@@ -1,3 +1,9 @@
+const gitVersion = git.tag();
+const packageVersion =
+  gitVersion === "devel"
+    ? `${$`node -p "require('./package.json').version"`.trim()}-dev`
+    : gitVersion;
+
 $`npm run assets`;
 
 ["amd64", "arm64", "ppc64le", "riscv64"].forEach((goarch) => {
@@ -8,6 +14,7 @@ $`npm run assets`;
         "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
       homepage: "https://anubis.techaro.lol",
       license: "MIT",
+      version: packageVersion,
       goarch,
 
       documentation: {
@@ -17,8 +24,8 @@ $`npm run assets`;
       },
 
       build: ({ bin, etc, systemd, doc }) => {
-        $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/anubis`;
-        $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/robots2policy`;
+        $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${packageVersion}"' ./cmd/anubis`;
+        $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${packageVersion}"' ./cmd/robots2policy`;
 
         file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
         file.install("./run/default.env", `${etc}/default.env`);
@@ -46,6 +53,7 @@ $`npm run assets`;
 tarball.build({
   name: "anubis-src-vendor",
   license: "MIT",
+  version: packageVersion,
   // XXX(Xe): This is needed otherwise go will be very sad.
   platform: yeet.goos,
   goarch: yeet.goarch,
@@ -56,7 +64,7 @@ tarball.build({
     // vendor Go dependencies
     $`cd ${out} && go mod vendor`;
     // write VERSION file
-    $`echo ${git.tag()} > ${out}/VERSION`;
+    $`echo ${packageVersion} > ${out}/VERSION`;
   },
 
   mkFilename: ({ name, version }) => `${name}-${version}`,
@@ -65,6 +73,7 @@ tarball.build({
 tarball.build({
   name: "anubis-src-vendor-npm",
   license: "MIT",
+  version: packageVersion,
   // XXX(Xe): This is needed otherwise go will be very sad.
   platform: yeet.goos,
   goarch: yeet.goarch,
@@ -77,7 +86,7 @@ tarball.build({
     // build NPM-bound dependencies
     $`cd ${out} && npm ci && npm run assets && rm -rf node_modules`;
     // write VERSION file
-    $`echo ${git.tag()} > ${out}/VERSION`;
+    $`echo ${packageVersion} > ${out}/VERSION`;
   },
 
   mkFilename: ({ name, version }) => `${name}-${version}`,
