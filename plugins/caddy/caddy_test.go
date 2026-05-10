@@ -509,6 +509,70 @@ func TestServeHTTPReturnsNextError(t *testing.T) {
 	}
 }
 
+func TestServeHTTPUseRemoteAddrPopulatesMissingRealIP(t *testing.T) {
+	ctx, cancel := caddyserver.NewContext(caddyserver.Context{Context: context.Background()})
+	defer cancel()
+
+	h := Handler{
+		PolicyFile:           filepath.Join("..", "..", "lib", "testdata", "permissive.yaml"),
+		CookieDomain:         "example.com",
+		ED25519PrivateKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
+		UseRemoteAddr:        true,
+	}
+	if err := h.Provision(ctx); err != nil {
+		t.Fatalf("Provision returned error: %v", err)
+	}
+
+	tests := []struct {
+		name           string
+		remoteAddr     string
+		existingRealIP string
+		wantRealIP     string
+	}{
+		{
+			name:       "missing header uses remote address host",
+			remoteAddr: "203.0.113.9:12345",
+			wantRealIP: "203.0.113.9",
+		},
+		{
+			name:           "existing header is preserved",
+			remoteAddr:     "203.0.113.9:12345",
+			existingRealIP: "198.51.100.7",
+			wantRealIP:     "198.51.100.7",
+		},
+		{
+			name:       "remote address without port is accepted",
+			remoteAddr: "2001:db8::1",
+			wantRealIP: "2001:db8::1",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "https://example.com/", nil)
+			req.RemoteAddr = tc.remoteAddr
+			if tc.existingRealIP != "" {
+				req.Header.Set("X-Real-Ip", tc.existingRealIP)
+			}
+			rec := httptest.NewRecorder()
+			next := caddyhttp.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+				if got := r.Header.Get("X-Real-Ip"); got != tc.wantRealIP {
+					t.Fatalf("X-Real-Ip = %q, want %q", got, tc.wantRealIP)
+				}
+				w.WriteHeader(http.StatusNoContent)
+				return nil
+			})
+
+			if err := h.ServeHTTP(rec, req, next); err != nil {
+				t.Fatalf("ServeHTTP returned error: %v", err)
+			}
+			if rec.Code != http.StatusNoContent {
+				t.Fatalf("response code = %d, want %d", rec.Code, http.StatusNoContent)
+			}
+		})
+	}
+}
+
 func TestCaddyfileDirectiveRunsBeforeRespond(t *testing.T) {
 	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
 	out, _, err := adapter.Adapt([]byte(`:8080 {
