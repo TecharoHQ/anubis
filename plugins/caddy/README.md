@@ -36,10 +36,10 @@ of Caddy, configure that proxy or Caddy to set `X-Real-Ip` instead.
 
 Each `anubis` directive provisions its own Anubis policy, cookie settings, and
 next-handler bridge, so Caddy matchers and routes can control where the
-middleware runs. Anubis currently keeps `base_prefix`, `public_url`,
-`forced_language`, and `use_simplified_explanation` in package-level state, so
-keep those settings consistent across `anubis` handlers in the same Caddy
-process.
+middleware runs. The adapter applies Anubis' package-level rendering settings
+while provisioning or serving each handler, so `base_prefix`, `public_url`,
+`forced_language`, and `use_simplified_explanation` can differ between handlers
+in the same Caddy process.
 
 ## Directives
 

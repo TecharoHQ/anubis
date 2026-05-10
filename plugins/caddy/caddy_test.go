@@ -6,11 +6,14 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/web"
+	caddyserver "github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
@@ -156,18 +159,188 @@ func TestKeyFromHex(t *testing.T) {
 	}
 }
 
-func TestNextHandlerPropagatesCaddyError(t *testing.T) {
-	want := errors.New("next failed")
-	state := &nextState{next: caddyhttp.HandlerFunc(func(http.ResponseWriter, *http.Request) error {
+func TestProvisionRestoresAnubisGlobals(t *testing.T) {
+	origBasePrefix := anubis.BasePrefix
+	origPublicURL := anubis.PublicUrl
+	origForcedLanguage := anubis.ForcedLanguage
+	origUseSimplifiedExplanation := anubis.UseSimplifiedExplanation
+	t.Cleanup(func() {
+		anubis.BasePrefix = origBasePrefix
+		anubis.PublicUrl = origPublicURL
+		anubis.ForcedLanguage = origForcedLanguage
+		anubis.UseSimplifiedExplanation = origUseSimplifiedExplanation
+	})
+
+	anubis.BasePrefix = "/existing"
+	anubis.PublicUrl = "https://existing.example"
+	anubis.ForcedLanguage = "de"
+	anubis.UseSimplifiedExplanation = true
+
+	ctx, cancel := caddyserver.NewContext(caddyserver.Context{Context: context.Background()})
+	defer cancel()
+
+	h := Handler{
+		BasePrefix:               "/gate",
+		PublicURL:                "https://anubis.example.com",
+		ForcedLanguage:           "en",
+		UseSimplifiedExplanation: false,
+		CookieDomain:             "example.com",
+		JWTRestrictionHeader:     "X-Real-IP",
+		ED25519PrivateKeyHex:     "0000000000000000000000000000000000000000000000000000000000000000",
+	}
+	if err := h.Provision(ctx); err != nil {
+		t.Fatalf("Provision returned error: %v", err)
+	}
+
+	if anubis.BasePrefix != "/existing" {
+		t.Fatalf("BasePrefix leaked after Provision: %q", anubis.BasePrefix)
+	}
+	if anubis.PublicUrl != "https://existing.example" {
+		t.Fatalf("PublicUrl leaked after Provision: %q", anubis.PublicUrl)
+	}
+	if anubis.ForcedLanguage != "de" {
+		t.Fatalf("ForcedLanguage leaked after Provision: %q", anubis.ForcedLanguage)
+	}
+	if !anubis.UseSimplifiedExplanation {
+		t.Fatal("UseSimplifiedExplanation leaked after Provision")
+	}
+}
+
+func TestWithAnubisGlobalsRestoresAfterError(t *testing.T) {
+	origBasePrefix := anubis.BasePrefix
+	origPublicURL := anubis.PublicUrl
+	origForcedLanguage := anubis.ForcedLanguage
+	origUseSimplifiedExplanation := anubis.UseSimplifiedExplanation
+	t.Cleanup(func() {
+		anubis.BasePrefix = origBasePrefix
+		anubis.PublicUrl = origPublicURL
+		anubis.ForcedLanguage = origForcedLanguage
+		anubis.UseSimplifiedExplanation = origUseSimplifiedExplanation
+	})
+
+	anubis.BasePrefix = "/before"
+	anubis.PublicUrl = "https://before.example"
+	anubis.ForcedLanguage = "fr"
+	anubis.UseSimplifiedExplanation = false
+
+	want := errors.New("stop")
+	h := Handler{
+		BasePrefix:               "/during",
+		PublicURL:                "https://during.example",
+		ForcedLanguage:           "en",
+		UseSimplifiedExplanation: true,
+	}
+	err := h.withAnubisGlobals(func() error {
+		if anubis.BasePrefix != "/during" {
+			t.Fatalf("BasePrefix inside callback = %q", anubis.BasePrefix)
+		}
+		if anubis.PublicUrl != "https://during.example" {
+			t.Fatalf("PublicUrl inside callback = %q", anubis.PublicUrl)
+		}
+		if anubis.ForcedLanguage != "en" {
+			t.Fatalf("ForcedLanguage inside callback = %q", anubis.ForcedLanguage)
+		}
+		if !anubis.UseSimplifiedExplanation {
+			t.Fatal("UseSimplifiedExplanation inside callback = false")
+		}
 		return want
-	})}
+	})
+	if !errors.Is(err, want) {
+		t.Fatalf("withAnubisGlobals error = %v, want %v", err, want)
+	}
+
+	if anubis.BasePrefix != "/before" {
+		t.Fatalf("BasePrefix after callback = %q", anubis.BasePrefix)
+	}
+	if anubis.PublicUrl != "https://before.example" {
+		t.Fatalf("PublicUrl after callback = %q", anubis.PublicUrl)
+	}
+	if anubis.ForcedLanguage != "fr" {
+		t.Fatalf("ForcedLanguage after callback = %q", anubis.ForcedLanguage)
+	}
+	if anubis.UseSimplifiedExplanation {
+		t.Fatal("UseSimplifiedExplanation after callback = true")
+	}
+}
+
+func TestNextHandlerCapturesAllowedRequest(t *testing.T) {
+	state := &nextState{}
+	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req = req.WithContext(context.WithValue(req.Context(), nextContextKey{}, state))
 
-	nextHandler{}.ServeHTTP(httptest.NewRecorder(), req)
+	nextHandler{}.ServeHTTP(rec, req)
 
-	if !errors.Is(state.err, want) {
-		t.Fatalf("state.err = %v, want %v", state.err, want)
+	if state.w != rec {
+		t.Fatalf("state.w = %p, want %p", state.w, rec)
+	}
+	if state.r != req {
+		t.Fatalf("state.r = %p, want %p", state.r, req)
+	}
+}
+
+func TestServeHTTPRunsNextAfterRestoringAnubisGlobals(t *testing.T) {
+	origBasePrefix := anubis.BasePrefix
+	origPublicURL := anubis.PublicUrl
+	origForcedLanguage := anubis.ForcedLanguage
+	origUseSimplifiedExplanation := anubis.UseSimplifiedExplanation
+	t.Cleanup(func() {
+		anubis.BasePrefix = origBasePrefix
+		anubis.PublicUrl = origPublicURL
+		anubis.ForcedLanguage = origForcedLanguage
+		anubis.UseSimplifiedExplanation = origUseSimplifiedExplanation
+	})
+
+	anubis.BasePrefix = "/outside"
+	anubis.PublicUrl = "https://outside.example"
+	anubis.ForcedLanguage = "de"
+	anubis.UseSimplifiedExplanation = true
+
+	ctx, cancel := caddyserver.NewContext(caddyserver.Context{Context: context.Background()})
+	defer cancel()
+
+	h := Handler{
+		PolicyFile:           filepath.Join("..", "..", "lib", "testdata", "permissive.yaml"),
+		BasePrefix:           "/gate",
+		PublicURL:            "https://anubis.example.com",
+		ForcedLanguage:       "en",
+		CookieDomain:         "example.com",
+		ED25519PrivateKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
+	}
+	if err := h.Provision(ctx); err != nil {
+		t.Fatalf("Provision returned error: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "https://example.com/", nil)
+	req.Header.Set("X-Real-Ip", "10.0.0.1")
+	rec := httptest.NewRecorder()
+	nextCalled := false
+	next := caddyhttp.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		nextCalled = true
+		if anubis.BasePrefix != "/outside" {
+			t.Fatalf("BasePrefix leaked into next handler: %q", anubis.BasePrefix)
+		}
+		if anubis.PublicUrl != "https://outside.example" {
+			t.Fatalf("PublicUrl leaked into next handler: %q", anubis.PublicUrl)
+		}
+		if anubis.ForcedLanguage != "de" {
+			t.Fatalf("ForcedLanguage leaked into next handler: %q", anubis.ForcedLanguage)
+		}
+		if !anubis.UseSimplifiedExplanation {
+			t.Fatal("UseSimplifiedExplanation leaked into next handler")
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return nil
+	})
+
+	if err := h.ServeHTTP(rec, req, next); err != nil {
+		t.Fatalf("ServeHTTP returned error: %v", err)
+	}
+	if !nextCalled {
+		t.Fatal("expected next handler to be called")
+	}
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("response code = %d, want %d", rec.Code, http.StatusNoContent)
 	}
 }
 

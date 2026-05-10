@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TecharoHQ/anubis"
@@ -36,18 +37,44 @@ func init() {
 type nextContextKey struct{}
 
 type nextState struct {
-	next caddyhttp.Handler
-	err  error
+	w http.ResponseWriter
+	r *http.Request
 }
 
 type nextHandler struct{}
 
 func (nextHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	state, ok := r.Context().Value(nextContextKey{}).(*nextState)
-	if !ok || state == nil || state.next == nil {
+	if !ok || state == nil {
 		return
 	}
-	state.err = state.next.ServeHTTP(w, r)
+	state.w = w
+	state.r = r
+}
+
+var anubisGlobalsMu sync.Mutex
+
+func (h *Handler) withAnubisGlobals(fn func() error) error {
+	anubisGlobalsMu.Lock()
+	defer anubisGlobalsMu.Unlock()
+
+	oldBasePrefix := anubis.BasePrefix
+	oldPublicURL := anubis.PublicUrl
+	oldForcedLanguage := anubis.ForcedLanguage
+	oldUseSimplifiedExplanation := anubis.UseSimplifiedExplanation
+	defer func() {
+		anubis.BasePrefix = oldBasePrefix
+		anubis.PublicUrl = oldPublicURL
+		anubis.ForcedLanguage = oldForcedLanguage
+		anubis.UseSimplifiedExplanation = oldUseSimplifiedExplanation
+	}()
+
+	anubis.BasePrefix = strings.TrimRight(h.BasePrefix, "/")
+	anubis.PublicUrl = h.PublicURL
+	anubis.ForcedLanguage = h.ForcedLanguage
+	anubis.UseSimplifiedExplanation = h.UseSimplifiedExplanation
+
+	return fn()
 }
 
 // Handler is an Anubis middleware module for Caddy.
@@ -118,8 +145,6 @@ func (h *Handler) Provision(ctx caddyserver.Context) error {
 	}
 
 	logger := slog.New(zapslog.NewHandler(ctx.Logger().Core())).With("subsystem", "anubis", "adapter", "caddy")
-	anubis.ForcedLanguage = h.ForcedLanguage
-	anubis.UseSimplifiedExplanation = h.UseSimplifiedExplanation
 
 	opts := libanubis.Options{
 		Next:                 nextHandler{},
@@ -166,10 +191,17 @@ func (h *Handler) Provision(ctx caddyserver.Context) error {
 		opts.HS512Secret = []byte(h.HS512Secret)
 	}
 
-	h.server, err = libanubis.New(opts)
-	if err != nil {
-		return fmt.Errorf("anubis caddy: create server: %w", err)
+	var server *libanubis.Server
+	if err := h.withAnubisGlobals(func() error {
+		server, err = libanubis.New(opts)
+		if err != nil {
+			return fmt.Errorf("anubis caddy: create server: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
+	h.server = server
 	return nil
 }
 
@@ -225,10 +257,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 		r.Header.Set("X-Real-Ip", host)
 	}
 
-	state := &nextState{next: next}
+	state := &nextState{}
 	r = r.WithContext(context.WithValue(r.Context(), nextContextKey{}, state))
-	h.server.ServeHTTP(w, r)
-	return state.err
+	if err := h.withAnubisGlobals(func() error {
+		h.server.ServeHTTP(w, r)
+		return nil
+	}); err != nil {
+		return err
+	}
+	if state.r != nil {
+		return next.ServeHTTP(state.w, state.r)
+	}
+	return nil
 }
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler.
