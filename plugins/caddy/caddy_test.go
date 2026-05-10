@@ -344,6 +344,32 @@ func TestServeHTTPRunsNextAfterRestoringAnubisGlobals(t *testing.T) {
 	}
 }
 
+func TestServeHTTPReturnsNextError(t *testing.T) {
+	ctx, cancel := caddyserver.NewContext(caddyserver.Context{Context: context.Background()})
+	defer cancel()
+
+	h := Handler{
+		PolicyFile:           filepath.Join("..", "..", "lib", "testdata", "permissive.yaml"),
+		CookieDomain:         "example.com",
+		ED25519PrivateKeyHex: "0000000000000000000000000000000000000000000000000000000000000000",
+	}
+	if err := h.Provision(ctx); err != nil {
+		t.Fatalf("Provision returned error: %v", err)
+	}
+
+	want := errors.New("next failed")
+	req := httptest.NewRequest(http.MethodGet, "https://example.com/", nil)
+	req.Header.Set("X-Real-Ip", "10.0.0.1")
+	rec := httptest.NewRecorder()
+	next := caddyhttp.HandlerFunc(func(http.ResponseWriter, *http.Request) error {
+		return want
+	})
+
+	if err := h.ServeHTTP(rec, req, next); !errors.Is(err, want) {
+		t.Fatalf("ServeHTTP error = %v, want %v", err, want)
+	}
+}
+
 func TestCaddyfileDirectiveRunsBeforeRespond(t *testing.T) {
 	adapter := caddyfile.Adapter{ServerType: httpcaddyfile.ServerType{}}
 	out, _, err := adapter.Adapt([]byte(`:8080 {
