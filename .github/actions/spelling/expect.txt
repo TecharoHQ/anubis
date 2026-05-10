@@ -44,7 +44,10 @@ byteslice
 Bytespider
 cachebuster
 cachediptoasn
-Caddyfile
+caddyconfig
+caddyfile
+caddyhttp
+caddyserver
 caninetools
 Cardyb
 CAs
@@ -106,6 +109,7 @@ ellenjoe
 emacs
 embe
 enbyware
+Errf
 etld
 everyones
 evilbot
@@ -175,6 +179,7 @@ HSTS
 htmlc
 htmx
 httpdebug
+httpcaddyfile
 huawei
 hypertext
 iaskspider
@@ -331,6 +336,7 @@ Sidetrade
 simprint
 sitemap
 sls
+smallstep
 sni
 snipster
 Spambot
@@ -346,6 +352,7 @@ storetest
 strcmp
 subgrid
 subr
+subdirective
 subrequest
 SVCNAME
 tagline
@@ -369,6 +376,7 @@ TLog
 traefik
 trunc
 txn
+uber
 uberspace
 Unbreak
 unbreakdocker
@@ -405,6 +413,7 @@ workaround
 workdir
 wpbot
 XCircle
+xcaddy
 xeiaso
 xeserv
 xesite
@@ -427,4 +436,5 @@ Zenos
 zizmor
 zombocom
 zos
+zapslog
 zst

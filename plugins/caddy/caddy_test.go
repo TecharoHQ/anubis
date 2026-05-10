@@ -197,12 +197,12 @@ func TestCaddyfileGlobalDefaults(t *testing.T) {
 			t.Fatalf("adapted config does not contain %s: %s", want, config)
 		}
 	}
-	for _, unwant := range []string{
+	for _, unexpected := range []string{
 		`"difficulty"`,
 		`"use_remote_addr":true`,
 	} {
-		if strings.Contains(config, unwant) {
-			t.Fatalf("local value should override global default; found %s in config: %s", unwant, config)
+		if strings.Contains(config, unexpected) {
+			t.Fatalf("local value should override global default; found %s in config: %s", unexpected, config)
 		}
 	}
 }
