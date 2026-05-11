@@ -86,6 +86,24 @@ func spawnAnubis(t *testing.T, opts Options) *Server {
 	return s
 }
 
+func TestHandlerWithNextDoesNotMutateServer(t *testing.T) {
+	t.Parallel()
+
+	srv := spawnAnubis(t, Options{})
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	wrapped := srv.HandlerWithNext(next)
+	if wrapped == srv {
+		t.Fatal("HandlerWithNext returned the original server")
+	}
+	if srv.next != nil {
+		t.Fatal("HandlerWithNext mutated the original server")
+	}
+}
+
 type challengeResp struct {
 	ID        string `json:"id"`
 	Challenge string `json:"challenge"`

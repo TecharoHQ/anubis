@@ -210,3 +210,12 @@ func New(opts Options) (*Server, error) {
 
 	return result, nil
 }
+
+// HandlerWithNext returns a shallow copy of s that forwards passed requests to next.
+// This lets middleware integrations adapt Anubis to frameworks that provide the
+// downstream handler per request without mutating the shared Server.
+func (s *Server) HandlerWithNext(next http.Handler) http.Handler {
+	clone := *s
+	clone.next = next
+	return &clone
+}
