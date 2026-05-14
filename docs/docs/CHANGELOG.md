@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 - Add config option to add ASN to logs/metrics.
 - Log weight when issuing challenge
+- Keep Anubis server URL state local to each `lib.Server` instance to make embedded use safer.
 
 ## v1.25.0: Necron
 
