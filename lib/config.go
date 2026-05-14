@@ -112,8 +112,7 @@ func New(opts Options) (*Server, error) {
 		opts.ED25519PrivateKey = priv
 	}
 
-	anubis.BasePrefix = strings.TrimRight(opts.BasePrefix, "/")
-	anubis.PublicUrl = opts.PublicUrl
+	opts.BasePrefix = strings.TrimRight(opts.BasePrefix, "/")
 
 	result := &Server{
 		next:        opts.Next,
@@ -121,6 +120,8 @@ func New(opts Options) (*Server, error) {
 		hs512Secret: opts.HS512Secret,
 		policy:      opts.Policy,
 		opts:        opts,
+		basePrefix:  opts.BasePrefix,
+		publicURL:   opts.PublicUrl,
 		OGTags: ogtags.NewOGTagCache(opts.Target, opts.Policy.OpenGraph, opts.Policy.Store, ogtags.TargetOptions{
 			Host:               opts.TargetHost,
 			SNI:                opts.TargetSNI,
@@ -131,28 +132,20 @@ func New(opts Options) (*Server, error) {
 	}
 
 	mux := http.NewServeMux()
-	xess.Mount(mux)
+	xessPrefix := result.prefixedPath(xess.BasePrefix)
+	mux.Handle(xessPrefix, internal.UnchangingCache(http.StripPrefix(xessPrefix, http.FileServerFS(xess.Static))))
 
-	// Helper to add global prefix
+	// Helper to add the server-local base prefix.
 	registerWithPrefix := func(pattern string, handler http.Handler, method string) {
 		if method != "" {
 			method = method + " " // methods must end with a space to register with them
 		}
 
-		// Ensure there's no double slash when concatenating BasePrefix and pattern
-		basePrefix := strings.TrimSuffix(anubis.BasePrefix, "/")
-		prefix := method + basePrefix
-
-		// If pattern doesn't start with a slash, add one
-		if !strings.HasPrefix(pattern, "/") {
-			pattern = "/" + pattern
-		}
-
-		mux.Handle(prefix+pattern, handler)
+		mux.Handle(method+result.prefixedPath(pattern), handler)
 	}
 
 	// Ensure there's no double slash when concatenating BasePrefix and StaticPath
-	stripPrefix := strings.TrimSuffix(anubis.BasePrefix, "/") + anubis.StaticPath
+	stripPrefix := result.prefixedPath(anubis.StaticPath)
 	registerWithPrefix(anubis.StaticPath, internal.UnchangingCache(internal.NoBrowsing(http.StripPrefix(stripPrefix, http.FileServerFS(web.Static)))), "")
 
 	if opts.ServeRobotsTXT {
@@ -166,9 +159,12 @@ func New(opts Options) (*Server, error) {
 
 	if opts.Policy.Impressum != nil {
 		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			templ.Handler(
+			handler := templ.Handler(
 				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
-			).ServeHTTP(w, r)
+			)
+			result.withAnubisBasePrefix(func() {
+				handler.ServeHTTP(w, r)
+			})
 		}), "GET")
 	}
 

@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -501,8 +502,11 @@ func TestBasePrefix(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Reset the global BasePrefix before each test
-			anubis.BasePrefix = ""
+			originalBasePrefix := anubis.BasePrefix
+			anubis.BasePrefix = "/not-this-server"
+			t.Cleanup(func() {
+				anubis.BasePrefix = originalBasePrefix
+			})
 
 			pol := loadPolicies(t, "", 4)
 
@@ -631,7 +635,93 @@ func TestBasePrefix(t *testing.T) {
 			if ckie.Path != expectedPath {
 				t.Errorf("cookie path is wrong, wanted %s, got: %s", expectedPath, ckie.Path)
 			}
+
+			if anubis.BasePrefix != "/not-this-server" {
+				t.Errorf("New should not overwrite anubis.BasePrefix, got %q", anubis.BasePrefix)
+			}
 		})
+	}
+}
+
+func TestBasePrefixUsesServerConfigNotPackageGlobal(t *testing.T) {
+	originalBasePrefix := anubis.BasePrefix
+	anubis.BasePrefix = "/global"
+	t.Cleanup(func() {
+		anubis.BasePrefix = originalBasePrefix
+	})
+
+	pol := loadPolicies(t, "", 4)
+	srv := spawnAnubis(t, Options{
+		Next:       http.NewServeMux(),
+		Policy:     pol,
+		BasePrefix: "/local/",
+	})
+
+	if anubis.BasePrefix != "/global" {
+		t.Fatalf("New should leave anubis.BasePrefix alone, got %q", anubis.BasePrefix)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/local/.within.website/x/cmd/anubis/api/make-challenge?redir=/", nil)
+	req.Header.Set("X-Real-Ip", "127.0.0.1")
+	rr := httptest.NewRecorder()
+
+	srv.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected local server prefix route to work, got status %d body %q", rr.Code, rr.Body.String())
+	}
+}
+
+func TestRenderIndexUsesServerBasePrefixNotPackageGlobal(t *testing.T) {
+	originalBasePrefix := anubis.BasePrefix
+	anubis.BasePrefix = "/global"
+	t.Cleanup(func() {
+		anubis.BasePrefix = originalBasePrefix
+	})
+
+	pol := loadPolicies(t, "", 4)
+	srv := spawnAnubis(t, Options{
+		Next:       http.NewServeMux(),
+		Policy:     pol,
+		BasePrefix: "/local/",
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/local/protected", nil)
+	req.Header.Set("X-Real-Ip", "127.0.0.1")
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	req.Header.Set("Accept-Encoding", "gzip")
+	rr := httptest.NewRecorder()
+
+	srv.ServeHTTP(rr, req)
+
+	resp := rr.Result()
+	defer resp.Body.Close()
+
+	var body strings.Builder
+	reader := io.Reader(resp.Body)
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			t.Fatalf("opening gzip response should not fail: %v", err)
+		}
+		defer gzipReader.Close()
+		reader = gzipReader
+	}
+	if _, err := io.Copy(&body, reader); err != nil {
+		t.Fatalf("reading challenge response should not fail: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected challenge status %d, got %d body %q", http.StatusOK, resp.StatusCode, body.String())
+	}
+	if !strings.Contains(body.String(), "/local/.within.website/x/cmd/anubis/static/js/main.mjs") {
+		t.Fatalf("expected challenge assets to use server base prefix, body %q", body.String())
+	}
+	if strings.Contains(body.String(), "/global/.within.website") {
+		t.Fatalf("challenge body used package global base prefix: %q", body.String())
+	}
+	if anubis.BasePrefix != "/global" {
+		t.Fatalf("rendering should restore anubis.BasePrefix, got %q", anubis.BasePrefix)
 	}
 }
 

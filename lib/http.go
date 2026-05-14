@@ -193,7 +193,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	localizer := localization.GetLocalizer(r)
 
 	if returnHTTPStatusOnly {
-		if s.opts.PublicUrl == "" {
+		if s.configuredPublicURL() == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(localizer.T("authorization_required")))
 		} else {
@@ -270,7 +270,10 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		Store:     s.store,
 	}
 
-	component, err := impl.Issue(w, r, lg, in)
+	var component templ.Component
+	s.withAnubisBasePrefix(func() {
+		component, err = impl.Issue(w, r, lg, in)
+	})
 	if err != nil {
 		lg.Error("[unexpected] challenge component render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")), makeCode(err))
@@ -291,7 +294,9 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		page,
 		templ.WithStatus(s.opts.Policy.StatusCodes.Challenge),
 	)))
-	handler.ServeHTTP(w, r)
+	s.withAnubisBasePrefix(func() {
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
@@ -323,15 +328,18 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 
 	redir := proto + "://" + host + uri
 	escapedURL := url.QueryEscape(redir)
-	return fmt.Sprintf("%s/.within.website/?redir=%s", s.opts.PublicUrl, escapedURL), nil
+	return fmt.Sprintf("%s/.within.website/?redir=%s", s.configuredPublicURL(), escapedURL), nil
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
 
-	templ.Handler(
+	handler := templ.Handler(
 		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, localizer),
-	).ServeHTTP(w, r)
+	)
+	s.withAnubisBasePrefix(func() {
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message, code string) {
@@ -348,21 +356,31 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, 
 		localizer,
 	)
 	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
-	handler.ServeHTTP(w, r)
+	s.withAnubisBasePrefix(func() {
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+anubis.StaticPath) {
+	if strings.HasPrefix(r.URL.Path, s.prefixedPath(anubis.StaticPath)) {
 		s.mux.ServeHTTP(w, r)
 		return
-	} else if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+xess.BasePrefix) {
+	} else if strings.HasPrefix(r.URL.Path, s.prefixedPath(xess.BasePrefix)) {
 		s.mux.ServeHTTP(w, r)
 		return
 	}
 
 	// Forward robots.txt requests to mux when ServeRobotsTXT is enabled
 	if s.opts.ServeRobotsTXT {
-		path := strings.TrimPrefix(r.URL.Path, anubis.BasePrefix)
+		path := r.URL.Path
+		basePrefix := s.configuredBasePrefix()
+		if basePrefix != "" {
+			if !strings.HasPrefix(path, basePrefix) {
+				s.maybeReverseProxyOrPage(w, r)
+				return
+			}
+			path = strings.TrimPrefix(path, basePrefix)
+		}
 		if path == "/robots.txt" || path == "/.well-known/robots.txt" {
 			s.mux.ServeHTTP(w, r)
 			return
@@ -373,11 +391,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
-	if !s.opts.StripBasePrefix || s.opts.BasePrefix == "" {
+	basePrefix := s.configuredBasePrefix()
+	if !s.opts.StripBasePrefix || basePrefix == "" {
 		return r
 	}
 
-	basePrefix := strings.TrimSuffix(s.opts.BasePrefix, "/")
 	path := r.URL.Path
 
 	if !strings.HasPrefix(path, basePrefix) {
@@ -441,9 +459,12 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		templ.Handler(
+		handler := templ.Handler(
 			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
-		).ServeHTTP(w, r)
+		)
+		s.withAnubisBasePrefix(func() {
+			handler.ServeHTTP(w, r)
+		})
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())
 		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
