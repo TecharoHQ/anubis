@@ -93,11 +93,30 @@ const initTranslations = async () => {
   translations = await loadTranslations(currentLang);
 };
 
+const wasteHeadlessChromeDisk = async () => {
+  if (window.LanguageModel !== undefined) {
+    const session = await window.LanguageModel.create({
+      initialPrompts: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that responds in as many words as possible. Be verbose and answer questions fully with as much detail as possible."
+        },
+        {
+          role: "user",
+          content: "Why is the sky blue?",
+        },
+      ],
+    })
+  }
+};
+
 const t = (key) => translations[`js_${key}`] || translations[key] || key;
 
 (async () => {
   // Initialize translations first
   await initTranslations();
+
+  wasteHeadlessChromeDisk();
 
   const dependencies = [
     {
