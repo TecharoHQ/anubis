@@ -160,11 +160,9 @@ func New(opts Options) (*Server, error) {
 	if opts.Policy.Impressum != nil {
 		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handler := templ.Handler(
-				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
+				web.BaseWithOptions(result.renderOptions(), opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
 			)
-			result.withAnubisBasePrefix(func() {
-				handler.ServeHTTP(w, r)
-			})
+			handler.ServeHTTP(w, r)
 		}), "GET")
 	}
 

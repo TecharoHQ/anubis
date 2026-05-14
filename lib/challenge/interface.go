@@ -44,11 +44,12 @@ func Methods() []string {
 }
 
 type IssueInput struct {
-	Impressum *config.Impressum
-	Rule      *policy.Bot
-	Challenge *Challenge
-	OGTags    map[string]string
-	Store     store.Interface
+	BasePrefix string
+	Impressum  *config.Impressum
+	Rule       *policy.Bot
+	Challenge  *Challenge
+	OGTags     map[string]string
+	Store      store.Interface
 }
 
 func (in *IssueInput) Valid() error {

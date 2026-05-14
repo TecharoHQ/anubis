@@ -721,7 +721,7 @@ func TestRenderIndexUsesServerBasePrefixNotPackageGlobal(t *testing.T) {
 		t.Fatalf("challenge body used package global base prefix: %q", body.String())
 	}
 	if anubis.BasePrefix != "/global" {
-		t.Fatalf("rendering should restore anubis.BasePrefix, got %q", anubis.BasePrefix)
+		t.Fatalf("rendering should leave anubis.BasePrefix alone, got %q", anubis.BasePrefix)
 	}
 }
 

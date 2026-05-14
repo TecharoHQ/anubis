@@ -13,7 +13,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -34,6 +33,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
+	"github.com/TecharoHQ/anubis/web"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
 	// challenge implementations
@@ -126,8 +126,6 @@ func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request)
 	return lg, r
 }
 
-var anubisBasePrefixMu sync.Mutex
-
 func (s *Server) configuredBasePrefix() string {
 	if s.basePrefix != "" {
 		return s.basePrefix
@@ -157,17 +155,11 @@ func (s *Server) cookiePath() string {
 	return basePrefix + "/"
 }
 
-func (s *Server) withAnubisBasePrefix(fn func()) {
-	anubisBasePrefixMu.Lock()
-	defer anubisBasePrefixMu.Unlock()
-
-	oldBasePrefix := anubis.BasePrefix
-	anubis.BasePrefix = s.configuredBasePrefix()
-	defer func() {
-		anubis.BasePrefix = oldBasePrefix
-	}()
-
-	fn()
+func (s *Server) renderOptions() web.Options {
+	return web.Options{
+		BasePrefix: s.configuredBasePrefix(),
+		PublicURL:  s.configuredPublicURL(),
+	}
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {

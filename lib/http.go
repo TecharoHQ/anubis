@@ -263,24 +263,23 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	}
 
 	in := &challenge.IssueInput{
-		Impressum: s.policy.Impressum,
-		Rule:      rule,
-		Challenge: chall,
-		OGTags:    ogTags,
-		Store:     s.store,
+		BasePrefix: s.configuredBasePrefix(),
+		Impressum:  s.policy.Impressum,
+		Rule:       rule,
+		Challenge:  chall,
+		OGTags:     ogTags,
+		Store:      s.store,
 	}
 
-	var component templ.Component
-	s.withAnubisBasePrefix(func() {
-		component, err = impl.Issue(w, r, lg, in)
-	})
+	component, err := impl.Issue(w, r, lg, in)
 	if err != nil {
 		lg.Error("[unexpected] challenge component render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")), makeCode(err))
 		return
 	}
 
-	page := web.BaseWithChallengeAndOGTags(
+	page := web.BaseWithChallengeAndOGTagsWithOptions(
+		s.renderOptions(),
 		localizer.T("making_sure_not_bot"),
 		component,
 		s.policy.Impressum,
@@ -294,9 +293,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		page,
 		templ.WithStatus(s.opts.Policy.StatusCodes.Challenge),
 	)))
-	s.withAnubisBasePrefix(func() {
-		handler.ServeHTTP(w, r)
-	})
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
@@ -333,13 +330,12 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
+	opts := s.renderOptions()
 
 	handler := templ.Handler(
-		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, localizer),
+		web.BaseWithOptions(opts, localizer.T("benchmarking_anubis"), web.BenchWithOptions(opts, localizer), s.policy.Impressum, localizer),
 	)
-	s.withAnubisBasePrefix(func() {
-		handler.ServeHTTP(w, r)
-	})
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message, code string) {
@@ -348,17 +344,17 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, code string, status int) {
 	localizer := localization.GetLocalizer(r)
+	opts := s.renderOptions()
 
-	component := web.Base(
+	component := web.BaseWithOptions(
+		opts,
 		localizer.T("oh_noes"),
-		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
+		web.ErrorPageWithOptions(opts, msg, s.opts.WebmasterEmail, code, localizer),
 		s.policy.Impressum,
 		localizer,
 	)
 	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
-	s.withAnubisBasePrefix(func() {
-		handler.ServeHTTP(w, r)
-	})
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -459,12 +455,11 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		opts := s.renderOptions()
 		handler := templ.Handler(
-			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
+			web.BaseWithOptions(opts, localizer.T("you_are_not_a_bot"), web.StaticHappyWithOptions(opts, localizer), s.policy.Impressum, localizer),
 		)
-		s.withAnubisBasePrefix(func() {
-			handler.ServeHTTP(w, r)
-		})
+		handler.ServeHTTP(w, r)
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())
 		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
