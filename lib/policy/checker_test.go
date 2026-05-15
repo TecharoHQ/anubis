@@ -410,3 +410,119 @@ func TestPathChecker_GHSA_6wcg_mqvh_fcvg(t *testing.T) {
 		})
 	}
 }
+
+func TestPathChecker_XForwardedUri(t *testing.T) {
+	tests := []struct {
+		name           string
+		regex          string
+		xForwardedUri  string
+		xOriginalURI   string
+		urlPath        string
+		subRequestMode bool
+		want           bool
+	}{
+		{
+			name:           "X-Forwarded-Uri matches regex in subrequest mode",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/admin/users",
+			urlPath:        "/.within.website/x/cmd/anubis/api/check",
+			subRequestMode: true,
+			want:           true,
+		},
+		{
+			name:           "X-Forwarded-Uri with query string",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/admin/users?page=1",
+			urlPath:        "/.within.website/x/cmd/anubis/api/check",
+			subRequestMode: true,
+			want:           true,
+		},
+		{
+			name:           "X-Original-URI takes priority over X-Forwarded-Uri",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/public/page",
+			xOriginalURI:   "/admin/users",
+			urlPath:        "/.within.website/x/cmd/anubis/api/check",
+			subRequestMode: true,
+			want:           true,
+		},
+		{
+			name:           "falls back to X-Forwarded-Uri when no X-Original-URI",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/admin/dashboard",
+			urlPath:        "/.within.website/x/cmd/anubis/api/check",
+			subRequestMode: true,
+			want:           true,
+		},
+		{
+			name:           "neither header matches, url path matches",
+			regex:          "^/public/.*",
+			xForwardedUri:  "/admin/users",
+			urlPath:        "/public/page",
+			subRequestMode: true,
+			want:           true,
+		},
+		{
+			name:           "nothing matches",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/public/page",
+			urlPath:        "/.within.website/x/cmd/anubis/api/check",
+			subRequestMode: true,
+			want:           false,
+		},
+		{
+			name:           "non-subrequest mode ignores X-Forwarded-Uri",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/admin/users",
+			urlPath:        "/public/page",
+			subRequestMode: false,
+			want:           false,
+		},
+		{
+			name:           "non-subrequest mode uses url path",
+			regex:          "^/admin/.*",
+			xForwardedUri:  "/public/page",
+			urlPath:        "/admin/secret",
+			subRequestMode: false,
+			want:           true,
+		},
+		{
+			name:           "empty X-Forwarded-Uri falls back to url path",
+			regex:          "^/check$",
+			urlPath:        "/check",
+			subRequestMode: true,
+			want:           true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pc, err := NewPathChecker(tt.regex, tt.subRequestMode)
+			if err != nil {
+				t.Fatalf("NewPathChecker(%q, %v) returned error: %v", tt.regex, tt.subRequestMode, err)
+			}
+
+			req, err := http.NewRequest(http.MethodGet, "http://example.com"+tt.urlPath, nil)
+			if err != nil {
+				t.Fatalf("http.NewRequest: %v", err)
+			}
+
+			if tt.xForwardedUri != "" {
+				req.Header.Set("X-Forwarded-Uri", tt.xForwardedUri)
+			}
+			if tt.xOriginalURI != "" {
+				req.Header.Set("X-Original-URI", tt.xOriginalURI)
+			}
+
+			got, err := pc.Check(req)
+			if err != nil {
+				t.Fatalf("Check() unexpected error: %v", err)
+			}
+
+			if got != tt.want {
+				t.Errorf("Check() = %v, want %v (subRequestMode=%v, urlPath=%q, X-Forwarded-Uri=%q, X-Original-URI=%q)",
+					got, tt.want, tt.subRequestMode, tt.urlPath, tt.xForwardedUri, tt.xOriginalURI)
+			}
+		})
+	}
+}
