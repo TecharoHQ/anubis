@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log/slog"
+	"math"
 	"math/rand/v2"
 	"net/http"
 	"net/netip"
@@ -167,6 +168,9 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			lg.Warn("found possible crawler", "id", id, "network", network, "userAgent", r.UserAgent())
 		}
 	}
+
+	millisecondAmount := math.Pow(float64(networkCount), 2)
+	time.Sleep(time.Duration(millisecondAmount) * time.Millisecond)
 
 	spins := i.makeSpins()
 	affirmations := i.makeAffirmations()
