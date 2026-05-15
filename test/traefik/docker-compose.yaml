@@ -1,0 +1,27 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./http.yaml:/config/http.yaml:ro
+
+  anubis:
+    image: ko.local/anubis
+    restart: always
+    environment:
+      BIND: ":8080"
+      TARGET: " "
+      POLICY_FNAME: /etc/techaro/anubis.yaml
+      PUBLIC_URL: http://localhost:8080/.within.website/x/cmd/anubis
+      COOKIE_DOMAIN: localhost
+      USE_REMOTE_ADDRESS: "true"
+    volumes:
+      - ./anubis.yaml:/etc/techaro/anubis.yaml
+
+  backend:
+    image: ghcr.io/xe/x/httpdebug
+    pull_policy: always
+    restart: always
