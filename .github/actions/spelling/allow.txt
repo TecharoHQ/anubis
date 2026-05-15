@@ -39,3 +39,5 @@ wenet
 qwertiko
 setuplistener
 mba
+xfu
+xou
