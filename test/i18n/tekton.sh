@@ -17,4 +17,4 @@ go tool anubis \
 	--use-remote-address \
 	--target=unix://$(pwd)/unixhttpd.sock &
 
-backoff-retry node ./test.mjs
+go tool backoff-retry node ./test.mjs
