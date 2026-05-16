@@ -1,12 +1,12 @@
 ARG ALPINE_VERSION=3.22
-ARG GO_VERSION=1.26.2
+ARG GO_VERSION=1.26.3
 
 # Go toolchain bootstrapper
 FROM golang:${GO_VERSION} AS go
 
-RUN CGO_ENABLED=0 go install golang.org/dl/go${GO_VERSION}@latest \
+RUN CGO_ENABLED=0 go install golang.org/dl/go1.23.6@latest \
   && mkdir -p /app/bin \
-  && mv /go/bin/go${GO_VERSION} /app/bin/go
+  && mv /go/bin/go1.23.6 /app/bin/go
 
 FROM alpine:${ALPINE_VERSION}
 COPY --from=go /app/bin/go /usr/local/bin/go

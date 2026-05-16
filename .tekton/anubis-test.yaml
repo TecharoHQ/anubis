@@ -30,13 +30,14 @@ spec:
       type: string
       description: docker repo to store cache files
       default: "registry.int.xeserv.us/techarohq/anubis/cache"
+    - name: go-version
+      type: string
+      description: "Go version to use"
+      default: "1.26.3"
   workspaces:
     - name: repo
       description: |
         Cloned repo files.
-    - name: go-mod-cache
-      description: |
-        Go module cache
     - name: dockerconfig-atcr
       description: |
         Docker config for pushing images to atcr
@@ -71,12 +72,13 @@ spec:
         name: kaniko
       params:
         - name: IMAGE
-          value: registry.int.xeserv.us/xeiaso.net/site/ci:$(params.commit)
+          value: registry.int.xeserv.us/xeiaso.net/site/ci:$(params.branch)
         - name: DOCKERFILE
           value: ./test/ssh-ci/Dockerfile
         - name: EXTRA_ARGS
           value:
             [
+              "--build-arg=GO_VERSION=$(params.go-version)",
               "--cache",
               "--cache-copy-layers",
               "--cache-run-layers",
@@ -91,8 +93,6 @@ spec:
         workspaces:
           - name: repo
             mountPath: /src
-          - name: go-mod-cache
-            mountPath: /go
         steps:
           - name: test
             image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
