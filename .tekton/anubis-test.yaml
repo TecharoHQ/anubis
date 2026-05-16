@@ -72,7 +72,7 @@ spec:
         name: kaniko
       params:
         - name: IMAGE
-          value: registry.int.xeserv.us/xeiaso.net/site/ci:$(params.branch)
+          value: registry.int.xeserv.us/xeiaso.net/site/ci:$(tasks.clone-repo.results.version)
         - name: DOCKERFILE
           value: ./test/ssh-ci/Dockerfile
         - name: EXTRA_ARGS
@@ -87,6 +87,24 @@ spec:
               "--snapshot-mode=redo",
               "--use-new-run",
             ]
+    - name: provision-test-cluster
+      runAfter: ["docker-build-ci"]
+      taskSpec:
+        workspaces:
+          - name: repo
+            mountPath: /src
+        results:
+          - name: cluster-name
+            description: "k3k cluster name object in k8s"
+        steps:
+          - name: create-cluster
+            image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
+            workingDir: $(workspaces.repo.path)/repo
+            script: |
+              CLUSTER_NAME=`kubectl create -f test/k3k/test-cluster.yaml -ojson | jq -r '.metadata.name'`
+              echo -n "${CLUSTER_NAME}" | tee "$(results.cluster-name.path)"
+              kubectl wait --for=condition-Ready clusters.k3k.io/"${CLUSTER_NAME}" -n ci --timout 5m
+              kubectl wait --for=create "secret/k3k-${CLUSTER_NAME}-kubeconfig" -n ci --timeout 5m
     - name: go-test
       runAfter: ["docker-build-ci"]
       taskSpec:
@@ -96,7 +114,7 @@ spec:
         steps:
           - name: test
             image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
-            workingDir: $(workspaces.source.path)/repo
+            workingDir: $(workspaces.repo.path)/repo
             script: |
               npm ci
               npm run test

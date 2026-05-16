@@ -1,0 +1,5 @@
+apiVersion: k3k.io/v1beta1
+kind: Cluster
+metadata:
+  generateName: anubis-test-
+  namespace: ci
