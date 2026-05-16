@@ -175,6 +175,7 @@ spec:
           - name: test-case
             value:
               - default-config-macro
+              - i18n
               - robots_txt
       taskSpec:
         params:
