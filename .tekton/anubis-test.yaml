@@ -100,15 +100,21 @@ spec:
           - name: create-cluster
             image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
             workingDir: $(workspaces.repo.path)/repo
+            env:
+              - name: NAMESPACE
+                value: $(context.pipelineRun.namespace)
+              - name: PIPELINE_NAME
+                value: $(context.pipeline.name)
+              - name: PIPELINERUN_NAME
+                value: $(context.pipelineRun.name)
+              - name: PIPELINERUN_UID
+                value: $(context.pipelineRun.uid)
+              - name: KUBECONFIG_OUT
+                value: $(workspaces.repo.path)/kube/config
             script: |
-              CLUSTER_NAME=`kubectl create -f test/k3k/test-cluster.yaml -ojson | jq -r '.metadata.name'`
-              echo -n "${CLUSTER_NAME}" | tee "$(results.cluster-name.path)"
-              echo
-              kubectl label -n $(context.pipelineRun.namespace) clusters.k3k.io/"${CLUSTER_NAME}" tekton.dev/memberOf=tasks tekton.dev/pipeline="$(context.pipeline.name)" tekton.dev/pipelineRun=$(context.pipelineRun.name) tekton.dev/pipelineRunUID=$(context.pipelineRun.uid)
-              kubectl wait --for=condition=Ready clusters.k3k.io/"${CLUSTER_NAME}" -n $(context.pipelineRun.namespace) --timeout 5m
-              kubectl wait --for=create "secret/k3k-${CLUSTER_NAME}-kubeconfig" -n $(context.pipelineRun.namespace) --timeout 5m
-              mkdir -p $(workspaces.repo.path)/kube
-              kubectl get -ojson -n $(context.pipelineRun.namespace) "secret/k3k-${CLUSTER_NAME}-kubeconfig" | jq '.data["kubeconfig.yaml"]' -r | base64 -d > $(workspaces.repo.path)/kube/config
+              #!/usr/bin/env bash
+              set -euo pipefail
+              ./test/k3k/create-cluster.sh > "$(results.cluster-name.path)"
     - name: build-assets
       runAfter: ["docker-build-ci"]
       taskSpec:
@@ -193,8 +199,12 @@ spec:
             env:
               - name: KUBECONFIG
                 value: "$(workspaces.repo.path)/kube/config"
+  finally:
     - name: teardown-cluster
-      runAfter: ["provision-test-cluster", "go-test", "integration"]
+      when:
+        - input: "$(tasks.provision-test-cluster.status)"
+          operator: in
+          values: ["Succeeded"]
       taskSpec:
         workspaces:
           - name: repo
@@ -204,4 +214,4 @@ spec:
             image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
             workingDir: $(workspaces.repo.path)/repo
             script: |
-              kubectl delete -n $(context.pipelineRun.namespace) clusters.k3k.io/"$(tasks.provision-test-cluster.results.cluster-name)"
+              kubectl delete --ignore-not-found -n $(context.pipelineRun.namespace) clusters.k3k.io/"$(tasks.provision-test-cluster.results.cluster-name)"
