@@ -1,3 +1,4 @@
 namespace: ci
 resources:
   - anubis-test.yaml
+  - rbac.yaml

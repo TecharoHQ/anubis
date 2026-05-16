@@ -11,5 +11,5 @@ RUN CGO_ENABLED=0 go install golang.org/dl/go1.23.6@latest \
 FROM alpine:${ALPINE_VERSION}
 COPY --from=go /app/bin/go /usr/local/bin/go
 
-RUN apk add -U nodejs git build-base git npm bash zstd brotli gzip jq kubectl \
+RUN apk add -U nodejs git build-base git npm bash zstd brotli gzip jq kubectl python3 py3-pip py3-virtualenv \
   && go download

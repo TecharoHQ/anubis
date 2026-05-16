@@ -13,7 +13,7 @@ spec:
   pipelineRef:
     name: anubis-build-test
   taskRunTemplate:
-    serviceAccountName: xe-site-ci
+    serviceAccountName: anubis-k3k
   timeouts:
     pipeline: 1h0m0s
   workspaces:

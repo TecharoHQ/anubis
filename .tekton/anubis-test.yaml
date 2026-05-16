@@ -25,7 +25,7 @@ spec:
     - name: docker-image-base
       type: string
       description: string prefix for production docker images
-      default: "registry.int.xeserv.us/techarohq/anubis"
+      default: "registry.int.xeserv.us/techarohq"
     - name: docker-cache
       type: string
       description: docker repo to store cache files
@@ -103,9 +103,13 @@ spec:
             script: |
               CLUSTER_NAME=`kubectl create -f test/k3k/test-cluster.yaml -ojson | jq -r '.metadata.name'`
               echo -n "${CLUSTER_NAME}" | tee "$(results.cluster-name.path)"
-              kubectl wait --for=condition-Ready clusters.k3k.io/"${CLUSTER_NAME}" -n ci --timout 5m
-              kubectl wait --for=create "secret/k3k-${CLUSTER_NAME}-kubeconfig" -n ci --timeout 5m
-    - name: go-test
+              echo
+              kubectl label -n $(context.pipelineRun.namespace) clusters.k3k.io/"${CLUSTER_NAME}" tekton.dev/memberOf=tasks tekton.dev/pipeline="$(context.pipeline.name)" tekton.dev/pipelineRun=$(context.pipelineRun.name) tekton.dev/pipelineRunUID=$(context.pipelineRun.uid)
+              kubectl wait --for=condition=Ready clusters.k3k.io/"${CLUSTER_NAME}" -n $(context.pipelineRun.namespace) --timeout 5m
+              kubectl wait --for=create "secret/k3k-${CLUSTER_NAME}-kubeconfig" -n $(context.pipelineRun.namespace) --timeout 5m
+              mkdir -p $(workspaces.repo.path)/kube
+              kubectl get -ojson -n $(context.pipelineRun.namespace) "secret/k3k-${CLUSTER_NAME}-kubeconfig" | jq '.data["kubeconfig.yaml"]' -r | base64 -d > $(workspaces.repo.path)/kube/config
+    - name: build-assets
       runAfter: ["docker-build-ci"]
       taskSpec:
         workspaces:
@@ -117,12 +121,78 @@ spec:
             workingDir: $(workspaces.repo.path)/repo
             script: |
               npm ci
-              npm run test
+              npm run assets
       workspaces:
         - name: repo
           workspace: repo
+    - name: go-test
+      runAfter: ["build-assets"]
+      taskSpec:
+        workspaces:
+          - name: repo
+            mountPath: /src
+        steps:
+          - name: test
+            image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
+            workingDir: $(workspaces.repo.path)/repo
+            script: |
+              SKIP_INTEGRATION=1 go test ./...
+      workspaces:
+        - name: repo
+          workspace: repo
+    - name: test-anubis
+      runAfter: ["build-assets"]
+      taskRef:
+        name: ko
+      workspaces:
+        - name: source
+          workspace: repo
       params:
-        - name: url
-          value: $(params.repo-url)
-        - name: revision
-          value: $(params.commit)
+        - name: VERSION
+          value: $(tasks.clone-repo.results.version)
+        - name: SOURCE_DATE_EPOCH
+          value: $(tasks.clone-repo.results.source-date-epoch)
+        - name: KO_DOCKER_REPO
+          value: $(params.docker-image-base)
+        - name: extra-args
+          value:
+            [
+              "--platform=all",
+              "--base-import-paths",
+              "--tags=$(tasks.clone-repo.results.version)",
+              "--image-label=org.tangled.actor=$(params.actor)",
+            ]
+        - name: packages
+          value:
+            - ./cmd/anubis
+    - name: integration
+      runAfter: ["provision-test-cluster", "go-test"]
+      matrix:
+        params:
+          - name: test-case
+            value:
+              - default-config-macro
+      taskSpec:
+        workspaces:
+          - name: repo
+            mountPath: /src
+        env:
+          - name: KUBECONFIG
+            value: "$(workspaces.repo.path)/kube/config"
+        steps:
+          - name: default-config-macro
+            image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
+            workingDir: $(workspaces.repo.path)/repo/test/$(params.test-case)
+            script: ./tekton.sh
+    - name: teardown-cluster
+      runAfter: ["provision-test-cluster", "go-test", "integration"]
+      taskSpec:
+        workspaces:
+          - name: repo
+            mountPath: /src
+        steps:
+          - name: delete
+            image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
+            workingDir: $(workspaces.repo.path)/repo
+            script: |
+              kubectl delete -n $(context.pipelineRun.namespace) clusters.k3k.io/"$(tasks.provision-test-cluster.results.cluster-name)"
