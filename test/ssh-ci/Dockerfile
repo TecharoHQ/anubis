@@ -1,5 +1,15 @@
 ARG ALPINE_VERSION=3.22
+ARG GO_VERSION=1.26.2
+
+# Go toolchain bootstrapper
+FROM golang:${GO_VERSION} AS go
+
+RUN CGO_ENABLED=0 go install golang.org/dl/go${GO_VERSION}@latest \
+  && mkdir -p /app/bin \
+  && mv /go/bin/go${GO_VERSION} /app/bin/go
 
 FROM alpine:${ALPINE_VERSION}
-RUN apk add -U go nodejs git build-base git npm bash zstd brotli gzip
-LABEL org.opencontainers.image.source="https://github.com/TecharoHQ/anubis"
+COPY --from=go /app/bin/go /usr/local/bin/go
+
+RUN apk add -U nodejs git build-base git npm bash zstd brotli gzip \
+  && go download

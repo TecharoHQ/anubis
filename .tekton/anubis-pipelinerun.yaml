@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: anubis-m-
+  namespace: ci
+
+spec:
+  params:
+    - name: commit
+      value: "Xe/tekton"
+    - name: branch
+      value: main
+  pipelineRef:
+    name: anubis-build-test
+  taskRunTemplate:
+    serviceAccountName: xe-site-ci
+  timeouts:
+    pipeline: 1h0m0s
+  workspaces:
+    - name: repo
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 4Gi
+    - name: go-mod-cache
+      persistentVolumeClaim:
+        claimName: go-mod-cache
+    - name: dockerconfig-atcr
+      secret:
+        secretName: atcr
+    - name: dockerconfig-ghcr
+      secret:
+        secretName: ghcr

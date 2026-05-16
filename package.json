@@ -15,7 +15,9 @@
     "package": "go tool yeet",
     "lint": "make lint",
     "prepare": "husky && go mod download",
-    "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w ."
+    "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w .",
+    "deploy:ci": "kubectl apply -k .tekton -n ci --context admin@alrest",
+    "deploy:ci:invoke": "npm run deploy:ci && kubectl create -f .tekton/anubis-pipelinerun.yaml -n ci --context admin@alrest"
   },
   "author": "",
   "license": "ISC",

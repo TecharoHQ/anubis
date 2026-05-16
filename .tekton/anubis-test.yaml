@@ -1,0 +1,110 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: anubis-build-test
+  namespace: ci
+
+spec:
+  description: |
+    The CI/CD pipeline for Anubis
+  params:
+    - name: repo-url
+      type: string
+      description: "Git repo to clone"
+      default: "https://github.com/TecharoHQ/anubis"
+    - name: "branch"
+      type: string
+      description: "Git branch to operate against"
+    - name: "commit"
+      type: string
+      description: "Git revision to check out"
+    - name: "actor"
+      type: string
+      description: "Tangled actor"
+      default: "did:web:anubis.techaro.lol"
+    - name: docker-image-base
+      type: string
+      description: string prefix for production docker images
+      default: "registry.int.xeserv.us/techarohq/anubis"
+    - name: docker-cache
+      type: string
+      description: docker repo to store cache files
+      default: "registry.int.xeserv.us/techarohq/anubis/cache"
+  workspaces:
+    - name: repo
+      description: |
+        Cloned repo files.
+    - name: go-mod-cache
+      description: |
+        Go module cache
+    - name: dockerconfig-atcr
+      description: |
+        Docker config for pushing images to atcr
+    - name: dockerconfig-ghcr
+      description: |
+        Docker config for pushing images to ghcr
+  tasks:
+    - name: fix-permissions
+      taskRef:
+        name: fix-permissions
+      workspaces:
+        - name: dir
+          workspace: repo
+    - name: clone-repo
+      runAfter: ["fix-permissions"]
+      taskRef:
+        name: git-clone-naive
+      workspaces:
+        - name: output
+          workspace: repo
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.commit)
+    - name: docker-build-ci
+      runAfter: ["clone-repo"]
+      workspaces:
+        - name: source
+          workspace: repo
+      taskRef:
+        name: kaniko
+      params:
+        - name: IMAGE
+          value: registry.int.xeserv.us/xeiaso.net/site/ci:$(params.commit)
+        - name: DOCKERFILE
+          value: ./test/ssh-ci/Dockerfile
+        - name: EXTRA_ARGS
+          value:
+            [
+              "--cache",
+              "--cache-copy-layers",
+              "--cache-run-layers",
+              "--cache-repo=$(params.docker-cache)",
+              "--label=org.tangled.actor=$(params.actor)",
+              "--snapshot-mode=redo",
+              "--use-new-run",
+            ]
+    - name: go-test
+      runAfter: ["docker-build-ci"]
+      taskSpec:
+        workspaces:
+          - name: repo
+            mountPath: /src
+          - name: go-mod-cache
+            mountPath: /go
+        steps:
+          - name: test
+            image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
+            workingDir: $(workspaces.source.path)/repo
+            script: |
+              npm ci
+              npm run test
+      workspaces:
+        - name: repo
+          workspace: repo
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.commit)
