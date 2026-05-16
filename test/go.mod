@@ -104,5 +104,6 @@ require (
 
 tool (
 	github.com/TecharoHQ/anubis/cmd/anubis
+	github.com/TecharoHQ/anubis/utils/cmd/backoff-retry
 	github.com/jsha/minica
 )
