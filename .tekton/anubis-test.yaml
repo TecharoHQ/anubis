@@ -72,7 +72,7 @@ spec:
         name: kaniko
       params:
         - name: IMAGE
-          value: registry.int.xeserv.us/xeiaso.net/site/ci:$(tasks.clone-repo.results.version)
+          value: $(params.docker-image-base)/anubis/ci:$(tasks.clone-repo.results.version)
         - name: DOCKERFILE
           value: ./test/ssh-ci/Dockerfile
         - name: EXTRA_ARGS
@@ -166,24 +166,32 @@ spec:
           value:
             - ./cmd/anubis
     - name: integration
-      runAfter: ["provision-test-cluster", "go-test"]
+      runAfter:
+        - "provision-test-cluster"
+        - "build-assets"
+        - "test-anubis"
       matrix:
         params:
           - name: test-case
             value:
               - default-config-macro
+              - robots_txt
       taskSpec:
+        params:
+          - name: test-case
+            type: string
         workspaces:
           - name: repo
             mountPath: /src
-        env:
-          - name: KUBECONFIG
-            value: "$(workspaces.repo.path)/kube/config"
         steps:
-          - name: default-config-macro
+          - name: exec
             image: $(tasks.docker-build-ci.results.IMAGE_URL)@$(tasks.docker-build-ci.results.IMAGE_DIGEST)
             workingDir: $(workspaces.repo.path)/repo/test/$(params.test-case)
-            script: ./tekton.sh
+            script: |
+              ./tekton.sh
+            env:
+              - name: KUBECONFIG
+                value: "$(workspaces.repo.path)/kube/config"
     - name: teardown-cluster
       runAfter: ["provision-test-cluster", "go-test", "integration"]
       taskSpec:
