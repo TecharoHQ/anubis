@@ -1,10 +1,17 @@
-import { Sha256 } from "@aws-crypto/sha256-js";
+// import { Sha256 } from "@aws-crypto/sha256-js";
 
+const calculateSHA256 = async (text: string): Promise<ArrayBuffer> => {
+  const data = new TextEncoder().encode(text);
+  return await crypto.subtle.digest("SHA-256", data);
+};
+
+/*
 const calculateSHA256 = (text) => {
   const hash = new Sha256();
   hash.update(text);
   return hash.digest();
 };
+*/
 
 function toHexString(arr: Uint8Array): string {
   return Array.from(arr)
