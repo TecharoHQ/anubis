@@ -169,7 +169,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	millisecondAmount := math.Pow(float64(networkCount), 2)
+	millisecondAmount := min(math.Pow(float64(networkCount), 2), 1000)
 	time.Sleep(time.Duration(millisecondAmount) * time.Millisecond)
 
 	spins := i.makeSpins()
