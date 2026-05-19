@@ -219,6 +219,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		result.Impressum = c.Impressum
 
 		parsedBot.Rules = cl
+		parsedBot.hash = parsedBot.Hash()
 
 		result.Bots = append(result.Bots, parsedBot)
 	}
