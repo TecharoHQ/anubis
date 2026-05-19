@@ -1,6 +1,8 @@
 package policy
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,5 +85,29 @@ func TestBadConfigs(t *testing.T) {
 				t.Log(err)
 			}
 		})
+	}
+}
+
+func TestPathCheckerStripsForwardedURIQuery(t *testing.T) {
+	checker, err := NewPathChecker("^/admin$", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "https://anubis.local/.within.website/x/cmd/anubis/api/check", nil)
+	req.Header.Set("X-Forwarded-Uri", "/admin?x=1")
+	matched, err := checker.Check(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !matched {
+		t.Fatalf("expected exact path checker to match forwarded URI when query string is appended")
+	}
+	req.Header.Set("X-Forwarded-Uri", "/admin")
+	matched, err = checker.Check(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !matched {
+		t.Fatalf("expected exact path checker to match forwarded URI without query string")
 	}
 }
