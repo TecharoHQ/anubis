@@ -32,6 +32,7 @@ type Metrics struct {
 	Network    string            `json:"network" yaml:"network"`
 	SocketMode string            `json:"socketMode" yaml:"socketMode"`
 	TLS        *MetricsTLS       `json:"tls" yaml:"tls"`
+	Debug      bool              `json:"debug" yaml:"debug"`
 	BasicAuth  *MetricsBasicAuth `json:"basicAuth" yaml:"basicAuth"`
 }
 
