@@ -170,7 +170,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		}
 
 		if b.Expression != nil {
-			c, err := NewCELChecker(b.Expression, result.Dns)
+			c, err := NewCELChecker(b.Expression, result.Dns, subrequestMode)
 			if err != nil {
 				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s expressions: %w", b.Name, err))
 			} else {

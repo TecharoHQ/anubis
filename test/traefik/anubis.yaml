@@ -1,0 +1,16 @@
+bots:
+  - name: block-admin-via-regex
+    path_regex: ^/admin(/.*)?$
+    action: DENY
+
+  - name: block-secret-via-cel
+    expression:
+      all:
+        - 'path.startsWith("/api/secret")'
+    action: DENY
+
+  - import: (data)/meta/default-config.yaml
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403

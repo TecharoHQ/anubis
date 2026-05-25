@@ -27,6 +27,7 @@ jobs:
           - palemoon/amd64
           #- palemoon/i386
           - robots_txt
+          - traefik
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

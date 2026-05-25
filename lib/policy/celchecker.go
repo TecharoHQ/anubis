@@ -13,11 +13,12 @@ import (
 )
 
 type CELChecker struct {
-	program cel.Program
-	src     string
+	program        cel.Program
+	src            string
+	subRequestMode bool
 }
 
-func NewCELChecker(cfg *config.ExpressionOrList, dnsObj *dns.Dns) (*CELChecker, error) {
+func NewCELChecker(cfg *config.ExpressionOrList, dnsObj *dns.Dns, subRequestMode bool) (*CELChecker, error) {
 	env, err := expressions.BotEnvironment(dnsObj)
 	if err != nil {
 		return nil, err
@@ -29,8 +30,9 @@ func NewCELChecker(cfg *config.ExpressionOrList, dnsObj *dns.Dns) (*CELChecker, 
 	}
 
 	return &CELChecker{
-		src:     cfg.String(),
-		program: program,
+		src:            cfg.String(),
+		program:        program,
+		subRequestMode: subRequestMode,
 	}, nil
 }
 
@@ -39,7 +41,7 @@ func (cc *CELChecker) Hash() string {
 }
 
 func (cc *CELChecker) Check(r *http.Request) (bool, error) {
-	result, _, err := cc.program.ContextEval(r.Context(), &CELRequest{r})
+	result, _, err := cc.program.ContextEval(r.Context(), &CELRequest{r, cc.subRequestMode})
 
 	if err != nil {
 		return false, err
@@ -54,6 +56,7 @@ func (cc *CELChecker) Check(r *http.Request) (bool, error) {
 
 type CELRequest struct {
 	*http.Request
+	subRequestMode bool
 }
 
 func (cr *CELRequest) Parent() cel.Activation { return nil }
@@ -71,6 +74,14 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	case "userAgent":
 		return cr.UserAgent(), true
 	case "path":
+		if cr.subRequestMode {
+			if xou := cr.Header.Get("X-Original-URI"); xou != "" {
+				return xou, true
+			}
+			if xfu := cr.Header.Get("X-Forwarded-Uri"); xfu != "" {
+				return xfu, true
+			}
+		}
 		return cr.URL.Path, true
 	case "query":
 		return expressions.URLValues{Values: cr.URL.Query()}, true

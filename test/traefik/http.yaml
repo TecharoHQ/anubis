@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    anubis:
+      forwardAuth:
+        address: http://anubis:8080/.within.website/x/cmd/anubis/api/check
+        trustForwardHeader: true
+
+  routers:
+    anubis-assets:
+      rule: Host(`localhost`) && PathPrefix(`/.within.website/x/cmd/anubis`)
+      entryPoints:
+        - web
+      service: anubis
+    backend:
+      rule: Host(`localhost`)
+      entryPoints:
+        - web
+      service: backend
+      middlewares:
+        - anubis
+
+  services:
+    anubis:
+      loadBalancer:
+        servers:
+          - url: http://anubis:8080
+    backend:
+      loadBalancer:
+        servers:
+          - url: http://backend:3000
