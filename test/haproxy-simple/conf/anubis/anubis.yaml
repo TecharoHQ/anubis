@@ -1,0 +1,11 @@
+bots:
+  - name: mozilla
+    user_agent_regex: Mozilla
+    action: CHALLENGE
+    challenge:
+      difficulty: 2
+      algorithm: fast
+
+status_codes:
+  CHALLENGE: 401
+  DENY: 403
