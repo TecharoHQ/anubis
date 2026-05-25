@@ -15,7 +15,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/localization"
 )
 
-func page(redir string, difficulty int, showMeta bool, loc *localization.SimpleLocalizer) templ.Component {
+func page(basePrefix, redir string, difficulty int, showMeta bool, loc *localization.SimpleLocalizer) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,9 +41,9 @@ func page(redir string, difficulty int, showMeta bool, loc *localization.SimpleL
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(basePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `metarefresh.templ`, Line: 12, Col: 165}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `metarefresh.templ`, Line: 12, Col: 158}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -54,9 +54,9 @@ func page(redir string, difficulty int, showMeta bool, loc *localization.SimpleL
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(basePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `metarefresh.templ`, Line: 13, Col: 174}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `metarefresh.templ`, Line: 13, Col: 167}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {

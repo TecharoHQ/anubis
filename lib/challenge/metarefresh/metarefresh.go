@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/a-h/templ"
@@ -28,7 +27,7 @@ func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 		return nil, err
 	}
 
-	u, err := r.URL.Parse(anubis.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
+	u, err := r.URL.Parse(in.BasePrefix + "/.within.website/x/cmd/anubis/api/pass-challenge")
 	if err != nil {
 		return nil, fmt.Errorf("can't render page: %w", err)
 	}
@@ -47,7 +46,7 @@ func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 
 	loc := localization.GetLocalizer(r)
 
-	result := page(u.String(), in.Rule.Challenge.Difficulty, showMeta, loc)
+	result := page(in.BasePrefix, u.String(), in.Rule.Challenge.Difficulty, showMeta, loc)
 
 	return result, nil
 }
