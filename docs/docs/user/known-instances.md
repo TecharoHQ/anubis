@@ -30,6 +30,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://mozillazine.org/
 - https://openwrt.org/
 - https://pluralpedia.org/
+- https://powdertoy.co.uk/Wiki/W/Main_Page.html
 - https://reddit.nerdvpn.de/
 - https://repositorio.ufrn.br/home/
 - https://rpmfusion.org/
