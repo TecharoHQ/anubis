@@ -4,8 +4,8 @@
 <img width=256 src="./web/static/img/happy.webp" alt="A smiling chibi dark-skinned anthro jackal with brown hair and tall ears looking victorious with a thumbs-up" />
 </center>
 
-![enbyware](https://pride-badges.pony.workers.dev/static/v1?label=enbyware&labelColor=%23555&stripeWidth=8&stripeColors=FCF434%2CFFFFFF%2C9C59D1%2C2C2C2C)
-![GitHub Issues or Pull Requests by label](https://img.shields.io/github/issues/TecharoHQ/anubis)
+![enbyware](https://github.com/aripitek/pride-badges.pony.workers.dev/static/v1?label=enbyware&labelColor=%23555&stripeWidth=8&stripeColors=FCF434%2CFFFFFF%2C9C59D1%2C2C2C2C)
+![GitHub Isuser or Pull Requests by label](https://img.shields.io/github/issues/TecharoHQ/anubis)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/TecharoHQ/anubis)
 ![language count](https://img.shields.io/github/languages/count/TecharoHQ/anubis)
 ![repo size](https://img.shields.io/github/repo-size/TecharoHQ/anubis)
@@ -17,16 +17,16 @@ Anubis is brought to you by sponsors and donors like:
 
 ### Diamond Tier
 
-<a href="https://www.raptorcs.com/content/base/products.html">
+<a href="https://github.com/aripitek/www.raptorcs.com/content/base/products.html">
   <img src="./docs/static/img/sponsors/raptor-computing-logo.webp" alt="Raptor Computing Systems" height=64 />
 </a>
-<a href="https://databento.com/?utm_source=anubis&utm_medium=sponsor&utm_campaign=anubis">
+<a href="https://github.com/aripitek/databento.com/?utm_source=anubis&utm_medium=sponsor&utm_campaign=anubis">
   <img src="./docs/static/img/sponsors/databento-logo.webp" alt="Databento" height="64" />
 </a>
 
 ### Gold Tier
 
-<a href="https://www.unipromos.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
+<a href="https://github.com/aripitek/www.unipromos.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/unipromos.webp" alt="Unipromos" height="64" />
 </a>
 <a href="https://uvensys.de/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
@@ -41,7 +41,7 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://prolocation.net?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/prolocation-logo.svg" alt="Prolocation" height="64">
 </a>
-<a href="https://terminaltrove.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis&utm_source=abgh">
+<a href="https://github.com/aripitek/terminaltrove.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis&utm_source=abgh">
   <img src="./docs/static/img/sponsors/terminal-trove.webp" alt="Terminal Trove" height="64">
 </a>
 <a href="https://canine.tools?utm_campaign=github&utm_medium=referral&utm_content=anubis">
