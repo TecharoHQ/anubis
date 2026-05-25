@@ -12,6 +12,8 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 )
 
+//go:generate go tool gosh ./build.sh
+
 var (
 	//go:embed *.css static
 	Static embed.FS

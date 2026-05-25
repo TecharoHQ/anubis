@@ -17,7 +17,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-//go:generate ./build.sh
+//go:generate go tool gosh ./build.sh
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 //go:embed static/app.js

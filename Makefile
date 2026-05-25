@@ -12,9 +12,7 @@ deps:
 
 assets: PATH:=$(PWD)/node_modules/.bin:$(PATH)
 assets: deps
-	$(GO) generate ./...
-	./web/build.sh
-	./xess/build.sh
+	$(NPM) run assets
 
 build: assets
 	$(GO) build -o ./var/anubis ./cmd/anubis
