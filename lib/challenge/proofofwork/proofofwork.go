@@ -45,7 +45,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w nonce", chall.ErrMissingField))
 	}
 
-	nonce, err := strconv.Atoi(nonceStr)
+	_, err := strconv.Atoi(nonceStr)
 	if err != nil {
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: nonce: %w", chall.ErrInvalidFormat, err))
 
@@ -66,7 +66,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w response", chall.ErrMissingField))
 	}
 
-	calcString := fmt.Sprintf("%s%d", challenge, nonce)
+	calcString := challenge + nonceStr
 	calculated := internal.SHA256sum(calcString)
 
 	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
