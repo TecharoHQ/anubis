@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Marginally improve the performances of PoW validation
 - Marginally improve the performances of challenges generation/display
 - Significantly improve the performances of the gzip middleware
+- Significantly improve the performances of the PoW validation
 
 ## v1.25.0: Necron
 
