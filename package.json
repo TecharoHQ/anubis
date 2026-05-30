@@ -20,11 +20,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^20.5.3",
-    "@commitlint/config-conventional": "^20.5.3",
-    "baseline-browser-mapping": "^2.10.27",
-    "cssnano": "^7.1.8",
-    "cssnano-preset-advanced": "^7.0.16",
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
+    "baseline-browser-mapping": "^2.10.30",
+    "cssnano": "^8.0.1",
+    "cssnano-preset-advanced": "^8.0.1",
     "esbuild": "^0.28.0",
     "husky": "^9.1.7",
     "playwright": "^1.52.0",
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.29.1"
+    "preact": "^10.29.2"
   },
   "commitlint": {
     "extends": [

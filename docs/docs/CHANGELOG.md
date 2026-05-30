@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate bounds in the CEL `randInt` helper so non-positive or platform-overflowing arguments surface a typed CEL error instead of an evaluator panic.
 - Pin docs deployment images to immutable digests with `imagePullPolicy: IfNotPresent`, and have the docs-deploy workflow overlay the just-built digest via `kustomize edit set image` so each rollout references an auditable artifact instead of a floating `:main` tag. The docs `Dockerfile` now pins `node` and `nginx-micro` base images to specific versions.
 - Fix a race in the bbolt store where the asynchronous cleanup scheduled by an expired read could delete a value that had just been refreshed; the delete now only fires when the key still carries the same expired generation it observed.
+- Marginally increase the performances of requests processing
+- Marginally improve the performances of PoW validation
 
 ## v1.25.0: Necron
 
