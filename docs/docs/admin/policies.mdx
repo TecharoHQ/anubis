@@ -138,6 +138,24 @@ metrics:
   socketMode: "0700" # must be a string
 ```
 
+### Debug routes
+
+Anubis' metrics server supports [pprof](https://pkg.go.dev/runtime/pprof), the Go standard library tool for profiling Go applications. This is very useful for debugging how Anubis works in the wild with regards to CPU, multicore, and RAM usage. pprof is very powerful and can expose command line arguments as part of the debugging setup (inside Google, everything is done with command line flags).
+
+Prior versions of Anubis exposed pprof endpoints on all TCP bindhosts by default. This means that machines with incorrectly configured firewalls can expose command line arguments to the public internet in the right conditions.
+
+In order to enable pprof profiling endpoints on the Metrics server, set the `debug` flag under the `metrics` block:
+
+```yaml
+metrics:
+  bind: ":9090"
+  network: "tcp"
+
+  debug: true
+```
+
+To err on the side of caution, this defaults to disabled. If this defaults migration breaks your configuration, please let us know in a ticket.
+
 ### TLS
 
 If you want to serve the metrics server over TLS, use the `tls` block:

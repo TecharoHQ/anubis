@@ -41,3 +41,6 @@ setuplistener
 mba
 xfu
 xou
+AWOO
+firewalls
+bindhosts

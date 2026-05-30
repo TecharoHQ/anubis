@@ -28,11 +28,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 - Add config option to add ASN to logs/metrics.
-- Log weight when issuing challenge
+- Log weight when issuing challenge.
+- Gate pprof endpoints behind `metrics.debug` in the policy file.
+- Limit naive honeypot r9k delay to one second.
+- Fix an obscure case where adding query values to a subrequest match could cause an invalid rule match when using path based matching for protected resources.
+- Fix an edge case where load average expression values could nil pointer dereference when Anubis just started up.
+- Fix an obscure case where Anubis in subrequest mode could allow redirects to invalid domains with strange instructions.
 - Fix `path_regex` and CEL `path` rules not matching when using Traefik `forwardAuth` middleware. Anubis now checks `X-Forwarded-Uri` (Traefik) in addition to `X-Original-URI` (nginx) when resolving the request path in subrequest mode ([#1628](https://github.com/TecharoHQ/anubis/issues/1628)).
+- Validate bounds in the CEL `randInt` helper so non-positive or platform-overflowing arguments surface a typed CEL error instead of an evaluator panic.
+- Fix a race in the bbolt store where the asynchronous cleanup scheduled by an expired read could delete a value that had just been refreshed; the delete now only fires when the key still carries the same expired generation it observed.
 - Marginally increase the performances of requests processing
 - Marginally improve the performances of PoW validation
 - Marginally improve the performances of challenges generation/display
+- Significantly improve the performances of the gzip middleware
 
 ## v1.25.0: Necron
 

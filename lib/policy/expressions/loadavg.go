@@ -46,7 +46,7 @@ var (
 )
 
 func init() {
-	globalLoadAvg = &loadAvg{}
+	globalLoadAvg = &loadAvg{data: &load.AvgStat{}}
 	go globalLoadAvg.updateThread(context.Background())
 }
 

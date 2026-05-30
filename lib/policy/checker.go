@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -114,6 +115,9 @@ func (pc *PathChecker) Check(r *http.Request) (bool, error) {
 			originalUrl = r.Header.Get("X-Forwarded-Uri")
 		}
 		if originalUrl != "" {
+			if parsed, err := url.ParseRequestURI(originalUrl); err == nil {
+				originalUrl = parsed.Path
+			}
 			if pc.regexp.MatchString(originalUrl) {
 				return true, nil
 			}

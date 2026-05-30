@@ -222,7 +222,16 @@ func New(opts ...cel.EnvOption) (*cel.Env, error) {
 						return types.ValOrErr(val, "value is not an integer, but is %T", val)
 					}
 
-					return types.Int(rand.IntN(int(n)))
+					if n <= 0 {
+						return types.NewErr("randInt bound must be positive, got %d", int64(n))
+					}
+
+					bound := int(n)
+					if types.Int(bound) != n {
+						return types.NewErr("randInt bound %d overflows platform int", int64(n))
+					}
+
+					return types.Int(rand.IntN(bound))
 				}),
 			),
 		),

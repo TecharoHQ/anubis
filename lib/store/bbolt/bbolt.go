@@ -50,6 +50,33 @@ func (s *Store) Delete(ctx context.Context, key string) error {
 	})
 }
 
+// deleteIfExpired removes key only if it still carries the exact expiry that an
+// expired Get observed and that expiry is still in the past.
+//
+// Get runs in a read-only transaction, so it can only schedule cleanup
+// asynchronously. Between observing the expiry and this delete running, another
+// request may Set a fresh value for the same key. Re-reading and matching the
+// observed expiry inside the write transaction makes the timestamp act as a
+// generation token: a refreshed value carries a different, future expiry and is
+// therefore left untouched (see AWOO-015).
+func (s *Store) deleteIfExpired(ctx context.Context, key string, observed time.Time) error {
+	return s.bdb.Update(func(tx *bbolt.Tx) error {
+		valueBkt := tx.Bucket([]byte(key))
+		if valueBkt == nil {
+			return nil
+		}
+
+		expiry, err := time.Parse(time.RFC3339Nano, string(valueBkt.Get([]byte("expiry"))))
+		if err != nil || !expiry.Equal(observed) || !time.Now().After(expiry) {
+			// Unparseable, refreshed to a different generation, or no longer
+			// expired: leave it for cleanup or a later Get to handle.
+			return nil
+		}
+
+		return tx.DeleteBucket([]byte(key))
+	})
+}
+
 // Get a value from the datastore.
 //
 // Because each value is stored in its own bucket with data and expiry keys,
@@ -77,7 +104,7 @@ func (s *Store) Get(ctx context.Context, key string) ([]byte, error) {
 		}
 
 		if time.Now().After(expiry) {
-			go s.Delete(context.Background(), key)
+			go s.deleteIfExpired(context.Background(), key, expiry)
 			return fmt.Errorf("%w: %q", store.ErrNotFound, key)
 		}
 
