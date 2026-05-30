@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -162,6 +163,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	if err != nil {
 		return nil, err
 	}
+	idStr := id.String()
 
 	var randomData = make([]byte, 64)
 	if _, err := rand.Read(randomData); err != nil {
@@ -169,9 +171,9 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	}
 
 	chall := challenge.Challenge{
-		ID:             id.String(),
+		ID:             idStr,
 		Method:         rule.Challenge.Algorithm,
-		RandomData:     fmt.Sprintf("%x", randomData),
+		RandomData:     hex.EncodeToString(randomData),
 		IssuedAt:       time.Now(),
 		Difficulty:     rule.Challenge.Difficulty,
 		PolicyRuleHash: rule.Hash(),
@@ -182,11 +184,11 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 	}
 
 	j := store.JSON[challenge.Challenge]{Underlying: s.store}
-	if err := j.Set(ctx, "challenge:"+id.String(), chall, 30*time.Minute); err != nil {
+	if err := j.Set(ctx, "challenge:"+idStr, chall, 30*time.Minute); err != nil {
 		return nil, err
 	}
 
-	lg.Info("new challenge issued", "challenge", id.String(), "weight", cr.Weight)
+	lg.Info("new challenge issued", "challenge", idStr, "weight", cr.Weight)
 
 	return &chall, err
 }
@@ -240,7 +242,7 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
 
-	if val, _ := s.store.Get(r.Context(), fmt.Sprintf("ogtags:allow:%s%s", r.Host, r.URL.String())); val != nil {
+	if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
 		lg.Debug("serving opengraph tag asset")
 		s.ServeHTTPNext(w, r)
 		return

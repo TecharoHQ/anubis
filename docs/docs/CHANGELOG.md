@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a race in the bbolt store where the asynchronous cleanup scheduled by an expired read could delete a value that had just been refreshed; the delete now only fires when the key still carries the same expired generation it observed.
 - Marginally increase the performances of requests processing
 - Marginally improve the performances of PoW validation
+- Marginally improve the performances of challenges generation/display
 - Significantly improve the performances of the gzip middleware
 
 ## v1.25.0: Necron

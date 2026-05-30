@@ -36,6 +36,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
+	"github.com/google/uuid"
 	_ "github.com/joho/godotenv/autoload"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
@@ -192,6 +193,9 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 func main() {
 	flagenv.Parse()
 	flag.Parse()
+
+	// Must be set before any concurrent UUID call.
+	uuid.EnableRandPool()
 
 	if *versionFlag {
 		fmt.Println("Anubis", anubis.Version)
