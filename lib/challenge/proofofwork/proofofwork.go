@@ -1,14 +1,15 @@
 package proofofwork
 
 import (
+	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/TecharoHQ/anubis/internal"
 	chall "github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/a-h/templ"
@@ -66,11 +67,20 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w response", chall.ErrMissingField))
 	}
 
-	calcString := challenge + nonceStr
-	calculated := internal.SHA256sum(calcString)
+	// Stream the challenge and nonce into a single sha256 hasher to avoid
+	// the intermediate "challenge + nonceStr" concatenation. Hex-encode
+	// the digest into a stack buffer so the comparison runs without
+	// allocating a heap string.
+	h := sha256.New()
+	h.Write([]byte(challenge))
+	h.Write([]byte(nonceStr))
+	var sumBuf [sha256.Size]byte
+	sum := h.Sum(sumBuf[:0])
+	var hexBuf [sha256.Size * 2]byte
+	hex.Encode(hexBuf[:], sum)
 
-	if subtle.ConstantTimeCompare([]byte(response), []byte(calculated)) != 1 {
-		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted response %s but got %s", chall.ErrFailed, calculated, response))
+	if subtle.ConstantTimeCompare([]byte(response), hexBuf[:]) != 1 {
+		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted response %s but got %s", chall.ErrFailed, string(hexBuf[:]), response))
 	}
 
 	// compare the leading zeroes
