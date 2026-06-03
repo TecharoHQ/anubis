@@ -1,12 +1,27 @@
 // Package anubis contains the version number of Anubis.
 package anubis
 
-import "time"
+import (
+	"runtime/debug"
+	"time"
+)
+
+func init() {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+
+	// XXX(Xe): many things in this repo assume that the development version
+	// of anubis is `devel` and ReadBuildInfo returns `(devel)`. Shim the gap.
+	if bi.Main.Version != "(devel)" {
+		Version = bi.Main.Version
+	}
+}
 
 // Version is the current version of Anubis.
 //
-// This variable is set at build time using the -X linker flag. If not set,
-// it defaults to "devel".
+// This is set from the Go module runtime version.
 var Version = "devel"
 
 // CookieName is the name of the cookie that Anubis uses in order to validate

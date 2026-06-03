@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve error messages and fix broken REDIRECT_DOMAINS link in docs ([#1193](https://github.com/TecharoHQ/anubis/issues/1193))
 - Add Bulgarian locale ([#1394](https://github.com/TecharoHQ/anubis/pull/1394))
 - Fixed case-sensitivity mismatch in geoipchecker.go
+- Use [Go's native version stamping](https://michael.stapelberg.ch/posts/2026-04-05-stamp-it-all-programs-must-report-their-version/) instead of a handrolled variant.
 - Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
 - Enable [metrics serving via TLS](./admin/policies.mdx#tls), including [mutual TLS (mTLS)](./admin/policies.mdx#mtls).
 - Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
