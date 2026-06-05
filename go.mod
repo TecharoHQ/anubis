@@ -24,7 +24,6 @@ require (
 	github.com/playwright-community/playwright-go v0.5200.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redis/go-redis/v9 v9.17.2
-	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/shirou/gopsutil/v4 v4.25.11
 	github.com/testcontainers/testcontainers-go v0.40.0
 	go.etcd.io/bbolt v1.4.3

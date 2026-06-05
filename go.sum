@@ -355,8 +355,6 @@ github.com/russross/blackfriday/v2 v2.1.0 h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/sassoftware/go-rpmutils v0.4.0 h1:ojND82NYBxgwrV+mX1CWsd5QJvvEZTKddtCdFLPWhpg=
 github.com/sassoftware/go-rpmutils v0.4.0/go.mod h1:3goNWi7PGAT3/dlql2lv3+MSN5jNYPjT5mVcQcIsYzI=
-github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a h1:iLcLb5Fwwz7g/DLK89F+uQBDeAhHhwdzB5fSlVdhGcM=
-github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a/go.mod h1:wozgYq9WEBQBaIJe4YZ0qTSFAMxmcwBhQH0fO0R34Z0=
 github.com/sergi/go-diff v1.4.0 h1:n/SP9D5ad1fORl+llWyN+D6qoUETXNZARKjyY2/KVCw=
 github.com/sergi/go-diff v1.4.0/go.mod h1:A0bzQcvG0E7Rwjx0REVgAGH58e96+X0MeOfepqsbeW4=
 github.com/shirou/gopsutil/v4 v4.25.11 h1:X53gB7muL9Gnwwo2evPSE+SfOrltMoR6V3xJAXZILTY=
