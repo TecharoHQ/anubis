@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Marginally improve the performances of challenges generation/display
 - Significantly improve the performances of the gzip middleware
 - Significantly improve the performances of the PoW validation
+- Fix local addresses being rejected in the X-Forwarded-For header when X-Real-IP is unset ([#1668](https://github.com/TecharoHQ/anubis/issues/1668))
 
 ## v1.25.0: Necron
 

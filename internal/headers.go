@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
-	"github.com/sebest/xff"
 )
 
 type realIPKey struct{}
@@ -97,7 +96,7 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-Ip") == "" && xffHeader != "" {
-			ip := xff.Parse(xffHeader)
+			ip := strings.TrimSpace(xffHeader)
 			slog.Debug("setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
 			r.Header.Set("X-Real-Ip", ip)
 			if addr, err := netip.ParseAddr(ip); err == nil {
