@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 - Add config option to add ASN to logs/metrics.
 - Log weight when issuing challenge.
+- Block x.ai's crawler for code review training.
 - Gate pprof endpoints behind `metrics.debug` in the policy file.
 - Limit naive honeypot r9k delay to one second.
 - Fix an obscure case where adding query values to a subrequest match could cause an invalid rule match when using path based matching for protected resources.
