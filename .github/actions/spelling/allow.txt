@@ -45,3 +45,5 @@ AWOO
 firewalls
 bindhosts
 handrolled
+xai
+gitlab
