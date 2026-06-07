@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add [Anubis Kubernetes Operator](https://github.com/eznix86/anubis-kubernetes-operator/) to the docs ([#1675](https://github.com/TecharoHQ/anubis/pull/1675)).
 - Patch [GHSA-6wcg-mqvh-fcvg](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-6wcg-mqvh-fcvg) by containing subrequest logic to Anubis instances in subrequest mode.
 - Implement robot9001 style delays on the honeypot feature so that the first hit takes 1 millisecond, the second takes 2, etc.
 - Move metrics server configuration to [the policy file](./admin/policies.mdx#metrics-server).
