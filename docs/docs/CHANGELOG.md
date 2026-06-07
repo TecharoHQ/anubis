@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mixed tab/space indentation in Caddy documentation code block
 - Improve error messages and fix broken REDIRECT_DOMAINS link in docs ([#1193](https://github.com/TecharoHQ/anubis/issues/1193))
 - Add Bulgarian locale ([#1394](https://github.com/TecharoHQ/anubis/pull/1394))
+- Add Belarusian locale
 - Fixed case-sensitivity mismatch in geoipchecker.go
 - Use [Go's native version stamping](https://michael.stapelberg.ch/posts/2026-04-05-stamp-it-all-programs-must-report-their-version/) instead of a handrolled variant.
 - Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
