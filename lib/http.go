@@ -92,6 +92,7 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		Expires:     time.Now().Add(cookieOpts.Expiry),
 		SameSite:    sameSite,
 		Domain:      domain,
+		HttpOnly:    s.opts.CookieHttpOnly,
 		Secure:      s.opts.CookieSecure,
 		Partitioned: s.opts.CookiePartitioned,
 		Path:        path,
@@ -127,6 +128,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		SameSite:    sameSite,
 		Partitioned: s.opts.CookiePartitioned,
 		Domain:      domain,
+		HttpOnly:    s.opts.CookieHttpOnly,
 		Secure:      s.opts.CookieSecure,
 		Path:        path,
 	})
