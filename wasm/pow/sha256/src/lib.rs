@@ -77,7 +77,7 @@ fn compute_hash(nonce: u32) -> [u8; 32] {
 
 /// This function is the main entrypoint for the Anubis proof of work implementation.
 ///
-/// This expects `DATA_BUFFER` to be pre-populated with the challenge value as "raw bytes".
+/// This expects `DATA_BUFFER` to be prepopulated with the challenge value as "raw bytes".
 /// The definition of what goes in the data buffer is an exercise for the implementor, but
 /// for SHA-256 we store the hash as "raw bytes". The data buffer is intentionally oversized
 /// so that the challenge value can be expanded in the future.
