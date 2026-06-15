@@ -33,8 +33,8 @@ jobs:
 
       - name: CLI deps
         run: |
-          apt-get update
-          apt-get -y install brotli zstd
+          sudo apt-get update
+          sudo apt-get -y install brotli zstd
 
       - name: install node deps
         run: |

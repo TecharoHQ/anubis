@@ -32,8 +32,8 @@ jobs:
 
       - name: CLI deps
         run: |
-          apt-get update
-          apt-get -y install brotli zstd
+          sudo apt-get update
+          sudo apt-get -y install brotli zstd
 
       - name: Cache playwright binaries
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
