@@ -1,6 +1,5 @@
 import { u } from "../lib/xeact";
 import { simd } from "wasm-feature-detect";
-import isWASMSupported from "../lib/wasm-supported";
 
 type ProgressCallback = (nonce: number | string) => void;
 
