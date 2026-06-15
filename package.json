@@ -43,7 +43,8 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.29.2"
+    "preact": "^10.29.2",
+    "wasm-feature-detect": "^1.8.0"
   },
   "commitlint": {
     "extends": [

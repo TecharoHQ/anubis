@@ -1,11 +1,5 @@
+import { u } from "./lib/xeact";
 import algorithms from "./algorithms";
-
-// from Xeact
-const u = (url: string = "", params: Record<string, any> = {}) => {
-  let result = new URL(url, window.location.href);
-  Object.entries(params).forEach(([k, v]) => result.searchParams.set(k, v));
-  return result.toString();
-};
 
 const j = (id: string): any | null => {
   const elem = document.getElementById(id);
