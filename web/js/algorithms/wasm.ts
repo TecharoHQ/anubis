@@ -1,5 +1,6 @@
 import { u } from "../lib/xeact";
 import { simd } from "wasm-feature-detect";
+import isWASMSupported, { WASMUnsupportedError } from "../lib/wasm-supported";
 
 type ProgressCallback = (nonce: number | string) => void;
 
@@ -21,6 +22,10 @@ export default function process(
   threads: number = Math.trunc(Math.max(getHardwareConcurrency() / 2, 1)),
 ): Promise<string> {
   const { basePrefix, version, algorithm } = options;
+
+  if (!isWASMSupported) {
+    throw new WASMUnsupportedError();
+  }
 
   return new Promise(async (resolve, reject) => {
     let wasmFeatures = "baseline";

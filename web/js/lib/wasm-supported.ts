@@ -14,3 +14,10 @@ const isWASMSupported = (() => {
 })();
 
 export default isWASMSupported;
+
+export class WASMUnsupportedError extends Error {
+  constructor() {
+    super("WebAssembly is not supported in this browser. This is not a bug in Anubis. Please contact the system administrator for help.");
+    this.name = "WASMUnsupportedError";
+  }
+}
