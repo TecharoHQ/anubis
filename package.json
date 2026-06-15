@@ -19,7 +19,10 @@
     "package": "go tool yeet",
     "lint": "make lint",
     "prepare": "husky && go mod download",
-    "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w ."
+    "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w .",
+    "ci:go": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j go_tests",
+    "ci:docker": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j ko_pr",
+    "ci:yeet": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j package_builds"
   },
   "author": "",
   "license": "ISC",
