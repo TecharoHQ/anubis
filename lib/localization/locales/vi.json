@@ -62,5 +62,7 @@
   "js_iterations": "lần lặp lại",
   "js_finished_reading": "Tôi đã đọc xong, tiếp tục →",
   "js_calculation_error": "Lỗi tính toán!",
-  "js_calculation_error_msg": "Không thể tính toán thử thách:"
+  "js_calculation_error_msg": "Không thể tính toán thử thách:",
+  "js_wasm_unsupported": "Không hỗ trợ WebAssembly!",
+  "js_wasm_unsupported_msg": "Trình duyệt của bạn không hỗ trợ WebAssembly, thứ mà Anubis cần để kiểm tra kết nối của bạn. Đây không phải là lỗi của Anubis. Vui lòng liên hệ quản trị viên trang web để được trợ giúp, hoặc thử dùng một trình duyệt khác."
 }

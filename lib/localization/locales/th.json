@@ -60,5 +60,7 @@
   "js_iterations": "รอบ",
   "js_finished_reading": "อ่านจบแล้ว ดำเนินการต่อ →",
   "js_calculation_error": "เกิดข้อผิดพลาดในการคำนวณ!",
-  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:"
+  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:",
+  "js_wasm_unsupported": "ไม่รองรับ WebAssembly!",
+  "js_wasm_unsupported_msg": "เบราว์เซอร์ของคุณไม่รองรับ WebAssembly ซึ่ง Anubis จำเป็นต้องใช้เพื่อตรวจสอบการเชื่อมต่อของคุณ นี่ไม่ใช่ข้อผิดพลาดใน Anubis กรุณาติดต่อผู้ดูแลเว็บไซต์เพื่อขอความช่วยเหลือ หรือลองใช้เบราว์เซอร์อื่น"
 }
