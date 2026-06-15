@@ -17,8 +17,8 @@ $`npm run assets`;
       },
 
       build: ({ bin, etc, systemd, doc }) => {
-        $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static"' ./cmd/anubis`;
-        $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static"' ./cmd/robots2policy`;
+        $`go build -trimpath -o ${bin}/anubis -ldflags '-s -w -extldflags "-static"' ./cmd/anubis`;
+        $`go build -trimpath -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static"' ./cmd/robots2policy`;
 
         file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
         file.install("./run/default.env", `${etc}/default.env`);
