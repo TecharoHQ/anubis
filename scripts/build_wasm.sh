@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
+src_dirs=(./wasm/pow ./wasm/anubis)
+dst_dirs=(./web/static/wasm/simd128 ./web/static/wasm/baseline)
+
+# Newest source file timestamp (unix seconds).
+newest_src="$(find "${src_dirs[@]}" -type f -printf '%T@\n' | sort -n | tail -1)"
+
+# Oldest destination file timestamp (unix seconds). Empty if no outputs exist yet.
+oldest_dst="$(find "${dst_dirs[@]}" -type f -name '*.wasm' -printf '%T@\n' 2>/dev/null | sort -n | head -1)"
+
+if [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
+  echo "wasm artifacts are up to date, skipping build"
+  exit 0
+fi
+
 mkdir -p ./web/static/wasm/{simd128,baseline}
 
 cargo clean
