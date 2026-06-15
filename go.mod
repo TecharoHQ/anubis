@@ -1,6 +1,6 @@
 module github.com/TecharoHQ/anubis
 
-go 1.24.2
+go 1.25.0
 
 require (
 	github.com/TecharoHQ/thoth-proto v0.5.0
@@ -27,6 +27,7 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/shirou/gopsutil/v4 v4.25.11
 	github.com/testcontainers/testcontainers-go v0.40.0
+	github.com/tetratelabs/wazero v1.12.0
 	go.etcd.io/bbolt v1.4.3
 	golang.org/x/net v0.48.0
 	golang.org/x/text v0.32.0
@@ -188,7 +189,7 @@ require (
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/telemetry v0.0.0-20251203150158-8fff8a5912fc // indirect
 	golang.org/x/term v0.38.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
