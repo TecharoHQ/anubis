@@ -64,6 +64,7 @@ caninetools
 canonialheader
 Cardyb
 CAs
+cdylib
 celchecker
 celphase
 cerr
@@ -82,8 +83,10 @@ cidranger
 ckie
 clampip
 CLAUDE
+clippy
 cloudflare
 cloudsolutions
+codegen
 Codespaces
 confd
 containerbuild
@@ -129,6 +132,7 @@ embe
 enbyware
 envoyproxy
 eral
+equix
 etld
 everyones
 evilbot
@@ -145,6 +149,7 @@ FCr
 fcrdns
 fcvg
 fediverse
+fff
 ffprobe
 FFXIV
 fhdr
@@ -154,6 +159,7 @@ Firecrawl
 firewalls
 flagenv
 fname
+fnames
 Fordola
 forgejo
 forwardauth
@@ -197,6 +203,7 @@ gzw
 handrolled
 Hashcash
 hashrate
+hashx
 hdr
 headermap
 healthcheck
@@ -208,6 +215,7 @@ Hext
 hmc
 homelab
 hostable
+hostimport
 HSTS
 htmlc
 htmx
@@ -235,6 +243,7 @@ irreproducible
 isp
 iss
 isset
+iterand
 ivh
 Jenomis
 JGit
@@ -249,6 +258,7 @@ Keyfunc
 keypair
 keypairreloader
 KHTML
+kilohashes
 kinda
 kpr
 KUBECONFIG
@@ -273,6 +283,7 @@ lominsa
 Lupis
 MAINT
 maintnotifications
+lto
 malware
 mba
 mcr
@@ -379,6 +390,7 @@ runlevels
 RUnlock
 runtimedir
 runtimedirectory
+RUSTFLAGS
 Ryzen
 Samsung
 sarif
@@ -401,6 +413,7 @@ shirou
 shoneypot
 shopt
 Sidetrade
+simd
 simprint
 sitemap
 sloglint
@@ -443,6 +456,7 @@ templ
 templruntime
 tencent
 testarea
+tetratelabs
 Thancred
 thoth
 thothmock
@@ -460,12 +474,15 @@ unbreakdocker
 unifiedjs
 unintrusive
 unipromos
+uninlined
 unmarshal
 unmarshals
 unparseable
 updown
 urlsafe
 uvensys
+usecase
+usize
 uvx
 UXP
 valkey
@@ -482,6 +499,7 @@ VPS
 Vultr
 WAIFU
 Warde
+wazero
 wcg
 weblate
 webmaster

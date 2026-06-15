@@ -254,9 +254,9 @@ thresholds:
         - weight < 20
     action: CHALLENGE
     challenge:
-      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
-      algorithm: fast
-      difficulty: 2 # two leading zeros, very fast for most clients
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm
+      algorithm: sha256
+      difficulty: 8 # 2 leading zero nibbles, very fast for most clients (perceptually instant)
   - name: mild-proof-of-work
     expression:
       all:
@@ -264,14 +264,14 @@ thresholds:
         - weight < 30
     action: CHALLENGE
     challenge:
-      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
-      algorithm: fast
-      difficulty: 4
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm
+      algorithm: hashx
+      difficulty: 20
   # For clients that are browser like and have gained many points from custom rules
   - name: extreme-suspicion
     expression: weight >= 30
     action: CHALLENGE
     challenge:
-      # https://anubis.techaro.lol/docs/admin/configuration/challenges/proof-of-work
-      algorithm: fast
+      # https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm
+      algorithm: argon2id
       difficulty: 6

@@ -1,6 +1,7 @@
 VERSION= $(shell cat ./VERSION)
 GO?= go
 NPM?= npm
+CARGO?= cargo
 
 .PHONY: build assets deps lint prebaked-build test
 
@@ -9,10 +10,12 @@ all: build
 deps:
 	$(NPM) ci
 	$(GO) mod download
+	$(CARGO) fetch
 
 assets: PATH:=$(PWD)/node_modules/.bin:$(PATH)
 assets: deps
 	$(GO) generate ./...
+	./scripts/build_wasm.sh
 	./web/build.sh
 	./xess/build.sh
 
@@ -30,4 +33,4 @@ prebaked-build:
 	$(GO) build -o ./var/robots2policy -ldflags "-X 'github.com/TecharoHQ/anubis.Version=$(VERSION)'" ./cmd/robots2policy
 
 test: assets
-	$(GO) test ./...
+	SKIP_INTEGRATION=1 $(GO) test ./...

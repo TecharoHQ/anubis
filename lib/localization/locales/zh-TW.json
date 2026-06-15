@@ -61,6 +61,8 @@
   "js_finished_reading": "我讀完了，繼續 →",
   "js_calculation_error": "計算錯誤！",
   "js_calculation_error_msg": "計算挑戰失敗：",
+  "js_wasm_unsupported": "不支援 WebAssembly！",
+  "js_wasm_unsupported_msg": "您的瀏覽器不支援 WebAssembly，而 Anubis 需要使用它來驗證您的連線。這並非 Anubis 的程式錯誤。請聯絡網站管理員尋求協助，或改用其他瀏覽器。",
   "missing_required_forwarded_headers": "缺少必要的 X-Forwarded-* 標頭",
   "simplified_explanation": "這是一種類似於驗證碼的措施，用於防止機器人和惡意請求。但是，您無需自己動手，您的瀏覽器會收到一個計算任務，必須解決該任務以確保它是有效的客戶端。這個概念稱為<a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">工作量證明</a>。該任務在幾秒鐘內計算完畢，您將被授予訪問網站的權限。感謝您的理解和耐心。"
 }

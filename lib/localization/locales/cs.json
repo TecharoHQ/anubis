@@ -62,5 +62,7 @@
   "js_finished_reading": "Čtení dokončeno, pokračovat →",
   "js_calculation_error": "Chyba výpočtu!",
   "js_calculation_error_msg": "Nepodařilo se vypočítat výzvu:",
+  "js_wasm_unsupported": "WebAssembly není podporováno!",
+  "js_wasm_unsupported_msg": "Váš prohlížeč nepodporuje WebAssembly, které Anubis vyžaduje k ověření vašeho připojení. Nejedná se o chybu v Anubisu. Prosím kontaktujte správce této webové stránky se žádostí o pomoc, nebo zkuste jiný prohlížeč.",
   "missing_required_forwarded_headers": "Chybějící požadované hlavičky X-Forwarded-*"
 }

@@ -62,5 +62,7 @@
   "js_iterations": "Iterationen",
   "js_finished_reading": "Fertig gelesen, weiter zur Seite →",
   "js_calculation_error": "Berechnungsfehler!",
-  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:"
+  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:",
+  "js_wasm_unsupported": "WebAssembly wird nicht unterstützt!",
+  "js_wasm_unsupported_msg": "Dein Browser unterstützt kein WebAssembly, das Anubis zur Überprüfung deiner Verbindung benötigt. Dies ist kein Fehler in Anubis. Bitte kontaktiere den Administrator der Website, um Hilfe zu erhalten, oder versuche es mit einem anderen Browser."
 }

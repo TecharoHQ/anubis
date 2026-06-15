@@ -1,0 +1,67 @@
+name: "Ensure that wasm2js builds are reproducible"
+
+on:
+  push:
+    paths:
+      - "utils/wasm/wasm2js/build.sh"
+      - ".github/workflows/wasm2js-reproducible.yml"
+
+jobs:
+  wasm2js-reproducible:
+    name: Build wasm2js (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # We verify the property that actually holds: the build is byte-for-byte
+        # reproducible run-to-run *on the same machine* (setarch pins ASLR so the
+        # toolchain's pointer-sensitive codegen is stable). It is NOT reproducible
+        # across machines -- not even across two hosts of the same architecture.
+        # clang's WebAssembly EH pass (WebAssemblyCFGStackify) iterates a
+        # DenseMap<MachineBasicBlock*, ...> in pointer-hash order, and the absolute
+        # heap/load addresses of the clang process differ between any two machines
+        # (kernel, loader base, vDSO, env-block size), so a few try_table blocks
+        # come out reordered (~29 bytes). That is an upstream LLVM determinism quirk
+        # we cannot pin from here. So rather than compare against a checksum recorded
+        # on some other machine (which is just that machine's fingerprint), each
+        # runner builds twice and asserts the two outputs are identical. We run it
+        # on both architectures to confirm the determinism holds on each.
+        runner:
+          # XXX(Xe): GitHub's amd64 runners are unimaginably slow
+          #- ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Clone tree
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Setup `wasmtime`
+        uses: bytecodealliance/actions/wasmtime/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1.1.3
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      - name: Ensure reproducibility
+        run: |
+          cd ./utils/wasm/wasm2js
+
+          # First clean build. build.sh wipes its build tree every run, so this
+          # and the second build are independent from-scratch compiles.
+          ./build.sh
+          mkdir -p repro-run1
+          cp wasm2js_130.wasm wasm-opt_130.wasm repro-run1/
+
+          # Second clean build on the same machine; must be byte-identical.
+          ./build.sh
+
+          status=0
+          for tool in wasm2js_130.wasm wasm-opt_130.wasm; do
+            if cmp -s "repro-run1/$tool" "$tool"; then
+              echo "OK: $tool is byte-identical across two builds on ${{ matrix.runner }}"
+            else
+              echo "::error::$tool differs between two builds on ${{ matrix.runner }} -- build is not reproducible" >&2
+              sha256sum "repro-run1/$tool" "$tool"
+              status=1
+            fi
+          done
+          exit $status
