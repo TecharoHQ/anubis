@@ -291,7 +291,7 @@ func (r *Runner) Verify(ctx context.Context, data, verify []byte, nonce, difficu
 func (r *Runner) writeVerification(ctx context.Context, module api.Module, data []byte) error {
 	length, err := r.verificationHashSize(ctx, module)
 	if err != nil {
-		return fmt.Errorf("can't get verification hash size: %v", err)
+		return fmt.Errorf("can't get verification hash size: %w", err)
 	}
 
 	if length != uint32(len(data)) {
@@ -300,7 +300,7 @@ func (r *Runner) writeVerification(ctx context.Context, module api.Module, data 
 
 	ptr, err := r.verificationHashPtr(ctx, module)
 	if err != nil {
-		return fmt.Errorf("can't get verification hash pointer: %v", err)
+		return fmt.Errorf("can't get verification hash pointer: %w", err)
 	}
 
 	if !module.Memory().Write(ptr, data) {
