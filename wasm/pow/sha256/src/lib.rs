@@ -1,15 +1,12 @@
 use anubis::{DATA_BUFFER, DATA_LENGTH, update_nonce};
 use sha2::{Digest, Sha256};
-use std::boxed::Box;
 use std::sync::{LazyLock, Mutex};
 
 /// SHA-256 hashes are 32 bytes (256 bits). These are stored in static buffers due to the
 /// fact that you cannot easily pass data from host space to WebAssembly space.
-pub static RESULT_HASH: LazyLock<Box<Mutex<[u8; 32]>>> =
-    LazyLock::new(|| Box::new(Mutex::new([0; 32])));
+pub static RESULT_HASH: LazyLock<Mutex<[u8; 32]>> = LazyLock::new(|| Mutex::new([0; 32]));
 
-pub static VERIFICATION_HASH: LazyLock<Box<Mutex<[u8; 32]>>> =
-    LazyLock::new(|| Box::new(Mutex::new([0; 32])));
+pub static VERIFICATION_HASH: LazyLock<Mutex<[u8; 32]>> = LazyLock::new(|| Mutex::new([0; 32]));
 
 /// Core validation function. Compare each bit in the hash by progressively masking bits until
 /// some are found to not be matching.
@@ -102,21 +99,22 @@ pub extern "C" fn anubis_work(difficulty: u32, initial_nonce: u32, iterand: u32)
         if validate(&hash, difficulty) {
             // If the challenge worked, copy the bytes into `RESULT_HASH` so the runtime
             // can pick it up.
-            let mut challenge = RESULT_HASH.lock().unwrap();
-            challenge.copy_from_slice(&hash);
+            let mut result = RESULT_HASH.lock().unwrap();
+            result.copy_from_slice(&hash);
             return nonce;
         }
 
         let old_nonce = nonce;
         nonce = nonce.wrapping_add(iterand);
 
-        // send a progress update every 1024 iterations. since each thread checks
-        // separate values, one simple way to do this is by bit masking the
-        // nonce for multiples of 1024. unfortunately, if the number of threads
-        // is not prime, only some of the threads will be sending the status
-        // update and they will get behind the others. this is slightly more
-        // complicated but ensures an even distribution between threads.
-        if nonce > old_nonce | 1023 && (nonce >> 10) % iterand == initial_nonce {
+        // Report progress each time the search crosses into a new 1024-value window of the
+        // nonce space, i.e. roughly every 1024 nonce values. The reported nonce approximates
+        // the total work done across all worker threads, which the client turns into a
+        // progress bar and hashrate. Comparing the shifted window (rather than the original
+        // `nonce > old_nonce + 1023`) reports correctly for any `iterand` and stays correct
+        // across the u32 wraparound. (Only the nonce-0 worker's callback is live; the caller
+        // silences the rest.)
+        if (nonce >> 10) != (old_nonce >> 10) {
             update_nonce(nonce);
         }
     }
