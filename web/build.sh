@@ -8,7 +8,7 @@ LICENSE='/*
 @licstart  The following is the entire license notice for the
 JavaScript code in this page.
 
-Copyright (c) 2025 Xe Iaso <xe.iaso@techaro.lol>
+Copyright (c) 2026 Xe Iaso <xe.iaso@techaro.lol>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,15 +42,15 @@ cp ../lib/localization/locales/*.json static/locales/
 shopt -s nullglob globstar
 
 for file in js/**/*.ts js/**/*.mjs; do
-  out="static/${file}"
-  if [[ "$file" == *.ts ]]; then
-    out="static/${file%.ts}.mjs"
-  fi
+	out="static/${file}"
+	if [[ "$file" == *.ts ]]; then
+		out="static/${file%.ts}.mjs"
+	fi
 
-  mkdir -p "$(dirname "$out")"
+	mkdir -p "$(dirname "$out")"
 
-  esbuild "$file" --sourcemap --bundle --minify --outfile="$out" --banner:js="$LICENSE"
-  gzip -f -k -n "$out"
-  zstd -f -k --ultra -22 "$out"
-  brotli -fZk "$out"
+	esbuild "$file" --sourcemap --bundle --minify --outfile="$out" --banner:js="$LICENSE"
+	gzip -f -k -n "$out"
+	zstd -f -k --ultra -22 "$out"
+	brotli -fZk "$out"
 done
