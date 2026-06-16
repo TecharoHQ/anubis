@@ -29,7 +29,8 @@ addEventListener("message", async (event: MessageEvent<Args>) => {
     importObject.anubis.anubis_update_nonce = (_) => { };
   }
 
-  const obj = await WebAssembly.instantiate(module, importObject);
+  // instantiate() resolves to an Instance (not a ResultObject) when passed a compiled Module.
+  const instance = await WebAssembly.instantiate(module, importObject) as WebAssembly.Instance;
 
   const {
     anubis_work,
@@ -38,7 +39,7 @@ addEventListener("message", async (event: MessageEvent<Args>) => {
     result_hash_size,
     set_data_length,
     memory
-  } = (obj as unknown as any).exports as unknown as AnubisExports;
+  } = instance.exports as unknown as AnubisExports;
   function uint8ArrayToHex(arr: Uint8Array) {
     return Array.from(arr)
       .map((c) => c.toString(16).padStart(2, "0"))
