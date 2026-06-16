@@ -60,12 +60,11 @@ fn validate(hash: &[u8], difficulty: u32) -> bool {
 fn compute_hash(nonce: u32) -> [u8; 32] {
     let data = &DATA_BUFFER;
     let data_len = *DATA_LENGTH.lock().unwrap();
-    let use_le = data[data_len - 1] >= 128;
+    let data_slice: &[u8] = &data[..data_len];
+    let use_le = data_slice.last().copied().unwrap_or(0) >= 128;
     let mut result = [0u8; 32];
 
     let nonce = nonce as u64;
-
-    let data_slice = &data[..data_len];
 
     let nonce = if use_le {
         nonce.to_le_bytes()

@@ -54,7 +54,7 @@ fn anubis_work_inner(
 
     let data = &DATA_BUFFER;
     let data_len = *DATA_LENGTH.lock().unwrap();
-    let data_slice = &data[..data_len];
+    let data_slice: &[u8] = &data[..data_len];
     let mut i = 0;
 
     let h = HashX::new(data_slice)?;

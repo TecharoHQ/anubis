@@ -61,9 +61,8 @@ fn validate(hash: &[u8], difficulty: u32) -> bool {
 fn compute_hash(nonce: u32) -> [u8; 32] {
     let data = &DATA_BUFFER;
     let data_len = *DATA_LENGTH.lock().unwrap();
-    let use_le = data[data_len - 1] >= 128;
-
-    let data_slice = &data[..data_len];
+    let data_slice: &[u8] = &data[..data_len];
+    let use_le = data_slice.last().copied().unwrap_or(0) >= 128;
 
     let mut hasher = Sha256::new();
     hasher.update(data_slice);
