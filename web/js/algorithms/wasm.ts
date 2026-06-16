@@ -69,6 +69,7 @@ export default function process(
 
     for (let i = 0; i < threads; i++) {
       let worker = new Worker(webWorkerURL);
+      workers.push(worker);
 
       worker.onmessage = (event) => {
         if (typeof event.data === "number") {
