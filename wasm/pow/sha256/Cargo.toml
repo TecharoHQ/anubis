@@ -7,7 +7,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-sha2 = "0.11.0-pre.5"
+sha2 = "0.11"
 
 anubis = { path = "../../anubis" }
 
