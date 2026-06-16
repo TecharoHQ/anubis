@@ -234,10 +234,11 @@ func (r *Runner) run(ctx context.Context, data []byte, difficulty, initialNonce,
 }
 
 func (r *Runner) Run(ctx context.Context, data []byte, difficulty, initialNonce, iterand uint32) (uint32, []byte, error) {
-	nonce, hash, _, err := r.run(ctx, data, difficulty, initialNonce, iterand)
+	nonce, hash, mod, err := r.run(ctx, data, difficulty, initialNonce, iterand)
 	if err != nil {
 		return 0, nil, fmt.Errorf("can't run %s: %w", r.fname, err)
 	}
+	defer mod.Close(ctx)
 
 	return nonce, hash, nil
 }
@@ -270,9 +271,10 @@ func (r *Runner) verify(ctx context.Context, data, verify []byte, nonce, difficu
 
 func (r *Runner) Verify(ctx context.Context, data, verify []byte, nonce, difficulty uint32) (bool, error) {
 	t0 := time.Now()
-	ok, _, err := r.verify(ctx, data, verify, nonce, difficulty)
+	ok, mod, err := r.verify(ctx, data, verify, nonce, difficulty)
+	defer mod.Close(ctx)
 	validationTime.WithLabelValues(r.fname).Observe(float64(time.Since(t0)))
-	validationCount.WithLabelValues(r.fname, strconv.FormatBool(ok))
+	validationCount.WithLabelValues(r.fname, strconv.FormatBool(ok)).Inc()
 	return ok, err
 }
 
