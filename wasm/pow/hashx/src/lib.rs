@@ -1,15 +1,13 @@
 use anubis::{DATA_BUFFER, DATA_LENGTH, update_nonce};
 use hashx::HashX;
-use std::boxed::Box;
 use std::sync::{LazyLock, Mutex};
 
-/// SHA-256 hashes are 32 bytes (256 bits). These are stored in static buffers due to the
-/// fact that you cannot easily pass data from host space to WebAssembly space.
-pub static RESULT_HASH: LazyLock<Box<Mutex<[u8; 32]>>> =
-    LazyLock::new(|| Box::new(Mutex::new([0; 32])));
+/// HashX result and verification hashes are 32 bytes (256 bits). These are stored in static
+/// buffers due to the fact that you cannot easily pass data from host space to WebAssembly
+/// space.
+pub static RESULT_HASH: LazyLock<Mutex<[u8; 32]>> = LazyLock::new(|| Mutex::new([0; 32]));
 
-pub static VERIFICATION_HASH: LazyLock<Box<Mutex<[u8; 32]>>> =
-    LazyLock::new(|| Box::new(Mutex::new([0; 32])));
+pub static VERIFICATION_HASH: LazyLock<Mutex<[u8; 32]>> = LazyLock::new(|| Mutex::new([0; 32]));
 
 /// Core validation function. Compare each bit in the hash by progressively masking bits until
 /// some are found to not be matching.
@@ -45,38 +43,34 @@ fn validate(hash: &[u8], difficulty: u32) -> bool {
     true
 }
 
-fn anubis_work_inner(
-    difficulty: u32,
-    initial_nonce: u32,
-    iterand: u32,
-) -> Result<u32, hashx::Error> {
-    let mut nonce: u32 = initial_nonce;
-
+/// Build a `HashX` instance for the current challenge.
+///
+/// HashX rejects a small fraction of seeds (`Error::ProgramConstraints`). Rather than trap
+/// on those, derive a usable instance deterministically: the overwhelmingly common case is
+/// that the challenge bytes are accepted as-is, but if they are rejected we append an
+/// incrementing little-endian counter to the challenge until `HashX::new` accepts the seed.
+/// The client and server run this identical code, so they always agree on which seed — and
+/// therefore which program — is in use. The probability of needing even one retry is well
+/// under a percent, so the common path is unchanged on the wire.
+fn make_hashx() -> HashX {
     let data = &DATA_BUFFER;
     let data_len = *DATA_LENGTH.lock().unwrap();
     let data_slice: &[u8] = &data[..data_len];
-    let mut i = 0;
 
-    let h = HashX::new(data_slice)?;
+    if let Ok(h) = HashX::new(data_slice) {
+        return h;
+    }
 
+    let mut seed = Vec::with_capacity(data_slice.len() + 4);
+    let mut counter: u32 = 0;
     loop {
-        i += 1;
-        let hash = h.hash_to_bytes(nonce as u64);
-
-        if validate(&hash, difficulty) {
-            // If the challenge worked, copy the bytes into `RESULT_HASH` so the runtime
-            // can pick it up.
-            let mut challenge = RESULT_HASH.lock().unwrap();
-            challenge.copy_from_slice(&hash);
-            return Ok(nonce);
+        seed.clear();
+        seed.extend_from_slice(data_slice);
+        seed.extend_from_slice(&counter.to_le_bytes());
+        if let Ok(h) = HashX::new(&seed) {
+            return h;
         }
-
-        nonce = nonce.wrapping_add(iterand);
-
-        if i == 1024 {
-            update_nonce(nonce);
-            i = 0;
-        }
+        counter = counter.wrapping_add(1);
     }
 }
 
@@ -100,7 +94,33 @@ fn anubis_work_inner(
 /// wasting CPU time retrying a hash+nonce pair that likely won't work.
 #[unsafe(no_mangle)]
 pub extern "C" fn anubis_work(difficulty: u32, initial_nonce: u32, iterand: u32) -> u32 {
-    anubis_work_inner(difficulty, initial_nonce, iterand).unwrap()
+    let h = make_hashx();
+    let mut nonce: u32 = initial_nonce;
+
+    loop {
+        let hash = h.hash_to_bytes(nonce as u64);
+
+        if validate(&hash, difficulty) {
+            // If the challenge worked, copy the bytes into `RESULT_HASH` so the runtime
+            // can pick it up.
+            let mut result = RESULT_HASH.lock().unwrap();
+            result.copy_from_slice(&hash);
+            return nonce;
+        }
+
+        let old_nonce = nonce;
+        nonce = nonce.wrapping_add(iterand);
+
+        // Report progress each time the search crosses into a new 1024-value window of the
+        // nonce space, i.e. roughly every 1024 nonce values. The reported nonce approximates
+        // the total work done across all worker threads, which the client turns into a
+        // progress bar and hashrate. Comparing the shifted window reports correctly for any
+        // `iterand` and stays correct across the u32 wraparound. (Only the nonce-0 worker's
+        // callback is live; the caller silences the rest.)
+        if (nonce >> 10) != (old_nonce >> 10) {
+            update_nonce(nonce);
+        }
+    }
 }
 
 /// This function is called by the server in order to validate a proof-of-work challenge.
@@ -113,11 +133,7 @@ pub extern "C" fn anubis_work(difficulty: u32, initial_nonce: u32, iterand: u32)
 /// for now.
 #[unsafe(no_mangle)]
 pub extern "C" fn anubis_validate(nonce: u32, difficulty: u32) -> bool {
-    let data = &DATA_BUFFER;
-    let data_len = *DATA_LENGTH.lock().unwrap();
-    let data_slice = &data[..data_len];
-
-    let h: HashX = HashX::new(data_slice).unwrap();
+    let h = make_hashx();
     let computed = h.hash_to_bytes(nonce as u64);
     let valid = validate(&computed, difficulty);
     if !valid {
