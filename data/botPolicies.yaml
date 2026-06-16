@@ -248,7 +248,7 @@ thresholds:
     challenge:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm
       algorithm: sha256
-      difficulty: 8 # 2 leading zeros, very fast for most clients
+      difficulty: 8 # 2 leading zero nibbles, very fast for most clients (perceptually instant)
   - name: mild-proof-of-work
     expression:
       all:
