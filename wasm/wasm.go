@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
 	"strconv"
 	"time"
 
@@ -15,8 +14,6 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 )
-
-func UpdateNonce(uint32) {}
 
 var (
 	validationTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
@@ -29,6 +26,9 @@ var (
 		Name: "anubis_wasm_validation",
 		Help: "The number of times the validation logic has been run and its success rate",
 	}, []string{"fname", "success"})
+
+	ErrNotEnoughData = errors.New("wasm: not enough data being written")
+	ErrTooMuchData   = errors.New("wasm: too much data being written")
 )
 
 type Runner struct {
@@ -165,8 +165,12 @@ func (r *Runner) verificationHashSize(ctx context.Context, module api.Module) (u
 }
 
 func (r *Runner) writeData(ctx context.Context, module api.Module, data []byte) error {
+	if len(data) == 0 {
+		return ErrNotEnoughData
+	}
+
 	if len(data) > 4096 {
-		return os.ErrInvalid
+		return ErrTooMuchData
 	}
 
 	length := uint32(len(data))
@@ -238,7 +242,9 @@ func (r *Runner) Run(ctx context.Context, data []byte, difficulty, initialNonce,
 	if err != nil {
 		return 0, nil, fmt.Errorf("can't run %s: %w", r.fname, err)
 	}
-	defer mod.Close(ctx)
+	if mod != nil {
+		defer mod.Close(ctx)
+	}
 
 	return nonce, hash, nil
 }
@@ -272,7 +278,9 @@ func (r *Runner) verify(ctx context.Context, data, verify []byte, nonce, difficu
 func (r *Runner) Verify(ctx context.Context, data, verify []byte, nonce, difficulty uint32) (bool, error) {
 	t0 := time.Now()
 	ok, mod, err := r.verify(ctx, data, verify, nonce, difficulty)
-	defer mod.Close(ctx)
+	if mod != nil {
+		defer mod.Close(ctx)
+	}
 	validationTime.WithLabelValues(r.fname).Observe(float64(time.Since(t0)))
 	validationCount.WithLabelValues(r.fname, strconv.FormatBool(ok)).Inc()
 	return ok, err

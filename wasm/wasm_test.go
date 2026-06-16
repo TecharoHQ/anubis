@@ -3,12 +3,14 @@ package wasm
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io/fs"
 	"testing"
 	"time"
 
 	"github.com/TecharoHQ/anubis/web"
+	"github.com/tetratelabs/wazero"
 )
 
 func abiTest(t testing.TB, kind, fname string, difficulty uint32) {
@@ -176,6 +178,66 @@ func BenchmarkValidate(b *testing.B) {
 				if err != nil {
 					b.Fatalf("can't run validation: %v", err)
 				}
+			}
+		})
+	}
+}
+
+func TestRunnerDataHardening(t *testing.T) {
+	fnames, err := fs.ReadDir(web.Static, "static/wasm/simd128")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, fname := range fnames {
+		fname := fname.Name()
+		t.Run(fname, func(t *testing.T) {
+			for _, tt := range []struct {
+				name string
+				data []byte
+				err  error
+			}{
+				{
+					name: "simple okay",
+					data: make([]byte, 4096),
+					err:  nil,
+				},
+				{
+					name: "not enough",
+					data: make([]byte, 0),
+					err:  ErrNotEnoughData,
+				},
+				{
+					name: "too much",
+					data: make([]byte, 8192),
+					err:  ErrTooMuchData,
+				},
+			} {
+				t.Run(tt.name, func(t *testing.T) {
+					fin, err := web.Static.Open("static/wasm/simd128/" + fname)
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer fin.Close()
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+					t.Cleanup(cancel)
+
+					runner, err := NewRunner(ctx, fname, fin)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					mod, err := runner.r.InstantiateModule(ctx, runner.code, wazero.NewModuleConfig().WithName(runner.fname))
+					if err != nil {
+						t.Fatalf("can't instantiate module: %v", err)
+					}
+
+					if err := runner.writeData(t.Context(), mod, tt.data); !errors.Is(err, tt.err) {
+						t.Logf("wanted error: %v", tt.err)
+						t.Logf("got error:    %v", err)
+						t.Error()
+					}
+				})
 			}
 		})
 	}
