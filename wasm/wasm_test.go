@@ -49,7 +49,7 @@ func abiTest(t testing.TB, kind, fname string, difficulty uint32) {
 		t.Error("validation failed")
 	}
 
-	t.Logf("used %d pages of wasm memory (%d bytes)", mod.Memory().Size()/63356, mod.Memory().Size())
+	t.Logf("used %d pages of wasm memory (%d bytes)", mod.Memory().Size()/pageSize, mod.Memory().Size())
 }
 
 func TestAlgos(t *testing.T) {

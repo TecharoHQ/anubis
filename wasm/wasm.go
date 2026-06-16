@@ -31,6 +31,8 @@ var (
 	ErrTooMuchData   = errors.New("wasm: too much data being written")
 )
 
+const pageSize = 65536
+
 type Runner struct {
 	r     wazero.Runtime
 	code  wazero.CompiledModule
@@ -217,21 +219,21 @@ func (r *Runner) run(ctx context.Context, data []byte, difficulty, initialNonce,
 	}
 
 	if err := r.checkExports(mod); err != nil {
-		return 0, nil, nil, err
+		return 0, nil, mod, err
 	}
 
 	if err := r.writeData(ctx, mod, data); err != nil {
-		return 0, nil, nil, err
+		return 0, nil, mod, err
 	}
 
 	nonce, err := r.anubisWork(ctx, mod, difficulty, initialNonce, iterand)
 	if err != nil {
-		return 0, nil, nil, fmt.Errorf("can't run work function: %w", err)
+		return 0, nil, mod, fmt.Errorf("can't run work function: %w", err)
 	}
 
 	hash, err := r.readResult(ctx, mod)
 	if err != nil {
-		return 0, nil, nil, fmt.Errorf("can't read result: %w", err)
+		return 0, nil, mod, fmt.Errorf("can't read result: %w", err)
 	}
 
 	return nonce, hash, mod, nil
@@ -239,11 +241,11 @@ func (r *Runner) run(ctx context.Context, data []byte, difficulty, initialNonce,
 
 func (r *Runner) Run(ctx context.Context, data []byte, difficulty, initialNonce, iterand uint32) (uint32, []byte, error) {
 	nonce, hash, mod, err := r.run(ctx, data, difficulty, initialNonce, iterand)
-	if err != nil {
-		return 0, nil, fmt.Errorf("can't run %s: %w", r.fname, err)
-	}
 	if mod != nil {
 		defer mod.Close(ctx)
+	}
+	if err != nil {
+		return 0, nil, fmt.Errorf("can't run %s: %w", r.fname, err)
 	}
 
 	return nonce, hash, nil
@@ -256,20 +258,20 @@ func (r *Runner) verify(ctx context.Context, data, verify []byte, nonce, difficu
 	}
 
 	if err := r.checkExports(mod); err != nil {
-		return false, nil, err
+		return false, mod, err
 	}
 
 	if err := r.writeData(ctx, mod, data); err != nil {
-		return false, nil, err
+		return false, mod, err
 	}
 
 	if err := r.writeVerification(ctx, mod, verify); err != nil {
-		return false, nil, err
+		return false, mod, err
 	}
 
 	ok, err := r.anubisValidate(ctx, mod, nonce, difficulty)
 	if err != nil {
-		return false, nil, fmt.Errorf("can't validate hash %x from challenge %x, nonce %d and difficulty %d: %w", verify, data, nonce, difficulty, err)
+		return false, mod, fmt.Errorf("can't validate hash %x from challenge %x, nonce %d and difficulty %d: %w", verify, data, nonce, difficulty, err)
 	}
 
 	return ok, mod, nil

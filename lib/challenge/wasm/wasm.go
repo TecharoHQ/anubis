@@ -51,6 +51,10 @@ func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in
 }
 
 func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInput) error {
+	if err := in.Valid(); err != nil {
+		return err
+	}
+
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w nonce", chall.ErrMissingField))
