@@ -71,7 +71,7 @@ addEventListener("message", async (event: MessageEvent<Args>) => {
 
   // Write data to buffer
   function writeToBuffer(data: Uint8Array) {
-    if (data.length > 1024) throw new Error("Data exceeds buffer size");
+    if (data.length > 4096) throw new Error("Data exceeds buffer size");
 
     // Get pointer and create view
     const offset = data_ptr();
