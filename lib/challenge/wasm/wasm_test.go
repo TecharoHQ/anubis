@@ -77,9 +77,18 @@ func solve(t *testing.T, algorithm string, data []byte) (nonce string, response 
 //     Runner.Verify when writeVerification rejects a correctly-encoded but
 //     wrong-sized response.
 //
-// None of these inputs may panic, and each must surface a clean error.
+// None of these inputs may panic, and each must surface a clean error. The matrix is run
+// against every WASM algorithm so an algorithm-specific validation path can't regress.
 func TestValidateAdversarial(t *testing.T) {
-	const algorithm = "sha256"
+	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
+		t.Run(algorithm, func(t *testing.T) {
+			testValidateAdversarial(t, algorithm)
+		})
+	}
+}
+
+func testValidateAdversarial(t *testing.T, algorithm string) {
+	t.Helper()
 
 	i := &Impl{algorithm: algorithm}
 	if err := i.Setup(http.NewServeMux()); err != nil {
@@ -273,6 +282,77 @@ func TestValidateAdversarial(t *testing.T) {
 
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("got error %v, want %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// TestSolveVerifyManyChallenges runs many independent random challenges through the full
+// solve + Validate path for every algorithm. It guards against rare, seed-dependent
+// failures: most importantly the HashX ProgramConstraints seed rejection, which must be
+// handled deterministically (see make_hashx in wasm/pow/hashx) rather than trapping.
+func TestSolveVerifyManyChallenges(t *testing.T) {
+	counts := map[string]int{
+		"sha256":   200,
+		"hashx":    200,
+		"argon2id": 20, // argon2id is deliberately slow; keep the loop short
+	}
+
+	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
+		t.Run(algorithm, func(t *testing.T) {
+			n := counts[algorithm]
+			if testing.Short() {
+				n = 5
+			}
+
+			i := &Impl{algorithm: algorithm}
+			if err := i.Setup(http.NewServeMux()); err != nil {
+				t.Fatalf("can't set up %s challenge: %v", algorithm, err)
+			}
+
+			// One runner shared across iterations to avoid recompiling per solve.
+			fname := fmt.Sprintf("static/wasm/simd128/%s.wasm", algorithm)
+			fin, err := web.Static.Open(fname)
+			if err != nil {
+				t.Fatalf("can't open %s: %v", fname, err)
+			}
+			defer fin.Close()
+
+			runner, err := wasm.NewRunner(t.Context(), fname, fin)
+			if err != nil {
+				t.Fatalf("can't create runner for %s: %v", algorithm, err)
+			}
+
+			lg := slog.New(slog.NewTextHandler(io.Discard, nil))
+			bot := &policy.Bot{
+				Challenge: &config.ChallengeRules{
+					Algorithm:  algorithm,
+					Difficulty: difficulty,
+				},
+			}
+
+			for j := range n {
+				challengeBytes := sha256.Sum256(fmt.Appendf(nil, "%s-%d", t.Name(), j))
+
+				nonce, hash, err := runner.Run(t.Context(), challengeBytes[:], difficulty, 0, 1)
+				if err != nil {
+					t.Fatalf("challenge %d: can't compute solution: %v", j, err)
+				}
+
+				req := mkRequest(t, map[string]string{
+					"nonce":       strconv.Itoa(int(nonce)),
+					"elapsedTime": "42",
+					"response":    hex.EncodeToString(hash),
+				})
+
+				in := &challenge.ValidateInput{
+					Rule:      bot,
+					Challenge: &challenge.Challenge{RandomData: hex.EncodeToString(challengeBytes[:])},
+				}
+
+				if err := i.Validate(req, lg, in); err != nil {
+					t.Fatalf("challenge %d failed to validate: %v", j, err)
+				}
 			}
 		})
 	}
