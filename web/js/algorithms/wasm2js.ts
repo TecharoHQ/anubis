@@ -1,8 +1,3 @@
-import { u } from "../lib/xeact";
-import { simd } from "wasm-feature-detect";
-import isWASMSupported, { WASMUnsupportedError } from "../lib/wasm-supported";
-import wasm2js from "./wasm2js";
-
 type ProgressCallback = (nonce: number | string) => void;
 
 interface ProcessOptions {
@@ -24,21 +19,8 @@ export default function process(
 ): Promise<string> {
   const { basePrefix, version, algorithm } = options;
 
-  if (!isWASMSupported) {
-    return wasm2js(options, data, difficulty, signal, progressCallback, threads);
-  }
-
   return new Promise(async (resolve, reject) => {
-    let wasmFeatures = "baseline";
-
-    if (await simd()) {
-      wasmFeatures = "simd128";
-    }
-
-    let module = await fetch(u(`${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${wasmFeatures}/${algorithm}.wasm?cacheBuster=${version}`))
-      .then(x => WebAssembly.compileStreaming(x));
-
-    const webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/wasm.mjs?cacheBuster=${version}`;
+    const webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/wasm2js.mjs?cacheBuster=${version}`;
 
     const workers: Worker[] = [];
     let settled = false;
@@ -69,7 +51,6 @@ export default function process(
 
     for (let i = 0; i < threads; i++) {
       let worker = new Worker(webWorkerURL);
-      workers.push(worker);
 
       worker.onmessage = (event) => {
         if (typeof event.data === "number") {
@@ -91,9 +72,7 @@ export default function process(
         nonce: i,
         threads,
         algorithm,
-        module,
       });
     }
   });
 };
-
