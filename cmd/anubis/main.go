@@ -426,7 +426,9 @@ func main() {
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
-	h = internal.JA4H(h)
+	if policy.NeedJA4H {
+		h = internal.JA4H(h)
+	}
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)

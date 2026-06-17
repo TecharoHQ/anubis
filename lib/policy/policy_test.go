@@ -9,6 +9,8 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
+	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
@@ -109,5 +111,71 @@ func TestPathCheckerStripsForwardedURIQuery(t *testing.T) {
 	}
 	if !matched {
 		t.Fatalf("expected exact path checker to match forwarded URI without query string")
+	}
+}
+
+func TestConfigReferencesJA4H(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		bots []config.BotConfig
+		want bool
+	}{
+		{
+			name: "no bots",
+			bots: nil,
+			want: false,
+		},
+		{
+			name: "unrelated rules",
+			bots: []config.BotConfig{
+				{Name: "ua", HeadersRegex: map[string]string{"User-Agent": "curl"}},
+				{Name: "expr", Expression: &config.ExpressionOrList{Expression: `userAgent.contains("bot")`}},
+			},
+			want: false,
+		},
+		{
+			name: "headers_regex exact match",
+			bots: []config.BotConfig{
+				{Name: "ja4h", HeadersRegex: map[string]string{internal.JA4HHeaderName: "t13d.*"}},
+			},
+			want: true,
+		},
+		{
+			name: "headers_regex case-insensitive match",
+			bots: []config.BotConfig{
+				{Name: "ja4h", HeadersRegex: map[string]string{"x-http-fingerprint-ja4h": ".*"}},
+			},
+			want: true,
+		},
+		{
+			name: "expression references header",
+			bots: []config.BotConfig{
+				{Name: "ja4h", Expression: &config.ExpressionOrList{Expression: `headers["X-Http-Fingerprint-Ja4h"] == "t13d"`}},
+			},
+			want: true,
+		},
+		{
+			name: "expression list references header",
+			bots: []config.BotConfig{
+				{Name: "ja4h", Expression: &config.ExpressionOrList{Any: []string{
+					`userAgent.contains("bot")`,
+					`headers["X-Http-Fingerprint-Ja4h"] == "t13d"`,
+				}}},
+			},
+			want: true,
+		},
+		{
+			name: "expression missingHeader references header",
+			bots: []config.BotConfig{
+				{Name: "ja4h", Expression: &config.ExpressionOrList{Expression: `!missingHeader(headers, "X-Http-Fingerprint-Ja4h")`}},
+			},
+			want: true,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := configReferencesJA4H(tt.bots); got != tt.want {
+				t.Errorf("configReferencesJA4H() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
