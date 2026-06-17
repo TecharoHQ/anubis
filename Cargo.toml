@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["wasm/anubis", "wasm/pow/argon2id", "wasm/pow/sha256"]
+members = ["wasm/anubis", "wasm/pow/*"]
 
 [profile.release]
 #strip = true

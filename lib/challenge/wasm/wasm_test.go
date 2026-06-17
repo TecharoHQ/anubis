@@ -80,7 +80,7 @@ func solve(t *testing.T, algorithm string, data []byte) (nonce string, response 
 // None of these inputs may panic, and each must surface a clean error. The matrix is run
 // against every WASM algorithm so an algorithm-specific validation path can't regress.
 func TestValidateAdversarial(t *testing.T) {
-	for _, algorithm := range []string{"sha256", "argon2id"} {
+	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
 		t.Run(algorithm, func(t *testing.T) {
 			testValidateAdversarial(t, algorithm)
 		})
@@ -136,8 +136,8 @@ func testValidateAdversarial(t *testing.T, algorithm string) {
 		name     string
 		values   map[string]string
 		input    *challenge.ValidateInput
-		wantErr  error                // matched with errors.Is; nil means expect success
-		errCheck func(err error) bool // optional override; when set, wantErr is ignored
+		wantErr  error                  // matched with errors.Is; nil means expect success
+		errCheck func(err error) bool   // optional override; when set, wantErr is ignored
 	}{
 		{
 			name:    "valid-solution-passes",
@@ -294,10 +294,11 @@ func testValidateAdversarial(t *testing.T, algorithm string) {
 func TestSolveVerifyManyChallenges(t *testing.T) {
 	counts := map[string]int{
 		"sha256":   200,
+		"hashx":    200,
 		"argon2id": 20, // argon2id is deliberately slow; keep the loop short
 	}
 
-	for _, algorithm := range []string{"sha256", "argon2id"} {
+	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
 		t.Run(algorithm, func(t *testing.T) {
 			n := counts[algorithm]
 			if testing.Short() {

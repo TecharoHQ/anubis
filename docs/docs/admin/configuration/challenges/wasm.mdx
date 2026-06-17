@@ -15,17 +15,18 @@ Additionally due to complicated facts and circumstances involving it being compl
 Anubis offers the following WebAssembly proof of work functions:
 
 - [argon2id](#argon2id) (via the [`argon2id`](https://docs.rs/argon2/latest/argon2/) crate)
+- [hashx](#hashx) (via the [`hashx`](https://docs.rs/hashx/latest/hashx/index.html) crate)
 - [sha256](#sha256) (via the [`sha2`](https://docs.rs/sha2/latest/sha2/) crate)
 
 :::note
 
 The difficulty values for the WebAssembly based checks are going to be much greater than the equivalent difficulty values for the [JavaScript based checks](./proof-of-work.mdx). Generally these count the number of leading _bits_ that much match instead of the number of leading _nibbles_ that must match. Here's a rough translation table:
 
-| `fast` difficulty | `argon2id` difficulty | `sha256` difficulty |
-| :---------------- | :-------------------- | :------------------ |
-| `2`               | `2`                   | `8`                 |
-| `4`               | `4`                   | `16`                |
-| `6`               | `6`                   | `24`                |
+| `fast` difficulty | `argon2id` difficulty | `sha256` difficulty | `hashx` difficulty |
+| :---------------- | :-------------------- | :------------------ | :----------------- |
+| `4`               | `4`                   | `16`                | `15`               |
+| `2`               | `2`                   | `8`                 | `7`                |
+| `6`               | `6`                   | `24`                | `20`               |
 
 :::
 
@@ -46,6 +47,25 @@ thresholds:
     challenge:
       algorithm: argon2id
       difficulty: 6
+```
+
+## `hashx`
+
+Uses the ASIC-resistant [hashx](https://github.com/tevador/hashx) as the proof of work function. This is resistant to GPU and ASIC attacks. In practice this means that users need to be using a standards-compliant browser to pass the challenge.
+
+Usage:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: hashx
+      difficulty: 16
 ```
 
 ## `sha256`

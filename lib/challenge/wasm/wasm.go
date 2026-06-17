@@ -19,6 +19,7 @@ import (
 
 func init() {
 	chall.Register("argon2id", &Impl{algorithm: "argon2id"})
+	chall.Register("hashx", &Impl{algorithm: "hashx"})
 	chall.Register("sha256", &Impl{algorithm: "sha256"})
 }
 
