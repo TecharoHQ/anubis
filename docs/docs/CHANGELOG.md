@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Significantly improve the performances of the PoW validation
 - Add trimpath option to artifact builds
 - Add COOKIE_HTTP_ONLY option to set the HttpOnly flag on Anubis cookies
+- Improve the performances of rules validation
 
 ## v1.25.0: Necron
 
