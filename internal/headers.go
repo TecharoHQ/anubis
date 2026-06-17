@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"slices"
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
@@ -161,7 +162,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		return "", fmt.Errorf("%w: %w", ErrCantParseRemoteIP, err)
 	}
 
-	origForwardedList := make([]string, 0, 4)
+	var origForwardedList []string
 	if origXFFHeader != "" {
 		origForwardedList = strings.Split(origXFFHeader, ",")
 		for i := range origForwardedList {
@@ -203,8 +204,12 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		if pref.StripCGNAT && CGNat.Contains(segmentIP) {
 			continue
 		}
-		forwardedList = append([]string{segmentIP.String()}, forwardedList...)
+		// Build the kept chain in reverse (cheap appends into the
+		// pre-sized slice) and flip it once below, instead of prepending
+		// a freshly allocated slice on every iteration.
+		forwardedList = append(forwardedList, segmentIP.String())
 	}
+	slices.Reverse(forwardedList)
 	var xffHeaderString string
 	if len(forwardedList) == 0 {
 		xffHeaderString = ""
