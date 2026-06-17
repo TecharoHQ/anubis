@@ -242,10 +242,12 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
 
-	if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
-		lg.Debug("serving opengraph tag asset")
-		s.ServeHTTPNext(w, r)
-		return
+	if s.opts.OpenGraph.Enabled {
+		if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
+			lg.Debug("serving opengraph tag asset")
+			s.ServeHTTPNext(w, r)
+			return
+		}
 	}
 
 	// Adjust cookie path if base prefix is not empty
