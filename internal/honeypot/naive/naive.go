@@ -78,9 +78,10 @@ type Impl struct {
 }
 
 func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
-	result, _ := i.networkWeight.Get(ctx, internal.SHA256sum(network))
+	key := internal.SHA256sum(network)
+	result, _ := i.networkWeight.Get(ctx, key)
 	result++
-	i.networkWeight.Set(ctx, internal.SHA256sum(network), result, time.Hour)
+	i.networkWeight.Set(ctx, key, result, time.Hour)
 	return result
 }
 
