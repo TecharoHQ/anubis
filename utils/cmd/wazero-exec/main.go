@@ -43,7 +43,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	if err := run(ctx, flag.Arg(0), flag.Args()); err != nil {
-		fmt.Fprintln(os.Stderr, "can't run program %s: %v\n", flag.Arg(0), err)
+		fmt.Fprintf(os.Stderr, "can't run program %s: %v\n", flag.Arg(0), err)
 	}
 }
 
