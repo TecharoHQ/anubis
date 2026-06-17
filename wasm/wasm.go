@@ -45,7 +45,7 @@ func NewRunner(ctx context.Context, fname string, fin io.ReadCloser) (*Runner, e
 		return nil, fmt.Errorf("wasm: can't read from fin: %w", err)
 	}
 
-	r := wazero.NewRuntime(ctx)
+	r := wazero.NewRuntimeWithConfig(ctx, runtimeConfig())
 
 	_, err = r.NewHostModuleBuilder("anubis").
 		NewFunctionBuilder().
