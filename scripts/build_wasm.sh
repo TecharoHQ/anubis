@@ -13,8 +13,8 @@ newest_src="$(find "${src_dirs[@]}" -type f -printf '%T@\n' | sort -n | tail -1)
 oldest_dst="$(find "${dst_dirs[@]}" -type f -name '*.wasm' -printf '%T@\n' 2>/dev/null | sort -n | head -1 || true)"
 
 if [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
-  echo "wasm artifacts are up to date, skipping build"
-  exit 0
+	echo "wasm artifacts are up to date, skipping build"
+	exit 0
 fi
 
 mkdir -p ./web/static/wasm/{simd128,baseline}
