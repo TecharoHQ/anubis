@@ -677,7 +677,9 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 
 	weight := 0
 
-	for _, b := range s.policy.Bots {
+	// Ranging by index keeps b from escaping to the heap on every iteration.
+	for i := range s.policy.Bots {
+		b := &s.policy.Bots[i]
 		match, err := b.Rules.Check(r)
 		if err != nil {
 			return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("can't run check %s: %w", b.Name, err)
@@ -686,7 +688,9 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 		if match {
 			switch b.Action {
 			case config.RuleDeny, config.RuleAllow, config.RuleBenchmark, config.RuleChallenge:
-				return cr("bot/"+b.Name, b.Action, weight), &b, nil
+				// Return a copy of the rule, as the shared policy must not be modified.
+				bot := *b
+				return cr("bot/"+b.Name, b.Action, weight), &bot, nil
 			case config.RuleWeigh:
 				lg.Debug("adjusting weight", "name", b.Name, "delta", b.Weight.Adjust)
 				asn, asnDesc := asnFromContext(r.Context())
