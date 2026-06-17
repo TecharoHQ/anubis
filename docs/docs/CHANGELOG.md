@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add trimpath option to artifact builds
 - Add COOKIE_HTTP_ONLY option to set the HttpOnly flag on Anubis cookies
 - Improve the performances of rules validation
+- Only compute the JA4H fingerprint when a policy references the `X-Http-Fingerprint-JA4H` header, taking it off the hot path for configurations that don't use it ([#834](https://github.com/TecharoHQ/anubis/pull/834)).
 
 ## v1.25.0: Necron
 
