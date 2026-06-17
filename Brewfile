@@ -1,5 +1,5 @@
 # programming languages
-brew "go@1.24"
+brew "go@1.26"
 brew "node"
 brew "ko"
 brew "esbuild"

@@ -114,14 +114,6 @@ func BenchmarkArgon2ID(b *testing.B) {
 	}
 }
 
-func BenchmarkHashX(b *testing.B) {
-	for _, kind := range []string{"baseline", "simd128"} {
-		b.Run(kind, func(b *testing.B) {
-			bench(b, kind, "hashx.wasm", []uint32{4, 6, 8})
-		})
-	}
-}
-
 func BenchmarkSHA256(b *testing.B) {
 	for _, kind := range []string{"baseline", "simd128"} {
 		b.Run(kind, func(b *testing.B) {

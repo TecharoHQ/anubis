@@ -1,5 +1,4 @@
 import * as argon2id from "../gen/wasm2js/argon2id.wasm.js";
-import * as hashx from "../gen/wasm2js/hashx.wasm.js";
 import * as sha256 from "../gen/wasm2js/sha256.wasm.js";
 
 export interface Args {

@@ -257,8 +257,8 @@ thresholds:
     action: CHALLENGE
     challenge:
       # https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm
-      algorithm: hashx
-      difficulty: 20
+      algorithm: argon2id
+      difficulty: 4
   # For clients that are browser like and have gained many points from custom rules
   - name: extreme-suspicion
     expression: weight >= 30
