@@ -20,10 +20,8 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
 
-      - name: Setup Binaryen
-        uses: Zxilly/setup-binaryen@3cda60f50c9575dff0dc7a1d27cdf1306333a7c5 # v1.1.0
-        with:
-          version: "130"
+      - name: Setup `wasmtime`
+        uses: bytecodealliance/actions/wasmtime/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1.1.3
 
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
