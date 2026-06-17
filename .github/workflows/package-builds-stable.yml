@@ -20,6 +20,11 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
 
+      - name: Setup Binaryen
+        uses: Zxilly/setup-binaryen@3cda60f50c9575dff0dc7a1d27cdf1306333a7c5 # v1.1.0
+        with:
+          version: "130"
+
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: "24.11.0"

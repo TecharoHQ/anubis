@@ -25,4 +25,5 @@ web/static/locales/*.json
 
 # Rust
 target/*
-*.wasm
+web/static/wasm/baseline/*.wasm
+web/static/wasm/simd128/*.wasm

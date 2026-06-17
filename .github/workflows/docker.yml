@@ -27,6 +27,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Setup Binaryen
+        uses: Zxilly/setup-binaryen@3cda60f50c9575dff0dc7a1d27cdf1306333a7c5 # v1.1.0
+        with:
+          version: "130"
+
       - name: Set lowercase image name
         run: |
           echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
