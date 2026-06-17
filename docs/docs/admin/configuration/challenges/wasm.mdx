@@ -1,6 +1,16 @@
 # Proof of Work (WebAssembly)
 
-Anubis supports using [WebAssembly](https://en.wikipedia.org/wiki/WebAssembly) to speed up proof of work validation. Proof of work functions as a randomized delay to prevent clients from overwhelming your server with traffic. All WebAssembly proof of work functions are written in Rust. When clients don't support WebAssembly, they will get an error message informing of their client's misconfiguration.
+Anubis supports using [WebAssembly](https://en.wikipedia.org/wiki/WebAssembly) to speed up proof of work validation. Proof of work functions as a randomized delay to prevent clients from overwhelming your server with traffic. All WebAssembly proof of work functions are written in Rust.
+
+:::note
+
+When clients are configured to disable WebAssembly, Anubis falls back to a pure JavaScript implementation of the WebAssembly-based check logic. As clients that disable WebAssembly usually disable the JavaScript JIT (the thing that makes JavaScript fast), this makes checks slower.
+
+Additionally due to complicated facts and circumstances involving it being complicated to pass the messages from the wasm2js world back to JavaScript, the progress bar will not update while a wasm2js check is running. This is a known issue and will be fixed in a later release.
+
+:::
+
+## Implementations
 
 Anubis offers the following WebAssembly proof of work functions:
 
