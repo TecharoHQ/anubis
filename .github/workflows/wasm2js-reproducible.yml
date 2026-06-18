@@ -26,7 +26,8 @@ jobs:
         # runner builds twice and asserts the two outputs are identical. We run it
         # on both architectures to confirm the determinism holds on each.
         runner:
-          - ubuntu-24.04
+          # XXX(Xe): GitHub's amd64 runners are unimaginably slow
+          #- ubuntu-24.04
           - ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
