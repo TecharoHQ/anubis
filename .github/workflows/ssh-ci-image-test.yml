@@ -2,13 +2,11 @@ name: Docker
 
 on:
   push:
-    branches: ["main"]
     paths:
       - "test/ssh-ci/Dockerfile"
       - "test/ssh-ci/docker-bake.hcl"
       - ".github/workflows/ssh-ci-image-test.yml"
   pull_request:
-    branches: ["main"]
     paths:
       - "test/ssh-ci/Dockerfile"
       - "test/ssh-ci/docker-bake.hcl"
@@ -32,9 +30,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
-      - name: Build Docker image
-        if: github.event_name == 'pull_request'
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6.10.0
-        with:
-          source: ./test/ssh-ci/docker-bake.hcl
-          push: false
+      - name: Build image
+        run: |
+          cd ./test/ssh-ci
+          docker buildx bake --pull

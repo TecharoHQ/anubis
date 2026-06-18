@@ -11,7 +11,7 @@ target "ci-runner" {
     ALPINE_VERSION = "${ALPINE_VERSION}"
   }
   context = "."
-  dockerfile = "./test/ssh-ci/Dockerfile"
+  dockerfile = "./Dockerfile"
   platforms = [
     "linux/amd64",
     "linux/arm64",

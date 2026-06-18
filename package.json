@@ -21,11 +21,12 @@
     "lint": "make lint",
     "prepare": "husky && go mod download",
     "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w .",
-    "ci": "npm run ci:go && npm run ci:rust && npm run ci:yeet",
+    "ci": "npm run ci:go && npm run ci:rust && npm run ci:ssh-ci && npm run ci:yeet",
     "ci:go": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j go_tests",
     "ci:rust": "npm run ci:rust:fmt && npm run ci:rust:test",
     "ci:rust:fmt": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j rust-formatting",
     "ci:rust:test": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j rust-test",
+    "ci:ssh-ci": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j ssh-ci-image-test",
     "ci:yeet": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 -j package_builds"
   },
   "author": "",
