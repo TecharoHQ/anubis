@@ -8,8 +8,14 @@ on:
 
 jobs:
   rust-test:
-    name: cargo test
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    name: cargo test (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -22,8 +28,14 @@ jobs:
 
   # Check formatting with rustfmt
   rust-formatting:
-    name: cargo fmt
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    name: cargo fmt (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
