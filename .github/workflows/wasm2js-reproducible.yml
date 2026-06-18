@@ -12,16 +12,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The build is byte-for-byte reproducible *within* an architecture, but
-        # x86_64 and arm64 drift by ~29 bytes: clang's WebAssembly EH pass
-        # (WebAssemblyCFGStackify) iterates a DenseMap<MachineBasicBlock*, ...>
-        # in pointer-hash order, and the two clang binaries hand out different
-        # pointers, so a few try_table blocks come out reordered. That is an
-        # upstream LLVM determinism quirk we cannot pin from here. Rather than
-        # give up cross-arch coverage, we record the expected checksums for both
-        # architectures (shasums.x86_64 / shasums.arm64) and accept a match
-        # against either, so each runner verifies against its own recorded set.
-        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        # We verify the property that actually holds: the build is byte-for-byte
+        # reproducible run-to-run *on the same machine* (setarch pins ASLR so the
+        # toolchain's pointer-sensitive codegen is stable). It is NOT reproducible
+        # across machines -- not even across two hosts of the same architecture.
+        # clang's WebAssembly EH pass (WebAssemblyCFGStackify) iterates a
+        # DenseMap<MachineBasicBlock*, ...> in pointer-hash order, and the absolute
+        # heap/load addresses of the clang process differ between any two machines
+        # (kernel, loader base, vDSO, env-block size), so a few try_table blocks
+        # come out reordered (~29 bytes). That is an upstream LLVM determinism quirk
+        # we cannot pin from here. So rather than compare against a checksum recorded
+        # on some other machine (which is just that machine's fingerprint), each
+        # runner builds twice and asserts the two outputs are identical. We run it
+        # on both architectures to confirm the determinism holds on each.
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Clone tree
@@ -37,13 +43,24 @@ jobs:
       - name: Ensure reproducibility
         run: |
           cd ./utils/wasm/wasm2js
+
+          # First clean build. build.sh wipes its build tree every run, so this
+          # and the second build are independent from-scratch compiles.
           ./build.sh
-          if sha256sum -c --status shasums.x86_64; then
-            echo "OK: rebuilt modules match the recorded x86_64 checksums"
-          elif sha256sum -c --status shasums.arm64; then
-            echo "OK: rebuilt modules match the recorded arm64 checksums"
-          else
-            echo "::error::rebuilt wasm2js/wasm-opt match neither recorded checksum set on ${{ matrix.runner }}" >&2
-            sha256sum wasm-opt_130.wasm wasm2js_130.wasm
-            exit 1
-          fi
+          mkdir -p repro-run1
+          cp wasm2js_130.wasm wasm-opt_130.wasm repro-run1/
+
+          # Second clean build on the same machine; must be byte-identical.
+          ./build.sh
+
+          status=0
+          for tool in wasm2js_130.wasm wasm-opt_130.wasm; do
+            if cmp -s "repro-run1/$tool" "$tool"; then
+              echo "OK: $tool is byte-identical across two builds on ${{ matrix.runner }}"
+            else
+              echo "::error::$tool differs between two builds on ${{ matrix.runner }} -- build is not reproducible" >&2
+              sha256sum "repro-run1/$tool" "$tool"
+              status=1
+            fi
+          done
+          exit $status
