@@ -1,11 +1,6 @@
 name: Docker
 
 on:
-  push:
-    paths:
-      - "test/ssh-ci/Dockerfile"
-      - "test/ssh-ci/docker-bake.hcl"
-      - ".github/workflows/ssh-ci-image-test.yml"
   pull_request:
     paths:
       - "test/ssh-ci/Dockerfile"
