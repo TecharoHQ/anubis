@@ -61,7 +61,7 @@ func TestAlgos(t *testing.T) {
 	for _, kind := range []string{"baseline", "simd128"} {
 		for _, fname := range fnames {
 			fname := fname
-			t.Run(fname.Name(), func(t *testing.T) {
+			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
 				abiTest(t, kind, fname.Name(), 4)
 			})
 		}

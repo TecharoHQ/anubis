@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,7 +47,13 @@ func NewRunner(ctx context.Context, fname string, fin io.ReadCloser) (*Runner, e
 		return nil, fmt.Errorf("wasm: can't read from fin: %w", err)
 	}
 
-	r := wazero.NewRuntimeWithConfig(ctx, runtimeConfig())
+	cfg := wazero.NewRuntimeConfig()
+
+	if runtime.GOARCH == "arm64" && (strings.HasSuffix(fname, "hashx.wasm") || strings.HasSuffix(fname, "argon2id.wasm")) {
+		cfg = wazero.NewRuntimeConfigInterpreter()
+	}
+
+	r := wazero.NewRuntimeWithConfig(ctx, cfg)
 
 	_, err = r.NewHostModuleBuilder("anubis").
 		NewFunctionBuilder().

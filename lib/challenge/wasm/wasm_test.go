@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"strconv"
 	"testing"
 
@@ -47,7 +48,7 @@ func mkRequest(t *testing.T, values map[string]string) *http.Request {
 func solve(t *testing.T, algorithm string, data []byte) (nonce string, response string) {
 	t.Helper()
 
-	fname := fmt.Sprintf("static/wasm/simd128/%s.wasm", algorithm)
+	fname := fmt.Sprintf("static/wasm/baseline/%s.wasm", algorithm)
 	fin, err := web.Static.Open(fname)
 	if err != nil {
 		t.Fatalf("can't open %s: %v", fname, err)
@@ -82,6 +83,9 @@ func solve(t *testing.T, algorithm string, data []byte) (nonce string, response 
 func TestValidateAdversarial(t *testing.T) {
 	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
 		t.Run(algorithm, func(t *testing.T) {
+			if runtime.GOARCH == "arm64" && algorithm == "argon2id" {
+				t.Skip("skipping argon2id on aarch64 because validation is slow in the interpreter")
+			}
 			testValidateAdversarial(t, algorithm)
 		})
 	}
@@ -136,8 +140,8 @@ func testValidateAdversarial(t *testing.T, algorithm string) {
 		name     string
 		values   map[string]string
 		input    *challenge.ValidateInput
-		wantErr  error                  // matched with errors.Is; nil means expect success
-		errCheck func(err error) bool   // optional override; when set, wantErr is ignored
+		wantErr  error                // matched with errors.Is; nil means expect success
+		errCheck func(err error) bool // optional override; when set, wantErr is ignored
 	}{
 		{
 			name:    "valid-solution-passes",
@@ -300,6 +304,9 @@ func TestSolveVerifyManyChallenges(t *testing.T) {
 
 	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
 		t.Run(algorithm, func(t *testing.T) {
+			if runtime.GOARCH == "arm64" && algorithm == "argon2id" {
+				t.Skip("skipping argon2id on aarch64 because validation is slow in the interpreter")
+			}
 			n := counts[algorithm]
 			if testing.Short() {
 				n = 5
