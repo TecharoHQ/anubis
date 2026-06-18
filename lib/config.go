@@ -47,6 +47,7 @@ type Options struct {
 	OpenGraph                config.OpenGraph
 	ServeRobotsTXT           bool
 	CookieSecure             bool
+	CookieHttpOnly           bool
 	CookieSameSite           http.SameSite
 	Logger                   *slog.Logger
 	LogLevel                 string

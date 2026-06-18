@@ -31,6 +31,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log weight when issuing challenge
 - Keep Anubis server URL state local to each `lib.Server` instance to make embedded use safer
 - Fix `path_regex` and CEL `path` rules not matching when using Traefik `forwardAuth` middleware. Anubis now checks `X-Forwarded-Uri` (Traefik) in addition to `X-Original-URI` (nginx) when resolving the request path in subrequest mode ([#1628](https://github.com/TecharoHQ/anubis/issues/1628))
+- Use [Go's native version stamping](https://michael.stapelberg.ch/posts/2026-04-05-stamp-it-all-programs-must-report-their-version/) instead of a handrolled variant.
+- Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
+- Enable [metrics serving via TLS](./admin/policies.mdx#tls), including [mutual TLS (mTLS)](./admin/policies.mdx#mtls).
+- Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
+- Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
+- Add config option to add ASN to logs/metrics.
+- Log weight when issuing challenge.
+- Block x.ai's crawler for code review training.
+- Gate pprof endpoints behind `metrics.debug` in the policy file.
+- Limit naive honeypot r9k delay to one second.
+- Fix an obscure case where adding query values to a subrequest match could cause an invalid rule match when using path based matching for protected resources.
+- Fix an edge case where load average expression values could nil pointer dereference when Anubis just started up.
+- Fix an obscure case where Anubis in subrequest mode could allow redirects to invalid domains with strange instructions.
+- Fix `path_regex` and CEL `path` rules not matching when using Traefik `forwardAuth` middleware. Anubis now checks `X-Forwarded-Uri` (Traefik) in addition to `X-Original-URI` (nginx) when resolving the request path in subrequest mode ([#1628](https://github.com/TecharoHQ/anubis/issues/1628)).
+- Validate bounds in the CEL `randInt` helper so non-positive or platform-overflowing arguments surface a typed CEL error instead of an evaluator panic.
+- Fix a race in the bbolt store where the asynchronous cleanup scheduled by an expired read could delete a value that had just been refreshed; the delete now only fires when the key still carries the same expired generation it observed.
+- Marginally increase the performances of requests processing
+- Marginally improve the performances of PoW validation
+- Marginally improve the performances of challenges generation/display
+- Significantly improve the performances of the gzip middleware
+- Significantly improve the performances of the PoW validation
+- Add trimpath option to artifact builds
+- Add COOKIE_HTTP_ONLY option to set the HttpOnly flag on Anubis cookies
+- Improve the performances of rules validation
+- Only compute the JA4H fingerprint when a policy references the `X-Http-Fingerprint-JA4H` header, taking it off the hot path for configurations that don't use it ([#834](https://github.com/TecharoHQ/anubis/pull/834)).
 
 ## v1.25.0: Necron
 

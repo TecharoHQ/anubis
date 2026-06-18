@@ -36,6 +36,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
+	"github.com/google/uuid"
 	_ "github.com/joho/godotenv/autoload"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 )
@@ -55,6 +56,7 @@ var (
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
+	cookieHttpOnly           = flag.Bool("cookie-http-only", false, "if true, sets the HttpOnly flag on Anubis cookies")
 	cookieSameSite           = flag.String("cookie-same-site", "None", "sets the same site option on Anubis cookies, will auto-downgrade None to Lax if cookie-secure is false. Valid values are None, Lax, Strict, and Default.")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
@@ -192,6 +194,9 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 func main() {
 	flagenv.Parse()
 	flag.Parse()
+
+	// Must be set before any concurrent UUID call.
+	uuid.EnableRandPool()
 
 	if *versionFlag {
 		fmt.Println("Anubis", anubis.Version)
@@ -404,6 +409,7 @@ func main() {
 		WebmasterEmail:           *webmasterEmail,
 		OpenGraph:                policy.OpenGraph,
 		CookieSecure:             *cookieSecure,
+		CookieHttpOnly:           *cookieHttpOnly,
 		CookieSameSite:           parseSameSite(*cookieSameSite),
 		PublicUrl:                *publicUrl,
 		JWTRestrictionHeader:     *jwtRestrictionHeader,
@@ -420,7 +426,9 @@ func main() {
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
-	h = internal.JA4H(h)
+	if policy.NeedJA4H {
+		h = internal.JA4H(h)
+	}
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)

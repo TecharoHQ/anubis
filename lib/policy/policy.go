@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -49,6 +50,7 @@ type ParsedConfig struct {
 	Metrics           *config.Metrics
 	ThothClient       *thoth.Client
 	LogASN            bool
+	NeedJA4H          bool
 }
 
 func newParsedConfig(orig *config.Config) *ParsedConfig {
@@ -219,6 +221,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		result.Impressum = c.Impressum
 
 		parsedBot.Rules = cl
+		parsedBot.hash = parsedBot.Hash()
 
 		result.Bots = append(result.Bots, parsedBot)
 	}
@@ -255,6 +258,31 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	}
 
 	result.DNSBL = c.DNSBL
+	result.NeedJA4H = configReferencesJA4H(c.Bots)
 
 	return result, nil
+}
+
+// configReferencesJA4H reports whether any bot rule references the JA4H
+// fingerprint header, either through a headers_regex key or a CEL expression.
+// Computing the JA4H fingerprint for every request is relatively expensive, so
+// when no rule needs it the middleware that adds the header can be skipped
+// entirely. Threshold expressions can't access request headers, so only bot
+// rules are considered.
+func configReferencesJA4H(bots []config.BotConfig) bool {
+	needle := strings.ToLower(internal.JA4HHeaderName)
+
+	for _, b := range bots {
+		for key := range b.HeadersRegex {
+			if strings.EqualFold(key, internal.JA4HHeaderName) {
+				return true
+			}
+		}
+
+		if b.Expression != nil && strings.Contains(strings.ToLower(b.Expression.String()), needle) {
+			return true
+		}
+	}
+
+	return false
 }

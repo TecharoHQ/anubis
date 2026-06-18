@@ -92,6 +92,7 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		Expires:     time.Now().Add(cookieOpts.Expiry),
 		SameSite:    sameSite,
 		Domain:      domain,
+		HttpOnly:    s.opts.CookieHttpOnly,
 		Secure:      s.opts.CookieSecure,
 		Partitioned: s.opts.CookiePartitioned,
 		Path:        path,
@@ -127,6 +128,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		SameSite:    sameSite,
 		Partitioned: s.opts.CookiePartitioned,
 		Domain:      domain,
+		HttpOnly:    s.opts.CookieHttpOnly,
 		Secure:      s.opts.CookieSecure,
 		Path:        path,
 	})
@@ -417,14 +419,15 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		localizer := localization.GetLocalizer(r)
 
 		redir := r.FormValue("redir")
-		urlParsed, err := url.ParseRequestURI(redir)
+		urlParsed, err := url.Parse(redir)
 		if err != nil {
-			// if ParseRequestURI fails, try as relative URL
-			urlParsed, err = r.URL.Parse(redir)
-			if err != nil {
-				s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), makeCode(err), http.StatusBadRequest)
-				return
-			}
+			s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), makeCode(err), http.StatusBadRequest)
+			return
+		}
+
+		if urlParsed.Opaque != "" || (urlParsed.Scheme == "" && strings.HasPrefix(redir, "//")) {
+			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
+			return
 		}
 
 		// validate URL scheme to prevent javascript:, data:, file:, tel:, etc.

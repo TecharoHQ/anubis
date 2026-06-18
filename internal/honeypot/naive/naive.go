@@ -78,9 +78,10 @@ type Impl struct {
 }
 
 func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
-	result, _ := i.networkWeight.Get(ctx, internal.SHA256sum(network))
+	key := internal.SHA256sum(network)
+	result, _ := i.networkWeight.Get(ctx, key)
 	result++
-	i.networkWeight.Set(ctx, internal.SHA256sum(network), result, time.Hour)
+	i.networkWeight.Set(ctx, key, result, time.Hour)
 	return result
 }
 
@@ -169,7 +170,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	millisecondAmount := math.Pow(float64(networkCount), 2)
+	millisecondAmount := min(math.Pow(float64(networkCount), 2), 1000)
 	time.Sleep(time.Duration(millisecondAmount) * time.Millisecond)
 
 	spins := i.makeSpins()

@@ -223,3 +223,17 @@ func TestNoCacheOnError(t *testing.T) {
 		})
 	}
 }
+
+func TestRejectsHostlessRedirect(t *testing.T) {
+	pol := loadPolicies(t, "testdata/useragent.yaml", 0)
+	srv := spawnAnubis(t, Options{Policy: pol, RedirectDomains: []string{"allowed.example"}})
+	req := httptest.NewRequest(http.MethodGet, "https://anubis.example/.within.website/?redir=%2f%2fevil.example%2fphish", nil)
+	rr := httptest.NewRecorder()
+	srv.ServeHTTPNext(rr, req)
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected hostless redirect to be rejected, got HTTP %d body %q", rr.Code, rr.Body.String())
+	}
+	if got := rr.Header().Get("Location"); got != "" {
+		t.Fatalf("expected no Location header on rejected redirect, got %q", got)
+	}
+}
