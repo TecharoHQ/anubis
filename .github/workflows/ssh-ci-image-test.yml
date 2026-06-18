@@ -1,7 +1,7 @@
 name: Docker
 
 on:
-  pull_request:
+  push:
     paths:
       - "test/ssh-ci/Dockerfile"
       - "test/ssh-ci/docker-bake.hcl"

@@ -1,7 +1,7 @@
 name: "Ensure that wasm2js builds are reproducible"
 
 on:
-  pull_request:
+  push:
     paths:
       - "utils/wasm/wasm2js/build.sh"
       - ".github/workflows/wasm2js-reproducible.yml"
