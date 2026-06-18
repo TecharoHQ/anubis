@@ -38,12 +38,53 @@
 #     provides stubs). At runtime ThreadPool::getNumCores() returns 1 on wasip1,
 #     so no threads are ever spawned and it runs single-threaded.
 #
+#   * Reproducibility: the goal is a byte-for-byte identical module on any
+#     machine. Ninja invokes clang with absolute source paths, so __FILE__
+#     (used all over binaryen via WASM_UNREACHABLE) would otherwise bake the
+#     build machine's checkout path into the module's data segments. We rewrite
+#     that prefix to a stable token with -ffile-prefix-map so the output does
+#     not depend on where the tree lives. Everything else feeding the module is
+#     already pinned (wasi-sdk version, binaryen tag, compile/link flags), and
+#     the wasm format carries no build timestamp, so the raw clang/lld output is
+#     deterministic. We deliberately do NOT post-process with wasm-opt: its
+#     availability and version vary per machine, which would defeat the
+#     guarantee. The module ships exactly as the linker emits it.
+#
+#   * ASLR: the wasi-sdk clang that compiles binaryen has address-sensitive
+#     ordering in its WebAssembly exception-handling codegen -- pointer values
+#     leak into the iteration order of a few passes, which shuffles a handful of
+#     try_table basic blocks and their branch labels. With address-space layout
+#     randomization on, the same source compiles to ~29 differing bytes from one
+#     run to the next. We pin pointer layout by re-exec'ing the whole build under
+#     `setarch -R` (ADDR_NO_RANDOMIZE), which is inherited by cmake/ninja/clang.
+#     This is Linux-only; see the re-exec guard below.
+#
 # To run the resulting module, the host runtime must enable the exceptions
 # proposal and grant filesystem access, e.g.:
 #
 #   wasmtime run -W exceptions=y --dir . ./wasm2js_130.wasm input.wasm -o out.js
 #
 set -euo pipefail
+
+# Reproducibility: disable address-space randomization for the whole build so
+# the wasi-sdk clang's pointer-sensitive codegen is deterministic (see the ASLR
+# note in the header comment). The ADDR_NO_RANDOMIZE personality is inherited by
+# every child process (cmake, ninja, clang, lld), so re-exec'ing the script once
+# under setarch covers the entire toolchain. setarch is Linux/util-linux only;
+# elsewhere we proceed without it and the output may not be bit-identical.
+if [[ "$(uname -s)" == "Linux" && -z "${WASM2JS_NO_ASLR:-}" ]]; then
+	if command -v setarch >/dev/null 2>&1; then
+		export WASM2JS_NO_ASLR=1
+		exec setarch "$(uname -m)" -R "$0" "$@"
+	fi
+	echo ">> warning: setarch not found; build may not be byte-for-byte reproducible" >&2
+fi
+
+# Pin any timestamp a tool in the chain might embed. Nothing in the current
+# toolchain consumes this (the wasm format has no build-time field and we emit
+# no debug info), but exporting it keeps the build deterministic if a future
+# wasi-sdk or binaryen starts honoring it. Fixed constant, not "now".
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-1700000000}"
 
 # Resolve the directory this script lives in so it works from anywhere.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -123,6 +164,11 @@ fi
 EH_COMPILE_FLAGS="-fwasm-exceptions -mllvm -wasm-use-legacy-eh=false"
 EH_LINK_FLAGS="-fwasm-exceptions -lunwind"
 
+# Reproducibility: strip the absolute checkout path out of every __FILE__ so the
+# module is identical regardless of where binaryen was cloned. BUILD_DIR lives
+# under BINARYEN_SRC, so generated-source paths are normalized by the same map.
+REPRO_COMPILE_FLAGS="-ffile-prefix-map=$BINARYEN_SRC=."
+
 echo ">> Configuring (wasm32-wasip1, static, exceptions=exnref)"
 cmake -S "$BINARYEN_SRC" -B "$BUILD_DIR" -G Ninja \
 	-DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
@@ -132,8 +178,8 @@ cmake -S "$BINARYEN_SRC" -B "$BUILD_DIR" -G Ninja \
 	-DBUILD_SHARED_LIBS=OFF \
 	-DENABLE_WERROR=OFF \
 	-DINSTALL_LIBS=OFF \
-	-DCMAKE_C_FLAGS="$EH_COMPILE_FLAGS" \
-	-DCMAKE_CXX_FLAGS="$EH_COMPILE_FLAGS" \
+	-DCMAKE_C_FLAGS="$EH_COMPILE_FLAGS $REPRO_COMPILE_FLAGS" \
+	-DCMAKE_CXX_FLAGS="$EH_COMPILE_FLAGS $REPRO_COMPILE_FLAGS" \
 	-DCMAKE_EXE_LINKER_FLAGS="$EH_LINK_FLAGS"
 
 # Tools to build, as binaryen CMake target names. Each is emitted to
@@ -143,28 +189,17 @@ TOOLS=(wasm2js wasm-opt)
 echo ">> Building: ${TOOLS[*]}"
 cmake --build "$BUILD_DIR" --target "${TOOLS[@]}"
 
-# wasm-opt (under wasmtime) only sees paths inside the preopened cwd ("--dir ."),
-# so address the build outputs with cwd-relative paths (SCRIPT_DIR is the cwd).
-BUILD_BIN_REL="${BUILD_DIR#"$SCRIPT_DIR"/}/bin"
-
-wasm_opt=()
-if command -v wasm-opt >/dev/null 2>&1; then
-	echo ">> optimizing with system wasm-opt ($(wasm-opt --version))"
-	wasm_opt=(wasm-opt)
-else
-	echo ">> no wasm runtime or system wasm-opt found; installing unoptimized modules"
-fi
+# Install the linker output verbatim. We intentionally skip any wasm-opt pass:
+# optimizing here would make the result depend on whichever wasm-opt happens to
+# be installed, which is exactly the non-determinism we are eliminating. The
+# raw module is already reproducible thanks to the pinned toolchain and the
+# -ffile-prefix-map applied above.
+BUILD_BIN="$BUILD_DIR/bin"
 
 for tool in "${TOOLS[@]}"; do
 	out="./${tool}_${BINARYEN_VERSION}.wasm"
-	if [[ ${#wasm_opt[@]} -gt 0 ]]; then
-		echo ">> Optimizing $tool -> $out"
-		"${wasm_opt[@]}" -Oz --strip-debug --strip-producers \
-			"$BUILD_BIN_REL/$tool" -o "$out"
-	else
-		echo ">> Installing $tool -> $out"
-		cp "$BUILD_BIN_REL/$tool" "$out"
-	fi
+	echo ">> Installing $tool -> $out"
+	cp "$BUILD_BIN/$tool" "$out"
 	ls -l "$out" | awk '{print "   size:", $5, "bytes"}'
 done
 
