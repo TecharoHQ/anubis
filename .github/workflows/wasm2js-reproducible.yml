@@ -1,0 +1,49 @@
+name: "Ensure that wasm2js builds are reproducible"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  wasm2js-reproducible:
+    name: Build wasm2js (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # The build is byte-for-byte reproducible *within* an architecture, but
+        # x86_64 and arm64 drift by ~29 bytes: clang's WebAssembly EH pass
+        # (WebAssemblyCFGStackify) iterates a DenseMap<MachineBasicBlock*, ...>
+        # in pointer-hash order, and the two clang binaries hand out different
+        # pointers, so a few try_table blocks come out reordered. That is an
+        # upstream LLVM determinism quirk we cannot pin from here. Rather than
+        # give up cross-arch coverage, we record the expected checksums for both
+        # architectures (shasums.x86_64 / shasums.arm64) and accept a match
+        # against either, so each runner verifies against its own recorded set.
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Clone tree
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Setup `wasmtime`
+        uses: bytecodealliance/actions/wasmtime/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1.1.3
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      - name: Ensure reproducibility
+        run: |
+          cd ./utils/wasm/wasm2js
+          ./build.sh
+          if sha256sum -c --status shasums.x86_64; then
+            echo "OK: rebuilt modules match the recorded x86_64 checksums"
+          elif sha256sum -c --status shasums.arm64; then
+            echo "OK: rebuilt modules match the recorded arm64 checksums"
+          else
+            echo "::error::rebuilt wasm2js/wasm-opt match neither recorded checksum set on ${{ matrix.runner }}" >&2
+            sha256sum wasm-opt_130.wasm wasm2js_130.wasm
+            exit 1
+          fi

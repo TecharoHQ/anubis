@@ -48,7 +48,30 @@
 #     the wasm format carries no build timestamp, so the raw clang/lld output is
 #     deterministic. We deliberately do NOT post-process with wasm-opt: its
 #     availability and version vary per machine, which would defeat the
-#     guarantee. The module ships exactly as the linker emits it.
+#     guarantee. Note this takes an explicit flag: clang's wasm driver runs
+#     `wasm-opt -O3` on its own whenever a wasm-opt is on PATH and optimization
+#     is on, so we pass --no-wasm-opt at link time to suppress it (see the
+#     REPRO_LINK_FLAGS note below).
+#
+#   * Clean build: cmake/ninja are incremental, so re-running over an existing
+#     build tree only recompiles what changed and leaves stale object files
+#     behind. If those objects were produced by an older revision of this script
+#     (different flags), they leak into the final module and the output is no
+#     longer a function of the current inputs alone. We therefore wipe the build
+#     directory before configuring so every run is a full, flag-consistent build
+#     from scratch.
+#
+#   * Stripping: the linker emits ~2.5 MB of DWARF (.debug_*), a multi-megabyte
+#     `name` section, and a `producers` section that records the exact clang
+#     revision. The producers string in particular would tie the bytes to one
+#     wasi-sdk build, and the debug/name sections only bloat a module we run
+#     headless. We strip all of them with the wasi-sdk's OWN `llvm-strip`
+#     (--strip-all), which is pinned by WASI_SDK_VERSION just like the compiler,
+#     so the strip step is as deterministic as the rest of the toolchain. This
+#     is NOT wasm-opt: llvm-strip ships in the sdk we already pin, so it adds no
+#     new floating dependency. `target_features` is intentionally preserved --
+#     it advertises the proposals (exceptions, etc.) the module needs and
+#     --strip-all keeps it.
 #
 #   * ASLR: the wasi-sdk clang that compiles binaryen has address-sensitive
 #     ordering in its WebAssembly exception-handling codegen -- pointer values
@@ -58,6 +81,18 @@
 #     run to the next. We pin pointer layout by re-exec'ing the whole build under
 #     `setarch -R` (ADDR_NO_RANDOMIZE), which is inherited by cmake/ninja/clang.
 #     This is Linux-only; see the re-exec guard below.
+#
+#     CAVEAT -- same architecture only. setarch fixes ASLR within one host, but
+#     the underlying ordering is keyed on raw pointer VALUES (clang's
+#     WebAssemblyCFGStackify iterates DenseMap<MachineBasicBlock*, ...> in
+#     pointer-hash order). The x86_64 and arm64 wasi-sdk clang binaries hand out
+#     different pointers, so the two arches still produce ~29 differing bytes (a
+#     few reordered try_table blocks) even though every section is otherwise
+#     identical. This is an upstream LLVM determinism bug, not something we can
+#     pin from here; fixing it needs LLVM to sort those EH pads by block number.
+#     The committed modules are the x86_64 build; CI records the expected
+#     checksums for both architectures (shasums.x86_64 / shasums.arm64) and
+#     accepts a match against either, so each runner verifies its own arch.
 #
 # To run the resulting module, the host runtime must enable the exceptions
 # proposal and grant filesystem access, e.g.:
@@ -75,7 +110,7 @@ set -euo pipefail
 if [[ "$(uname -s)" == "Linux" && -z "${WASM2JS_NO_ASLR:-}" ]]; then
 	if command -v setarch >/dev/null 2>&1; then
 		export WASM2JS_NO_ASLR=1
-		exec setarch "$(uname -m)" -R "$0" "$@"
+		exec setarch "$(uname -m)" --addr-no-randomize "$0" "$@"
 	fi
 	echo ">> warning: setarch not found; build may not be byte-for-byte reproducible" >&2
 fi
@@ -130,6 +165,8 @@ BINARYEN_SRC="$VAR_DIR/binaryen"
 BUILD_DIR="$BINARYEN_SRC/build-wasi"
 
 TOOLCHAIN="$WASI_SDK/share/cmake/wasi-sdk-p1.cmake"
+# llvm-strip from the same pinned wasi-sdk; used to drop debug/name/producers.
+STRIP="$WASI_SDK/bin/llvm-strip"
 
 mkdir -p "$VAR_DIR"
 
@@ -169,6 +206,23 @@ EH_LINK_FLAGS="-fwasm-exceptions -lunwind"
 # under BINARYEN_SRC, so generated-source paths are normalized by the same map.
 REPRO_COMPILE_FLAGS="-ffile-prefix-map=$BINARYEN_SRC=."
 
+# Reproducibility: clang's wasm driver silently runs `wasm-opt -O3` on the
+# linked module whenever an optimization level is set (Release => -O3) AND a
+# wasm-opt happens to be on PATH. That makes the bytes depend on whichever
+# wasm-opt is installed -- and an old one (e.g. the binaryen 108 that ships in
+# some distros) cannot even parse the exnref exception handling we emit, so the
+# link dies with "[parse exception: Bad type form -1] / error parsing wasm".
+# Disable the auto-pass so the module is purely the linker's deterministic
+# output (this is what the wasm-opt note in the header is really about).
+REPRO_LINK_FLAGS="--no-wasm-opt"
+
+# Reproducibility: start from a pristine build tree. cmake/ninja only rebuild
+# changed objects, so a stale tree from an earlier (differently-flagged) run
+# would silently contaminate the output. Wiping it guarantees the module is a
+# function of the current inputs alone.
+echo ">> Wiping build directory for a clean build"
+rm -rf "$BUILD_DIR"
+
 echo ">> Configuring (wasm32-wasip1, static, exceptions=exnref)"
 cmake -S "$BINARYEN_SRC" -B "$BUILD_DIR" -G Ninja \
 	-DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
@@ -180,7 +234,7 @@ cmake -S "$BINARYEN_SRC" -B "$BUILD_DIR" -G Ninja \
 	-DINSTALL_LIBS=OFF \
 	-DCMAKE_C_FLAGS="$EH_COMPILE_FLAGS $REPRO_COMPILE_FLAGS" \
 	-DCMAKE_CXX_FLAGS="$EH_COMPILE_FLAGS $REPRO_COMPILE_FLAGS" \
-	-DCMAKE_EXE_LINKER_FLAGS="$EH_LINK_FLAGS"
+	-DCMAKE_EXE_LINKER_FLAGS="$EH_LINK_FLAGS $REPRO_LINK_FLAGS"
 
 # Tools to build, as binaryen CMake target names. Each is emitted to
 # ./<tool>_<BINARYEN_VERSION>.wasm.
@@ -189,17 +243,18 @@ TOOLS=(wasm2js wasm-opt)
 echo ">> Building: ${TOOLS[*]}"
 cmake --build "$BUILD_DIR" --target "${TOOLS[@]}"
 
-# Install the linker output verbatim. We intentionally skip any wasm-opt pass:
+# Install the stripped linker output. We intentionally skip any wasm-opt pass:
 # optimizing here would make the result depend on whichever wasm-opt happens to
 # be installed, which is exactly the non-determinism we are eliminating. The
-# raw module is already reproducible thanks to the pinned toolchain and the
-# -ffile-prefix-map applied above.
+# only post-processing is llvm-strip from the pinned wasi-sdk (see header note);
+# combined with the pinned toolchain and the -ffile-prefix-map applied above,
+# the module is reproducible.
 BUILD_BIN="$BUILD_DIR/bin"
 
 for tool in "${TOOLS[@]}"; do
 	out="./${tool}_${BINARYEN_VERSION}.wasm"
-	echo ">> Installing $tool -> $out"
-	cp "$BUILD_BIN/$tool" "$out"
+	echo ">> Installing $tool -> $out (stripped)"
+	"$STRIP" --strip-all "$BUILD_BIN/$tool" -o "$out"
 	ls -l "$out" | awk '{print "   size:", $5, "bytes"}'
 done
 
