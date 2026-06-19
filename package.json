@@ -32,9 +32,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^21.0.1",
-    "@commitlint/config-conventional": "^21.0.1",
-    "baseline-browser-mapping": "^2.10.30",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "baseline-browser-mapping": "^2.10.34",
     "cssnano": "^8.0.1",
     "cssnano-preset-advanced": "^8.0.1",
     "esbuild": "^0.28.0",
@@ -43,7 +43,7 @@
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.1",
     "postcss-import-url": "^7.2.0",
-    "postcss-url": "^10.1.3",
+    "postcss-url": "^10.1.4",
     "prettier": "^3.8.3"
   },
   "dependencies": {

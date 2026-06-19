@@ -1,6 +1,6 @@
 module github.com/TecharoHQ/anubis/test
 
-go 1.25.0
+go 1.26.4
 
 replace github.com/TecharoHQ/anubis => ..
 
