@@ -18,6 +18,12 @@ func TestFactoryIsCheckerFactory(t *testing.T) {
 	}
 }
 
+func TestImplIsCheckerImpl(t *testing.T) {
+	if _, ok := (any(&Impl{})).(checker.Impl); !ok {
+		t.Fatal("Factory is not an instance of checker.Factory")
+	}
+}
+
 func TestFactoryValidateConfig(t *testing.T) {
 	f := Factory{}
 
@@ -29,7 +35,7 @@ func TestFactoryValidateConfig(t *testing.T) {
 		{
 			name: "basic valid",
 			data: []byte(`{
-  "remote_addresses": [
+  "addrs": [
     "1.1.1.1/32"
   ]
 }`),
@@ -42,14 +48,14 @@ func TestFactoryValidateConfig(t *testing.T) {
 		{
 			name: "no cidr",
 			data: []byte(`{
-  "remote_addresses": []
+  "addrs": []
 }`),
 			err: ErrNoRemoteAddresses,
 		},
 		{
 			name: "bad cidr",
 			data: []byte(`{
-  "remote_addresses": [
+  "addrs": [
     "according to all laws of aviation"
   ]
 }`),
@@ -81,7 +87,7 @@ func TestFactoryCreate(t *testing.T) {
 		{
 			name: "basic valid",
 			data: []byte(`{
-  "remote_addresses": [
+  "addrs": [
     "1.1.1.1/32"
   ]
 }`),
@@ -91,7 +97,7 @@ func TestFactoryCreate(t *testing.T) {
 		{
 			name: "bad cidr",
 			data: []byte(`{
-  "remote_addresses": [
+  "addrs": [
     "according to all laws of aviation"
   ]
 }`),

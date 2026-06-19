@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	ErrNoRemoteAddresses = errors.New("remoteaddress: no remote addresses defined")
+	ErrNoRemoteAddresses = errors.New("checker.remote_address: no remote addresses defined")
 )
 
 func init() {
-	checker.Register("remote_addresses", Factory{})
+	checker.Register("remote_address", Factory{})
 }
 
 type Factory struct{}
@@ -39,7 +39,7 @@ func (Factory) ValidateConfig(inp json.RawMessage) error {
 
 func (Factory) Create(inp json.RawMessage) (checker.Impl, error) {
 	c := struct {
-		RemoteAddr []netip.Prefix `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+		RemoteAddr []netip.Prefix `json:"addrs,omitempty" yaml:"addrs,omitempty"`
 	}{}
 
 	if err := json.Unmarshal([]byte(inp), &c); err != nil {
@@ -52,14 +52,14 @@ func (Factory) Create(inp json.RawMessage) (checker.Impl, error) {
 		table.Insert(cidr)
 	}
 
-	return &RemoteAddrChecker{
+	return &Impl{
 		prefixTable: table,
 		hash:        internal.FastHash(string(inp)),
 	}, nil
 }
 
 type fileConfig struct {
-	RemoteAddr []string `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+	RemoteAddr []string `json:"addrs,omitempty" yaml:"addrs,omitempty"`
 }
 
 func (fc fileConfig) Valid() error {
@@ -82,12 +82,12 @@ func (fc fileConfig) Valid() error {
 	return nil
 }
 
-type RemoteAddrChecker struct {
+type Impl struct {
 	prefixTable *bart.Lite
 	hash        string
 }
 
-func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
+func (rac *Impl) Check(r *http.Request) (bool, error) {
 	host := r.Header.Get("X-Real-Ip")
 	if host == "" {
 		return false, fmt.Errorf("%w: header X-Real-Ip is not set", policy.ErrMisconfiguration)
@@ -101,6 +101,6 @@ func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
 	return rac.prefixTable.Contains(addr), nil
 }
 
-func (rac *RemoteAddrChecker) Hash() string {
+func (rac *Impl) Hash() string {
 	return rac.hash
 }
