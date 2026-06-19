@@ -1,14 +1,15 @@
 package checker
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 	"sync"
 )
 
 type Factory interface {
-	ValidateConfig(json.RawMessage) error
-	Create(json.RawMessage) (Impl, error)
+	ValidateConfig(ctx context.Context, inp json.RawMessage) error
+	Create(ctx context.Context, inp json.RawMessage) (Impl, error)
 }
 
 var (

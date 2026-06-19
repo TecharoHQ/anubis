@@ -76,7 +76,7 @@ func TestFactoryValidateConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data := json.RawMessage(tt.data)
 
-			if err := f.ValidateConfig(data); !errors.Is(err, tt.err) {
+			if err := f.ValidateConfig(t.Context(), data); !errors.Is(err, tt.err) {
 				t.Logf("want: %v", tt.err)
 				t.Logf("got:  %v", err)
 				t.Fatal("validation didn't do what was expected")
@@ -85,12 +85,12 @@ func TestFactoryValidateConfig(t *testing.T) {
 	}
 }
 
-func jsonOf(t *testing.T, inp fileConfig) json.RawMessage {
+func jsonOf(t *testing.T, inp Config) json.RawMessage {
 	t.Helper()
 
 	data, err := json.Marshal(inp)
 	if err != nil {
-		t.Fatalf("can't marshal fileConfig, this is a bug: %v", err)
+		t.Fatalf("can't marshal Config, this is a bug: %v", err)
 	}
 
 	return json.RawMessage(data)
@@ -101,14 +101,14 @@ func TestEndToEnd(t *testing.T) {
 
 	for _, tt := range []struct {
 		name          string
-		fc            fileConfig
+		fc            Config
 		header, value string
 		match         bool
 		err           error
 	}{
 		{
 			name: "basic host match",
-			fc: fileConfig{
+			fc: Config{
 				Header: "Host",
 				Regexp: "techaro.lol",
 			},
@@ -119,7 +119,7 @@ func TestEndToEnd(t *testing.T) {
 		},
 		{
 			name: "basic host not match",
-			fc: fileConfig{
+			fc: Config{
 				Header: "Host",
 				Regexp: "probably-not-malware.lol",
 			},
@@ -130,7 +130,7 @@ func TestEndToEnd(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			impl, err := f.Create(jsonOf(t, tt.fc))
+			impl, err := f.Create(t.Context(), jsonOf(t, tt.fc))
 			if err != nil {
 				t.Fatalf("can't build impl: %v", err)
 			}

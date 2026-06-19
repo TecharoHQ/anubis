@@ -1,6 +1,7 @@
 package remoteaddress
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,8 +25,8 @@ func init() {
 
 type Factory struct{}
 
-func (Factory) ValidateConfig(inp json.RawMessage) error {
-	var fc fileConfig
+func (Factory) ValidateConfig(ctx context.Context, inp json.RawMessage) error {
+	var fc Config
 	if err := json.Unmarshal([]byte(inp), &fc); err != nil {
 		return fmt.Errorf("%w: %w", config.ErrUnparseableConfig, err)
 	}
@@ -37,7 +38,7 @@ func (Factory) ValidateConfig(inp json.RawMessage) error {
 	return nil
 }
 
-func (Factory) Create(inp json.RawMessage) (checker.Impl, error) {
+func (Factory) Create(ctx context.Context, inp json.RawMessage) (checker.Impl, error) {
 	c := struct {
 		RemoteAddr []netip.Prefix `json:"addrs,omitempty" yaml:"addrs,omitempty"`
 	}{}
@@ -58,11 +59,11 @@ func (Factory) Create(inp json.RawMessage) (checker.Impl, error) {
 	}, nil
 }
 
-type fileConfig struct {
+type Config struct {
 	RemoteAddr []string `json:"addrs,omitempty" yaml:"addrs,omitempty"`
 }
 
-func (fc fileConfig) Valid() error {
+func (fc Config) Valid() error {
 	var errs []error
 
 	if len(fc.RemoteAddr) == 0 {

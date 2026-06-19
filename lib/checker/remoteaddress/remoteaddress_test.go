@@ -65,7 +65,7 @@ func TestFactoryValidateConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data := json.RawMessage(tt.data)
 
-			if err := f.ValidateConfig(data); !errors.Is(err, tt.err) {
+			if err := f.ValidateConfig(t.Context(), data); !errors.Is(err, tt.err) {
 				t.Logf("want: %v", tt.err)
 				t.Logf("got:  %v", err)
 				t.Fatal("validation didn't do what was expected")
@@ -107,7 +107,7 @@ func TestFactoryCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data := json.RawMessage(tt.data)
 
-			impl, err := f.Create(data)
+			impl, err := f.Create(t.Context(), data)
 			if !errors.Is(err, tt.err) {
 				t.Logf("want: %v", tt.err)
 				t.Logf("got:  %v", err)
@@ -195,13 +195,13 @@ func TestRemoteAddrChecker(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(fileConfig{
+			data, err := json.Marshal(Config{
 				RemoteAddr: tt.cidrs,
 			})
 			if err != nil {
 				t.Fatalf("creating config failed: %v", err)
 			}
-			rac, err := (Factory{}).Create(json.RawMessage(data))
+			rac, err := (Factory{}).Create(t.Context(), json.RawMessage(data))
 			if err != nil && !errors.Is(err, tt.err) {
 				t.Fatalf("creating RemoteAddrChecker failed: %v", err)
 			}
