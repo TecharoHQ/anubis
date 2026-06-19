@@ -172,20 +172,30 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 		transport.TLSClientConfig.ServerName = targetSNI
 	}
 
-	rp := httputil.NewSingleHostReverseProxy(targetUri)
-	rp.Transport = transport
+	rp := &httputil.ReverseProxy{
+		Transport: transport,
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(targetUri)
+			// SetURL clears Out.Host; preserve the inbound Host, matching the
+			// previous NewSingleHostReverseProxy default.
+			r.Out.Host = r.In.Host
 
-	if targetHost != "" || targetSNI == "auto" {
-		originalDirector := rp.Director
-		rp.Director = func(req *http.Request) {
-			originalDirector(req)
+			// Rewrite mode strips forwarding headers before this runs. Anubis
+			// sets these upstream (see internal/headers.go XForwardedForUpdate),
+			// so copy them through unchanged so the target still sees them.
+			for _, h := range []string{"Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto"} {
+				if v, ok := r.In.Header[h]; ok {
+					r.Out.Header[h] = v
+				}
+			}
+
 			if targetHost != "" {
-				req.Host = targetHost
+				r.Out.Host = targetHost
 			}
 			if targetSNI == "auto" {
-				transport.TLSClientConfig.ServerName = req.Host
+				transport.TLSClientConfig.ServerName = r.Out.Host
 			}
-		}
+		},
 	}
 
 	return rp, nil
