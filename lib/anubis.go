@@ -34,6 +34,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
+	"github.com/TecharoHQ/anubis/web"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
 	// challenge implementations
@@ -98,6 +99,8 @@ type Server struct {
 	OGTags      *ogtags.OGTagCache
 	logger      *slog.Logger
 	opts        Options
+	basePrefix  string
+	publicURL   string
 	ed25519Priv ed25519.PrivateKey
 	hs512Secret []byte
 }
@@ -122,6 +125,42 @@ func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request)
 	}
 
 	return lg, r
+}
+
+func (s *Server) configuredBasePrefix() string {
+	if s.basePrefix != "" {
+		return s.basePrefix
+	}
+	return strings.TrimRight(s.opts.BasePrefix, "/")
+}
+
+func (s *Server) configuredPublicURL() string {
+	if s.publicURL != "" {
+		return s.publicURL
+	}
+	return s.opts.PublicUrl
+}
+
+func (s *Server) prefixedPath(path string) string {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return s.configuredBasePrefix() + path
+}
+
+func (s *Server) cookiePath() string {
+	basePrefix := s.configuredBasePrefix()
+	if basePrefix == "" {
+		return "/"
+	}
+	return basePrefix + "/"
+}
+
+func (s *Server) renderOptions() web.Options {
+	return web.Options{
+		BasePrefix: s.configuredBasePrefix(),
+		PublicURL:  s.configuredPublicURL(),
+	}
 }
 
 func (s *Server) getTokenKeyfunc() jwt.Keyfunc {
@@ -250,11 +289,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		}
 	}
 
-	// Adjust cookie path if base prefix is not empty
-	cookiePath := "/"
-	if anubis.BasePrefix != "" {
-		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
-	}
+	cookiePath := s.cookiePath()
 
 	cr, rule, err := s.check(r, lg)
 	if err != nil {
@@ -348,11 +383,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
-	// Adjust cookie path if base prefix is not empty
-	cookiePath := "/"
-	if anubis.BasePrefix != "" {
-		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
-	}
+	cookiePath := s.cookiePath()
 
 	localizer := localization.GetLocalizer(r)
 
@@ -515,11 +546,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Adjust cookie path if base prefix is not empty
-	cookiePath := "/"
-	if anubis.BasePrefix != "" {
-		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
-	}
+	cookiePath := s.cookiePath()
 
 	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})

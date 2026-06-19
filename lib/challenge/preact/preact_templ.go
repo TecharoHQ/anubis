@@ -13,7 +13,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/localization"
 )
 
-func page(redir, challenge string, difficulty int, loc *localization.SimpleLocalizer) templ.Component {
+func page(basePrefix, redir, challenge string, difficulty int, loc *localization.SimpleLocalizer) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -39,9 +39,9 @@ func page(redir, challenge string, difficulty int, loc *localization.SimpleLocal
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(basePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `preact.templ`, Line: 11, Col: 166}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `preact.templ`, Line: 11, Col: 159}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -83,7 +83,7 @@ func page(redir, challenge string, difficulty int, loc *localization.SimpleLocal
 			"difficulty":                  difficulty,
 			"connection_security_message": loc.T("connection_security"),
 			"loading_message":             loc.T("loading"),
-			"pensive_url":                 anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version,
+			"pensive_url":                 basePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version,
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

@@ -195,7 +195,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	localizer := localization.GetLocalizer(r)
 
 	if returnHTTPStatusOnly {
-		if s.opts.PublicUrl == "" {
+		if s.configuredPublicURL() == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(localizer.T("authorization_required")))
 		} else {
@@ -265,11 +265,12 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	}
 
 	in := &challenge.IssueInput{
-		Impressum: s.policy.Impressum,
-		Rule:      rule,
-		Challenge: chall,
-		OGTags:    ogTags,
-		Store:     s.store,
+		BasePrefix: s.configuredBasePrefix(),
+		Impressum:  s.policy.Impressum,
+		Rule:       rule,
+		Challenge:  chall,
+		OGTags:     ogTags,
+		Store:      s.store,
 	}
 
 	component, err := impl.Issue(w, r, lg, in)
@@ -279,7 +280,8 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		return
 	}
 
-	page := web.BaseWithChallengeAndOGTags(
+	page := web.BaseWithChallengeAndOGTagsWithOptions(
+		s.renderOptions(),
 		localizer.T("making_sure_not_bot"),
 		component,
 		s.policy.Impressum,
@@ -325,15 +327,17 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 
 	redir := proto + "://" + host + uri
 	escapedURL := url.QueryEscape(redir)
-	return fmt.Sprintf("%s/.within.website/?redir=%s", s.opts.PublicUrl, escapedURL), nil
+	return fmt.Sprintf("%s/.within.website/?redir=%s", s.configuredPublicURL(), escapedURL), nil
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
+	opts := s.renderOptions()
 
-	templ.Handler(
-		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, localizer),
-	).ServeHTTP(w, r)
+	handler := templ.Handler(
+		web.BaseWithOptions(opts, localizer.T("benchmarking_anubis"), web.BenchWithOptions(opts, localizer), s.policy.Impressum, localizer),
+	)
+	handler.ServeHTTP(w, r)
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message, code string) {
@@ -342,10 +346,12 @@ func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, messag
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, code string, status int) {
 	localizer := localization.GetLocalizer(r)
+	opts := s.renderOptions()
 
-	component := web.Base(
+	component := web.BaseWithOptions(
+		opts,
 		localizer.T("oh_noes"),
-		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
+		web.ErrorPageWithOptions(opts, msg, s.opts.WebmasterEmail, code, localizer),
 		s.policy.Impressum,
 		localizer,
 	)
@@ -354,17 +360,25 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, 
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+anubis.StaticPath) {
+	if strings.HasPrefix(r.URL.Path, s.prefixedPath(anubis.StaticPath)) {
 		s.mux.ServeHTTP(w, r)
 		return
-	} else if strings.HasPrefix(r.URL.Path, anubis.BasePrefix+xess.BasePrefix) {
+	} else if strings.HasPrefix(r.URL.Path, s.prefixedPath(xess.BasePrefix)) {
 		s.mux.ServeHTTP(w, r)
 		return
 	}
 
 	// Forward robots.txt requests to mux when ServeRobotsTXT is enabled
 	if s.opts.ServeRobotsTXT {
-		path := strings.TrimPrefix(r.URL.Path, anubis.BasePrefix)
+		path := r.URL.Path
+		basePrefix := s.configuredBasePrefix()
+		if basePrefix != "" {
+			if !strings.HasPrefix(path, basePrefix) {
+				s.maybeReverseProxyOrPage(w, r)
+				return
+			}
+			path = strings.TrimPrefix(path, basePrefix)
+		}
 		if path == "/robots.txt" || path == "/.well-known/robots.txt" {
 			s.mux.ServeHTTP(w, r)
 			return
@@ -375,11 +389,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
-	if !s.opts.StripBasePrefix || s.opts.BasePrefix == "" {
+	basePrefix := s.configuredBasePrefix()
+	if !s.opts.StripBasePrefix || basePrefix == "" {
 		return r
 	}
 
-	basePrefix := strings.TrimSuffix(s.opts.BasePrefix, "/")
 	path := r.URL.Path
 
 	if !strings.HasPrefix(path, basePrefix) {
@@ -444,9 +458,11 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		templ.Handler(
-			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
-		).ServeHTTP(w, r)
+		opts := s.renderOptions()
+		handler := templ.Handler(
+			web.BaseWithOptions(opts, localizer.T("you_are_not_a_bot"), web.StaticHappyWithOptions(opts, localizer), s.policy.Impressum, localizer),
+		)
+		handler.ServeHTTP(w, r)
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())
 		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
