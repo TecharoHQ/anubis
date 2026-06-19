@@ -13,7 +13,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-//go:generate go tool github.com/a-h/templ/cmd/templ generate
+//go:generate go tool github.com/a-h/templ/cmd/templ generate --log-level error
 
 func init() {
 	challenge.Register("metarefresh", &Impl{})

@@ -18,7 +18,7 @@ import (
 )
 
 //go:generate ./build.sh
-//go:generate go tool github.com/a-h/templ/cmd/templ generate
+//go:generate go tool github.com/a-h/templ/cmd/templ generate --log-level error
 
 //go:embed static/app.js
 var appJS []byte
