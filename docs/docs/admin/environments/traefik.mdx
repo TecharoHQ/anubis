@@ -39,6 +39,8 @@ traefik-->|:80 - Passing to the target|target
 
 ## Full Example Config
 
+To use Anubis with Traefik we use a [forwardAuth](https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/) middleware, take look at the documentation if you want to understand how it works in details.
+
 This example contains 3 services: anubis, one that is protected and the other one that is not.
 
 **compose.yml**
@@ -83,8 +85,11 @@ services:
       - PUBLIC_URL=https://anubis.example.com
       # Should match your domain for proper cookie scoping
       - COOKIE_DOMAIN=example.com
+      - POLICY_FNAME=/botPolicies.yaml
     networks:
       - traefik
+    volumes:
+      - ./botPolicies.yaml:/botPolicies.yaml
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
@@ -150,4 +155,18 @@ certificatesResolvers:
 
 providers:
   docker: {}
+```
+
+For the forwardAuth middleware to work Anubis needs to return a status code different that 2XX otherwise Traefik will forward the request to the target.
+
+**botPolicies.yaml**
+
+```yml
+bots:
+  # Use the default config
+  - import: (data)/meta/default-config.yaml
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
 ```
