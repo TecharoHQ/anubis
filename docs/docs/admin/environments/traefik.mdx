@@ -22,19 +22,42 @@ In this example, we will use 4 Containers:
 This is a small diagram depicting the flow.
 Keep in mind that `8080` or `80` can be anything depending on your containers.
 
+Sequence diagram for an authorized connection :
 ```mermaid
-flowchart LR
-user[User]
-traefik[Traefik]
-anubis[Anubis]
-target[Target]
+sequenceDiagram
+    participant U as User
+    participant T as Traefik
+    participant A as Anubis
+    participant S as Target
+    U->>T: :443 - Requesting service
+    T->>A: :8080 - Check authorization to Anubis
+    A-->>T: 200 OK - Authorized
+    T->>S: :80 - Forward request to target
+    S-->>U: Answer from target
+```
 
-user-->|:443 - Requesting Service|traefik
-traefik-->|:8080 - Check authorization to Anubis|anubis
-anubis-->|redirect if failed|traefik
-user-->|:8080 - make the challenge|traefik
-anubis-->|redirect back to target|traefik
-traefik-->|:80 - Passing to the target|target
+Sequence diagram for a user getting challenged :
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant T as Traefik
+    participant A as Anubis
+    participant S as Target
+    U->>T: :443 - Requesting service
+    T->>A: :8080 - Check authorization to Anubis
+    A-->>U: Redirect to challenge page
+    U->>T: :443 - Get challenge page
+    T->>A: :8080 - Get challenge page
+    A-->>U: Send challenge
+    Note left of U: Solves challenge
+    U->>T: :443 - Send solved challenge
+    T->>A:
+    A-->>U: Access cookie
+    U->>T: :443 - Requesting service
+    T->>A: :8080 - Check authorization to Anubis again
+    A-->>T: Authorized
+    T->>S: :80 - Forward request to target
+    S-->>U: Answer from target
 ```
 
 ## Full Example Config
