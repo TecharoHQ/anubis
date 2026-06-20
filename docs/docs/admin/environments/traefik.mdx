@@ -88,9 +88,9 @@ services:
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
-      - traefik.http.routers.anubis.rule=Host(`anubis.example.com`) # Only Matching Requests for example.com
+      - traefik.http.routers.anubis.rule=Host(`anubis.example.com`) # Only Matching Requests for anubis.example.com
       - traefik.http.routers.anubis.entrypoints=websecure # Listen on HTTPS
-      - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik where to receive requests
+      - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik which port anubis is listening on
       - traefik.http.routers.anubis.service=anubis # Telling Traefik to use the above specified port
       - traefik.http.routers.anubis.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
 
@@ -103,10 +103,10 @@ services:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
       - traefik.http.routers.target.rule=Host(`example.com`) # Only Matching Requests for example.com
-      - traefik.http.routers.target.entrypoints=websecure # Listening on the exclusive Anubis Network
-      - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik where to receive requests
+      - traefik.http.routers.target.entrypoints=websecure # Listen on HTTPS
+      - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik which port target is listening on
       - traefik.http.routers.target.service=target # Telling Traefik to use the above specified port
-      - traefik.http.routers.target.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
+      - traefik.http.routers.target.tls.certresolver=le # Telling Traefik to resolve a Cert for target
       - traefik.http.routers.target.middlewares=anubis@docker # Use the Anubis middleware
 
   # Not Protected by Anubis
@@ -117,9 +117,9 @@ services:
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
-      - traefik.http.routers.target2.rule=Host(`another.example.com`) # Only Matching Requests for example.com
-      - traefik.http.routers.target2.entrypoints=websecure # Listening on the exclusive Anubis Network
-      - traefik.http.services.target2.loadbalancer.server.port=80 # Telling Traefik where to receive requests
+      - traefik.http.routers.target2.rule=Host(`another.example.com`) # Only Matching Requests for another.example.com
+      - traefik.http.routers.target2.entrypoints=websecure # Listen on HTTPS
+      - traefik.http.services.target2.loadbalancer.server.port=80 # Telling Traefik which port target2 is listening on
       - traefik.http.routers.target2.service=target2 # Telling Traefik to use the above specified port
       - traefik.http.routers.target2.tls.certresolver=le # Telling Traefik to resolve a Cert for this Target
 
