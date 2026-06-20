@@ -170,3 +170,18 @@ status_codes:
   CHALLENGE: 200
   DENY: 403
 ```
+
+## Using the same domain for Anubis and the target
+
+It is possible to use the same domain for anubis and the protected target with a few changes to the configuration.
+
+**compose.yml**
+
+```diff
+    environment:
+-      - PUBLIC_URL=https://anubis.example.com
++      - PUBLIC_URL=https://example.com
+    labels:
+-      - traefik.http.routers.anubis.rule=Host(`example.com`) # Only Matching Requests for anubis.example.com
++      - traefik.http.routers.anubis.rule=Host(`example.com`) && PathPrefix(`/.within.website`) # Match requests for example.com/.within.website
+```
