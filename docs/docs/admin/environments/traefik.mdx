@@ -62,6 +62,7 @@ services:
       - traefik.docker.network=traefik
       # Anubis middleware
       - traefik.http.middlewares.anubis.forwardauth.address=http://anubis:8080/.within.website/x/cmd/anubis/api/check
+      - traefik.http.middlewares.anubis.forwardauth.maxResponseBodySize=1048576
       # Redirect any HTTP to HTTPS
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.web.rule=PathPrefix(`/`)
