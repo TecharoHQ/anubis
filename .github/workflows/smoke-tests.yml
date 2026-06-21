@@ -24,6 +24,7 @@ jobs:
           - i18n
           - log-file
           - nginx
+          - haproxy-simple
           - palemoon/amd64
           #- palemoon/i386
           - robots_txt

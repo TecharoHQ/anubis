@@ -1,0 +1,27 @@
+services:
+  haproxy:
+    image: haproxytech/haproxy-alpine:3.0
+    ports:
+      - 80:80
+      - 8443:8443
+    volumes:
+      - ./conf/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./pki:/etc/techaro/pki:ro
+      - anubis-socket:/shared
+
+  anubis:
+    image: ghcr.io/techarohq/anubis:main
+    env_file: ./anubis.env
+    user: root
+    volumes:
+      - anubis-socket:/shared
+      - ./conf/anubis:/cfg:ro
+    depends_on:
+      - httpdebug
+
+  httpdebug:
+    image: ghcr.io/xe/x/httpdebug
+    pull_policy: always
+
+volumes:
+  anubis-socket:
