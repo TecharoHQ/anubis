@@ -61,6 +61,8 @@
   "js_finished_reading": "Ég hef lokið lestrinum, höldum áfram →",
   "js_calculation_error": "Reiknivilla!",
   "js_calculation_error_msg": "Mistókst að reikna áskorun:",
+  "js_wasm_unsupported": "WebAssembly er ekki stutt!",
+  "js_wasm_unsupported_msg": "Vafrinn þinn styður ekki WebAssembly, sem Anubis þarf að nota til að staðfesta tenginguna þína. Þetta er ekki villa í Anubis. Vinsamlega hafðu samband við kerfisstjóra vefsvæðisins til að fá aðstoð, eða prófaðu annan vafra.",
   "missing_required_forwarded_headers": "Vantar nauðsynleg X-Forwarded-* hausar",
   "simplified_explanation": "Þetta er ráðstöfun gegn vélmennum og illa meinandi beiðnum, sem virkar svipað og CAPTCHA-mennskupróf. Hins vegar; í stað þess að þurfa að vinna sjálfur, fær vafrinn þinn útreikningsverkefni sem hann þarf að leysa til að tryggja að hann sé gildur biðlari. Þetta hugtak er kallað <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Sönnun-á-vinnu</a>. Verkefnið er reiknað á nokkrum sekúndum og þú færð aðgang að vefsíðunni. Takk fyrir skilninginn og þolinmæðina."
 }

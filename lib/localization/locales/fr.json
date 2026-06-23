@@ -61,6 +61,8 @@
   "js_finished_reading": "J'ai fini de lire, continuer →",
   "js_calculation_error": "Erreur de calcul !",
   "js_calculation_error_msg": "Échec du calcul du défi :",
+  "js_wasm_unsupported": "WebAssembly non pris en charge !",
+  "js_wasm_unsupported_msg": "Votre navigateur ne prend pas en charge WebAssembly, qu'Anubis utilise pour vérifier votre connexion. Il ne s'agit pas d'un bug d'Anubis. Veuillez contacter l'administrateur·rice du site pour obtenir de l'aide, ou essayez un autre navigateur.",
   "missing_required_forwarded_headers": "En-têtes X-Forwarded-* manquants",
   "simplified_explanation": "Ceci est une mesure contre les robots et les requêtes malveillantes, similaire à un CAPTCHA. Cependant, au lieu d'avoir à faire le travail vous-même, votre navigateur se voit confier une tâche de calcul qu'il doit résoudre pour confirmer qu'il est un client valide. Ce concept est nommé <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Preuve de travail</a>. La tâche s'effectue en quelques secondes, puis vous avez accès au site Web. Merci pour votre compréhension et votre patience."
 }
