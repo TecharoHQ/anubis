@@ -214,3 +214,5 @@ tool (
 	golang.org/x/vuln/cmd/govulncheck
 	honnef.co/go/tools/cmd/staticcheck
 )
+
+replace github.com/tetratelabs/wazero => github.com/wazero/wazero v1.12.1-0.20260622070111-89079b9166ff
