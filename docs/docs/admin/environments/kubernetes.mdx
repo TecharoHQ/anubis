@@ -131,11 +131,27 @@ Then point your Ingress to the Anubis port:
               name: anubis
 ```
 
+## Storage
+
+By default, Anubis stores all of its data in memory. This memory is not shared between pods. If you have multiple instances of Anubis without the data being [stored outside of memory](../policies.mdx#storage-backends) and a [shared cookie key](../installation.mdx#key-generation), you will run into [unexpected behaviour](https://github.com/TecharoHQ/anubis/issues/1602) when user traffic traverses between pods.
+
+Based on the deployment of your Kubernetes cluster, here are the preferable storage backends to pick from:
+
+| Backend  | Pro                                                             | Con                                                                                          |
+| :------- | :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------- |
+| `bbolt`  | Only requires a ReadWriteOnce PVC.                              | Does not support more than one Anubis pod.                                                   |
+| `memory` | Requires no configuration.                                      | Process memory is not shared between pods.                                                   |
+| `s3api`  | Great if your cluster includes Rook/Ceph to use RADOS directly. | Potentially higher latency unless you use a store like [Tigris](https://www.tigrisdata.com). |
+| `valkey` | Trivial to configure in your cluster.                           | If your Redis/Valkey server is down, Anubis is going to have issues.                         |
+
+Pick your poison accordingly. Many production deployments use the `s3api` and `valkey` backends without issue. Single node deployments can get away with either `memory` or `bbolt` depending on the facts and circumstances of the deployment.
+
 ## Envoy Gateway
 
 If you are using envoy-gateway, the `X-Real-Ip` header is not set by default, but Anubis does require it. You can resolve this by adding the header, either on the specific `HTTPRoute` where Anubis is listening, or on the `ClientTrafficPolicy` to apply it to any number of Gateways:
 
 HTTPRoute:
+
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -160,6 +176,7 @@ spec:
 ```
 
 Applying to any number of Gateways:
+
 ```yaml
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
