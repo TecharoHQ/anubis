@@ -16,6 +16,7 @@ This page contains a non-exhaustive list with all websites using Anubis.
 - https://ebird.org/
 - https://extensions.typo3.org/
 - https://fabulous.systems/
+- https://gayfr.social/
 - https://git.aya.so/
 - https://git.devuan.org/
 - https://git.enlightenment.org/
