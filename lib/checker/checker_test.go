@@ -21,23 +21,23 @@ func TestListCheck_AndSemantics(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		list    List
+		list    All
 		want    bool
 		wantErr bool
 	}{
 		{
 			name: "all true",
-			list: List{Mock{true, nil, "a"}, Mock{true, nil, "b"}},
+			list: All{Mock{true, nil, "a"}, Mock{true, nil, "b"}},
 			want: true,
 		},
 		{
 			name: "one false",
-			list: List{Mock{true, nil, "a"}, Mock{false, nil, "b"}},
+			list: All{Mock{true, nil, "a"}, Mock{false, nil, "b"}},
 			want: false,
 		},
 		{
 			name:    "error propagates",
-			list:    List{Mock{true, nil, "a"}, Mock{true, errors.New("boom"), "b"}},
+			list:    All{Mock{true, nil, "a"}, Mock{true, errors.New("boom"), "b"}},
 			want:    false,
 			wantErr: true,
 		},
