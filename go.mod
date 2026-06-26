@@ -1,6 +1,6 @@
 module github.com/TecharoHQ/anubis
 
-go 1.26.4
+go 1.26.3
 
 require (
 	github.com/TecharoHQ/thoth-proto v0.5.0
