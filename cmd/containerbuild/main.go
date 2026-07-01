@@ -102,7 +102,7 @@ func main() {
 		tags = append(tags, img.tag)
 	}
 
-	output, err := run(fmt.Sprintf("ko build --platform=all --base-import-paths --tags=%q --image-user=1000 --image-annotation=%q --image-label=%q ./cmd/anubis | tail -n1", strings.Join(tags, ","), *dockerAnnotations, *dockerLabels))
+	output, err := run(fmt.Sprintf("go tool ko build --platform=all --base-import-paths --tags=%q --image-user=1000 --image-annotation=%q --image-label=%q ./cmd/anubis | tail -n1", strings.Join(tags, ","), *dockerAnnotations, *dockerLabels))
 	if err != nil {
 		log.Fatalf("can't run ko build, check stderr: %v", err)
 	}
@@ -159,8 +159,8 @@ func run(command string) (string, error) {
 }
 
 func setOutput(key, val string) {
-    github_output := os.Getenv("GITHUB_OUTPUT")
-    f, _ := os.OpenFile(github_output, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-    fmt.Fprintf(f, "%s=%s\n", key, val)
-    f.Close()
+	github_output := os.Getenv("GITHUB_OUTPUT")
+	f, _ := os.OpenFile(github_output, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	fmt.Fprintf(f, "%s=%s\n", key, val)
+	f.Close()
 }

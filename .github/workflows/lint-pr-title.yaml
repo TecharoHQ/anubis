@@ -10,7 +10,7 @@ on:
 jobs:
   lint_pr_title:
     name: Validate PR title
-    runs-on: ubuntu-latest
+    runs-on: saga-techaro
     permissions:
       pull-requests: read
     steps:

@@ -35,6 +35,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install zstd and brotli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zstd brotli
+
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: "24.11.0"
