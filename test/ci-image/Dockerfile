@@ -15,6 +15,8 @@ ENV HOMEBREW_NO_ANALYTICS=1 \
 
 USER root
 
+COPY --from=ko /go/bin/ko /usr/local/bin/ko
+
 RUN \
   apt-get update \
   && \
@@ -40,5 +42,3 @@ RUN (type -p wget >/dev/null || (apt-get update && apt-get install wget -y)) \
   && apt install gh -y
 
 USER runner
-
-COPY --from=ko /go/bin/ko /usr/local/bin/ko
