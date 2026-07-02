@@ -11,7 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update QwantBot remote addresses range with latest value
+
 <!-- This changes the project to: -->
+
 
 ## v1.26.0-pre1
 
