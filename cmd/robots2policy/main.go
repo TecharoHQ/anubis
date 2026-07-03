@@ -79,14 +79,18 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to fetch robots.txt from URL: %v", err)
 		}
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 		input = resp.Body
 	} else {
 		file, err := os.Open(*inputFile)
 		if err != nil {
 			log.Fatalf("failed to open input file: %v", err)
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Fatalf("can't close output file %s: %v", file.Name(), err)
+			}
+		}()
 		input = file
 	}
 

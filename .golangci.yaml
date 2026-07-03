@@ -1,0 +1,18 @@
+version: "2"
+
+linters:
+  enable:
+    - canonicalheader
+    - sloglint
+  settings:
+    errcheck:
+      exclude-functions:
+        # if setenv fails, we have much bigger problems
+        - os.Setenv
+    sloglint:
+      context: "scope"
+  exclusions:
+    generated: strict
+    paths:
+      - "internal/test/..."
+      - "node_modules/..."

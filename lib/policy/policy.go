@@ -103,7 +103,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	lg := result.Logger.With("at", "config-validate")
 
 	if result.LogASN && !hasThothClient {
-		lg.Warn("logging.asn is enabled but no Thoth client is configured; ASN logging and metrics will be skipped. Please read https://anubis.techaro.lol/docs/admin/thoth for more information")
+		lg.WarnContext(ctx, "logging.asn is enabled but no Thoth client is configured; ASN logging and metrics will be skipped. Please read https://anubis.techaro.lol/docs/admin/thoth for more information")
 	}
 
 	stFac, ok := store.Get(c.Store.Backend)
@@ -182,7 +182,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.ASNs != nil {
 			if !hasThothClient {
-				lg.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
+				lg.WarnContext(ctx, "You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
 				continue
 			}
 
@@ -191,7 +191,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.GeoIP != nil {
 			if !hasThothClient {
-				lg.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
+				lg.WarnContext(ctx, "You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
 				continue
 			}
 
@@ -210,7 +210,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			}
 
 			if parsedBot.Challenge.Algorithm == "slow" {
-				lg.Warn("use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", parsedBot.Name)
+				lg.WarnContext(ctx, "use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", parsedBot.Name)
 			}
 		}
 
@@ -228,16 +228,16 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 	for _, t := range c.Thresholds {
 		if t.Challenge != nil && t.Challenge.Algorithm == "slow" {
-			lg.Warn("use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", t.Name)
+			lg.WarnContext(ctx, "use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", t.Name)
 		}
 
 		if t.Challenge != nil && t.Challenge.ReportAs != 0 {
-			lg.Warn("use of deprecated report_as setting detected, please remove this from your policy file when possible", "name", t.Name)
+			lg.WarnContext(ctx, "use of deprecated report_as setting detected, please remove this from your policy file when possible", "name", t.Name)
 		}
 
 		if t.Name == "legacy-anubis-behaviour" && t.Expression.String() == "true" {
 			if !warnedAboutThresholds.Load() {
-				lg.Warn("configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")
+				lg.WarnContext(ctx, "configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")
 				warnedAboutThresholds.Store(true)
 			}
 

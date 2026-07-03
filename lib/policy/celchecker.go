@@ -75,7 +75,7 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 		return cr.UserAgent(), true
 	case "path":
 		if cr.subRequestMode {
-			if xou := cr.Header.Get("X-Original-URI"); xou != "" {
+			if xou := cr.Header.Get("X-Original-Uri"); xou != "" {
 				return xou, true
 			}
 			if xfu := cr.Header.Get("X-Forwarded-Uri"); xfu != "" {

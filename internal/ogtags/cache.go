@@ -31,7 +31,7 @@ func (c *OGTagCache) GetOGTags(ctx context.Context, url *url.URL, originalHost s
 	// Fetch HTML content, passing the original host
 	doc, err := c.fetchHTMLDocumentWithCache(ctx, target, originalHost, cacheKey)
 	if errors.Is(err, syscall.ECONNREFUSED) {
-		slog.Debug("Connection refused, returning empty tags")
+		slog.DebugContext(ctx, "Connection refused, returning empty tags")
 		return nil, nil
 	} else if errors.Is(err, ErrOgHandled) {
 		// Error was handled in fetchHTMLDocument, return empty tags
@@ -44,17 +44,17 @@ func (c *OGTagCache) GetOGTags(ctx context.Context, url *url.URL, originalHost s
 	// Extract OG tags
 	ogTags := c.extractOGTags(doc)
 
-	// Store in cache
-	c.cache.Set(ctx, cacheKey, ogTags, c.ogTimeToLive)
+	// Store in cache, the error doesn't matter
+	_ = c.cache.Set(ctx, cacheKey, ogTags, c.ogTimeToLive)
 
 	for k, v := range ogTags {
 		switch {
 		case strings.HasSuffix(k, "image"), strings.HasSuffix(k, "audio"), strings.HasSuffix(k, "secure_url"), strings.HasSuffix(k, "video"):
 			v, _ = strings.CutPrefix(v, "http://")
 			v, _ = strings.CutPrefix(v, "https://")
-			slog.Debug("setting ogtags allow for", "url", k)
+			slog.DebugContext(ctx, "setting ogtags allow for", "url", k)
 			if err := c.cache.Underlying.Set(ctx, "ogtags:allow:"+v, []byte(k), time.Hour); err != nil {
-				slog.Debug("can't set ogtag allow cache", "err", err)
+				slog.DebugContext(ctx, "can't set ogtag allow cache", "err", err)
 			}
 		}
 	}
@@ -76,9 +76,9 @@ func (c *OGTagCache) generateCacheKey(target string, originalHost string) string
 // checkCache checks if we have the tags cached and returns them if so
 func (c *OGTagCache) checkCache(ctx context.Context, cacheKey string) map[string]string {
 	if cachedTags, err := c.cache.Get(ctx, cacheKey); err == nil {
-		slog.Debug("cache hit", "tags", cachedTags)
+		slog.DebugContext(ctx, "cache hit", "tags", cachedTags)
 		return cachedTags
 	}
-	slog.Debug("cache miss", "url", cacheKey)
+	slog.DebugContext(ctx, "cache miss", "url", cacheKey)
 	return nil
 }

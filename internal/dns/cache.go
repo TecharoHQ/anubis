@@ -59,12 +59,12 @@ func (d *Dns) forwardCachePut(host string, entries []string) {
 	if d.cache == nil {
 		return
 	}
-	d.cache.forward.Set(d.ctx, host, entries, d.cache.forwardTTL)
+	_ = d.cache.forward.Set(d.ctx, host, entries, d.cache.forwardTTL)
 }
 
 func (d *Dns) reverseCachePut(addr string, entries []string) {
 	if d.cache == nil {
 		return
 	}
-	d.cache.reverse.Set(d.ctx, addr, entries, d.cache.reverseTTL)
+	_ = d.cache.reverse.Set(d.ctx, addr, entries, d.cache.reverseTTL)
 }

@@ -152,7 +152,7 @@ func TestSetupListener(t *testing.T) {
 			}
 
 			if ln != nil {
-				defer ln.Close()
+				defer ln.Close() //nolint:errcheck
 			}
 
 			if !tt.wantErr && !strings.HasPrefix(socketURL, tt.socketURLPrefix) {

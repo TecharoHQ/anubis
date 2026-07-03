@@ -10,7 +10,7 @@ import (
 // to requests, holding the request's JA4H fingerprint. It is also used to
 // detect whether a policy references the fingerprint, so that the relatively
 // expensive computation can be skipped when no rule needs it.
-const JA4HHeaderName = "X-Http-Fingerprint-JA4H"
+const JA4HHeaderName = "X-Http-Fingerprint-Ja4h"
 
 func JA4H(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

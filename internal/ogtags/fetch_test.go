@@ -75,10 +75,10 @@ func TestFetchHTMLDocument(t *testing.T) {
 				if tt.contentLength > 0 {
 					// Simulate content length but avoid sending too much actual data
 					w.Header().Set("Content-Length", fmt.Sprintf("%d", tt.contentLength))
-					io.CopyN(w, strings.NewReader("X"), tt.contentLength)
+					io.CopyN(w, strings.NewReader("X"), tt.contentLength) //nolint:errcheck
 				} else {
 					w.WriteHeader(tt.statusCode)
-					w.Write([]byte(tt.htmlContent))
+					w.Write([]byte(tt.htmlContent)) //nolint:errcheck
 				}
 			}))
 			defer ts.Close()

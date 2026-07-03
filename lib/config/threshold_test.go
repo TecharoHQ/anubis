@@ -97,7 +97,7 @@ func TestLoadActuallyLoadsThresholds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	c, err := Load(fin, fin.Name())
 	if err != nil {

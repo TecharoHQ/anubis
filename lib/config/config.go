@@ -242,7 +242,7 @@ func (is *ImportStatement) load() error {
 	if err != nil {
 		return fmt.Errorf("%w: %s: %w", ErrInvalidImportStatement, is.Import, err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	var imported []BotOrImport
 	var result []BotConfig
@@ -259,7 +259,7 @@ func (is *ImportStatement) load() error {
 		}
 
 		if b.ImportStatement != nil {
-			result = append(result, b.ImportStatement.Bots...)
+			result = append(result, b.Bots...)
 		}
 
 		if b.BotConfig != nil {
@@ -442,7 +442,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 				continue
 			}
 
-			result.Bots = append(result.Bots, boi.ImportStatement.Bots...)
+			result.Bots = append(result.Bots, boi.Bots...)
 		}
 
 		if boi.BotConfig != nil {

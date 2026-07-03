@@ -59,7 +59,7 @@ func reverse6(ip net.IP) string {
 		lowNibble := ipBytes[i] & 0x0F
 
 		// Append the nibbles in reversed order
-		sb.WriteString(fmt.Sprintf("%x.%x.", lowNibble, highNibble))
+		fmt.Fprintf(&sb, "%x.%x.", lowNibble, highNibble)
 	}
 
 	return sb.String()[:len(sb.String())-1]

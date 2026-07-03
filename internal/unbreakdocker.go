@@ -17,6 +17,6 @@ func UnbreakDocker() {
 	// This is a horrifying monstrosity, but the part that scares me the most
 	// is the fact that it works.
 	if hostname, err := os.Hostname(); err == nil {
-		exec.Command("docker", "network", "connect", "bridge", hostname).Run()
+		_ = exec.Command("docker", "network", "connect", "bridge", hostname).Run()
 	}
 }
