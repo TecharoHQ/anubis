@@ -21,6 +21,8 @@
     "node",
     "npm",
     "project-words",
+    "rust",
+    "rust-crates",
     "typescript"
   ],
   "ignorePaths": [
@@ -123,7 +125,7 @@
     "**/robots.txt",
     ".github/FUNDING.yml",
     ".github/workflows/spelling.yml",
-    "data/crawlers/**",
+    "data/**",
     "docs/blog/tags.yml",
     "docs/docs/user/known-instances.md",
     "docs/manifest/**",
@@ -132,10 +134,14 @@
     "internal/honeypot/naive/affirmations.txt",
     "internal/honeypot/naive/spintext.txt",
     "internal/honeypot/naive/titles.txt",
+    "lib/challenge/preact/static/**",
     "lib/config/testdata/bad/unparseable.json",
     "lib/localization/**",
+    "lib/localization/locales/*.json",
+    "internal/ogtags/ogtags_fuzz_test.go",
     "lib/policy/config/testdata/bad/unparseable.json",
-    "test/**"
+    "test/**",
+    "web/static/**"
   ],
   "flagWords": [
     "attache",
