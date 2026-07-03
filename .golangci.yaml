@@ -15,3 +15,4 @@ linters:
     generated: strict
     paths:
       - "internal/test/..."
+      - "node_modules/..."
