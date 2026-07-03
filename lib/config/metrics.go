@@ -133,11 +133,14 @@ func canReadFile(fname string) error {
 	if err != nil {
 		return err
 	}
-	defer fin.Close()
 
 	data := make([]byte, 64)
 	if _, err := fin.Read(data); err != nil {
 		return fmt.Errorf("can't read %s: %w", fname, err)
+	}
+
+	if err := fin.Close(); err != nil {
+		return err
 	}
 
 	return nil

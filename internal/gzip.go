@@ -54,7 +54,7 @@ func GzipMiddleware(level int, next http.Handler) http.Handler {
 		gz := pool.Get().(*gzip.Writer)
 		gz.Reset(w)
 		defer func() {
-			gz.Close()
+			_ = gz.Close()
 			gz.Reset(io.Discard)
 			pool.Put(gz)
 		}()

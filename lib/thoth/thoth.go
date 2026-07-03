@@ -29,7 +29,7 @@ func New(ctx context.Context, thothURL, apiToken string, plaintext bool) (*Clien
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
 		),
 	)
-	prometheus.DefaultRegisterer.Register(clMetrics)
+	prometheus.DefaultRegisterer.Register(clMetrics) //nolint:errcheck
 
 	do := []grpc.DialOption{
 		grpc.WithChainUnaryInterceptor(

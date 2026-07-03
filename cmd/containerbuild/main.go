@@ -160,7 +160,7 @@ func run(command string) (string, error) {
 
 func setOutput(key, val string) {
 	github_output := os.Getenv("GITHUB_OUTPUT")
-	f, _ := os.OpenFile(github_output, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-	fmt.Fprintf(f, "%s=%s\n", key, val)
-	f.Close()
+	f, _ := os.OpenFile(github_output, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644) //nolint:all
+	fmt.Fprintf(f, "%s=%s\n", key, val)                                           //nolint:all
+	f.Close()                                                                     //nolint:all
 }

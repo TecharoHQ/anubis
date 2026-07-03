@@ -22,7 +22,7 @@ func gzipTestPayload() []byte {
 func TestGzipMiddleware(t *testing.T) {
 	payload := gzipTestPayload()
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(payload)
+		_, _ = w.Write(payload)
 	})
 
 	t.Run("compresses when client accepts gzip", func(t *testing.T) {
@@ -98,7 +98,7 @@ func TestGzipMiddlewareInvalidLevel(t *testing.T) {
 func TestGzipMiddlewarePoolSurvivesReconstruction(t *testing.T) {
 	payload := gzipTestPayload()
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(payload)
+		_, _ = w.Write(payload)
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -109,7 +109,7 @@ func TestGzipMiddlewarePoolSurvivesReconstruction(t *testing.T) {
 		h := GzipMiddleware(gzip.BestSpeed, inner)
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, req)
-		io.Copy(io.Discard, rec.Body)
+		_, _ = io.Copy(io.Discard, rec.Body)
 	}
 
 	const maxAllocs = 25 // healthy steady state is ~14; a defeated pool is ~37
@@ -129,7 +129,7 @@ func TestGzipMiddlewarePoolSurvivesReconstruction(t *testing.T) {
 func BenchmarkGzipMiddleware(b *testing.B) {
 	payload := gzipTestPayload()
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(payload)
+		_, _ = w.Write(payload)
 	})
 
 	b.ReportAllocs()
@@ -140,7 +140,7 @@ func BenchmarkGzipMiddleware(b *testing.B) {
 			h := GzipMiddleware(gzip.BestSpeed, inner)
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, req)
-			io.Copy(io.Discard, rec.Body)
+			_, _ = io.Copy(io.Discard, rec.Body)
 		}
 	})
 }

@@ -107,7 +107,7 @@ func makeChallenge(t *testing.T, ts *httptest.Server, cli *http.Client) challeng
 	if err != nil {
 		t.Fatalf("can't request challenge: %v", err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	var chall challengeResp
 	if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
@@ -248,7 +248,7 @@ func TestLoadPolicies(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer fin.Close()
+			defer fin.Close() //nolint:errcheck
 
 			if _, err := policy.ParseConfig(t.Context(), fin, fname, 4, "info", false); err != nil {
 				t.Fatal(err)
@@ -365,7 +365,7 @@ func TestCookieSettings(t *testing.T) {
 			resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
 
 			if resp.StatusCode != http.StatusFound {
-				resp.Write(os.Stderr)
+				_ = resp.Write(os.Stderr) // if this fails we have bigger problems
 				t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 			}
 
@@ -406,7 +406,7 @@ func TestCookieSettings(t *testing.T) {
 
 func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "OK")
+		fmt.Fprintln(w, "OK") //nolint:errcheck
 	})
 
 	for i := 1; i < 10; i++ {
@@ -445,7 +445,7 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 
 func TestBasePrefix(t *testing.T) {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "OK")
+		fmt.Fprintln(w, "OK") //nolint:errcheck
 	})
 
 	testCases := []struct {
@@ -512,7 +512,11 @@ func TestBasePrefix(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't request challenge: %v", err)
 			}
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}()
 
 			if resp.StatusCode != http.StatusOK {
 				t.Errorf("expected status code %d, got: %d", http.StatusOK, resp.StatusCode)
@@ -614,7 +618,7 @@ func TestCustomStatusCodes(t *testing.T) {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Log(r.UserAgent())
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
+		fmt.Fprintln(w, "OK") //nolint:errcheck
 	})
 
 	statusMap := map[string]int{
@@ -660,7 +664,7 @@ func TestCloudflareWorkersRule(t *testing.T) {
 			pol := loadPolicies(t, "./testdata/cloudflare-workers-"+variant+".yaml", 0)
 
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				fmt.Fprintln(w, "OK")
+				fmt.Fprintln(w, "OK") //nolint:errcheck
 			})
 
 			s, err := New(Options{
@@ -733,7 +737,7 @@ func TestRuleChange(t *testing.T) {
 	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
 
 	if resp.StatusCode != http.StatusFound {
-		resp.Write(os.Stderr)
+		_ = resp.Write(os.Stderr) // if stderr fails, there are bigger problems
 		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 	}
 }
@@ -861,7 +865,11 @@ func TestChallengeFor_ErrNotFound(t *testing.T) {
 	srv.maybeReverseProxyOrPage(w, req)
 
 	resp := w.Result()
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	body := new(strings.Builder)
 	_, err := io.Copy(body, resp.Body)
@@ -1081,7 +1089,7 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 func TestXForwardedForNoDoubleComma(t *testing.T) {
 	var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Forwarded-For", r.Header.Get("X-Forwarded-For"))
-		fmt.Fprintln(w, "OK")
+		fmt.Fprintln(w, "OK") //nolint:errcheck
 	})
 
 	h = internal.XForwardedForToXRealIP(h)

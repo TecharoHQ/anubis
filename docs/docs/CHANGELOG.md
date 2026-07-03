@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update QwantBot remote addresses range with latest value
+- Migrate check-spelling workflow config to [cspell](https://cspell.org/)
+
 <!-- This changes the project to: -->
 
 ## v1.26.0-pre1
@@ -446,7 +449,7 @@ Anubis now is able to store things persistently [in memory](./admin/policies.mdx
 
 Anubis now supports localized responses. Locales can be added in [lib/localization/locales/](https://github.com/TecharoHQ/anubis/tree/main/lib/localization/locales). This release includes support for the following languages:
 
-- [Brazilian Portugese](https://github.com/TecharoHQ/anubis/pull/726)
+- [Brazilian Portuguese](https://github.com/TecharoHQ/anubis/pull/726)
 - [Chinese (Simplified)](https://github.com/TecharoHQ/anubis/pull/774)
 - [Chinese (Traditional)](https://github.com/TecharoHQ/anubis/pull/759)
 - English

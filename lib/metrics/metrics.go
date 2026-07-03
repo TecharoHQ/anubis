@@ -28,7 +28,7 @@ func (s *Server) Run(ctx context.Context, done func()) {
 	lg := s.Log.With("subsystem", "metrics")
 
 	if err := s.run(ctx, lg); err != nil {
-		lg.Error("can't serve metrics server", "err", err)
+		lg.ErrorContext(ctx, "can't serve metrics server", "err", err)
 	}
 }
 
@@ -47,7 +47,7 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		st, ok := internal.GetHealth("anubis")
 		if !ok {
-			slog.Error("health service anubis does not exist, file a bug")
+			slog.ErrorContext(r.Context(), "health service anubis does not exist, file a bug")
 		}
 
 		switch st {
@@ -55,7 +55,7 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 			http.Error(w, "NOT OK", http.StatusInternalServerError)
 			return
 		case healthv1.HealthCheckResponse_SERVING:
-			fmt.Fprintln(w, "OK")
+			fmt.Fprintln(w, "OK") //nolint:errcheck
 			return
 		default:
 			http.Error(w, "UNKNOWN", http.StatusFailedDependency)
@@ -73,7 +73,7 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 		return fmt.Errorf("can't setup listener: %w", err)
 	}
 
-	defer ln.Close()
+	defer ln.Close() //nolint:errcheck
 
 	if s.Config.TLS != nil {
 		kpr, err := NewKeypairReloader(s.Config.TLS.Certificate, s.Config.TLS.Key, lg)
@@ -103,19 +103,19 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 
 	if s.Config.BasicAuth != nil {
 		var h http.Handler = mux
-		h = internal.BasicAuth("anubis-metrics", s.Config.BasicAuth.Username, s.Config.BasicAuth.Password, mux)
+		h = internal.BasicAuth("anubis-metrics", s.Config.BasicAuth.Username, s.Config.BasicAuth.Password, h)
 
 		srv.Handler = h
 	}
 
-	lg.Debug("listening for metrics", "url", metricsURL)
+	lg.DebugContext(ctx, "listening for metrics", "url", metricsURL)
 
 	go func() {
 		<-ctx.Done()
 		c, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(c); err != nil {
-			lg.Error("can't shut down metrics server", "err", err)
+			lg.ErrorContext(ctx, "can't shut down metrics server", "err", err)
 		}
 	}()
 

@@ -50,7 +50,7 @@ func (h HTTPHeaders) Find(key ref.Val) (ref.Val, bool) {
 		return nil, false
 	}
 
-	return types.String(strings.Join(h.Header.Values(string(k)), ",")), true
+	return types.String(strings.Join(h.Values(string(k)), ",")), true
 }
 
 func (h HTTPHeaders) Contains(key ref.Val) ref.Val {
