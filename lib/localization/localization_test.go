@@ -86,7 +86,7 @@ func loadManifest(t *testing.T) manifest {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	var result manifest
 	if err := json.NewDecoder(fin).Decode(&result); err != nil {
@@ -104,7 +104,7 @@ func TestComprehensiveTranslations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	if err := json.NewDecoder(fin).Decode(&translations); err != nil {
 		t.Fatal(err)

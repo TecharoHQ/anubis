@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -49,6 +50,7 @@ type ParsedConfig struct {
 	Metrics           *config.Metrics
 	ThothClient       *thoth.Client
 	LogASN            bool
+	NeedJA4H          bool
 }
 
 func newParsedConfig(orig *config.Config) *ParsedConfig {
@@ -101,7 +103,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	lg := result.Logger.With("at", "config-validate")
 
 	if result.LogASN && !hasThothClient {
-		lg.Warn("logging.asn is enabled but no Thoth client is configured; ASN logging and metrics will be skipped. Please read https://anubis.techaro.lol/docs/admin/thoth for more information")
+		lg.WarnContext(ctx, "logging.asn is enabled but no Thoth client is configured; ASN logging and metrics will be skipped. Please read https://anubis.techaro.lol/docs/admin/thoth for more information")
 	}
 
 	stFac, ok := store.Get(c.Store.Backend)
@@ -180,7 +182,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.ASNs != nil {
 			if !hasThothClient {
-				lg.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
+				lg.WarnContext(ctx, "You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
 				continue
 			}
 
@@ -189,7 +191,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 		if b.GeoIP != nil {
 			if !hasThothClient {
-				lg.Warn("You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
+				lg.WarnContext(ctx, "You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
 				continue
 			}
 
@@ -208,7 +210,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			}
 
 			if parsedBot.Challenge.Algorithm == "slow" {
-				lg.Warn("use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", parsedBot.Name)
+				lg.WarnContext(ctx, "use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", parsedBot.Name)
 			}
 		}
 
@@ -226,16 +228,16 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 	for _, t := range c.Thresholds {
 		if t.Challenge != nil && t.Challenge.Algorithm == "slow" {
-			lg.Warn("use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", t.Name)
+			lg.WarnContext(ctx, "use of deprecated algorithm \"slow\" detected, please update this to \"fast\" when possible", "name", t.Name)
 		}
 
 		if t.Challenge != nil && t.Challenge.ReportAs != 0 {
-			lg.Warn("use of deprecated report_as setting detected, please remove this from your policy file when possible", "name", t.Name)
+			lg.WarnContext(ctx, "use of deprecated report_as setting detected, please remove this from your policy file when possible", "name", t.Name)
 		}
 
 		if t.Name == "legacy-anubis-behaviour" && t.Expression.String() == "true" {
 			if !warnedAboutThresholds.Load() {
-				lg.Warn("configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")
+				lg.WarnContext(ctx, "configuration file does not contain thresholds, see docs for details on how to upgrade", "fname", fname, "docs_url", "https://anubis.techaro.lol/docs/admin/configuration/thresholds/")
 				warnedAboutThresholds.Store(true)
 			}
 
@@ -256,6 +258,31 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	}
 
 	result.DNSBL = c.DNSBL
+	result.NeedJA4H = configReferencesJA4H(c.Bots)
 
 	return result, nil
+}
+
+// configReferencesJA4H reports whether any bot rule references the JA4H
+// fingerprint header, either through a headers_regex key or a CEL expression.
+// Computing the JA4H fingerprint for every request is relatively expensive, so
+// when no rule needs it the middleware that adds the header can be skipped
+// entirely. Threshold expressions can't access request headers, so only bot
+// rules are considered.
+func configReferencesJA4H(bots []config.BotConfig) bool {
+	needle := strings.ToLower(internal.JA4HHeaderName)
+
+	for _, b := range bots {
+		for key := range b.HeadersRegex {
+			if strings.EqualFold(key, internal.JA4HHeaderName) {
+				return true
+			}
+		}
+
+		if b.Expression != nil && strings.Contains(strings.ToLower(b.Expression.String()), needle) {
+			return true
+		}
+	}
+
+	return false
 }

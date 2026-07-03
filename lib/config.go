@@ -47,6 +47,7 @@ type Options struct {
 	OpenGraph                config.OpenGraph
 	ServeRobotsTXT           bool
 	CookieSecure             bool
+	CookieHttpOnly           bool
 	CookieSameSite           http.SameSite
 	Logger                   *slog.Logger
 	LogLevel                 string
@@ -75,7 +76,7 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 	defer func(fin io.ReadCloser) {
 		err := fin.Close()
 		if err != nil {
-			slog.Error("failed to close policy file", "file", fname, "err", err)
+			slog.ErrorContext(ctx, "failed to close policy file", "file", fname, "err", err)
 		}
 	}(fin)
 

@@ -70,7 +70,7 @@ services:
       - traefik.http.routers.web.tls=false
 
   anubis:
-    image: ghcr.io/techarohq/anubis:main
+    image: ghcr.io/techarohq/anubis:latest
     environment:
       # Telling Anubis, where to listen for Traefik
       - BIND=:8080

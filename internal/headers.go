@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"slices"
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
@@ -98,7 +99,7 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-Ip") == "" && xffHeader != "" {
 			ip := xff.Parse(xffHeader)
-			slog.Debug("setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
+			slog.DebugContext(r.Context(), "setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
 			r.Header.Set("X-Real-Ip", ip)
 			if addr, err := netip.ParseAddr(ip); err == nil {
 				r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
@@ -134,7 +135,7 @@ func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
 
 		xffHeaderString, err := computeXFFHeader(remoteAddr, origXFFHeader, pref)
 		if err != nil {
-			slog.Debug("computing X-Forwarded-For header failed", "err", err)
+			slog.DebugContext(r.Context(), "computing X-Forwarded-For header failed", "err", err)
 			return
 		}
 
@@ -161,7 +162,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		return "", fmt.Errorf("%w: %w", ErrCantParseRemoteIP, err)
 	}
 
-	origForwardedList := make([]string, 0, 4)
+	var origForwardedList []string
 	if origXFFHeader != "" {
 		origForwardedList = strings.Split(origXFFHeader, ",")
 		for i := range origForwardedList {
@@ -203,8 +204,12 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		if pref.StripCGNAT && CGNat.Contains(segmentIP) {
 			continue
 		}
-		forwardedList = append([]string{segmentIP.String()}, forwardedList...)
+		// Build the kept chain in reverse (cheap appends into the
+		// pre-sized slice) and flip it once below, instead of prepending
+		// a freshly allocated slice on every iteration.
+		forwardedList = append(forwardedList, segmentIP.String())
 	}
+	slices.Reverse(forwardedList)
 	var xffHeaderString string
 	if len(forwardedList) == 0 {
 		xffHeaderString = ""

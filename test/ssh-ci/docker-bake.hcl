@@ -1,4 +1,4 @@
-variable "ALPINE_VERSION" { default = "3.22" }
+variable "ALPINE_VERSION" { default = "3.24" }
 
 group "default" {
   targets = [
@@ -8,7 +8,7 @@ group "default" {
 
 target "ci-runner" {
   args = {
-    ALPINE_VERSION = "3.22"
+    ALPINE_VERSION = "3.24"
   }
   context = "."
   dockerfile = "./Dockerfile"

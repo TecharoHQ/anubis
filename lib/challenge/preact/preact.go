@@ -24,9 +24,15 @@ import (
 var appJS []byte
 
 func renderAppJS(ctx context.Context, out io.Writer) error {
-	fmt.Fprint(out, `<script type="module">`)
-	out.Write(appJS)
-	fmt.Fprint(out, "</script>")
+	if _, err := fmt.Fprint(out, `<script type="module">`); err != nil {
+		return err
+	}
+	if _, err := out.Write(appJS); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprint(out, "</script>"); err != nil {
+		return err
+	}
 	return nil
 }
 

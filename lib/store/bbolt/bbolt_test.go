@@ -32,7 +32,7 @@ func newTestStore(t *testing.T) *Store {
 	if err != nil {
 		t.Fatalf("can't open bbolt database: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { db.Close() }) //nolint:errcheck
 
 	return &Store{bdb: db}
 }

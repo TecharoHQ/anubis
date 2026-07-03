@@ -30,5 +30,20 @@
   "cSpell.enabledFileTypes": {
     "mdx": true,
     "md": true
-  }
+  },
+  "go.lintTool": "golangci-lint-v2",
+  "go.lintFlags": [
+    "--path-mode=abs",
+    "--fast-only"
+  ],
+  "cSpell.words": [
+    "nolint",
+    "ogtags",
+    "Techaro"
+  ],
+  "cSpell.ignoreWords": [
+    "DONT",
+    "chall",
+    "ogtag"
+  ]
 }
