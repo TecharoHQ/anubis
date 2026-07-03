@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run assets && SKIP_INTEGRATION=1 go test ./...",
+    "test:spelling": "git diff --name-only HEAD | npx cspell --file-list stdin",
+    "test:spelling:sort": "node .vscode/scripts/sort-project-words.mjs",
     "test:integration": "npm run assets && go test -v ./internal/test",
     "test:integration:podman": "npm run assets && go test -v ./internal/test --playwright-runner=podman",
     "test:integration:docker": "npm run assets && go test -v ./internal/test --playwright-runner=docker",
@@ -14,6 +16,7 @@
     "container": "npm run assets && go run ./cmd/containerbuild",
     "package": "go tool yeet",
     "lint": "make lint",
+    "spellcheck": "cspell --no-progress --config .vscode/cspell.json \"**\"",
     "prepare": "husky && go mod download",
     "format": "prettier -w . 2>&1 >/dev/null && go run goimports -w ."
   },
@@ -23,6 +26,7 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "baseline-browser-mapping": "^2.10.34",
+    "cspell": "^10.0.1",
     "cssnano": "^8.0.1",
     "cssnano-preset-advanced": "^8.0.1",
     "esbuild": "^0.28.0",
