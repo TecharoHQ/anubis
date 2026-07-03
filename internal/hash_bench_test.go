@@ -251,6 +251,7 @@ func TestXXHashFormat(t *testing.T) {
 
 		// Make sure it's all hex characters
 		for _, char := range hash {
+			//nolint:staticcheck
 			if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f')) {
 				t.Errorf("Non-hex character %c in hash %s for input %q", char, hash, input)
 			}

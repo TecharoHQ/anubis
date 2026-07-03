@@ -118,7 +118,7 @@ func TestNewOGTagCache_UnixSocket(t *testing.T) {
 	// Attempt a dummy dial to see if it uses the correct path (optional, more involved check)
 	dummyConn, err := transport.DialContext(context.Background(), "", "")
 	if err == nil {
-		dummyConn.Close()
+		_ = dummyConn.Close() // error doesn't matter
 		t.Log("DialContext seems functional, but couldn't verify path without a listener")
 	} else if !strings.Contains(err.Error(), "connect: connection refused") && !strings.Contains(err.Error(), "connect: no such file or directory") {
 		// We expect connection refused or not found if nothing is listening
@@ -225,6 +225,7 @@ func TestIntegrationGetOGTags_UnixSocket(t *testing.T) {
 	}(listener, socketPath)
 
 	server := &http.Server{
+		//nolint:errcheck
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
 			fmt.Fprintln(w, `<!DOCTYPE html><html><head><meta property="og:title" content="Unix Socket Test" /></head><body>Test</body></html>`)
@@ -291,6 +292,7 @@ func TestGetOGTagsWithTargetHostOverride(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		seenHosts <- r.Host
 		w.Header().Set("Content-Type", "text/html")
+		//nolint:errcheck
 		fmt.Fprintln(w, `<!DOCTYPE html><html><head><meta property="og:title" content="HostOverride" /></head><body>ok</body></html>`)
 	}))
 	defer ts.Close()
@@ -342,6 +344,7 @@ func TestGetOGTagsWithTargetHostOverride(t *testing.T) {
 func TestGetOGTagsWithInsecureSkipVerify(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
+		//nolint:errcheck
 		fmt.Fprintln(w, `<!DOCTYPE html><html><head><meta property="og:title" content="Self-Signed" /></head><body>hello</body></html>`)
 	})
 	ts := httptest.NewTLSServer(handler)
@@ -457,6 +460,7 @@ func newSNIServer(t *testing.T, body string) (*httptest.Server, *sniRecorder) {
 	t.Helper()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
+		//nolint:errcheck
 		fmt.Fprint(w, body)
 	})
 

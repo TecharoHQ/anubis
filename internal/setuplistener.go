@@ -73,7 +73,7 @@ func SetupListener(network, address, socketMode string) (net.Listener, string, e
 	if network == "unix" {
 		mode, err := strconv.ParseUint(socketMode, 8, 0)
 		if err != nil {
-			ln.Close()
+			_ = ln.Close()
 			return nil, "", fmt.Errorf("could not parse socket mode %s: %w", socketMode, err)
 		}
 

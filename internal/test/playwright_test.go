@@ -171,7 +171,8 @@ func daemonize(t *testing.T, command string) {
 func startPlaywright(t *testing.T) {
 	t.Helper()
 
-	if *playwrightRunner == "npx" {
+	switch *playwrightRunner {
+	case "npx":
 		doesCommandExist(t, "npx")
 
 		if os.Getenv("CI") == "true" {
@@ -181,7 +182,7 @@ func startPlaywright(t *testing.T) {
 		}
 
 		daemonize(t, fmt.Sprintf("npx --yes playwright@%s run-server --port %d", playwrightVersion, *playwrightPort))
-	} else if *playwrightRunner == "docker" || *playwrightRunner == "podman" {
+	case "docker", "podman":
 		doesCommandExist(t, *playwrightRunner)
 
 		// docs: https://playwright.dev/docs/docker
@@ -190,9 +191,9 @@ func startPlaywright(t *testing.T) {
 		t.Cleanup(func() {
 			run(t, fmt.Sprintf("%s rm --force %s", *playwrightRunner, container))
 		})
-	} else if *playwrightRunner == "none" {
+	case "none":
 		t.Log("not starting Playwright, assuming it is already running")
-	} else {
+	default:
 		t.Skipf("unknown runner: %s, skipping", *playwrightRunner)
 	}
 

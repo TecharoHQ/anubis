@@ -96,7 +96,11 @@ func TestDataFileConversion(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to open robots file %s: %v", robotsPath, err)
 			}
-			defer robotsFile.Close()
+			defer func() {
+				if err := robotsFile.Close(); err != nil {
+					t.Fatalf("can't close output file: %v", err)
+				}
+			}()
 
 			// Parse robots.txt
 			rules, err := parseRobotsTxt(robotsFile)

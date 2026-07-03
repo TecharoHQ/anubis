@@ -38,7 +38,7 @@ func TestMetricsPprofCmdlineExposedWithoutAuthentication(t *testing.T) {
 		if err != nil {
 			t.Fatalf("can't read body: %v", err)
 		}
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 	}
 	time.Sleep(50 * time.Millisecond)
 	if strings.Contains(string(body), "metrics.test") {

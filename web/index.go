@@ -36,7 +36,9 @@ func Bench(localizer *localization.SimpleLocalizer) templ.Component {
 
 func honeypotLink(href string) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		fmt.Fprintf(w, `<script type="ignore"><a href="%s">Don't click me</a></script>`, href)
+		if _, err := fmt.Fprintf(w, `<script type="ignore"><a href="%s">Don't click me</a></script>`, href); err != nil {
+			return err
+		}
 		return nil
 	})
 }
