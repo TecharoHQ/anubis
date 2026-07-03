@@ -61,6 +61,7 @@ cachebuster
 cachediptoasn
 Caddyfile
 caninetools
+canonialheader
 Cardyb
 CAs
 celchecker
@@ -175,6 +176,7 @@ Goanna
 godotenv
 goimports
 goland
+golangci
 gomod
 goodbot
 googlebot
@@ -299,6 +301,7 @@ nicksnyder
 nikandfor
 nobots
 NOFILE
+nolint
 NONINFRINGEMENT
 nosleep
 nullglob
@@ -394,6 +397,7 @@ shopt
 Sidetrade
 simprint
 sitemap
+sloglint
 sls
 sni
 snipster
