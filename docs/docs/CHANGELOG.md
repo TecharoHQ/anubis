@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<!-- This changes the project to: -->
+
 - Update QwantBot remote addresses range with latest value
 - Migrate check-spelling workflow config to [cspell](https://cspell.org/)
-
-<!-- This changes the project to: -->
+- Add [Anubis Kubernetes Operator](https://github.com/eznix86/anubis-kubernetes-operator/) to the docs ([#1675](https://github.com/TecharoHQ/anubis/pull/1675)).
 
 ## v1.26.0-pre1
 
