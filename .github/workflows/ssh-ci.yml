@@ -12,8 +12,8 @@ permissions:
 jobs:
   ssh:
     if: github.repository == 'TecharoHQ/anubis'
-    #runs-on: alrest-techarohq
-    runs-on: ubuntu-latest
+    runs-on: saga-techaro
+    #runs-on: ubuntu-latest
     strategy:
       matrix:
         host:
