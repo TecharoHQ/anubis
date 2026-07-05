@@ -19,9 +19,9 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/joho/godotenv v1.5.1
 	github.com/lum8rjack/go-ja4h v0.0.0-20250828030157-fa5266d50650
+	github.com/mxschmitt/playwright-go v0.6100.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/nikandfor/spintax v0.0.0-20181023094358-fc346b245bb3
-	github.com/playwright-community/playwright-go v0.5200.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
