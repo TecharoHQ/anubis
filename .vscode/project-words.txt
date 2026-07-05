@@ -376,6 +376,7 @@ runtimedir
 runtimedirectory
 Ryzen
 Samsung
+sarif
 sas
 sasl
 screenshots
