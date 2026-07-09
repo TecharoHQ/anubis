@@ -9,11 +9,31 @@ const BASE = "http://localhost:8080";
 const UA = "Mozilla/5.0 (compatible; AnubisTraefikSmoke/1.0)";
 
 const cases = [
-  { path: "/", expected: 307, why: "control: no DENY rule, default challenge redirect" },
-  { path: "/free", expected: 307, why: "control: no DENY rule, default challenge redirect" },
-  { path: "/admin", expected: 403, why: "path_regex must match X-Forwarded-Uri, not 307 or 200" },
-  { path: "/admin/users", expected: 403, why: "path_regex must match X-Forwarded-Uri, not 307 or 200" },
-  { path: "/api/secret", expected: 403, why: "CEL path must match X-Forwarded-Uri, not 307 or 200" },
+  {
+    path: "/",
+    expected: 307,
+    why: "control: no DENY rule, default challenge redirect",
+  },
+  {
+    path: "/free",
+    expected: 307,
+    why: "control: no DENY rule, default challenge redirect",
+  },
+  {
+    path: "/admin",
+    expected: 403,
+    why: "path_regex must match X-Forwarded-Uri, not 307 or 200",
+  },
+  {
+    path: "/admin/users",
+    expected: 403,
+    why: "path_regex must match X-Forwarded-Uri, not 307 or 200",
+  },
+  {
+    path: "/api/secret",
+    expected: 403,
+    why: "CEL path must match X-Forwarded-Uri, not 307 or 200",
+  },
 ];
 
 let failed = false;
