@@ -19,9 +19,10 @@ const words = [
   ),
 ];
 
-words.sort((a, b) =>
-  a.localeCompare(b, "en", { sensitivity: "base" }) ||
-  a.localeCompare(b, "en"),
+words.sort(
+  (a, b) =>
+    a.localeCompare(b, "en", { sensitivity: "base" }) ||
+    a.localeCompare(b, "en"),
 );
 
 const sorted = words.join("\n") + "\n";

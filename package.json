@@ -36,7 +36,7 @@
     "postcss-import": "^16.1.1",
     "postcss-import-url": "^7.2.0",
     "postcss-url": "^10.1.4",
-    "prettier": "^3.8.5"
+    "prettier": "^3.9.1"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
