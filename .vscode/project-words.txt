@@ -286,6 +286,7 @@ mozilla
 mqvh
 msgbox
 multicore
+mxschmitt
 myapp
 myclient
 mymaster
@@ -376,6 +377,7 @@ runtimedir
 runtimedirectory
 Ryzen
 Samsung
+sarif
 sas
 sasl
 screenshots

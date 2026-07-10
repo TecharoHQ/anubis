@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<!-- This changes the project to: -->
+
 - Add `(data)/clients/google-user-triggered-fetchers.yaml` snippet that allows Google-owned user-triggered fetchers (Google Translate's website translation proxy, Google Read Aloud, Google Messages link previews) by their [published IP ranges](https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers-google.json), fixing the infinite challenge loop for visitors using Google Translate ([#444](https://github.com/TecharoHQ/anubis/issues/444))
 - Update QwantBot remote addresses range with latest value
 - Migrate check-spelling workflow config to [cspell](https://cspell.org/)
-
-<!-- This changes the project to: -->
+- Add [Anubis Kubernetes Operator](https://github.com/eznix86/anubis-kubernetes-operator/) to the docs ([#1675](https://github.com/TecharoHQ/anubis/pull/1675)).
+- Bump Playwright browser tooling to 1.61.1 and playwright-go to v0.6100.0.
 
 ## v1.26.0-pre1
 

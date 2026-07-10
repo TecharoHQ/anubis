@@ -3,13 +3,14 @@
 import CodeBlock from "@theme/CodeBlock";
 
 To use Anubis with HAProxy, you have two variants:
-  - simple - stick Anubis between HAProxy and your application backend (simple)
-    - perfect if you only have a single application in general
-  - advanced - force Anubis challenge by default and route to the application backend by HAProxy if the challenge is correct
-    - useful for complex setups
-    - routing can be done in HAProxy
-    - define ACLs in HAProxy for domains, paths etc which are required/excluded regarding Anubis
-    - HAProxy 3.0 recommended
+
+- simple - stick Anubis between HAProxy and your application backend (simple)
+  - perfect if you only have a single application in general
+- advanced - force Anubis challenge by default and route to the application backend by HAProxy if the challenge is correct
+  - useful for complex setups
+  - routing can be done in HAProxy
+  - define ACLs in HAProxy for domains, paths etc which are required/excluded regarding Anubis
+  - HAProxy 3.0 recommended
 
 ## Simple Variant
 

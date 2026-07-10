@@ -7,7 +7,7 @@
 // Anubis must be configured to redirect to the server started by the test suite.
 // The bind address and the Anubis server can be specified using the flags `-bind` and `-anubis` respectively.
 //
-// Playwright must be started in server mode using `npx playwright@1.50.1 run-server --port 3000`.
+// Playwright must be started in server mode using `npx playwright@1.61.1 run-server --port 9001`.
 // The version must match the minor used by the playwright-go package.
 //
 // On unsupported systems you may be able to use a container instead: https://playwright.dev/docs/docker#remote-connection
@@ -30,7 +30,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	libanubis "github.com/TecharoHQ/anubis/lib"
-	"github.com/playwright-community/playwright-go"
+	"github.com/mxschmitt/playwright-go"
 )
 
 var (
@@ -99,7 +99,7 @@ const (
 	actionChallenge action = "CHALLENGE"
 
 	placeholderIP     = "fd11:5ee:bad:c0de::"
-	playwrightVersion = "1.52.0"
+	playwrightVersion = "1.61.1"
 )
 
 type action string
