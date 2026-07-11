@@ -1,0 +1,6 @@
+bots:
+  - import: (data)/clients/google-user-triggered-fetchers.yaml
+
+metrics:
+  bind: ":9090"
+  network: "tcp"

@@ -45,5 +45,5 @@ for file in js/*.tsx; do
   output="${filename%.tsx}.js"  # Changes "app.jsx" to "app.js"
   echo $output
 
-  esbuild "${file}" --minify --bundle --outfile=static/"${output}" --banner:js="${LICENSE}"
+  esbuild "${file}" --minify --bundle --target=chrome66 --outfile=static/"${output}" --banner:js="${LICENSE}"
 done
