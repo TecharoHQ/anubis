@@ -40,10 +40,10 @@ github.com/Songmu/gitconfig v0.2.2 h1:tiQY2KZqgdgjs1C7slWd31EB8NbItN7BOKxCIHSlK4
 github.com/Songmu/gitconfig v0.2.2/go.mod h1:lZ0lKL6K+xvT+QzmmGxHQgOnneiWcbhGAV2DKI6PBpM=
 github.com/TecharoHQ/thoth-proto v0.5.0 h1:Fa663s4soYiURSU8MfW9tZ2wF+LsCRSaYmjUSyagfBM=
 github.com/TecharoHQ/thoth-proto v0.5.0/go.mod h1:C/U7FqTxpVn4V/qebC/GcW32I0h9xzsmWehF27KFOJs=
-github.com/TecharoHQ/yeet v0.12.0 h1:qaP30StKX6gSJPGvOkpDUI9D3Tkw1p+P3I2WjE2+CkE=
-github.com/TecharoHQ/yeet v0.12.0/go.mod h1:KN/cwG2cNf+DQSkKhJCK+myOq5sRFfiBxGZPZCYoliI=
-github.com/Xe/erofs v0.6.0 h1:Yicgpi9e3QHp8QwTgQxU7CBKTF/BcASkcbkh7QgVTm0=
-github.com/Xe/erofs v0.6.0/go.mod h1:GGxvJkCKU4yKfJ+Trap2xC8iN0HGuTUEsD5oz+olLJI=
+github.com/TecharoHQ/yeet v0.12.1 h1:iRY3pfnwAg52ZhjbjnRUCIaZcRrdrTHEuM7R5EQ2ZUg=
+github.com/TecharoHQ/yeet v0.12.1/go.mod h1:jGPbUZ9B8EIdnDjaZsFN655wJn9c6YfozsFHTaCBeG4=
+github.com/Xe/erofs v0.6.1 h1:GnrHZ+dxAQG9+Gy+hI06ANT9X8CA79uDwbaZqNad4bU=
+github.com/Xe/erofs v0.6.1/go.mod h1:GGxvJkCKU4yKfJ+Trap2xC8iN0HGuTUEsD5oz+olLJI=
 github.com/a-h/parse v0.0.0-20250122154542-74294addb73e h1:HjVbSQHy+dnlS6C3XajZ69NYAb5jbGNfHanvm1+iYlo=
 github.com/a-h/parse v0.0.0-20250122154542-74294addb73e/go.mod h1:3mnrkvGpurZ4ZrTDbYU84xhwXW2TjTKShSwjRi2ihfQ=
 github.com/a-h/templ v0.3.1020 h1:ypAT/L5ySWEnZ6Zft/5yfoWXYYkhFNvEFOeeqecg4tw=

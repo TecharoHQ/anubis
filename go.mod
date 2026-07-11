@@ -50,8 +50,8 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/Songmu/gitconfig v0.2.2 // indirect
-	github.com/TecharoHQ/yeet v0.12.0 // indirect
-	github.com/Xe/erofs v0.6.0 // indirect
+	github.com/TecharoHQ/yeet v0.12.1 // indirect
+	github.com/Xe/erofs v0.6.1 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect

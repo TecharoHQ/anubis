@@ -4,10 +4,10 @@ const methods = [
   // [goos, goarch, [build, methods]]
   ["freebsd", "amd64", [tarball]],
   ["freebsd", "arm64", [tarball]],
-  ["linux", "amd64", [deb, rpm, tarball]],
-  ["linux", "arm64", [deb, rpm, tarball]],
-  ["linux", "ppc64le", [deb, rpm, tarball]],
-  ["linux", "riscv64", [deb, rpm, tarball]],
+  ["linux", "amd64", [deb, rpm, sysext, tarball]],
+  ["linux", "arm64", [deb, rpm, sysext, tarball]],
+  ["linux", "ppc64le", [deb, rpm, sysext, tarball]],
+  ["linux", "riscv64", [deb, rpm, sysext, tarball]],
   ["windows", "amd64", [tarball]],
   ["windows", "arm64", [tarball]],
 ]
