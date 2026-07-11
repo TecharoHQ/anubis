@@ -425,6 +425,7 @@ subr
 subrequest
 subtest
 SVCNAME
+sysext
 tagline
 tarballs
 tarrif
