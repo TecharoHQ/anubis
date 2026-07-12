@@ -35,7 +35,7 @@ jobs:
 
       - name: Run gubal test
         run: |
-          gubalctl --url https://gubald.xeserv.us --chrome-versions 75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150 --anubis-image ggl.sh/techaro/pr-${PR_NUMBER}/anubis:24h > report.md
+          gubalctl --url https://gubald.xeserv.us --chrome-versions 75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150 --anubis-image ttl.sh/techaro/pr-${PR_NUMBER}/anubis:24h > report.md
           gh pr comment "${PR_NUMBER}" --body-file report.md
         env:
           GITHUB_REPO: ${{ github.repository }}
