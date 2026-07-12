@@ -42,5 +42,5 @@ jobs:
           GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACCESS_KEY_ID: ${{ secrets.GUBALD_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.GUBLAD_SECRET_ACCESS_KEY }}
+          SECRET_ACCESS_KEY: ${{ secrets.GUBALD_SECRET_ACCESS_KEY }}
           PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
