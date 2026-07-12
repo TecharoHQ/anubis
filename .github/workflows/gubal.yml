@@ -9,7 +9,7 @@ on:
 jobs:
   gubal_test:
     if: |
-      startsWith(github.event.comment.body, '/reviewbot')
+      startsWith(github.event.comment.body, '/gubaltest')
 
     runs-on: ubuntu-latest
     permissions:
