@@ -1,0 +1,25 @@
+.env
+*.deb
+*.rpm
+
+# Additional package locks
+pnpm-lock.yaml
+yarn.lock
+
+# Go binaries and test artifacts
+main
+*.test
+
+node_modules
+
+# MacOS
+.DS_store
+
+# Intellij
+.idea
+
+# how does this get here
+doc/VERSION
+
+web/static/js/*
+!web/static/js/.gitignore
