@@ -1086,6 +1086,85 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 	}
 }
 
+func TestPassChallengeCookiesDisabledPreservesDestination(t *testing.T) {
+	pol := loadPolicies(t, "", anubis.DefaultDifficulty)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+	})
+
+	const destination = "/some/protected/path?foo=bar"
+
+	req := httptest.NewRequest(http.MethodGet, "https://example.com"+anubis.APIPrefix+"pass-challenge", nil)
+	q := req.URL.Query()
+	q.Set("redir", destination)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Set("X-Real-Ip", "203.0.113.4")
+	req.Header.Set("User-Agent", "CookiesDisabledTester/1.0")
+	// Deliberately omit the Anubis test cookie to simulate a browser with cookies disabled.
+
+	rr := httptest.NewRecorder()
+
+	srv.PassChallenge(rr, req)
+
+	resp := rr.Result()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("can't read response body: %v", err)
+	}
+
+	if !bytes.Contains(body, []byte(destination)) {
+		t.Errorf("cookies-disabled error page does not link back to the original destination %q, got body:\n%s", destination, body)
+	}
+}
+
+func TestPassChallengeCookiesDisabledStillEnforcesRedirectDomain(t *testing.T) {
+	pol := loadPolicies(t, "", anubis.DefaultDifficulty)
+
+	srv := spawnAnubis(t, Options{
+		Next:            http.NewServeMux(),
+		Policy:          pol,
+		RedirectDomains: []string{"allowed.example"},
+	})
+
+	const destination = "https://evil.example/phish"
+
+	req := httptest.NewRequest(http.MethodGet, "https://example.com"+anubis.APIPrefix+"pass-challenge", nil)
+	q := req.URL.Query()
+	q.Set("redir", destination)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Set("X-Real-Ip", "203.0.113.4")
+	req.Header.Set("User-Agent", "CookiesDisabledTester/1.0")
+	// Deliberately omit the Anubis test cookie AND use a disallowed redirect domain.
+
+	rr := httptest.NewRecorder()
+
+	srv.PassChallenge(rr, req)
+
+	resp := rr.Result()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("can't read response body: %v", err)
+	}
+
+	if bytes.Contains(body, []byte(destination)) {
+		t.Errorf("disallowed redirect domain leaked into error page body:\n%s", body)
+	}
+
+	if bytes.Contains(body, []byte("enable cookies for this domain")) {
+		t.Errorf("expected redirect-domain validation to run before the cookie check, but got the cookies-disabled page, body:\n%s", body)
+	}
+
+	if !bytes.Contains(body, []byte("Redirect domain not allowed")) {
+		t.Errorf("expected the redirect_domain_not_allowed message, body:\n%s", body)
+	}
+
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected status %d (redirect_domain_not_allowed uses respondWithError), got %d, body:\n%s", http.StatusInternalServerError, resp.StatusCode, body)
+	}
+}
+
 func TestXForwardedForNoDoubleComma(t *testing.T) {
 	var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Forwarded-For", r.Header.Get("X-Forwarded-For"))

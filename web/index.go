@@ -26,8 +26,8 @@ func BaseWithChallengeAndOGTags(title string, body templ.Component, impressum *c
 	}, ogTags, localizer)
 }
 
-func ErrorPage(msg, mail, code string, localizer *localization.SimpleLocalizer) templ.Component {
-	return errorPage(msg, mail, code, localizer)
+func ErrorPage(msg, mail, code, retryURL string, localizer *localization.SimpleLocalizer) templ.Component {
+	return errorPage(msg, mail, code, retryURL, localizer)
 }
 
 func Bench(localizer *localization.SimpleLocalizer) templ.Component {
