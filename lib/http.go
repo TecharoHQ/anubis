@@ -345,11 +345,28 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, 
 
 	component := web.Base(
 		localizer.T("oh_noes"),
-		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
+		web.ErrorPage(msg, s.opts.WebmasterEmail, code, "", localizer),
 		s.policy.Impressum,
 		localizer,
 	)
 	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
+	handler.ServeHTTP(w, r)
+}
+
+// respondCookiesDisabled renders the cookies-disabled error page with a link
+// back to the destination the visitor was originally trying to reach, so
+// they have a way forward after enabling cookies. destination must already
+// be validated (scheme and redirect domain) by the caller.
+func (s *Server) respondCookiesDisabled(w http.ResponseWriter, r *http.Request, destination string) {
+	localizer := localization.GetLocalizer(r)
+
+	component := web.Base(
+		localizer.T("oh_noes"),
+		web.ErrorPage(localizer.T("cookies_disabled"), s.opts.WebmasterEmail, "", destination, localizer),
+		s.policy.Impressum,
+		localizer,
+	)
+	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(http.StatusInternalServerError)))
 	handler.ServeHTTP(w, r)
 }
 

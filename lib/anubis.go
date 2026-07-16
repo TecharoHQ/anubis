@@ -523,14 +523,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
-		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
-		lg.WarnContext(r.Context(), "user has cookies disabled, this is not an anubis bug")
-		s.respondWithError(w, r, localizer.T("cookies_disabled"), "")
-		return
-	}
-
 	// used by the path checker rule
 	r.URL = redirURL
 
@@ -542,6 +534,17 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
 		lg.DebugContext(r.Context(), "domain not allowed", "domain", urlParsed.Host)
 		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"), "")
+		return
+	}
+
+	// This check happens after the redirect has been fully validated (scheme
+	// and domain) above, so that the retry link on the error page below can
+	// never point somewhere an open redirect check would otherwise reject.
+	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
+		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
+		lg.WarnContext(r.Context(), "user has cookies disabled, this is not an anubis bug")
+		s.respondCookiesDisabled(w, r, redir)
 		return
 	}
 
