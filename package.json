@@ -23,9 +23,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^21.1.0",
+    "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.0.2",
-    "baseline-browser-mapping": "^2.10.40",
+    "baseline-browser-mapping": "^2.10.43",
     "cspell": "^10.0.1",
     "cssnano": "^8.0.2",
     "cssnano-preset-advanced": "^8.0.2",
@@ -36,11 +36,11 @@
     "postcss-import": "^16.1.1",
     "postcss-import-url": "^7.2.0",
     "postcss-url": "^10.1.4",
-    "prettier": "^3.9.1"
+    "prettier": "^3.9.5"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.29.3"
+    "preact": "^10.29.7"
   },
   "commitlint": {
     "extends": [
