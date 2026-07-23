@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Replace custom fonts with system fonts to reduce payload size ([#142](https://github.com/TecharoHQ/anubis/issues/142))
 <!-- This changes the project to: -->
 
 ## v1.26.0: Papalymo Totolymo
