@@ -22,6 +22,7 @@ Applebot
 archlinux
 arpa
 Asahi
+ASIC
 asnc
 asnchecker
 asns
@@ -104,9 +105,11 @@ dco
 DDOS
 ddwrt
 de
+dealign
 Debian
 debrpm
 decaymap
+denan
 devcontainers
 Diffbot
 discordapp
@@ -131,8 +134,8 @@ emacs
 embe
 enbyware
 envoyproxy
-eral
 equix
+eral
 etld
 everyones
 evilbot
@@ -164,6 +167,7 @@ Fordola
 forgejo
 forwardauth
 fout
+fpcast
 fsys
 fullchain
 gaissmai
@@ -280,10 +284,10 @@ loadbalancer
 logfile
 lol
 lominsa
+lto
 Lupis
 MAINT
 maintnotifications
-lto
 malware
 mba
 mcr
@@ -307,6 +311,8 @@ myclient
 mymaster
 mypass
 myuser
+Nanosleep
+Nanotime
 NArg
 nbf
 Necron
@@ -337,6 +343,7 @@ pag
 pagegen
 palemoon
 Pangu
+Papalymo
 parseable
 passthrough
 Patreon
@@ -380,6 +387,7 @@ refactors
 reimagining
 remoteip
 reputational
+rereloop
 resourced
 Rhul
 rififi
@@ -406,6 +414,7 @@ selfsigned
 Semrush
 Seo
 Sephiroth
+setarch
 setsebool
 setuplistener
 shellcheck
@@ -430,6 +439,7 @@ spyderbot
 srcip
 srv
 ssh
+Stackify
 stackoverflow
 Stargate
 startprecmd
@@ -463,6 +473,7 @@ thothmock
 Tik
 Timpibot
 TLog
+Totolymo
 traefik
 trimpath
 trunc
@@ -472,17 +483,19 @@ ubuntu
 Unbreak
 unbreakdocker
 unifiedjs
+uninlined
 unintrusive
 unipromos
-uninlined
 unmarshal
 unmarshals
 unparseable
+untee
 updown
 urlsafe
-uvensys
 usecase
+usecases
 usize
+uvensys
 uvx
 UXP
 valkey
@@ -498,7 +511,9 @@ vnd
 VPS
 Vultr
 WAIFU
+Walltime
 Warde
+wasmtime
 wazero
 wcg
 weblate
