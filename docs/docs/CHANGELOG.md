@@ -11,12 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add option to [disable the honeypot](./admin/policies.mdx#honeypot-configuration).
-
 <!-- This changes the project to: -->
 
-## v1.26.0-pre2
+## v1.26.0: Papalymo Totolymo
 
+- Add option to [disable the honeypot](./admin/policies.mdx#honeypot-configuration).
 - Add `(data)/clients/google-user-triggered-fetchers.yaml` snippet that allows Google-owned user-triggered fetchers (Google Translate's website translation proxy, Google Read Aloud, Google Messages link previews) by their [published IP ranges](https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers-google.json), fixing the infinite challenge loop for visitors using Google Translate ([#444](https://github.com/TecharoHQ/anubis/issues/444))
 - Update QwantBot remote addresses range with latest value
 - Migrate check-spelling workflow config to [cspell](https://cspell.org/)
@@ -25,9 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add FreeBSD/Windows binaries to the yeetfile.
 - Add systemd system extensions to the yeetfile.
 - Set an explicit esbuild `--target=chrome66` so modern syntax (e.g. optional chaining) is transpiled down. This lowers the minimum supported browser from Chrome 80 to Chrome 66.
-
-## v1.26.0-pre1
-
 - Patch [GHSA-6wcg-mqvh-fcvg](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-6wcg-mqvh-fcvg) by containing subrequest logic to Anubis instances in subrequest mode.
 - Implement robot9001 style delays on the honeypot feature so that the first hit takes 1 millisecond, the second takes 2, etc.
 - Move metrics server configuration to [the policy file](./admin/policies.mdx#metrics-server).
