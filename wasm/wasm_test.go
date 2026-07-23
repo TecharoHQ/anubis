@@ -18,7 +18,7 @@ func abiTest(t testing.TB, kind, fname string, difficulty uint32) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	t.Cleanup(cancel)
 
@@ -28,7 +28,7 @@ func abiTest(t testing.TB, kind, fname string, difficulty uint32) {
 	}
 
 	h := sha256.New()
-	fmt.Fprint(h, t.Name())
+	fmt.Fprint(h, t.Name()) //nolint:errcheck
 	data := h.Sum(nil)
 
 	nonce, hash, mod, err := runner.run(ctx, data, difficulty, 0, 1)
@@ -60,7 +60,6 @@ func TestAlgos(t *testing.T) {
 
 	for _, kind := range []string{"baseline", "simd128"} {
 		for _, fname := range fnames {
-			fname := fname
 			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
 				abiTest(t, kind, fname.Name(), 4)
 			})
@@ -75,7 +74,7 @@ func bench(b *testing.B, kind, fname string, difficulties []uint32) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	b.Cleanup(cancel)
 
@@ -85,7 +84,7 @@ func bench(b *testing.B, kind, fname string, difficulties []uint32) {
 	}
 
 	h := sha256.New()
-	fmt.Fprint(h, "This is an example value that exists only to test the system.")
+	fmt.Fprint(h, "This is an example value that exists only to test the system.") //nolint:errcheck
 	data := h.Sum(nil)
 
 	_, _, mod, err := runner.run(ctx, data, 0, 0, 1)
@@ -137,7 +136,7 @@ func BenchmarkValidate(b *testing.B) {
 	}
 
 	h := sha256.New()
-	fmt.Fprint(h, "This is an example value that exists only to test the system.")
+	fmt.Fprint(h, "This is an example value that exists only to test the system.") //nolint:errcheck
 	data := h.Sum(nil)
 
 	for _, fname := range fnames {
@@ -155,7 +154,7 @@ func BenchmarkValidate(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer fin.Close()
+			defer fin.Close() //nolint:errcheck
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			b.Cleanup(cancel)
 
@@ -218,7 +217,7 @@ func TestRunnerDataHardening(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					defer fin.Close()
+					defer fin.Close() //nolint:errcheck
 					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 					t.Cleanup(cancel)
 

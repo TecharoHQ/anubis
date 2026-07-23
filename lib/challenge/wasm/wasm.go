@@ -34,7 +34,7 @@ func (i *Impl) Setup(mux *http.ServeMux) error {
 	if err != nil {
 		return err
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	i.runner, err = wasm.NewRunner(context.Background(), fname, fin)
 
@@ -100,7 +100,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("verify", "client calculated wrong data", fmt.Errorf("%w: response invalid: %s", chall.ErrFailed, response))
 	}
 
-	lg.Debug("challenge took", "elapsedTime", elapsedTime)
+	lg.DebugContext(r.Context(), "challenge took", "elapsedTime", elapsedTime)
 	chall.TimeTaken.WithLabelValues(i.algorithm).Observe(elapsedTime)
 
 	return nil

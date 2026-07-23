@@ -244,7 +244,9 @@ func (r *Runner) run(ctx context.Context, data []byte, difficulty, initialNonce,
 func (r *Runner) Run(ctx context.Context, data []byte, difficulty, initialNonce, iterand uint32) (uint32, []byte, error) {
 	nonce, hash, mod, err := r.run(ctx, data, difficulty, initialNonce, iterand)
 	if mod != nil {
-		defer mod.Close(ctx)
+		if err := mod.Close(ctx); err != nil {
+			return 0, nil, fmt.Errorf("can't close wasm module: %w", err)
+		}
 	}
 	if err != nil {
 		return 0, nil, fmt.Errorf("can't run %s: %w", r.fname, err)
@@ -283,7 +285,9 @@ func (r *Runner) Verify(ctx context.Context, data, verify []byte, nonce, difficu
 	t0 := time.Now()
 	ok, mod, err := r.verify(ctx, data, verify, nonce, difficulty)
 	if mod != nil {
-		defer mod.Close(ctx)
+		if err := mod.Close(ctx); err != nil {
+			return false, fmt.Errorf("can't close wasm module: %w", err)
+		}
 	}
 	validationTime.WithLabelValues(r.fname).Observe(float64(time.Since(t0)))
 	validationCount.WithLabelValues(r.fname, strconv.FormatBool(ok)).Inc()

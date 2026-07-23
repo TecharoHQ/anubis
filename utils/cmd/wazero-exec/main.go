@@ -18,12 +18,12 @@ func defaultCacheDir() string {
 	dir, err := os.UserCacheDir()
 	if err != nil {
 		path := filepath.Join(os.Getenv("HOME"), ".cache", "techaro.lol", "anubis", "wazero-exec")
-		os.MkdirAll(path, 0755)
+		_ = os.MkdirAll(path, 0755)
 		return path
 	}
 
 	path := filepath.Join(dir, "techaro.lol", "anubis", "wazero-exec")
-	os.MkdirAll(path, 0755)
+	_ = os.MkdirAll(path, 0755)
 	return path
 }
 
@@ -91,7 +91,9 @@ func run(ctx context.Context, fname string, args []string) error {
 	if err != nil {
 		return fmt.Errorf("can't run program %s: %w", fname, err)
 	}
-	defer mod.Close(ctx)
+	if err := mod.Close(ctx); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -16,7 +16,7 @@
     "assets:web": "./web/build.sh",
     "assets:xess": "./xess/build.sh",
     "assets": "npm run assets:generate && npm run assets:wasm && npm run assets:wasm2js && npm run assets:web && npm run assets:xess && echo Done",
-    "build": "npm run assets && go build -o ./var/anubis ./cmd/anubis",
+    "build": "npm run assets && go build -ldflags='-w -s' -o ./var/anubis ./cmd/anubis",
     "dev": "npm run assets && go run ./cmd/anubis --use-remote-address --target http://localhost:3000",
     "container": "npm run assets && go run ./cmd/containerbuild",
     "package": "go tool yeet",

@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"runtime"
@@ -53,7 +52,7 @@ func solve(t *testing.T, algorithm string, data []byte) (nonce string, response 
 	if err != nil {
 		t.Fatalf("can't open %s: %v", fname, err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	runner, err := wasm.NewRunner(t.Context(), fname, fin)
 	if err != nil {
@@ -99,7 +98,7 @@ func testValidateAdversarial(t *testing.T, algorithm string) {
 		t.Fatalf("can't set up %s challenge: %v", algorithm, err)
 	}
 
-	lg := slog.New(slog.NewTextHandler(io.Discard, nil))
+	lg := slog.New(slog.DiscardHandler)
 
 	// A challenge whose RandomData is valid hex-encoded bytes.
 	challengeBytes := sha256.Sum256([]byte(t.Name()))
@@ -323,14 +322,14 @@ func TestSolveVerifyManyChallenges(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't open %s: %v", fname, err)
 			}
-			defer fin.Close()
+			defer fin.Close() //nolint:errcheck
 
 			runner, err := wasm.NewRunner(t.Context(), fname, fin)
 			if err != nil {
 				t.Fatalf("can't create runner for %s: %v", algorithm, err)
 			}
 
-			lg := slog.New(slog.NewTextHandler(io.Discard, nil))
+			lg := slog.New(slog.DiscardHandler)
 			bot := &policy.Bot{
 				Challenge: &config.ChallengeRules{
 					Algorithm:  algorithm,
