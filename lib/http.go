@@ -283,6 +283,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		localizer.T("making_sure_not_bot"),
 		component,
 		s.policy.Impressum,
+		s.policy.Honeypot,
 		chall,
 		in.Rule.Challenge,
 		in.OGTags,
@@ -332,7 +333,7 @@ func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
 
 	templ.Handler(
-		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, localizer),
+		web.Base(localizer.T("benchmarking_anubis"), web.Bench(localizer), s.policy.Impressum, s.policy.Honeypot, localizer),
 	).ServeHTTP(w, r)
 }
 
@@ -347,6 +348,7 @@ func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, 
 		localizer.T("oh_noes"),
 		web.ErrorPage(msg, s.opts.WebmasterEmail, code, localizer),
 		s.policy.Impressum,
+		s.policy.Honeypot,
 		localizer,
 	)
 	handler := internal.NoStoreCache(templ.Handler(component, templ.WithStatus(status)))
@@ -445,7 +447,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		}
 
 		templ.Handler(
-			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, localizer),
+			web.Base(localizer.T("you_are_not_a_bot"), web.StaticHappy(localizer), s.policy.Impressum, s.policy.Honeypot, localizer),
 		).ServeHTTP(w, r)
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())

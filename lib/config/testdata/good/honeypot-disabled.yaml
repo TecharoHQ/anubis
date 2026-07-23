@@ -1,0 +1,7 @@
+bots:
+  - name: everything
+    user_agent_regex: .*
+    action: DENY
+
+honeypot:
+  enabled: false

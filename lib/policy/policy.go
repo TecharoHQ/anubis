@@ -38,6 +38,7 @@ type ParsedConfig struct {
 	Store             store.Interface
 	orig              *config.Config
 	Impressum         *config.Impressum
+	Honeypot          *config.Honeypot
 	OpenGraph         config.OpenGraph
 	Bots              []Bot
 	Thresholds        []*Threshold
@@ -219,6 +220,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		}
 
 		result.Impressum = c.Impressum
+		result.Honeypot = c.Honeypot
 
 		parsedBot.Rules = cl
 		parsedBot.hash = parsedBot.Hash()

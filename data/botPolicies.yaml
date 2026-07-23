@@ -108,6 +108,14 @@ bots:
 
 dnsbl: false
 
+## Honeypot configuration
+honeypot:
+  ## If not set, Anubis will assume you meant `true`.
+  enabled: true
+  ## Currently the only supported implementation is the naive method.
+  ## See https://anubis.techaro.lol/docs/admin/honeypot/overview#implementation-notes for more information
+  implementation: naive
+
 # #
 # impressum:
 #   # Displayed at the bottom of every page rendered by Anubis.
