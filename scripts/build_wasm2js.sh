@@ -47,8 +47,6 @@ fi
 mkdir -p ./web/js/gen/wasm2js
 
 for fname in ./web/static/wasm/baseline/*.wasm; do
-	echo $fname
-
 	output="./web/js/gen/wasm2js/$(basename $fname).js"
 	run_wasm2js $fname -o "${output}"
 	sed -i '1s$.*$const anubis = { anubis_update_nonce: (_ignored) => { } };$' $output
