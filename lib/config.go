@@ -168,7 +168,7 @@ func New(opts Options) (*Server, error) {
 	if opts.Policy.Impressum != nil {
 		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
-				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, localization.GetLocalizer(r)),
+				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, opts.Policy.Honeypot, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
 		}), "GET")
 	}
@@ -177,23 +177,25 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
-	mazeGen, err := naive.New(result.store, result.logger)
-	if err == nil {
-		registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
+	if opts.Policy.Honeypot != nil && opts.Policy.Honeypot.Enabled {
+		mazeGen, err := naive.New(result.store, result.logger)
+		if err == nil {
+			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
 
-		opts.Policy.Bots = append(
-			opts.Policy.Bots,
-			policy.Bot{
-				Rules:  mazeGen.CheckNetwork(),
-				Action: config.RuleWeigh,
-				Weight: &config.Weight{
-					Adjust: 30,
+			opts.Policy.Bots = append(
+				opts.Policy.Bots,
+				policy.Bot{
+					Rules:  mazeGen.CheckNetwork(),
+					Action: config.RuleWeigh,
+					Weight: &config.Weight{
+						Adjust: 30,
+					},
+					Name: "honeypot/network",
 				},
-				Name: "honeypot/network",
-			},
-		)
-	} else {
-		result.logger.Error("can't init honeypot subsystem", "err", err)
+			)
+		} else {
+			result.logger.Error("can't init honeypot subsystem", "err", err)
+		}
 	}
 
 	//goland:noinspection GoBoolExpressions

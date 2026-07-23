@@ -521,6 +521,36 @@ logging:
 
 If you use a service orchestration platform that does not capture the standard error stream of processes, you need to use a different logging sink.
 
+## Honeypot configuration
+
+Anubis has support for [dataset poisoning](./honeypot/overview.mdx). Out of the box this is enabled so that administrators can feed fail2ban pipelines. This works by adding an entry point to the honeypot maze in every page like this:
+
+```html
+<script type="ignore">
+  <a
+    href="/.within.website/x/cmd/anubis/api/honeypot/<uuid>/init"
+  >
+    Don't click me
+  </a>
+</script>
+```
+
+Any hits that match the URL `^/.within.website/x/cmd/anubis/api/honeypot/.*` are _malicious_ and should be blocked. A spec-compliant HTML parser will not parse this link, so any parser that does and visits it is categorically in the wrong.
+
+The following configuration options are supported:
+
+```yaml
+## Honeypot configuration
+honeypot:
+  ## If not set, Anubis will assume you meant `true`.
+  enabled: true
+  ## Currently the only supported method is the naive method.
+  ## See https://anubis.techaro.lol/docs/admin/honeypot/overview#implementation-notes for more information
+  implementation: naive
+```
+
+For more information about this feature, consult the [Dataset Poisoning](./honeypot/overview.mdx) page.
+
 ## Risk calculation for downstream services
 
 In case your service needs it for risk calculation reasons, Anubis exposes information about the rules that any requests match using a few headers:

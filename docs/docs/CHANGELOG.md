@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add option to [disable the honeypot](./admin/policies.mdx#honeypot-configuration).
+
 <!-- This changes the project to: -->
 
 ## v1.26.0-pre2
