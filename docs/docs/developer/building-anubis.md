@@ -29,11 +29,11 @@ In order to build a production-ready binary of Anubis, you need the following pa
 - `zstd` - compresses production JS
 - `brotli` - compresses production JS
 
-To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.24.2` (this can be done from any version of Go):
+To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.26.4` (this can be done from any version of Go):
 
 ```text
-go install golang.org/dl/go1.24.2@latest
-go1.24.2 download
+go install golang.org/dl/go1.26.4@latest
+go1.26.4 download
 ```
 
 ### Install dependencies

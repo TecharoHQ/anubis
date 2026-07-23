@@ -1,0 +1,8 @@
+- name: xai-crawler-and-asn
+  action: DENY
+  user_agent_regex: code-review-sourcing.*\+xai-research
+  remote_addresses:
+    - 69.12.56.0/21
+- name: xai-crawler-user-agent
+  action: DENY
+  user_agent_regex: code-review-sourcing.*\+xai-research

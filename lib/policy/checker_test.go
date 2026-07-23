@@ -395,7 +395,7 @@ func TestPathChecker_GHSA_6wcg_mqvh_fcvg(t *testing.T) {
 			}
 
 			if tt.xOriginalURI != "" {
-				req.Header.Set("X-Original-URI", tt.xOriginalURI)
+				req.Header.Set("X-Original-Uri", tt.xOriginalURI)
 			}
 
 			got, err := pc.Check(req)
@@ -511,7 +511,7 @@ func TestPathChecker_XForwardedUri(t *testing.T) {
 				req.Header.Set("X-Forwarded-Uri", tt.xForwardedUri)
 			}
 			if tt.xOriginalURI != "" {
-				req.Header.Set("X-Original-URI", tt.xOriginalURI)
+				req.Header.Set("X-Original-Uri", tt.xOriginalURI)
 			}
 
 			got, err := pc.Check(req)

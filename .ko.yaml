@@ -10,4 +10,3 @@ builds:
     ldflags:
       - -s -w
       - -extldflags "-static"
-      - -X github.com/TecharoHQ/anubis.Version={{.Env.VERSION}}

@@ -88,7 +88,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted %d leading zeros but got %s", chall.ErrFailed, rule.Challenge.Difficulty, response))
 	}
 
-	lg.Debug("challenge took", "elapsedTime", elapsedTime)
+	lg.DebugContext(r.Context(), "challenge took", "elapsedTime", elapsedTime)
 	chall.TimeTaken.WithLabelValues(i.Algorithm).Observe(elapsedTime)
 
 	return nil

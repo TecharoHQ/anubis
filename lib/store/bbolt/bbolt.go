@@ -104,7 +104,7 @@ func (s *Store) Get(ctx context.Context, key string) ([]byte, error) {
 		}
 
 		if time.Now().After(expiry) {
-			go s.deleteIfExpired(context.Background(), key, expiry)
+			go s.deleteIfExpired(context.Background(), key, expiry) //nolint:errcheck
 			return fmt.Errorf("%w: %q", store.ErrNotFound, key)
 		}
 
@@ -158,7 +158,7 @@ func (s *Store) cleanup(ctx context.Context) error {
 
 			expiryStr := valueBkt.Get([]byte("expiry"))
 			if expiryStr == nil {
-				slog.Warn("while running cleanup, expiry is not set somehow, file a bug?", "key", string(key))
+				slog.WarnContext(ctx, "while running cleanup, expiry is not set somehow, file a bug?", "key", string(key))
 				return nil
 			}
 
@@ -190,7 +190,7 @@ func (s *Store) cleanupThread(ctx context.Context) {
 			return
 		case <-t.C:
 			if err := s.cleanup(ctx); err != nil {
-				slog.Error("error during bbolt cleanup", "err", err)
+				slog.ErrorContext(ctx, "error during bbolt cleanup", "err", err)
 			}
 		}
 	}

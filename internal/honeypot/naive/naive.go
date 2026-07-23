@@ -78,9 +78,10 @@ type Impl struct {
 }
 
 func (i *Impl) incrementNetwork(ctx context.Context, network string) int {
-	result, _ := i.networkWeight.Get(ctx, internal.SHA256sum(network))
+	key := internal.SHA256sum(network)
+	result, _ := i.networkWeight.Get(ctx, key)
 	result++
-	i.networkWeight.Set(ctx, internal.SHA256sum(network), result, time.Hour)
+	_ = i.networkWeight.Set(ctx, key, result, time.Hour)
 	return result
 }
 
@@ -151,7 +152,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	network, ok := internal.ClampIP(realIP)
 	if !ok {
-		lg.Error("clampIP failed", "output", network, "ok", ok)
+		lg.ErrorContext(r.Context(), "clampIP failed", "output", network, "ok", ok)
 		http.Error(w, "The cake is a lie", http.StatusTeapot)
 		return
 	}
@@ -161,11 +162,11 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	stage := r.PathValue("stage")
 
 	if stage == "init" {
-		lg.Debug("found new entrance point", "id", id, "stage", stage, "userAgent", r.UserAgent(), "clampedIP", network)
+		lg.DebugContext(r.Context(), "found new entrance point", "id", id, "stage", stage, "userAgent", r.UserAgent(), "clampedIP", network)
 	} else {
-		switch {
-		case networkCount%256 == 0:
-			lg.Warn("found possible crawler", "id", id, "network", network, "userAgent", r.UserAgent())
+		switch networkCount % 256 {
+		case 0:
+			lg.WarnContext(r.Context(), "found possible crawler", "id", id, "network", network, "userAgent", r.UserAgent())
 		}
 	}
 

@@ -1,0 +1,386 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": [
+    "companies",
+    "css",
+    "en_GB",
+    "en_US",
+    "filetypes",
+    "fonts",
+    "golang",
+    "html",
+    "node",
+    "npm",
+    "project-words",
+    "rust",
+    "rust-crates",
+    "typescript"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    ".git/**",
+    ".vscode/cspell.json",
+    "**/{COPYRIGHT,copyright,Copyright}",
+    "**/{LICENSE,LICENCE,license,licence,License,Licence}",
+    "**/third-party/**",
+    "**/third_party/**",
+    "**/thirdparty/**",
+    "**/3rdparty/**",
+    "**/generated/**",
+    "**/vendor/**",
+    "**/go.sum",
+    "**/package.json",
+    "**/package-lock.json",
+    "**/Pipfile",
+    "**/pyproject.toml",
+    "**/requirements*.txt",
+    "**/*.a",
+    "**/*.ai",
+    "**/.all-contributorsrc",
+    "**/*.avi",
+    "**/*.bmp",
+    "**/*.bz2",
+    "**/*.cer",
+    "**/*.cert",
+    "**/*.crt",
+    "**/*.class",
+    "**/.coveragerc",
+    "**/*.crl",
+    "**/*.csr",
+    "**/*.dll",
+    "**/*.doc",
+    "**/*.docx",
+    "**/*.drawio",
+    "**/.DS_Store",
+    "**/*.eot",
+    "**/*.eps",
+    "**/*.exe",
+    "**/*.gif",
+    "**/.git-blame-ignore-revs",
+    "**/.gitattributes",
+    "**/.gitkeep",
+    "**/*.graffle",
+    "**/*.gz",
+    "**/*.icns",
+    "**/*.ico",
+    "**/*.ipynb",
+    "**/*.jar",
+    "**/*.jks",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.key",
+    "**/*.lib",
+    "**/*.lock",
+    "**/*.map",
+    "**/*.min.*",
+    "**/*.mo",
+    "**/*.mod",
+    "**/*.mp3",
+    "**/*.mp4",
+    "**/*.o",
+    "**/*.ocf",
+    "**/*.otf",
+    "**/*.p12",
+    "**/*.parquet",
+    "**/*.pdf",
+    "**/*.pem",
+    "**/*.pfx",
+    "**/*.png",
+    "**/*.psd",
+    "**/*.pyc",
+    "**/.pylintrc",
+    "**/*.qm",
+    "**/*.s",
+    "**/*.sig",
+    "**/*.so",
+    "**/*.svg",
+    "**/*.svgz",
+    "**/*.sys",
+    "**/*.tar",
+    "**/*.tgz",
+    "**/*.tif",
+    "**/*.tiff",
+    "**/*.ttf",
+    "**/*.wav",
+    "**/*.webm",
+    "**/*.webp",
+    "**/*.woff",
+    "**/*.woff2",
+    "**/*.xcf",
+    "**/*.xls",
+    "**/*.xlsx",
+    "**/*.xpm",
+    "**/*.xz",
+    "**/*.zip",
+    "**/*ignore",
+    "**/robots.txt",
+    ".github/FUNDING.yml",
+    ".github/workflows/spelling.yml",
+    "data/**",
+    "docs/blog/tags.yml",
+    "docs/docs/user/known-instances.md",
+    "docs/manifest/**",
+    "docs/static/.nojekyll",
+    "internal/glob/glob_test.go",
+    "internal/honeypot/naive/affirmations.txt",
+    "internal/honeypot/naive/spintext.txt",
+    "internal/honeypot/naive/titles.txt",
+    "lib/challenge/preact/static/**",
+    "lib/config/testdata/bad/unparseable.json",
+    "lib/localization/**",
+    "lib/localization/locales/*.json",
+    "internal/ogtags/ogtags_fuzz_test.go",
+    "lib/policy/config/testdata/bad/unparseable.json",
+    "test/**",
+    "web/static/**"
+  ],
+  "flagWords": [
+    "attache",
+    "bellow",
+    "bellows",
+    "benefitting",
+    "occurence",
+    "occurences",
+    "dependant",
+    "dependants",
+    "dependance",
+    "dependances",
+    "dependancy",
+    "dependancies",
+    "develope",
+    "developement",
+    "developpe",
+    "developped",
+    "developper",
+    "developpers",
+    "developpement",
+    "Dever",
+    "Devers",
+    "devex",
+    "devide",
+    "devided",
+    "devides",
+    "Devina",
+    "Devine",
+    "Devinna",
+    "Devinne",
+    "devisal",
+    "devisor",
+    "diable",
+    "diables",
+    "oer",
+    "Sorce",
+    "spae",
+    "spaes",
+    "Teh",
+    "untill",
+    "untilling",
+    "vender",
+    "venders",
+    "wether",
+    "wethers"
+  ],
+  "patterns": [
+    {
+      "name": "url",
+      "pattern": "(?:\\b(?:https?|ftp|file)://)[-A-Za-z0-9+&@#/*%?=~_|!:,.;]+[-A-Za-z0-9+&@#/*%=~_|]"
+    },
+    {
+      "name": "github-actions-uses",
+      "pattern": "\\buses:\\s+[-\\w.]+/[-\\w./]+@[-\\w.]+"
+    },
+    {
+      "name": "libraries",
+      "pattern": "(?:\\b|_)[Ll]ib(?:re(?=office)|era(?![lt])|)(?!ero|erty|rar(?:i(?:an|es)|y))(?=[a-z])"
+    },
+    {
+      "name": "version-suffix",
+      "pattern": "(?:(?<=[A-Z]{2})V|(?<=[a-z]{2}|[A-Z]{2})v)\\d+(?:\\b|(?=[a-zA-Z_]))"
+    },
+    {
+      "name": "container-image",
+      "pattern": "image: [-\\w./:@]+"
+    },
+    {
+      "name": "import",
+      "pattern": "^import\\s+(?:(?:static|type)\\s+|)(?:[\\w.]|\\{\\s*\\w*?(?:,\\s*(?:\\w*|\\*))+\\s*\\})+"
+    },
+    {
+      "name": "hex-digits",
+      "pattern": "(?:[\\\\0][xX]|\\\\u|[uU]\\+|#x?|%23|&H)[0-9_a-fA-FgGrR]*?[a-fA-FgGrR]{2,}[0-9_a-fA-FgGrR]*(?:[uUlL]{0,3}|[iu]\\d+)\\b"
+    },
+    {
+      "name": "node-packages",
+      "pattern": "([\"'])@[^/'\" ]+/[^/'\" ]+\\1"
+    },
+    {
+      "name": "css-fonts",
+      "pattern": "\\bfont(?:-family|):[^;}]+"
+    },
+    {
+      "name": "shell-set-args",
+      "pattern": "\\b(?:bash|sh|set)(?:\\s+[-+][abefimouxE]{1,2})*\\s+[-+][abefimouxE]{3,}(?:\\s+[-+][abefimouxE]+)*"
+    },
+    {
+      "name": "css-url",
+      "pattern": "\\burl\\([^)]+\\)"
+    },
+    {
+      "name": "c-byte-conversions",
+      "pattern": "(?:\\d|\\bh)to(?!ken)(?=[a-z])|to(?=[adhiklpun]\\()"
+    },
+    {
+      "name": "github-sha-refs",
+      "pattern": "\\[([0-9a-f]+)\\]\\(https://(?:www\\.|)github.com/[-\\w]+/[-\\w]+/commit/\\1[0-9a-f]*"
+    },
+    {
+      "name": "copyright",
+      "pattern": "Copyright (?:\\([Cc]\\)|)(?:[-\\d, ]|and)+(?: [A-Z][a-z]+ [A-Z][a-z]+,?)+"
+    },
+    {
+      "name": "ipv6",
+      "pattern": "\\b(?:[0-9a-fA-F]{0,4}:){3,7}[0-9a-fA-F]{0,4}\\b"
+    },
+    {
+      "name": "docker-from",
+      "pattern": "/^\\s*FROM\\s+\\S+:\\S+(?:\\s+AS\\s+\\S+|)/gmi"
+    },
+    {
+      "name": "perl-run",
+      "pattern": "perl(?:\\s+-[a-zA-Z]\\w*)+"
+    },
+    {
+      "name": "go-install",
+      "pattern": "go install(?:\\s+[a-z]+\\.[-@\\w/.]+)+"
+    },
+    {
+      "name": "printf-markers",
+      "pattern": "(?<!\\\\)\\\\[nrt](?=[a-z]{2,})"
+    },
+    {
+      "name": "tar-args",
+      "pattern": "\\b(?:\\\\n|)g?tar(?:\\.exe|)(?:(?:\\s+--[-a-zA-Z]+|\\s+-[a-zA-Z]+|\\s[ABGJMOPRSUWZacdfh-pr-xz]+\\b)(?:=[^ ]*|))+"
+    },
+    {
+      "name": "log-in-to",
+      "pattern": "\\b(?:(?:[Ll]og(?:g(?=[a-z])|)|[Ss]ign)(?:ed|ing)?) in to\\b"
+    },
+    {
+      "name": "to-opt-in",
+      "pattern": "\\bto opt in\\b"
+    },
+    {
+      "name": "pass-in",
+      "pattern": "\\bpass(?:ed|ing) in\\b"
+    },
+    {
+      "name": "ls-listing",
+      "pattern": "[-bcdlpsw](?:[-r][-w][-SsTtx]){3}[\\.+*]?\\s+\\d+\\s+\\S+\\s+\\S+\\s+[.\\d]+(?:[KMGT]|)\\s+"
+    },
+    {
+      "name": "mount",
+      "pattern": "\\bmount\\s+-t\\s+(\\w+)\\s+\\1\\b"
+    },
+    {
+      "name": "c-repeated-values",
+      "pattern": "\\s(auto|buffalo|center|div|inherit|long|LONG|none|normal|solid|thin|transparent|very)(?: \\1)+\\s"
+    },
+    {
+      "name": "c-enum-struct",
+      "pattern": "\\b(?:enum|struct)\\s+(\\w+)\\s+\\1\\b"
+    },
+    {
+      "name": "go-templates",
+      "pattern": "\\s(\\w+)\\s+\\1\\s+`(?:graphql|inject|json|yaml):"
+    },
+    {
+      "name": "doxygen",
+      "pattern": "(?:[\\\\@](?:brief|defgroup|groupname|link|t?param|return|retval)|(?:public|private|\\[Parameter(?:\\(.+\\)|)\\])(?:\\s+(?:static|override|readonly|required|virtual))*)(?:\\s+\\{\\w+\\}|)\\s+(\\w+)\\s+\\1\\s"
+    },
+    {
+      "name": "macos-path",
+      "pattern": "(?:Contents\\W+|(?!iOS)/)MacOS\\b"
+    },
+    {
+      "name": "python-macos",
+      "pattern": "\"Operating System :: MacOS :: MacOS X\""
+    },
+    {
+      "name": "gmbh",
+      "pattern": "\\bGmbH\\b"
+    },
+    {
+      "name": "intellij",
+      "pattern": "\\bIntelliJ\\b"
+    },
+    {
+      "name": "signed-off-by",
+      "pattern": "^\\s*(?:(?:Based-on-patch|Co-authored|Helped|Mentored|Reported|Reviewed|Signed-off)-by|Thanks-to): (?:[^<]*<[^>]*>|[^<]*)\\s*$"
+    },
+    {
+      "name": "revert-commit",
+      "pattern": "^This reverts commit [0-9a-f]{40}\\.$"
+    },
+    {
+      "name": "long-runs",
+      "pattern": "\\b([A-Za-z])\\1{3,}\\b"
+    },
+    {
+      "name": "microsoft-url",
+      "pattern": "\\b(?:https?://|)(?:(?:(?:blogs|download\\.visualstudio|docs|msdn2?|research)\\.|)microsoft|blogs\\.msdn)\\.co(?:m|\\.\\w\\w)/[-_a-zA-Z0-9()=./%]*"
+    },
+    {
+      "name": "data-url",
+      "pattern": "\\bdata:[-a-zA-Z=;:/0-9+]*,\\S*"
+    }
+  ],
+  "ignoreRegExpList": [
+    "url",
+    "github-actions-uses",
+    "libraries",
+    "version-suffix",
+    "container-image",
+    "import",
+    "hex-digits",
+    "node-packages",
+    "css-fonts",
+    "shell-set-args",
+    "css-url",
+    "c-byte-conversions",
+    "github-sha-refs",
+    "copyright",
+    "ipv6",
+    "docker-from",
+    "perl-run",
+    "go-install",
+    "printf-markers",
+    "tar-args",
+    "log-in-to",
+    "to-opt-in",
+    "pass-in",
+    "ls-listing",
+    "mount",
+    "c-repeated-values",
+    "c-enum-struct",
+    "go-templates",
+    "doxygen",
+    "macos-path",
+    "python-macos",
+    "gmbh",
+    "intellij",
+    "signed-off-by",
+    "revert-commit",
+    "long-runs",
+    "microsoft-url",
+    "data-url"
+  ]
+}

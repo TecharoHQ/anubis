@@ -1,13 +1,28 @@
 $`npm run assets`;
 
-["amd64", "arm64", "ppc64le", "riscv64"].forEach((goarch) => {
-  [deb, rpm, tarball].forEach((method) =>
+const methods = [
+  // [goos, goarch, [build, methods]]
+  ["freebsd", "amd64", [tarball]],
+  ["freebsd", "arm64", [tarball]],
+  ["linux", "amd64", [deb, rpm, sysext, tarball]],
+  ["linux", "arm64", [deb, rpm, sysext, tarball]],
+  ["linux", "ppc64le", [deb, rpm, sysext, tarball]],
+  ["linux", "riscv64", [deb, rpm, sysext, tarball]],
+  ["windows", "amd64", [tarball]],
+  ["windows", "arm64", [tarball]],
+]
+
+const packages = methods.map(([goos, goarch, methods]) => {
+  return methods.map(method => {
+    const exe = goos == "windows" ? ".exe" : "";
+
     method.build({
       name: "anubis",
       description:
         "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
       homepage: "https://anubis.techaro.lol",
       license: "MIT",
+      platform: goos,
       goarch,
 
       documentation: {
@@ -17,11 +32,26 @@ $`npm run assets`;
       },
 
       build: ({ bin, etc, systemd, doc }) => {
-        $`go build -o ${bin}/anubis -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/anubis`;
-        $`go build -o ${bin}/anubis-robots2policy -ldflags '-s -w -extldflags "-static" -X "github.com/TecharoHQ/anubis.Version=${git.tag()}"' ./cmd/robots2policy`;
+        $`go build -trimpath -o ${bin}/anubis${exe} -ldflags '-s -w -extldflags "-static"' ./cmd/anubis`;
+        $`go build -trimpath -o ${bin}/anubis-robots2policy${exe} -ldflags '-s -w -extldflags "-static"' ./cmd/robots2policy`;
 
-        file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
-        file.install("./run/default.env", `${etc}/default.env`);
+        if (goos == "linux") {
+          file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
+          file.install("./run/default.env", `${etc}/default.env`);
+        }
+
+        if (goos == "linux" && method.name == "tarball") {
+          $`mkdir -p ${etc}/openrc`
+          const openrc = `${etc}/openrc`
+          file.install("./run/openrc/anubis.confd", `${openrc}/anubis.confd`);
+          file.install("./run/openrc/anubis.initd", `${openrc}/anubis.initd`);
+        }
+
+        if (goos == "freebsd") {
+          $`mkdir -p ${etc}/rc`;
+          const rc = `${etc}/rc`;
+          file.install("./run/anubis.freebsd", `${rc}/anubis`);
+        }
 
         $`mkdir -p ${doc}/docs`;
         $`cp -a docs/docs ${doc}`;
@@ -34,9 +64,11 @@ $`npm run assets`;
         $`cp -a data/crawlers ${doc}/data/crawlers`;
         $`cp -a data/meta ${doc}/data/meta`;
       },
-    }),
-  );
+    });
+  });
 });
+
+
 
 // NOTE(Xe): Fixes #217. This is a "half baked" tarball that includes the harder
 // parts for deterministic distros already done. Distributions like NixOS, Gentoo

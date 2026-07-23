@@ -1,0 +1,45 @@
+name: The great browser testing library of Gubal
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+jobs:
+  gubal_test:
+    if: |
+      startsWith(github.event.comment.body, '/gubaltest')
+
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Install gubalctl
+        run: |
+          arch=amd64
+          if [ "$(uname -m)" = "aarch64" ]; then
+            arch=arm64
+          fi
+          wget -O gubalctl.deb "https://xedn.t3.tigrisfiles.io/dl/gubalctl/gubalctl_0.0.0_${arch}.deb"
+          sudo apt-get -y install ./gubalctl.deb
+
+      - name: Run gubal test
+        run: |
+          gubalctl --url https://gubald.xeserv.us --anubis-image ttl.sh/techaro/pr-${PR_NUMBER}/anubis:24h
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACCESS_KEY_ID: ${{ secrets.GUBALD_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.GUBALD_SECRET_ACCESS_KEY }}
+          PR_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}

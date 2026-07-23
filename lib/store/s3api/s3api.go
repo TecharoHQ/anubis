@@ -39,7 +39,7 @@ func (s *Store) Get(ctx context.Context, key string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", store.ErrNotFound, err)
 	}
-	defer out.Body.Close()
+	defer out.Body.Close() //nolint:errcheck
 	if msStr, ok := out.Metadata["x-anubis-expiry-ms"]; ok && msStr != "" {
 		if ms, err := strconv.ParseInt(msStr, 10, 64); err == nil {
 			if time.Now().UnixMilli() >= ms {

@@ -242,7 +242,7 @@ func (is *ImportStatement) load() error {
 	if err != nil {
 		return fmt.Errorf("%w: %s: %w", ErrInvalidImportStatement, is.Import, err)
 	}
-	defer fin.Close()
+	defer fin.Close() //nolint:errcheck
 
 	var imported []BotOrImport
 	var result []BotConfig
@@ -259,7 +259,7 @@ func (is *ImportStatement) load() error {
 		}
 
 		if b.ImportStatement != nil {
-			result = append(result, b.ImportStatement.Bots...)
+			result = append(result, b.Bots...)
 		}
 
 		if b.BotConfig != nil {
@@ -335,6 +335,7 @@ type fileConfig struct {
 	DNSTTL      DnsTTL              `json:"dns_ttl"`
 	Logging     *Logging            `json:"logging"`
 	Metrics     *Metrics            `json:"metrics,omitempty"`
+	Honeypot    *Honeypot           `json:"honeypot"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -382,6 +383,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.Honeypot != nil {
+		if err := c.Honeypot.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -402,7 +409,8 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		Store: &Store{
 			Backend: "memory",
 		},
-		Logging: (Logging{}).Default(),
+		Logging:  (Logging{}).Default(),
+		Honeypot: new((Honeypot{}).Default()),
 	}
 
 	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&c); err != nil {
@@ -425,6 +433,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		Store:       c.Store,
 		Logging:     c.Logging,
 		Metrics:     c.Metrics,
+		Honeypot:    c.Honeypot,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -442,7 +451,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 				continue
 			}
 
-			result.Bots = append(result.Bots, boi.ImportStatement.Bots...)
+			result.Bots = append(result.Bots, boi.Bots...)
 		}
 
 		if boi.BotConfig != nil {
@@ -517,6 +526,7 @@ type Config struct {
 	DNSBL       bool
 	DNSTTL      DnsTTL
 	Metrics     *Metrics
+	Honeypot    *Honeypot
 }
 
 func (c Config) Valid() error {

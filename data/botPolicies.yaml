@@ -41,6 +41,9 @@ bots:
   # Challenge Firefox AI previews
   - import: (data)/clients/x-firefox-ai.yaml
 
+  # x.ai has a scraper that is killing gitlab instances
+  - import: (data)/crawlers/xai.yaml
+
   # Allow common "keeping the internet working" routes (well-known, favicon, robots.txt)
   - import: (data)/common/keep-internet-working.yaml
 
@@ -104,6 +107,14 @@ bots:
       adjust: 10
 
 dnsbl: false
+
+## Honeypot configuration
+honeypot:
+  ## If not set, Anubis will assume you meant `true`.
+  enabled: true
+  ## Currently the only supported implementation is the naive method.
+  ## See https://anubis.techaro.lol/docs/admin/honeypot/overview#implementation-notes for more information
+  implementation: naive
 
 # #
 # impressum:

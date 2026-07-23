@@ -59,7 +59,7 @@ func TestBasePrefixInLinks(t *testing.T) {
 
 			// Render the base template to a buffer
 			var buf strings.Builder
-			component := base(tt.name, templ.NopComponent, impressum, nil, nil, localizer)
+			component := base(tt.name, templ.NopComponent, impressum, &config.Honeypot{Enabled: true, Implementation: "naive"}, nil, nil, localizer)
 			err := component.Render(context.Background(), &buf)
 			if err != nil {
 				t.Fatalf("failed to render template: %v", err)

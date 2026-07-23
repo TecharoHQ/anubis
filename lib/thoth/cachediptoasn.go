@@ -77,7 +77,7 @@ func (ip2asn *IPToASNWithCache) Lookup(ctx context.Context, lr *iptoasnv1.Lookup
 	}
 
 	if len(errs) != 0 {
-		slog.Error("errors parsing IP prefixes", "err", errors.Join(errs...))
+		slog.ErrorContext(ctx, "errors parsing IP prefixes", "err", errors.Join(errs...))
 	}
 
 	return resp, nil

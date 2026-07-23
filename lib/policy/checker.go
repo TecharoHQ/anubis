@@ -110,7 +110,7 @@ func NewPathChecker(rexStr string, subrequestMode bool) (checker.Impl, error) {
 
 func (pc *PathChecker) Check(r *http.Request) (bool, error) {
 	if pc.subRequestMode {
-		originalUrl := r.Header.Get("X-Original-URI")
+		originalUrl := r.Header.Get("X-Original-Uri")
 		if originalUrl == "" {
 			originalUrl = r.Header.Get("X-Forwarded-Uri")
 		}

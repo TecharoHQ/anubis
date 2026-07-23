@@ -32,7 +32,7 @@ flowchart LR
     An --> B
 ```
 
-Anubis is lightweight enough that you should be able to have many instances of it running without many problems. If this is a concern for you, please check out [ingress-anubis](https://github.com/jaredallard/ingress-anubis?ref=anubis.techaro.lol).
+Anubis is lightweight enough that you should be able to have many instances of it running without many problems. If this is a concern for you, please check out [ingress-anubis](https://github.com/jaredallard/ingress-anubis?ref=anubis.techaro.lol) or [anubis-kubernetes-operator](https://github.com/eznix86/anubis-kubernetes-operator/?ref=anubis.techaro.lol)
 
 This example makes the following assumptions:
 
@@ -115,20 +115,20 @@ spec:
 Then point your Ingress to the Anubis port:
 
 ```yaml
-  rules:
+rules:
   - host: git.xeserv.us
     http:
       paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: git
-            port:
-              # diff-remove
-              name: http
-              # diff-add
-              name: anubis
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: git
+              port:
+                # diff-remove
+                name: http
+                # diff-add
+                name: anubis
 ```
 
 ## Envoy Gateway
@@ -136,6 +136,7 @@ Then point your Ingress to the Anubis port:
 If you are using envoy-gateway, the `X-Real-Ip` header is not set by default, but Anubis does require it. You can resolve this by adding the header, either on the specific `HTTPRoute` where Anubis is listening, or on the `ClientTrafficPolicy` to apply it to any number of Gateways:
 
 HTTPRoute:
+
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -160,6 +161,7 @@ spec:
 ```
 
 Applying to any number of Gateways:
+
 ```yaml
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy

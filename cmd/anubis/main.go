@@ -56,6 +56,7 @@ var (
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
+	cookieHttpOnly           = flag.Bool("cookie-http-only", false, "if true, sets the HttpOnly flag on Anubis cookies")
 	cookieSameSite           = flag.String("cookie-same-site", "None", "sets the same site option on Anubis cookies, will auto-downgrade None to Lax if cookie-secure is false. Valid values are None, Lax, Strict, and Default.")
 	ed25519PrivateKeyHex     = flag.String("ed25519-private-key-hex", "", "private key used to sign JWTs, if not set a random one will be assigned")
 	ed25519PrivateKeyHexFile = flag.String("ed25519-private-key-hex-file", "", "file name containing value for ed25519-private-key-hex")
@@ -109,7 +110,7 @@ func doHealthCheck() error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -171,20 +172,30 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 		transport.TLSClientConfig.ServerName = targetSNI
 	}
 
-	rp := httputil.NewSingleHostReverseProxy(targetUri)
-	rp.Transport = transport
+	rp := &httputil.ReverseProxy{
+		Transport: transport,
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(targetUri)
+			// SetURL clears Out.Host; preserve the inbound Host, matching the
+			// previous NewSingleHostReverseProxy default.
+			r.Out.Host = r.In.Host
 
-	if targetHost != "" || targetSNI == "auto" {
-		originalDirector := rp.Director
-		rp.Director = func(req *http.Request) {
-			originalDirector(req)
+			// Rewrite mode strips forwarding headers before this runs. Anubis
+			// sets these upstream (see internal/headers.go XForwardedForUpdate),
+			// so copy them through unchanged so the target still sees them.
+			for _, h := range []string{"Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto"} {
+				if v, ok := r.In.Header[h]; ok {
+					r.Out.Header[h] = v
+				}
+			}
+
 			if targetHost != "" {
-				req.Host = targetHost
+				r.Out.Host = targetHost
 			}
 			if targetSNI == "auto" {
-				transport.TLSClientConfig.ServerName = req.Host
+				transport.TLSClientConfig.ServerName = r.Out.Host
 			}
-		}
+		},
 	}
 
 	return rp, nil
@@ -408,6 +419,7 @@ func main() {
 		WebmasterEmail:           *webmasterEmail,
 		OpenGraph:                policy.OpenGraph,
 		CookieSecure:             *cookieSecure,
+		CookieHttpOnly:           *cookieHttpOnly,
 		CookieSameSite:           parseSameSite(*cookieSameSite),
 		PublicUrl:                *publicUrl,
 		JWTRestrictionHeader:     *jwtRestrictionHeader,
@@ -424,7 +436,9 @@ func main() {
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
 	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
-	h = internal.JA4H(h)
+	if policy.NeedJA4H {
+		h = internal.JA4H(h)
+	}
 
 	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
 	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)

@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+## v1.26.0: Papalymo Totolymo
+
+- Add option to [disable the honeypot](./admin/policies.mdx#honeypot-configuration).
+- Add `(data)/clients/google-user-triggered-fetchers.yaml` snippet that allows Google-owned user-triggered fetchers (Google Translate's website translation proxy, Google Read Aloud, Google Messages link previews) by their [published IP ranges](https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers-google.json), fixing the infinite challenge loop for visitors using Google Translate ([#444](https://github.com/TecharoHQ/anubis/issues/444))
+- Update QwantBot remote addresses range with latest value
+- Migrate check-spelling workflow config to [cspell](https://cspell.org/)
+- Add [Anubis Kubernetes Operator](https://github.com/eznix86/anubis-kubernetes-operator/) to the docs ([#1675](https://github.com/TecharoHQ/anubis/pull/1675)).
+- Bump Playwright browser tooling to 1.61.1 and playwright-go to v0.6100.0.
+- Add FreeBSD/Windows binaries to the yeetfile.
+- Add systemd system extensions to the yeetfile.
+- Set an explicit esbuild `--target=chrome66` so modern syntax (e.g. optional chaining) is transpiled down. This lowers the minimum supported browser from Chrome 80 to Chrome 66.
 - Patch [GHSA-6wcg-mqvh-fcvg](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-6wcg-mqvh-fcvg) by containing subrequest logic to Anubis instances in subrequest mode.
 - Implement robot9001 style delays on the honeypot feature so that the first hit takes 1 millisecond, the second takes 2, etc.
 - Move metrics server configuration to [the policy file](./admin/policies.mdx#metrics-server).
@@ -23,15 +34,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve error messages and fix broken REDIRECT_DOMAINS link in docs ([#1193](https://github.com/TecharoHQ/anubis/issues/1193))
 - Add Bulgarian locale ([#1394](https://github.com/TecharoHQ/anubis/pull/1394))
 - Fixed case-sensitivity mismatch in geoipchecker.go
+- Use [Go's native version stamping](https://michael.stapelberg.ch/posts/2026-04-05-stamp-it-all-programs-must-report-their-version/) instead of a handrolled variant.
 - Fix CEL internal errors when iterating `headers`/`query` map wrappers by implementing map iterators for `HTTPHeaders` and `URLValues` ([#1465](https://github.com/TecharoHQ/anubis/pull/1465)).
 - Enable [metrics serving via TLS](./admin/policies.mdx#tls), including [mutual TLS (mTLS)](./admin/policies.mdx#mtls).
 - Enable [HTTP basic auth](./admin/policies.mdx#http-basic-authentication) for the metrics server.
 - Fix a bug in the dataset poisoning maze that could allow denial of service [#1580](https://github.com/TecharoHQ/anubis/issues/1580).
 - Add config option to add ASN to logs/metrics.
 - Log weight when issuing challenge.
+- Block x.ai's crawler for code review training.
 - Gate pprof endpoints behind `metrics.debug` in the policy file.
 - Limit naive honeypot r9k delay to one second.
 - Fix an obscure case where adding query values to a subrequest match could cause an invalid rule match when using path based matching for protected resources.
+- Anubis now requires Go 1.26 to build.
 - Fix an edge case where load average expression values could nil pointer dereference when Anubis just started up.
 - Fix an obscure case where Anubis in subrequest mode could allow redirects to invalid domains with strange instructions.
 - Fix `path_regex` and CEL `path` rules not matching when using Traefik `forwardAuth` middleware. Anubis now checks `X-Forwarded-Uri` (Traefik) in addition to `X-Original-URI` (nginx) when resolving the request path in subrequest mode ([#1628](https://github.com/TecharoHQ/anubis/issues/1628)).
@@ -42,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Marginally improve the performances of challenges generation/display
 - Significantly improve the performances of the gzip middleware
 - Significantly improve the performances of the PoW validation
+- Add trimpath option to artifact builds
+- Add COOKIE_HTTP_ONLY option to set the HttpOnly flag on Anubis cookies
+- Improve the performances of rules validation
+- Only compute the JA4H fingerprint when a policy references the `X-Http-Fingerprint-JA4H` header, taking it off the hot path for configurations that don't use it ([#834](https://github.com/TecharoHQ/anubis/pull/834)).
+- Migrate the target reverse proxy off the deprecated `httputil.ReverseProxy.Director` to `Rewrite` for Go 1.26 compatibility, preserving the inbound `Host` and `X-Forwarded-*`/`Forwarded` headers.
 
 ## v1.25.0: Necron
 
@@ -436,7 +455,7 @@ Anubis now is able to store things persistently [in memory](./admin/policies.mdx
 
 Anubis now supports localized responses. Locales can be added in [lib/localization/locales/](https://github.com/TecharoHQ/anubis/tree/main/lib/localization/locales). This release includes support for the following languages:
 
-- [Brazilian Portugese](https://github.com/TecharoHQ/anubis/pull/726)
+- [Brazilian Portuguese](https://github.com/TecharoHQ/anubis/pull/726)
 - [Chinese (Simplified)](https://github.com/TecharoHQ/anubis/pull/774)
 - [Chinese (Traditional)](https://github.com/TecharoHQ/anubis/pull/759)
 - English

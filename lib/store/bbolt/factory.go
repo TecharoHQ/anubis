@@ -83,7 +83,7 @@ func (c Config) Valid() error {
 		if err := os.WriteFile(filepath.Join(dir, ".test-file"), []byte(""), 0600); err != nil {
 			errs = append(errs, ErrCantWriteToPath)
 		}
-		os.Remove(filepath.Join(dir, ".test-file"))
+		os.Remove(filepath.Join(dir, ".test-file")) //nolint:errcheck
 	}
 
 	if len(errs) != 0 {
