@@ -13,8 +13,8 @@ import (
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
+	"github.com/TecharoHQ/anubis/lib/checker"
 	"github.com/TecharoHQ/anubis/lib/config"
-	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/fahedouch/go-logrotate"
@@ -134,7 +134,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			Action: b.Action,
 		}
 
-		cl := checker.List{}
+		cl := checker.All{}
 
 		if len(b.RemoteAddr) > 0 {
 			c, err := NewRemoteAddrChecker(b.RemoteAddr)
