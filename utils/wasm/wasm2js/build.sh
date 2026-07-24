@@ -128,7 +128,7 @@ cd "$SCRIPT_DIR"
 # --- Versions (override via the environment) -------------------------------
 # wasi-sdk: full release version, e.g. 33.0. The GitHub release tag uses only
 # the major component (wasi-sdk-33) while the tarball uses the full version.
-WASI_SDK_VERSION="${WASI_SDK_VERSION:-33.0}"
+WASI_SDK_VERSION="${WASI_SDK_VERSION:-34.0-rc.2}"
 # binaryen: the numeric release, used both for the git tag (version_130) and
 # the output filename (wasm2js_130.wasm).
 BINARYEN_VERSION="${BINARYEN_VERSION:-130}"
@@ -153,7 +153,7 @@ esac
 
 WASI_SDK_MAJOR="${WASI_SDK_VERSION%%.*}"
 WASI_SDK_DIRNAME="wasi-sdk-${WASI_SDK_VERSION}-${WASI_SDK_ARCH}-${WASI_SDK_OS}"
-WASI_SDK_URL="https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_MAJOR}/${WASI_SDK_DIRNAME}.tar.gz"
+WASI_SDK_URL="https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_MAJOR}-rc.2/${WASI_SDK_DIRNAME}.tar.gz"
 BINARYEN_TAG="version_${BINARYEN_VERSION}"
 BINARYEN_URL="https://github.com/WebAssembly/binaryen.git"
 
