@@ -16,7 +16,7 @@ export default function process(
   difficulty: number = 5,
   signal: AbortSignal | null = null,
   progressCallback?: ProgressCallback,
-  threads: number = Math.trunc(Math.max(getHardwareConcurrency() / 2, 1)),
+  threads: number = (navigator.hardwareConcurrency >> 1) || 1,
 ): Promise<string> {
   console.debug("fast algo");
 
