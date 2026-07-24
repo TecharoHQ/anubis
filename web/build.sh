@@ -52,8 +52,8 @@ for file in js/**/*.ts js/**/*.mjs; do
 
 	mkdir -p "$(dirname "$out")"
 
-	esbuild "$file" --sourcemap --bundle --minify --target=chrome66 --outfile="$out" --banner:js="$LICENSE"
+	esbuild "$file" --log-level=error --sourcemap --bundle --minify --target=chrome66 --outfile="$out" --banner:js="$LICENSE"
 	gzip -f -k -n "$out"
-	zstd -f -k --ultra -22 "$out"
+	zstd -q -f -k --ultra -22 "$out"
 	brotli -fZk "$out"
 done
