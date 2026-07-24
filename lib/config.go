@@ -204,9 +204,17 @@ func New(opts Options) (*Server, error) {
 		registerWithPrefix(anubis.APIPrefix+"make-challenge", http.HandlerFunc(result.MakeChallenge), "POST")
 	}
 
+	var challSetupErrs []error
+
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)
-		impl.Setup(mux)
+		if err := impl.Setup(mux); err != nil {
+			challSetupErrs = append(challSetupErrs, fmt.Errorf("error setting up challenge method %s: %w", implKind, err))
+		}
+	}
+
+	if len(challSetupErrs) != 0 {
+		return nil, fmt.Errorf("error setting up challenge methods: %w", errors.Join(challSetupErrs...))
 	}
 
 	result.mux = mux

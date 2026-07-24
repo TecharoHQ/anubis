@@ -1,11 +1,6 @@
+import { u } from "./lib/xeact";
 import algorithms from "./algorithms";
-
-// from Xeact
-const u = (url: string = "", params: Record<string, any> = {}) => {
-  let result = new URL(url, window.location.href);
-  Object.entries(params).forEach(([k, v]) => result.searchParams.set(k, v));
-  return result.toString();
-};
+import { WASMUnsupportedError } from "./lib/wasm-supported";
 
 const j = (id: string): any | null => {
   const elem = document.getElementById(id);
@@ -186,7 +181,7 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
   try {
     const t0 = Date.now();
     const { hash, nonce } = await process(
-      { basePrefix, version: anubisVersion },
+      { basePrefix, version: anubisVersion, algorithm: rules.algorithm },
       challenge.randomData,
       rules.difficulty,
       null,
@@ -272,6 +267,14 @@ const t = (key) => translations[`js_${key}`] || translations[key] || key;
       );
     }
   } catch (err) {
+    if (err instanceof WASMUnsupportedError) {
+      ohNoes({
+        titleMsg: t("wasm_unsupported"),
+        statusMsg: t("wasm_unsupported_msg"),
+        imageSrc: imageURL("reject", anubisVersion, basePrefix),
+      });
+      return;
+    }
     ohNoes({
       titleMsg: t("calculation_error"),
       statusMsg: `${t("calculation_error_msg")} ${err.message}`,

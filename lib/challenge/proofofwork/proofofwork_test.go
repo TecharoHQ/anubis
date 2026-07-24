@@ -180,7 +180,9 @@ func TestBasic(t *testing.T) {
 		t.Run(cs.name, func(t *testing.T) {
 			lg := slog.With()
 
-			i.Setup(http.NewServeMux())
+			if err := i.Setup(http.NewServeMux()); err != nil {
+				t.Fatal(err)
+			}
 
 			inp := &challenge.IssueInput{
 				Rule: bot,

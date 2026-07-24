@@ -26,6 +26,7 @@
     "typescript"
   ],
   "ignorePaths": [
+    "docs/node_modules/**",
     "node_modules/**",
     ".git/**",
     ".vscode/cspell.json",
@@ -141,7 +142,11 @@
     "internal/ogtags/ogtags_fuzz_test.go",
     "lib/policy/config/testdata/bad/unparseable.json",
     "test/**",
-    "web/static/**"
+    "web/static/**",
+    "**/*.wasm.js",
+    "scripts/**",
+    "utils/wasm/wasm2js/**",
+    "var/**"
   ],
   "flagWords": [
     "attache",

@@ -15,7 +15,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-//go:generate go tool github.com/a-h/templ/cmd/templ generate
+//go:generate go tool github.com/a-h/templ/cmd/templ generate --log-level=error
 
 func init() {
 	chall.Register("fast", &Impl{Algorithm: "fast"})
@@ -26,7 +26,7 @@ type Impl struct {
 	Algorithm string
 }
 
-func (i *Impl) Setup(mux *http.ServeMux) {}
+func (i *Impl) Setup(mux *http.ServeMux) error { return nil }
 
 func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)

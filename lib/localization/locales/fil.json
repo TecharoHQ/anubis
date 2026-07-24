@@ -61,6 +61,8 @@
   "js_finished_reading": "Tapos na akong magbasa, magpatuloy →",
   "js_calculation_error": "Error sa pagkalkula!",
   "js_calculation_error_msg": "Nabigong ikalkula ang hamon:",
+  "js_wasm_unsupported": "Hindi sinusuportahan ang WebAssembly!",
+  "js_wasm_unsupported_msg": "Hindi sinusuportahan ng iyong browser ang WebAssembly, na kinakailangan ng Anubis upang ma-verify ang iyong koneksyon. Hindi ito isang bug sa Anubis. Mangyaring makipag-ugnayan sa tagapangasiwa ng site para sa tulong, o subukan ang ibang browser.",
   "missing_required_forwarded_headers": "Nawawala ang kinakailangang X-Forwarded-* na mga header",
   "simplified_explanation": "Ito ay isang panukala laban sa mga bot at malisyosong mga kahilingan na katulad ng isang CAPTCHA. Gayunpaman, sa halip na ikaw mismo ang gumawa ng trabaho, binibigyan ang iyong browser ng isang gawain sa pagkalkula na kailangan nitong lutasin upang matiyak na ito ay isang wastong kliyente. Ang konseptong ito ay tinatawag na <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">Proof of Work</a>. Ang gawain ay kinakalkula sa loob ng ilang segundo at binibigyan ka ng access sa website. Salamat sa iyong pag-unawa at pasensya."
 }

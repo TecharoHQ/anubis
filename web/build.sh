@@ -31,6 +31,9 @@ THE SOFTWARE.
 Includes code from https://github.com/aws/aws-sdk-js-crypto-helpers which is
 used under the terms of the Apache 2 license.
 
+Includes code from https://github.com/GoogleChromeLabs/wasm-feature-detect which
+is used under the terms of the Apache 2 license.
+
 @licend  The above is the entire license notice
 for the JavaScript code in this page.
 */'
@@ -42,15 +45,15 @@ cp ../lib/localization/locales/*.json static/locales/
 shopt -s nullglob globstar
 
 for file in js/**/*.ts js/**/*.mjs; do
-  out="static/${file}"
-  if [[ "$file" == *.ts ]]; then
-    out="static/${file%.ts}.mjs"
-  fi
+	out="static/${file}"
+	if [[ "$file" == *.ts ]]; then
+		out="static/${file%.ts}.mjs"
+	fi
 
-  mkdir -p "$(dirname "$out")"
+	mkdir -p "$(dirname "$out")"
 
-  esbuild "$file" --sourcemap --bundle --minify --target=chrome66 --outfile="$out" --banner:js="$LICENSE"
-  gzip -f -k -n "$out"
-  zstd -f -k --ultra -22 "$out"
-  brotli -fZk "$out"
+	esbuild "$file" --log-level=error --sourcemap --bundle --minify --target=chrome66 --outfile="$out" --banner:js="$LICENSE"
+	gzip -f -k -n "$out"
+	zstd -q -f -k --ultra -22 "$out"
+	brotli -fZk "$out"
 done

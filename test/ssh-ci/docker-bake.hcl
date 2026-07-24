@@ -8,14 +8,13 @@ group "default" {
 
 target "ci-runner" {
   args = {
-    ALPINE_VERSION = "3.24"
+    ALPINE_VERSION = "${ALPINE_VERSION}"
   }
   context = "."
   dockerfile = "./Dockerfile"
   platforms = [
     "linux/amd64",
     "linux/arm64",
-    "linux/arm/v7",
     "linux/ppc64le",
     "linux/riscv64",
   ]

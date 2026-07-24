@@ -62,5 +62,7 @@
   "js_iterations": "итерации",
   "js_finished_reading": "Приключих с четенето, продължете →",
   "js_calculation_error": "Грешка при изчислението!",
-  "js_calculation_error_msg": "Неуспешно изчисление на задачата:"
+  "js_calculation_error_msg": "Неуспешно изчисление на задачата:",
+  "js_wasm_unsupported": "WebAssembly не се поддържа!",
+  "js_wasm_unsupported_msg": "Браузърът ви не поддържа WebAssembly, който Anubis изисква, за да провери връзката ви. Това не е грешка в Anubis. Моля, свържете се с администратора на сайта за помощ или опитайте с друг браузър."
 }

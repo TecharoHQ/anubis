@@ -41,9 +41,8 @@ for the JavaScript code in this page.
 mkdir -p static/js
 
 for file in js/*.tsx; do
-  filename="${file##*/}"       # Extracts "app.jsx" from "./js/app.jsx"
-  output="${filename%.tsx}.js"  # Changes "app.jsx" to "app.js"
-  echo $output
+	filename="${file##*/}"       # Extracts "app.jsx" from "./js/app.jsx"
+	output="${filename%.tsx}.js" # Changes "app.jsx" to "app.js"
 
-  esbuild "${file}" --minify --bundle --target=chrome66 --outfile=static/"${output}" --banner:js="${LICENSE}"
+	esbuild "${file}" --log-level=error --minify --bundle --target=chrome66 --outfile=static/"${output}" --banner:js="${LICENSE}"
 done

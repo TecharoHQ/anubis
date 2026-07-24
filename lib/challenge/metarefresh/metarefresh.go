@@ -13,7 +13,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-//go:generate go tool github.com/a-h/templ/cmd/templ generate
+//go:generate go tool github.com/a-h/templ/cmd/templ generate --log-level=error
 
 func init() {
 	challenge.Register("metarefresh", &Impl{})
@@ -21,7 +21,7 @@ func init() {
 
 type Impl struct{}
 
-func (i *Impl) Setup(mux *http.ServeMux) {}
+func (i *Impl) Setup(mux *http.ServeMux) error { return nil }
 
 func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *challenge.IssueInput) (templ.Component, error) {
 	if err := in.Valid(); err != nil {
