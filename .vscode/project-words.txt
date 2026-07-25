@@ -328,6 +328,7 @@ pag
 pagegen
 palemoon
 Pangu
+Papalymo
 parseable
 passthrough
 Patreon
@@ -451,6 +452,7 @@ thothmock
 Tik
 Timpibot
 TLog
+Totolymo
 traefik
 trimpath
 trunc
