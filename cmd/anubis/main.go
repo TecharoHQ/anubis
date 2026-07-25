@@ -180,6 +180,18 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 			// previous NewSingleHostReverseProxy default.
 			r.Out.Host = r.In.Host
 
+			// Rewrite mode re-encodes the outbound query through
+			// url.ParseQuery, which silently drops ';'-separated parameters.
+			// Some upstreams (notably gitweb: /?p=repo.git;a=summary) use ';'
+			// as a query separator, so restore the client's raw query verbatim
+			// to match the previous NewSingleHostReverseProxy behavior.
+			// This fixes https://github.com/TecharoHQ/anubis/issues/1763.
+			if tq := targetUri.RawQuery; tq == "" || r.In.URL.RawQuery == "" {
+				r.Out.URL.RawQuery = tq + r.In.URL.RawQuery
+			} else {
+				r.Out.URL.RawQuery = tq + "&" + r.In.URL.RawQuery
+			}
+
 			// Rewrite mode strips forwarding headers before this runs. Anubis
 			// sets these upstream (see internal/headers.go XForwardedForUpdate),
 			// so copy them through unchanged so the target still sees them.

@@ -1,0 +1,8 @@
+bots:
+  - name: challenge
+    user_agent_regex: CHALLENGE
+    action: CHALLENGE
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403

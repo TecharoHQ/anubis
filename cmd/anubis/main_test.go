@@ -29,6 +29,14 @@ func TestMakeReverseProxy(t *testing.T) {
 			reqPath: "/foo/bar?baz=qux",
 		},
 		{
+			// gitweb uses ';' as a query separator (e.g.
+			// /?p=repo.git;a=summary). httputil's Rewrite mode re-encodes the
+			// query and would otherwise drop these parameters entirely.
+			name:    "semicolon-delimited query is preserved",
+			reqHost: "anubis.example.com",
+			reqPath: "/?p=testing.git;a=summary",
+		},
+		{
 			name:       "target host override",
 			targetHost: "upstream.internal",
 			reqHost:    "anubis.example.com",
