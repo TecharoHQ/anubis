@@ -20,6 +20,7 @@ jobs:
           - forced-language
           - git-clone
           - git-push
+          - gitweb
           - healthcheck
           - i18n
           - log-file

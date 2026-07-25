@@ -171,6 +171,8 @@ gipc
 gitea
 github
 gitlab
+gitolite
+gitweb
 GLM
 Goanna
 godotenv
