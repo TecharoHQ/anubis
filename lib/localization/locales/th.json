@@ -60,5 +60,6 @@
   "js_iterations": "รอบ",
   "js_finished_reading": "อ่านจบแล้ว ดำเนินการต่อ →",
   "js_calculation_error": "เกิดข้อผิดพลาดในการคำนวณ!",
-  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:"
+  "js_calculation_error_msg": "ไม่สามารถคำนวณการท้าทายได้:",
+  "script_load_error": "Anubis ไม่สามารถโหลด JavaScript ได้ เซิร์ฟเวอร์อาจมีภาระงานหนักเกินไป กรุณาโหลดหน้านี้ใหม่เพื่อลองอีกครั้ง"
 }

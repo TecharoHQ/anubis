@@ -15,6 +15,7 @@ import (
 	"github.com/a-h/templ"
 )
 
+//go:generate ./build.sh
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {

@@ -56,7 +56,10 @@ const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
 
   const t0 = performance.now();
   const { hash, nonce } = await process(
-    { basePrefix: "/", version: "devel" },
+    // basePrefix is joined as `${basePrefix}/.within.website/...`, so "/" here
+    // produces a protocol-relative "//.within.website/..." URL rather than a
+    // same-origin one.
+    { basePrefix: "", version: "devel" },
     challenge,
     Number(difficulty),
     signal,

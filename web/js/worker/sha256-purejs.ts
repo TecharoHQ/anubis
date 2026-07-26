@@ -1,9 +1,10 @@
 import { Sha256 } from "@aws-crypto/sha256-js";
+import { WorkerArgs } from "@lib/worker";
 
-const calculateSHA256 = (text) => {
+const calculateSHA256 = async (text: string): Promise<Uint8Array> => {
   const hash = new Sha256();
   hash.update(text);
-  return hash.digest();
+  return await hash.digest();
 };
 
 function toHexString(arr: Uint8Array): string {
@@ -12,7 +13,7 @@ function toHexString(arr: Uint8Array): string {
     .join("");
 }
 
-addEventListener("message", async ({ data: eventData }) => {
+addEventListener("message", async ({ data: eventData }: { data: WorkerArgs }) => {
   const { data, difficulty, threads } = eventData;
   let nonce = eventData.nonce;
   const isMainThread = nonce === 0;
@@ -21,7 +22,7 @@ addEventListener("message", async ({ data: eventData }) => {
   const requiredZeroBytes = Math.floor(difficulty / 2);
   const isDifficultyOdd = difficulty % 2 !== 0;
 
-  for (;;) {
+  for (; ;) {
     const hashBuffer = await calculateSHA256(data + nonce);
     const hashArray = new Uint8Array(hashBuffer);
 

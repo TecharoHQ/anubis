@@ -62,5 +62,6 @@
   "js_iterations": "iterations",
   "js_finished_reading": "I've finished reading, continue →",
   "js_calculation_error": "Calculation error!",
-  "js_calculation_error_msg": "Failed to calculate challenge:"
+  "js_calculation_error_msg": "Failed to calculate challenge:",
+  "script_load_error": "Anubis could not load its JavaScript. The server may be overloaded. Please reload the page to try again."
 }

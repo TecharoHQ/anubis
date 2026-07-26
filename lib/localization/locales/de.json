@@ -62,5 +62,6 @@
   "js_iterations": "Iterationen",
   "js_finished_reading": "Fertig gelesen, weiter zur Seite →",
   "js_calculation_error": "Berechnungsfehler!",
-  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:"
+  "js_calculation_error_msg": "Fehler bei der Berechnung der Prüfung:",
+  "script_load_error": "Anubis konnte sein JavaScript nicht laden. Der Server ist möglicherweise überlastet. Bitte lade die Seite neu, um es erneut zu versuchen."
 }

@@ -62,5 +62,6 @@
   "js_iterations": "lần lặp lại",
   "js_finished_reading": "Tôi đã đọc xong, tiếp tục →",
   "js_calculation_error": "Lỗi tính toán!",
-  "js_calculation_error_msg": "Không thể tính toán thử thách:"
+  "js_calculation_error_msg": "Không thể tính toán thử thách:",
+  "script_load_error": "Anubis không thể tải JavaScript của mình. Máy chủ có thể đang quá tải. Vui lòng tải lại trang để thử lại."
 }
