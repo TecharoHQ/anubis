@@ -58,7 +58,7 @@ const getMany = (ids: string[]): (HTMLElement | null)[] => ids.map(g);
 
   const booted = () =>
     // @ts-ignore: global variable set by main.mjs
-    window.__anubisBooted === true;
+    (window as any).__anubisBooted === true;
 
   const fail = () => {
     const els = getMany(["anubis-script-error", "status", "progress"]);
