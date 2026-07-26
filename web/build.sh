@@ -42,6 +42,13 @@ cp ../lib/localization/locales/*.json static/locales/
 shopt -s nullglob globstar
 
 for file in js/**/*.ts js/**/*.mjs; do
+  # js/lib/ holds shared modules (xeact, backoff) that entry points import.
+  # esbuild inlines them into each bundle that imports them, so building them
+  # standalone only emits dead code that then gets embedded into the binary.
+  if [[ "$file" == js/lib/* ]]; then
+    continue
+  fi
+
   out="static/${file}"
   if [[ "$file" == *.ts ]]; then
     out="static/${file%.ts}.mjs"
