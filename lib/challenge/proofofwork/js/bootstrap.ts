@@ -28,6 +28,7 @@
 //   failure that is relevant to Anubis. As a result we have to use a
 //   watchdog timer to ensure the `main.mjs` file actually booted.
 
+import { backoffDelay } from "@lib/backoff";
 import { g, h } from "@lib/xeact.mjs";
 
 const getMany = (ids: string[]): (HTMLElement | null)[] => ids.map(g);
@@ -85,17 +86,8 @@ const getMany = (ids: string[]): (HTMLElement | null)[] => ids.map(g);
         return;
       }
 
-      // Exponential backoff jitter
-      //
-      // This ensures that clients retry loading the script with exponential
-      // backoff including some random jitter in order to make things more
-      // reliable and to avoid thundering herd problems.
-      //
-      // The ceiling is the maximum delay which is tempered by the random
-      // value.
-      const ceiling = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempt));
-      const actualDelay = Math.random() * ceiling;
-      setTimeout(inject, actualDelay);
+      const delay = backoffDelay(attempt, BASE_DELAY_MS, MAX_DELAY_MS);
+      setTimeout(inject, delay);
     };
 
   const inject = () => {
