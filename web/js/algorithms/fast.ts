@@ -7,20 +7,6 @@ import {
   createWorkerSpawner,
 } from "@lib/worker";
 
-// Choose worker based on secure context.
-// Use the WebCrypto worker if the page is a secure context; otherwise fall back to pure‑JS.
-const chooseWorkerMethod = (): "webcrypto" | "purejs" => {
-  if (
-    navigator.userAgent.includes("Firefox") ||
-    navigator.userAgent.includes("Goanna")
-  ) {
-    console.log("Firefox detected, using pure-JS fallback");
-    return "purejs";
-  }
-
-  return window.isSecureContext ? "webcrypto" : "purejs";
-};
-
 export default async function process(
   options: ProcessOptions,
   data: string,
@@ -31,8 +17,7 @@ export default async function process(
 ): Promise<ProcessResult> {
   console.debug("fast algo");
 
-  const workerMethod = chooseWorkerMethod();
-  const webWorkerURL = `${options.basePrefix}/.within.website/x/cmd/anubis/static/js/worker/sha256-${workerMethod}.mjs?cacheBuster=${options.version}`;
+  const webWorkerURL = `${options.basePrefix}/.within.website/x/cmd/anubis/static/js/worker/sha256.mjs?cacheBuster=${options.version}`;
 
   const spawner = await createWorkerSpawner(webWorkerURL, signal);
 

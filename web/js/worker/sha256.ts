@@ -1,24 +1,42 @@
+import { Sha256 } from "@aws-crypto/sha256-js";
 import { WorkerArgs } from "@lib/worker";
 
 const encoder = new TextEncoder();
 
-const calculateSHA256 = async (input: string): Promise<ArrayBuffer> => {
-  const data = encoder.encode(input);
-  return await crypto.subtle.digest("SHA-256", data);
+const useWebCrypto = (): boolean => {
+  if (
+    navigator.userAgent.includes("Firefox") ||
+    navigator.userAgent.includes("Goanna")
+  ) {
+    return false;
+  }
+
+  return window.isSecureContext && typeof crypto?.subtle?.digest === "function";
 };
 
-const toHexString = (byteArray: Uint8Array) => {
-  return byteArray.reduce(
-    (str, byte) => str + byte.toString(16).padStart(2, "0"),
-    "",
-  );
-};
+const calculateSHA256: (input: string) => Promise<Uint8Array> = useWebCrypto()
+  ? async (input: string) =>
+    new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(input)))
+  : async (input: string) => {
+    const hash = new Sha256();
+    hash.update(input);
+    return await hash.digest();
+  };
+
+const toHexString = (arr: Uint8Array): string =>
+  Array.from(arr)
+    .map((c) => c.toString(16).padStart(2, "0"))
+    .join("");
 
 addEventListener("message", async ({ data: eventData }: { data: WorkerArgs }) => {
   const { data, difficulty, threads } = eventData;
   let nonce = eventData.nonce;
   const isMainThread = nonce === 0;
   let iterations = 0;
+
+  if (calculateSHA256 === null) {
+    throw new Error("anubis: can't detect which sha256 method to use (file a bug?)");
+  }
 
   const requiredZeroBytes = Math.floor(difficulty / 2);
   const isDifficultyOdd = difficulty % 2 !== 0;
