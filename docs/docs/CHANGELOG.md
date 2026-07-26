@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix support for semicolon-delimited query parameters that was dropped when moving from [net/http/httputil#ReverseProxy](https://pkg.go.dev/net/http/httputil#ReverseProxy).Director (deprecated) to net/http/httputil#ReverseProxy.Rewrite. This re-enables support for upstreams like gitweb ([#1763](https://github.com/TecharoHQ/anubis/issues/1763)). A functional test has been added to ensure this does not repeat.
 
+### Challenge page robustness
+
+The challenge page can now survive transient failures, reduces the number of requests it makes to the Anubis app, and adds exponential backoff with retries to counteract an overwhelmed server being unable to serve any assets.
+
+Previously if any request for JavaScript assets failed, the entire challenge attempt failed and users were forced to manually refresh the page, which is a bit of a bad user experience. This was made worse when the load balancer does not support HTTP/2, did not have resumable sessions enabled, and was implemented with Apache httpd pre-fork; making each asset fetch do its own TCP/TLS handshake. Under periods of heavy load such that TCP/TLS handshakes timed out, this made Anubis unable to fetch assets consistently or even made in-progress challenge attempts fail, which made challenges impossible to pass.
+
+This has been fixed in a few ways:
+
+- Fetch operations now retry with [exponential backoff](https://en.wikipedia.org/wiki/Exponential_backoff) in hopes that they will eventually be able to get through when the server is less stressed.
+- Attempting to fetch the `main.mjs` script now has fallback watchdog logic that periodically re-attempts to load the script.
+- Worker source code is fetched _once_ and then loaded into workers with a [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob) instead of having each worker do an independent fetch of the worker source code.
+- Individual workers can now die without making the entire challenge attempt fail. Surviving workers will cover the rest of the nonce space.
+- When worker construction fails, already running proof of work workers are terminated instead of staying active as headless unmonitored infinite loops.
+- Proof of work failures are now exposed as untranslated real errors. Browsers signal script load failures with real Events so the challenge failure page now shows a useful message.
+
 ## v1.26.0: Papalymo Totolymo
 
 - Add option to [disable the honeypot](./admin/policies.mdx#honeypot-configuration).
