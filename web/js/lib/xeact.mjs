@@ -145,4 +145,19 @@ const d = (ms) => {
   };
 };
 
-export { h, t, x, g, c, n, u, s, r, useState, d };
+/**
+ * Parse a given element as JSON and return it as a bare
+ * object.
+ * 
+ * @type{function(id): any | null}
+ */
+const j = (id) => {
+  const elem = g(id);
+  if (elem === null) {
+    return null;
+  }
+
+  return JSON.parse(elem.textContent);
+};
+
+export { h, t, x, g, c, n, u, s, r, j, useState, d };
