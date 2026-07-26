@@ -2,7 +2,7 @@ import { WorkerArgs } from "@lib/worker";
 
 const encoder = new TextEncoder();
 
-const calculateSHA256 = async (input: string) => {
+const calculateSHA256 = async (input: string): Promise<ArrayBuffer> => {
   const data = encoder.encode(input);
   return await crypto.subtle.digest("SHA-256", data);
 };

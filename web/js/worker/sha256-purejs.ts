@@ -1,10 +1,10 @@
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { WorkerArgs } from "@lib/worker";
 
-const calculateSHA256 = (text) => {
+const calculateSHA256 = async (text: string): Promise<Uint8Array> => {
   const hash = new Sha256();
   hash.update(text);
-  return hash.digest();
+  return await hash.digest();
 };
 
 function toHexString(arr: Uint8Array): string {
