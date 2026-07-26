@@ -62,5 +62,6 @@
   "js_iterations": "итерации",
   "js_finished_reading": "Приключих с четенето, продължете →",
   "js_calculation_error": "Грешка при изчислението!",
-  "js_calculation_error_msg": "Неуспешно изчисление на задачата:"
+  "js_calculation_error_msg": "Неуспешно изчисление на задачата:",
+  "script_load_error": "Anubis не можа да зареди своя JavaScript. Сървърът може да е претоварен. Моля, презаредете страницата, за да опитате отново."
 }
