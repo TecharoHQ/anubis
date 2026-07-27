@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v3.3
+    image: reg.xeiaso.net/library/traefik:v3.3
     restart: always
     ports:
       - 8080:80
