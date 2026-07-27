@@ -43,7 +43,7 @@ func TestBotPoliciesEmbed(t *testing.T) {
 				t.Errorf("Failed to read %s from embedded filesystem: %v", embeddedPath, err)
 				return
 			}
-			//lint:ignore if this fails to close the computer is broken
+			//nolint:errcheck
 			defer fin.Close()
 
 			var result any
