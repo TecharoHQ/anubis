@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+## v1.26.2: Papalymo Totolymo: Echo 2
+
 - Automatically verify correct parsing of everything in `(data)`. While doing post-release checks on v1.26.1, I discovered that I incorrectly merged `(data)/services/updown.yaml` in such a way that it became syntactically invalid. This has been mended and multiple layers of CI have been put into place to make sure that `(data)` entries are syntactically and semantically valid.
 
 ## v1.26.1: Papalymo Totolymo: Echo 1
