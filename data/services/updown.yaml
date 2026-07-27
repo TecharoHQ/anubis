@@ -2,6 +2,7 @@
 - name: updown
   user_agent_regex: updown.io
   action: ALLOW
+  remote_addresses:
     [
       "45.32.74.41/32",
       "104.238.136.194/32",

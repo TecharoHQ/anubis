@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Automatically verify correct parsing of everything in `(data)`. While doing post-release checks on v1.26.1, I discovered that I incorrectly merged `(data)/services/updown.yaml` in such a way that it became syntactically invalid. This has been mended and multiple layers of CI have been put into place to make sure that `(data)` entries are syntactically and semantically valid.
+
 ## v1.26.1: Papalymo Totolymo: Echo 1
 
 - Fix support for semicolon-delimited query parameters that was dropped when moving from [net/http/httputil#ReverseProxy](https://pkg.go.dev/net/http/httputil#ReverseProxy).Director (deprecated) to net/http/httputil#ReverseProxy.Rewrite. This re-enables support for upstreams like gitweb ([#1763](https://github.com/TecharoHQ/anubis/issues/1763)). A functional test has been added to ensure this does not repeat.

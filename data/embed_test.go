@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // TestBotPoliciesEmbed ensures all YAML files in the directory tree
@@ -32,6 +34,21 @@ func TestBotPoliciesEmbed(t *testing.T) {
 
 			if len(content) == 0 {
 				t.Errorf("File %s exists in embedded filesystem but is empty", embeddedPath)
+			}
+		})
+
+		t.Run("verify-yaml/"+embeddedPath, func(t *testing.T) {
+			fin, err := BotPolicies.Open(embeddedPath)
+			if err != nil {
+				t.Errorf("Failed to read %s from embedded filesystem: %v", embeddedPath, err)
+				return
+			}
+			//nolint:errcheck
+			defer fin.Close()
+
+			var result any
+			if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&result); err != nil {
+				t.Errorf("can't parse as YAML: %v", err)
 			}
 		})
 	}
