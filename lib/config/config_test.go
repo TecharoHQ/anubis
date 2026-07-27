@@ -238,49 +238,41 @@ func TestConfigValidKnownGood(t *testing.T) {
 	}
 }
 
+// TestImportStatement asserts that every policy snippet in the data folder can
+// be imported and is valid. The list of files is discovered by walking the
+// embedded filesystem so that new folders and new snippets are covered without
+// having to remember to add them here.
 func TestImportStatement(t *testing.T) {
-	type testCase struct {
-		err        error
-		name       string
-		importPath string
-	}
+	var importPaths []string
 
-	var tests []testCase
-
-	for _, folderName := range []string{
-		"apps",
-		"bots",
-		"common",
-		"crawlers",
-		"meta",
-	} {
-		if err := fs.WalkDir(data.BotPolicies, folderName, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if d.IsDir() {
-				return nil
-			}
-			if d.Name() == "README.md" {
-				return nil
-			}
-
-			tests = append(tests, testCase{
-				name:       "(data)/" + path,
-				importPath: "(data)/" + path,
-				err:        nil,
-			})
-
+	if err := fs.WalkDir(data.BotPolicies, ".", func(path string, d fs.DirEntry, err error) error {
+		switch {
+		case err != nil:
+			return err
+		case d.IsDir():
 			return nil
-		}); err != nil {
-			t.Fatal(err)
+		case path == "botPolicies.yaml": // an entire config, not a list of bots
+			return nil
 		}
+
+		switch filepath.Ext(path) {
+		case ".yaml", ".yml":
+			importPaths = append(importPaths, "(data)/"+path)
+		}
+
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	if len(importPaths) == 0 {
+		t.Fatal("no policy snippets found in the embedded data folder")
+	}
+
+	for _, importPath := range importPaths {
+		t.Run(importPath, func(t *testing.T) {
 			is := &ImportStatement{
-				Import: tt.importPath,
+				Import: importPath,
 			}
 
 			if err := is.Valid(); err != nil {
