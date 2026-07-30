@@ -1,0 +1,7 @@
+- name: arquivo-pt
+  action: ALLOW
+  # https://ipinfo.io/194.210.235.0
+  remote_addresses: ["194.210.235.0/26"]
+  # Not matching on the "Arquivo-web-crawler" user agent regex on purpose: it is
+  # also used by Arquivo.pt's on-demand "Archive Page Now" service, and allow-listing
+  # that user agent would break it.
