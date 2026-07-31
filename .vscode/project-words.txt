@@ -274,6 +274,7 @@ logfile
 lol
 lominsa
 Lupis
+Lyrenth
 MAINT
 maintnotifications
 malware
