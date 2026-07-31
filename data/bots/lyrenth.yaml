@@ -1,0 +1,29 @@
+# Lyrenth's AI web index crawler and on-demand fetcher.
+# Policy: https://lyrenth.com/bot
+# Contact: hello@lyrenth.com
+- name: lyrenth-ai-web-index
+  action: DENY
+  user_agent_regex: AIWebIndex(-Agent)?/[\d.]+ \(\+https\://lyrenth\.com/bot
+
+# All published prefixes are Hetzner cloud allocations (CLOUD-FSN1), so denying
+# them outright does not risk collateral damage to residential users.
+# Updated 2026-07-30 from https://www.lyrenth.com/bot/ip-ranges.json
+- name: lyrenth-ai-web-index-ips
+  action: DENY
+  remote_addresses:
+    - 46.224.73.201/32
+    - 46.225.147.220/32
+    - 49.13.94.158/32
+    - 159.69.116.231/32
+    - 159.69.189.54/32
+    - 168.119.98.242/32
+    - 178.104.212.30/32
+    - 178.105.66.244/32
+    - 178.105.70.116/32
+    - 178.105.121.172/32
+    - 178.105.195.233/32
+    - 178.105.197.214/32
+    - 178.105.200.108/32
+    - 178.105.207.129/32
+    - 178.105.220.145/32
+    - 178.105.223.90/32
