@@ -21,6 +21,7 @@ APNICRANDNETAU
 Applebot
 archlinux
 arpa
+arquivo
 Asahi
 asnc
 asnchecker
