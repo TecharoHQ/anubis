@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add Basque (eu) localization.
+
 - Add `(data)/bots/lyrenth.yaml` snippet that denies [Lyrenth](https://lyrenth.com/bot)'s `AIWebIndex` crawler and `AIWebIndex-Agent` on-demand fetcher by user agent and by their [published IP ranges](https://www.lyrenth.com/bot/ip-ranges.json). This is imported by `(data)/bots/_deny-pathological.yaml`.
 
 ## v1.26.2: Papalymo Totolymo: Echo 2
