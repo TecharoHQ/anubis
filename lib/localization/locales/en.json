@@ -15,7 +15,7 @@
   "go_home": "Go home",
   "contact_webmaster": "or if you believe you should not be blocked, please contact the webmaster at",
   "connection_security": "Please wait a moment while we ensure the security of your connection.",
-  "javascript_required": "Sadly, you must enable JavaScript to get past this challenge. This is required because AI companies have changed the social contract around how website hosting works. A no-JS solution is a work-in-progress.",
+  "javascript_required": "Sadly, you must enable JavaScript to get past this challenge. This is required because the administrator of this website decided to discriminate against some users by not enabling the no-JS Meta Refresh challenge.",
   "benchmark_requires_js": "Running the benchmark tool requires JavaScript to be enabled.",
   "difficulty": "Difficulty:",
   "algorithm": "Algorithm:",
