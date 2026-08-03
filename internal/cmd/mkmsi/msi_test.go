@@ -281,11 +281,16 @@ func TestMSIContents(t *testing.T) {
 		want []string
 	}{
 		{
-			name:  "service is registered as manual start under LocalSystem",
+			name:  "service is registered as manual start under its virtual account",
 			table: "ServiceInstall",
 			// Columns: ServiceInstall, Name, DisplayName, ServiceType(16 =
 			// own process), StartType(3 = manual), ErrorControl(1 = normal).
-			want: []string{"svc_anubis\tAnubis\tAnubis\t16\t3\t1", "LocalSystem"},
+			//
+			// StartName is the NT SERVICE virtual account the service control
+			// manager creates alongside the service. It has to be the fully
+			// qualified name: a bare "Anubis" or "LocalService" gets looked up
+			// as a local user account and the install fails.
+			want: []string{"svc_anubis\tAnubis\tAnubis\t16\t3\t1", `NT SERVICE\Anubis`},
 		},
 		{
 			name:  "service is stopped and deleted on uninstall",

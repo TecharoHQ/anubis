@@ -32,21 +32,6 @@
 
     <UIRef Id="WixUI_Minimal"/>
 
-    <!-- INSTALLDIR is deliberately not marked secure here. The obvious
-         declarative forms both fail under wixl 0.106:
-           - Property/@Secure="yes" is silently dropped; no
-             SecureCustomProperties row results at all.
-           - A hand-authored <Property Id="SecureCustomProperties"> collides
-             with the one wixl generates automatically for MajorUpgrade,
-             above (populated with WIX_UPGRADE_DETECTED and
-             WIX_DOWNGRADE_DETECTED), and aborts the build with a bare
-             "libmsi_query_execute" and no further explanation.
-         mkmsi's secureInstallDir instead patches the SecureCustomProperties
-         row after wixl builds the MSI, the same way setArm64Template patches
-         the summary Template. Without it, a command-line INSTALLDIR=
-         override would not survive elevation into the deferred,
-         system-context part of the install. -->
-
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="VendorDir" Name="Techaro">
@@ -64,7 +49,7 @@
                                 Type="ownProcess"
                                 Start="demand"
                                 ErrorControl="normal"
-                                Account="LocalSystem"
+                                Account="NT SERVICE\Anubis"
                                 Vital="yes"/>
                 <ServiceControl Id="svcctl_anubis" Name="Anubis"
                                 Stop="both" Remove="uninstall" Wait="yes"/>
