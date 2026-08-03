@@ -214,6 +214,8 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 }
 
 func main() {
+	platformStartup()
+
 	flagenv.Parse()
 	flag.Parse()
 
@@ -225,10 +227,9 @@ func main() {
 		return
 	}
 
-	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
-
-	lg := internal.InitSlog(*slogLevel, os.Stderr)
-	lg.Info("starting up Anubis")
+	if handleBootstrapFlag() {
+		return
+	}
 
 	if *healthcheck {
 		log.Println("running healthcheck")
@@ -249,9 +250,23 @@ func main() {
 		return
 	}
 
+	if runPlatformService(run) {
+		return
+	}
+
 	// install signal handler
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	run(ctx)
+}
+
+// run starts Anubis and blocks until ctx is cancelled or the server stops.
+func run(ctx context.Context) {
+	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
+
+	lg := internal.InitSlog(*slogLevel, os.Stderr)
+	lg.Info("starting up Anubis")
 
 	wg := new(sync.WaitGroup)
 
