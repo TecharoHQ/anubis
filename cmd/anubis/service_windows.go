@@ -11,11 +11,11 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/servicesid"
 	"github.com/joho/godotenv"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
@@ -136,7 +136,7 @@ func handleBootstrapFlag() bool {
 	return true
 }
 
-// bootstrapConfigDir seeds and hardens the config directory.
+// bootstrapConfigDir seeds the config directory from the installer's templates.
 func bootstrapConfigDir(lg *log.Logger) error {
 	if dataDir == "" {
 		return errors.New("ProgramData is not set, refusing to guess where the configuration directory is")
@@ -153,15 +153,18 @@ func bootstrapConfigDir(lg *log.Logger) error {
 
 	lg.Printf("copying %v out of %q", bootstrapFiles, srcDir)
 
-	return runBootstrap(bootstrapConfig{
-		SrcDir:    srcDir,
-		BaseDir:   programData,
-		DestDir:   dataDir,
-		Files:     bootstrapFiles,
-		DataDir:   dataDir,
-		Harden:    hardenDataDir,
-		VerifyDir: verifyDataDir,
-	})
+	if err := runBootstrap(bootstrapConfig{
+		SrcDir:  srcDir,
+		DestDir: dataDir,
+		Files:   bootstrapFiles,
+		DataDir: dataDir,
+	}); err != nil {
+		return err
+	}
+
+	lg.Printf("granting %s (%s) access to %q", servicesid.AnubisServiceName, servicesid.AnubisServiceSID, dataDir)
+
+	return grantServiceAccess(dataDir)
 }
 
 // writeBootstrapLog appends the bootstrap's diagnostics to the first place
@@ -198,105 +201,66 @@ func writeBootstrapLog(body []byte) {
 	}
 }
 
-// hardenDataDir hardens the permissions of the Anubis data directory within an
-// inch of its life.
+// grantServiceAccess gives the Anubis service read and write access to its own
+// data directory.
 //
-// As mentioned before, %ProgramData%'s ACLs are a bit fucky out of the gate. In
-// order to prevent a misconfigured system from resulting in normal users leaking
-// Anubis secrets, the ACLs of the Anubis data directory are super-hardened such
-// that only the Anubis service and Administrators can read them.
+// The directory otherwise keeps whatever it inherits from %ProgramData%, which
+// grants SYSTEM and the administrators full control and says nothing at all
+// about NT SERVICE\Anubis. Without this the service cannot read anubis.env or
+// create anubis.log, so it dies on startup with a permission error.
 //
-// Even more fun, usernames like "Administrator" are localized when Windows has
-// its local set to non-English on install. As a result you need to use the raw
-// identifiers instead of human-readable names.
+// This deliberately does not shell out to icacls. icacls reverse-maps every SID
+// it is handed back to an account name, and LSA will not map an NT SERVICE SID
+// for a service that is not registered yet. The bootstrap runs before
+// InstallServices, so icacls fails the whole invocation with error 1332 and
+// applies none of it. The API below takes the SID as bytes and never asks LSA
+// anything, which is what lets the grant happen ahead of the service.
 //
-// This is probably too paranoid and will need to be edited but it's better to
-// start out more paranoid out of the gate.
-func hardenDataDir(dir string) error {
-	cmd := exec.Command(
-		filepath.Join(os.Getenv("SystemRoot"), "System32", "icacls.exe"),
-		dir,
-		"/inheritance:r",
-		"/grant", "*S-1-5-18:(OI)(CI)F",
-		"/grant", "*S-1-5-32-544:(OI)(CI)F",
-		"/T",
-	)
+// The ACE is inheritable, and SetNamedSecurityInfo pushes inheritable ACEs down
+// to existing children, so files left behind by an older install pick it up too.
+func grantServiceAccess(dir string) error {
+	sid, err := windows.StringToSid(servicesid.AnubisServiceSID)
+	if err != nil {
+		return fmt.Errorf("cannot parse the %s service SID %s: %w", servicesid.AnubisServiceName, servicesid.AnubisServiceSID, err)
+	}
 
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("icacls failed: %w: %s", err, out)
+	sd, err := windows.GetNamedSecurityInfo(dir, windows.SE_FILE_OBJECT, windows.DACL_SECURITY_INFORMATION)
+	if err != nil {
+		return fmt.Errorf("cannot read the permissions of %s: %w", dir, err)
+	}
+
+	dacl, _, err := sd.DACL()
+	if err != nil {
+		return fmt.Errorf("cannot read the permissions of %s: %w", dir, err)
+	}
+
+	// Modify, which is what Windows calls this combination: enough to read the
+	// config, write and rotate the logs, and delete the rotated ones. It leaves
+	// out WRITE_DAC and WRITE_OWNER, so the service cannot widen its own grant.
+	const modify = windows.FILE_GENERIC_READ |
+		windows.FILE_GENERIC_WRITE |
+		windows.FILE_GENERIC_EXECUTE |
+		windows.DELETE
+
+	merged, err := windows.ACLFromEntries([]windows.EXPLICIT_ACCESS{{
+		AccessPermissions: modify,
+		AccessMode:        windows.GRANT_ACCESS,
+		Inheritance:       windows.SUB_CONTAINERS_AND_OBJECTS_INHERIT,
+		Trustee: windows.TRUSTEE{
+			TrusteeForm:  windows.TRUSTEE_IS_SID,
+			TrusteeType:  windows.TRUSTEE_IS_USER,
+			TrusteeValue: windows.TrusteeValueFromSID(sid),
+		},
+	}}, dacl)
+	if err != nil {
+		return fmt.Errorf("cannot add %s to the permissions of %s: %w", servicesid.AnubisServiceSID, dir, err)
+	}
+
+	if err := windows.SetNamedSecurityInfo(dir, windows.SE_FILE_OBJECT, windows.DACL_SECURITY_INFORMATION, nil, nil, merged, nil); err != nil {
+		return fmt.Errorf("cannot write the permissions of %s: %w", dir, err)
 	}
 
 	return nil
-}
-
-// verifyDataDir makes sure that the directory in question is both a real
-// directory and is owned by either LocalSystem or the local Administrators
-// group.
-//
-// This is annoying to implement because of directory junctions and other
-// magic NTFS features.
-func verifyDataDir(dir string) error {
-	name, err := windows.UTF16PtrFromString(dir)
-	if err != nil {
-		return fmt.Errorf("cannot open %s: %w", dir, err)
-	}
-
-	// FILE_FLAG_BACKUP_SEMANTICS is what makes CreateFile willing to open a
-	// directory at all. READ_CONTROL is the only access an owner read needs,
-	// and asking for no more than that keeps this from failing over a
-	// directory something else already has open.
-	h, err := windows.CreateFile(
-		name,
-		windows.READ_CONTROL,
-		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
-		nil,
-		windows.OPEN_EXISTING,
-		windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT,
-		0,
-	)
-	if err != nil {
-		return fmt.Errorf("cannot open %s: %w", dir, err)
-	}
-	defer windows.CloseHandle(h)
-
-	var info windows.ByHandleFileInformation
-	if err := windows.GetFileInformationByHandle(h, &info); err != nil {
-		return fmt.Errorf("cannot read attributes of %s: %w", dir, err)
-	}
-
-	if info.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
-		return fmt.Errorf("%w: %s is a reparse point", ErrUntrustedDir, dir)
-	}
-
-	if info.FileAttributes&windows.FILE_ATTRIBUTE_DIRECTORY == 0 {
-		return fmt.Errorf("%w: %s is not a directory", ErrUntrustedDir, dir)
-	}
-
-	sd, err := windows.GetSecurityInfo(h, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION)
-	if err != nil {
-		return fmt.Errorf("cannot read owner of %s: %w", dir, err)
-	}
-
-	owner, _, err := sd.Owner()
-	if err != nil {
-		return fmt.Errorf("cannot read owner of %s: %w", dir, err)
-	}
-
-	localSystem, err := windows.CreateWellKnownSid(windows.WinLocalSystemSid)
-	if err != nil {
-		return fmt.Errorf("cannot build LocalSystem SID: %w", err)
-	}
-
-	administrators, err := windows.CreateWellKnownSid(windows.WinBuiltinAdministratorsSid)
-	if err != nil {
-		return fmt.Errorf("cannot build Administrators SID: %w", err)
-	}
-
-	if owner.Equals(localSystem) || owner.Equals(administrators) {
-		return nil
-	}
-
-	return fmt.Errorf("%w: %s is owned by %s, want LocalSystem (S-1-5-18) or Administrators (S-1-5-32-544)", ErrUntrustedDir, dir, owner)
 }
 
 // runPlatformService runs fn under the service control manager when this
