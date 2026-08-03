@@ -71,7 +71,7 @@ func unzip(src, dest string) ([]string, time.Time, error) {
 	if err != nil {
 		return nil, time.Time{}, fmt.Errorf("mkmsi: cannot open %s: %w", src, err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	if len(r.File) == 0 {
 		return nil, time.Time{}, fmt.Errorf("mkmsi: %s has no entries", src)
@@ -131,7 +131,7 @@ func extractOne(f *zip.File, out string) error {
 	if err != nil {
 		return fmt.Errorf("mkmsi: cannot read %s from zip: %w", f.Name, err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
 	w, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode().Perm()|0o200)
 	if err != nil {
@@ -139,7 +139,7 @@ func extractOne(f *zip.File, out string) error {
 	}
 
 	if _, err := io.Copy(w, rc); err != nil {
-		w.Close()
+		_ = w.Close()
 		return fmt.Errorf("mkmsi: cannot write %s: %w", out, err)
 	}
 
