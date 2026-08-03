@@ -309,6 +309,7 @@ minica
 mistralai
 mkmsi
 mnt
+Moenbryda
 Mojeek
 mojeekbot
 mozilla
@@ -537,6 +538,7 @@ Webzio
 wenet
 whois
 wildbase
+Wilfsunnwyn
 Wingate
 withthothmock
 wixl
