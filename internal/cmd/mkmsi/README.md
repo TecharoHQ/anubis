@@ -12,7 +12,9 @@ tools across two packages -- `msibuild` and `msiinfo` in `msitools`, `wixl` and
 `run/windows/anubis.wxs`.
 
 > [!NOTE]
-> This code was generated using Claude Opus 5 as a correctness fuzzer to ensure that this output is valid, works on Windows systems, and generally behaves like a well-behaved Windows installer. Due to facts and circumstances beyond my control with how these tools and the MSI format works, it is not currently possible to make these MSI builds reproducible. I tried.
+> This code was generated using Claude Opus 5 as a correctness fuzzer to ensure that this output is valid, works on Windows systems, and generally behaves like a well-behaved Windows installer. Due to facts and circumstances beyond my control with how these tools and the MSI format works, it is not currently possible to make these MSI builds reproducible.
+>
+> I tried.
 
 This is intended to be run by `yeet` at package build time:
 
