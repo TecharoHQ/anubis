@@ -266,7 +266,7 @@ func run(ctx context.Context) {
 	internal.SetHealth("anubis", healthv1.HealthCheckResponse_NOT_SERVING)
 
 	lg := internal.InitSlog(*slogLevel, os.Stderr)
-	lg.Info("starting up Anubis")
+	lg.InfoContext(ctx, "starting up Anubis")
 
 	wg := new(sync.WaitGroup)
 
@@ -287,11 +287,11 @@ func run(ctx context.Context) {
 	// Thoth configuration
 	switch {
 	case *thothURL != "" && *thothToken == "":
-		lg.Warn("THOTH_URL is set but no THOTH_TOKEN is set")
+		lg.WarnContext(ctx, "THOTH_URL is set but no THOTH_TOKEN is set")
 	case *thothURL == "" && *thothToken != "":
-		lg.Warn("THOTH_TOKEN is set but no THOTH_URL is set")
+		lg.WarnContext(ctx, "THOTH_TOKEN is set but no THOTH_URL is set")
 	case *thothURL != "" && *thothToken != "":
-		lg.Debug("connecting to Thoth")
+		lg.DebugContext(ctx, "connecting to Thoth")
 		thothClient, err := thoth.New(ctx, *thothURL, *thothToken, *thothInsecure)
 		if err != nil {
 			log.Fatalf("can't dial thoth at %s: %v", *thothURL, err)
@@ -300,13 +300,13 @@ func run(ctx context.Context) {
 		ctx = thoth.With(ctx, thothClient)
 	}
 
-	lg.Info("loading policy file", "fname", *policyFname)
+	lg.InfoContext(ctx, "loading policy file", "fname", *policyFname)
 	policy, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty, *slogLevel, strings.TrimSpace(*target) == "")
 	if err != nil {
 		log.Fatalf("can't parse policy file: %v", err)
 	}
 	lg = policy.Logger
-	lg.Debug("swapped to new logger")
+	lg.DebugContext(ctx, "swapped to new logger")
 	slog.SetDefault(lg)
 
 	if *metricsBind != "" || policy.Metrics != nil {
@@ -318,7 +318,7 @@ func run(ctx context.Context) {
 		}
 
 		if policy.Metrics == nil {
-			lg.Debug("migrating flags to metrics config", "bind", *metricsBind, "network", *metricsBindNetwork, "socket-mode", *socketMode)
+			lg.DebugContext(ctx, "migrating flags to metrics config", "bind", *metricsBind, "network", *metricsBindNetwork, "socket-mode", *socketMode)
 			ms.Config = &config.Metrics{
 				Bind:       *metricsBind,
 				Network:    *metricsBindNetwork,
@@ -332,9 +332,9 @@ func run(ctx context.Context) {
 	// Warn if persistent storage is used without a configured signing key
 	if policy.Store.IsPersistent() {
 		if *hs512Secret == "" && *ed25519PrivateKeyHex == "" && *ed25519PrivateKeyHexFile == "" {
-			lg.Warn("[misconfiguration] persistent storage backend is configured, but no private key is set. " +
-				"Challenges will be invalidated when Anubis restarts. " +
-				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. " +
+			lg.WarnContext(ctx, "[misconfiguration] persistent storage backend is configured, but no private key is set. "+
+				"Challenges will be invalidated when Anubis restarts. "+
+				"Set HS512_SECRET, ED25519_PRIVATE_KEY_HEX, or ED25519_PRIVATE_KEY_HEX_FILE to ensure challenges survive service restarts. "+
 				"See: https://anubis.techaro.lol/docs/admin/installation#key-generation")
 		}
 	}
@@ -395,7 +395,7 @@ func run(ctx context.Context) {
 			log.Fatalf("failed to generate ed25519 key: %v", err)
 		}
 
-		lg.Warn("generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
+		lg.WarnContext(ctx, "generating random key, Anubis will have strange behavior when multiple instances are behind the same load balancer target, for more information: see https://anubis.techaro.lol/docs/admin/installation#key-generation")
 	}
 
 	var redirectDomainsList []string
@@ -409,7 +409,7 @@ func run(ctx context.Context) {
 			redirectDomainsList = append(redirectDomainsList, strings.TrimSpace(domain))
 		}
 	} else {
-		lg.Warn("REDIRECT_DOMAINS is not set, Anubis will redirect to any domain, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
+		lg.WarnContext(ctx, "REDIRECT_DOMAINS is not set, Anubis will redirect to any domain, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
 	anubis.CookieName = *cookiePrefix + "-auth"
@@ -473,7 +473,7 @@ func run(ctx context.Context) {
 		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
 	}
 
-	lg.Info(
+	lg.InfoContext(ctx,
 		"listening",
 		"url", listenerUrl,
 		"difficulty", *challengeDifficulty,
