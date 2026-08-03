@@ -128,6 +128,7 @@ droneblresponse
 dropin
 dsilence
 duckduckbot
+echaro
 eerror
 ellenjoe
 emacs
@@ -169,6 +170,7 @@ forgejo
 forwardauth
 fout
 fsys
+fucky
 fullchain
 gaissmai
 Galvus
@@ -353,6 +355,7 @@ pagegen
 palemoon
 Pangu
 Papalymo
+paranoidly
 parseable
 passthrough
 Patreon
