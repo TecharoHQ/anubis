@@ -29,10 +29,10 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/checker"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
@@ -200,7 +200,7 @@ func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challen
 
 	if rule == nil {
 		rule = &policy.Bot{
-			Rules: &checker.List{},
+			Rules: &checker.All{},
 		}
 	}
 
@@ -726,7 +726,7 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 			}
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
 				Challenge: challRules,
-				Rules:     &checker.List{},
+				Rules:     &checker.All{},
 			}, nil
 		}
 	}
@@ -736,6 +736,6 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 			Difficulty: s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,
 		},
-		Rules: &checker.List{},
+		Rules: &checker.All{},
 	}, nil
 }

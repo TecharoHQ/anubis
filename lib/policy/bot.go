@@ -2,8 +2,8 @@ package policy
 
 import (
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/lib/checker"
 	"github.com/TecharoHQ/anubis/lib/config"
-	"github.com/TecharoHQ/anubis/lib/policy/checker"
 )
 
 type Bot struct {

@@ -13,7 +13,7 @@ import (
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/honeypot"
-	"github.com/TecharoHQ/anubis/lib/policy/checker"
+	"github.com/TecharoHQ/anubis/lib/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"

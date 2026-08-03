@@ -10,25 +10,25 @@ import (
 )
 
 type Impl interface {
-	Check(*http.Request) (bool, error)
+	Check(*http.Request) (matches bool, err error)
 	Hash() string
 }
 
-type Func func(*http.Request) (bool, error)
+type Func func(*http.Request) (matches bool, err error)
 
-func (f Func) Check(r *http.Request) (bool, error) {
+func (f Func) Check(r *http.Request) (matches bool, err error) {
 	return f(r)
 }
 
 func (f Func) Hash() string { return internal.FastHash(fmt.Sprintf("%#v", f)) }
 
-type List []Impl
+type All []Impl
 
 // Check runs each checker in the list against the request.
 // It returns true only if *all* checkers return true (AND semantics).
 // If any checker returns an error, the function returns false and the error.
-func (l List) Check(r *http.Request) (bool, error) {
-	for _, c := range l {
+func (a All) Check(r *http.Request) (bool, error) {
+	for _, c := range a {
 		ok, err := c.Check(r)
 		if err != nil {
 			// Propagate the error; overall result is false.
@@ -44,10 +44,10 @@ func (l List) Check(r *http.Request) (bool, error) {
 	return true, nil
 }
 
-func (l List) Hash() string {
+func (a All) Hash() string {
 	var sb strings.Builder
 
-	for _, c := range l {
+	for _, c := range a {
 		fmt.Fprintln(&sb, c.Hash())
 	}
 

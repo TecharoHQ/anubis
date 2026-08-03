@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis/internal"
-	"github.com/TecharoHQ/anubis/lib/policy/checker"
+	"github.com/TecharoHQ/anubis/lib/checker"
 	"github.com/gaissmai/bart"
 )
 
@@ -156,7 +156,7 @@ func (hec headerExistsChecker) Hash() string {
 }
 
 func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
-	var result checker.List
+	var result checker.All
 	var errs []error
 
 	for key, rexStr := range headermap {
