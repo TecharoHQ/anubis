@@ -97,6 +97,7 @@ Cotoyogi
 Cromite
 crt
 Cscript
+dacl
 daemonizing
 databento
 DATADIR
@@ -284,6 +285,7 @@ licstart
 lightpanda
 limsa
 Linting
+linuxbrew
 listor
 LLU
 loadbalancer
@@ -424,9 +426,11 @@ selfsigned
 Semrush
 Seo
 Sephiroth
+servicesid
 setsebool
 setuplistener
 shellcheck
+shellenv
 shirou
 shoneypot
 shopt
@@ -455,6 +459,7 @@ stdlib
 stoppostcmd
 storetest
 strcmp
+subauthorities
 subgrid
 subr
 subrequest
@@ -501,7 +506,9 @@ unparseable
 unretryable
 updown
 uppercased
+uppercases
 urlsafe
+usecase
 uvensys
 uvx
 UXP
