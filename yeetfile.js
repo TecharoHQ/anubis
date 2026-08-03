@@ -10,13 +10,13 @@ const methods = [
   ["linux", "riscv64", [deb, rpm, sysext, tarball]],
   ["windows", "amd64", [tarball]],
   ["windows", "arm64", [tarball]],
-]
+];
 
 const packages = methods.map(([goos, goarch, methods]) => {
-  return methods.map(method => {
+  return methods.map((method) => {
     const exe = goos == "windows" ? ".exe" : "";
 
-    method.build({
+    return method.build({
       name: "anubis",
       description:
         "Anubis weighs the souls of incoming HTTP requests and uses a sha256 proof-of-work challenge in order to protect upstream resources from scraper bots.",
@@ -41,8 +41,8 @@ const packages = methods.map(([goos, goarch, methods]) => {
         }
 
         if (goos == "linux" && method.name == "tarball") {
-          $`mkdir -p ${etc}/openrc`
-          const openrc = `${etc}/openrc`
+          $`mkdir -p ${etc}/openrc`;
+          const openrc = `${etc}/openrc`;
           file.install("./run/openrc/anubis.confd", `${openrc}/anubis.confd`);
           file.install("./run/openrc/anubis.initd", `${openrc}/anubis.initd`);
         }
@@ -67,8 +67,6 @@ const packages = methods.map(([goos, goarch, methods]) => {
     });
   });
 });
-
-
 
 // NOTE(Xe): Fixes #217. This is a "half baked" tarball that includes the harder
 // parts for deterministic distros already done. Distributions like NixOS, Gentoo
@@ -114,3 +112,13 @@ tarball.build({
 
   mkFilename: ({ name, version }) => `${name}-${version}`,
 });
+
+// Build MSI installers from the Windows zips that were just built.
+packages
+  .flat()
+  .filter((pkg) => pkg.includes("windows"))
+  .filter((pkg) => pkg.endsWith(".zip"))
+  .forEach((zip) => {
+    const msiPath = zip.replace(/\.zip$/, ".msi");
+    $`go run ./internal/cmd/mkmsi --zip ${zip} --out ${msiPath}`;
+  });
