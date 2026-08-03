@@ -93,6 +93,12 @@ msiexec /i anubis-1.26.2-windows-amd64.msi /qn INSTALLDIR="D:\Anubis"
 
 Anubis was designed for Unix-like systems and as such there are some warts that you should be aware of before deploying it in production.
 
+### Service account
+
+The `Anubis` service runs as the [virtual account](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-service-accounts#virtual-accounts) `NT SERVICE\Anubis`. Windows creates it automatically when the service is installed and removes it when it is uninstalled. There is no password to manage and nothing to create by hand.
+
+The installer grants this virtual account rights on `%ProgramData%\Techaro\Anubis` so it can read its configuration, write its logs, and do other actions critical for Anubis to function. Please do not mess with these permissions. If you (or whoever you contract for compliance) feel that you need to, please file a bug to explain your usecase.
+
 ### Logging
 
 Typically Windows services write logs to the Event Viewer. Anubis generates a lot more logs in typical operation than the Event Viewer was designed to handle, so by default it writes all its logs to these three files in `%ProgramData%\Techaro\Anubis`:
