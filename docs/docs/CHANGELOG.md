@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix Windows MSI builds on prerelease tags such as `v1.27.0-pre1`.
+
 ## v1.27.0-pre1: Moenbryda Wilfsunnwyn
 
 - Bump AI-robots.txt to version 1.47

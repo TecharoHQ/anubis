@@ -20,13 +20,37 @@ var (
 const upgradeCode = "92f5fc1f-f6f2-4bd1-bbef-79b8a46c665f"
 
 // versionRe matches the versions yeet produces, such as "1.26.2" for a tagged
-// release and "1.26.2-1-gec3cce8a-dev" for a build off a later commit.
+// release, "1.27.0-pre1" for a tagged prerelease, and
+// "1.26.2-1-gec3cce8a-dev" for a build off a later commit.
 //
 // It is anchored at both ends on purpose. Without the trailing anchor a string
 // like "1.26.2.4" matches its prefix and silently becomes 1.26.2.0, turning a
 // version this code does not understand into a plausible wrong answer instead
 // of a build failure.
-var versionRe = regexp.MustCompile(`^v?(\d+)\.(\d+)\.(\d+)(?:-(\d+)-g[0-9a-fA-F]+)?(?:-dev)?$`)
+var versionRe = regexp.MustCompile(`^v?(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(?:-pre(?P<pre>\d+))?(?:-(?P<commits>\d+)-g[0-9a-fA-F]+)?(?:-dev)?$`)
+
+// versionFields maps the numeric fields of an MSI ProductVersion onto the
+// capture groups of versionRe, in the order they appear in the output, along
+// with the maximum value MSI allows in each.
+//
+// The prerelease number has no field of its own: MSI compares only
+// major.minor.build when deciding whether one package upgrades another, and
+// there is no way to express "1.27.0-pre1 sorts below 1.27.0" in three
+// unsigned numbers. It therefore reaches the installer only through the
+// ProductCode, which hashes the raw version string, so a prerelease and its
+// release are distinct products that share a ProductVersion. The wxs sets
+// AllowSameVersionUpgrades for exactly this reason, so installing 1.27.0 over
+// 1.27.0-pre1 still removes the prerelease instead of leaving both registered.
+var versionFields = []struct {
+	name  string
+	group string
+	limit int
+}{
+	{name: "major", group: "major", limit: 255},
+	{name: "minor", group: "minor", limit: 255},
+	{name: "build", group: "patch", limit: 65535},
+	{name: "revision", group: "commits", limit: 65535},
+}
 
 // msiVersion converts a yeet version string into an MSI ProductVersion.
 //
@@ -43,12 +67,10 @@ func msiVersion(in string) (string, error) {
 		return "", fmt.Errorf("%w: %q", ErrBadVersion, in)
 	}
 
-	limits := []int{255, 255, 65535, 65535}
-	names := []string{"major", "minor", "build", "revision"}
-	parts := make([]int, 4)
+	parts := make([]int, len(versionFields))
 
-	for i := range parts {
-		raw := m[i+1]
+	for i, f := range versionFields {
+		raw := m[versionRe.SubexpIndex(f.group)]
 		if raw == "" {
 			continue
 		}
@@ -58,13 +80,13 @@ func msiVersion(in string) (string, error) {
 			// A digit string too long for an int is semantically out of
 			// range, not malformed. Callers distinguish the two.
 			if errors.Is(err, strconv.ErrRange) {
-				return "", fmt.Errorf("%w: %s %q does not fit in an int", ErrVersionOutOfRange, names[i], raw)
+				return "", fmt.Errorf("%w: %s %q does not fit in an int", ErrVersionOutOfRange, f.name, raw)
 			}
-			return "", fmt.Errorf("%w: %s %q: %w", ErrBadVersion, names[i], raw, err)
+			return "", fmt.Errorf("%w: %s %q: %w", ErrBadVersion, f.name, raw, err)
 		}
 
-		if n > limits[i] {
-			return "", fmt.Errorf("%w: %s is %d, maximum is %d", ErrVersionOutOfRange, names[i], n, limits[i])
+		if n > f.limit {
+			return "", fmt.Errorf("%w: %s is %d, maximum is %d", ErrVersionOutOfRange, f.name, n, f.limit)
 		}
 
 		parts[i] = n

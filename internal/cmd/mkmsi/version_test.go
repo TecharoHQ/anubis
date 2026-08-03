@@ -16,6 +16,12 @@ func TestMSIVersion(t *testing.T) {
 		{name: "v prefix", in: "v1.26.2", want: "1.26.2.0"},
 		{name: "dev build", in: "1.26.2-1-gec3cce8a-dev", want: "1.26.2.1"},
 		{name: "dev build many commits", in: "1.26.2-137-gdeadbee", want: "1.26.2.137"},
+		// Prereleases share a ProductVersion with their release; only the
+		// ProductCode tells them apart. See versionFields.
+		{name: "prerelease", in: "1.27.0-pre1", want: "1.27.0.0"},
+		{name: "prerelease with v prefix", in: "v1.27.0-pre2", want: "1.27.0.0"},
+		{name: "dev build off a prerelease", in: "1.27.0-pre1-4-gec3cce8a-dev", want: "1.27.0.4"},
+		{name: "prerelease number is not a version component", in: "1.27.0-pre256", want: "1.27.0.0"},
 		{name: "major too big", in: "256.0.0", wantErr: ErrVersionOutOfRange},
 		{name: "minor too big", in: "1.256.0", wantErr: ErrVersionOutOfRange},
 		{name: "patch too big", in: "1.0.65536", wantErr: ErrVersionOutOfRange},
@@ -26,6 +32,9 @@ func TestMSIVersion(t *testing.T) {
 		{name: "four components", in: "1.26.2.4", wantErr: ErrBadVersion},
 		{name: "trailing garbage", in: "1.26.2extra", wantErr: ErrBadVersion},
 		{name: "garbage after commit hash", in: "1.26.2-1-gdead-devXXX", wantErr: ErrBadVersion},
+		{name: "prerelease without a number", in: "1.27.0-pre", wantErr: ErrBadVersion},
+		{name: "unknown prerelease flavour", in: "1.27.0-rc1", wantErr: ErrBadVersion},
+		{name: "prerelease after commit count", in: "1.27.0-4-gdeadbee-pre1", wantErr: ErrBadVersion},
 		{name: "overflows an int", in: "99999999999999999999.0.0", wantErr: ErrVersionOutOfRange},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,6 +89,25 @@ func TestProductCodeVariesByVersion(t *testing.T) {
 
 	if a == b {
 		t.Errorf("different versions produced the same ProductCode %q", a)
+	}
+}
+
+func TestProductCodeVariesByPrerelease(t *testing.T) {
+	pre, err := productCode("1.27.0-pre1", "amd64")
+	if err != nil {
+		t.Fatalf("productCode: %v", err)
+	}
+
+	release, err := productCode("1.27.0", "amd64")
+	if err != nil {
+		t.Fatalf("productCode: %v", err)
+	}
+
+	// A prerelease and its release compare equal as MSI ProductVersions, so
+	// the ProductCode is the only thing that keeps them from looking like the
+	// same installed package to Windows.
+	if pre == release {
+		t.Errorf("1.27.0-pre1 and 1.27.0 produced the same ProductCode %q", pre)
 	}
 }
 
