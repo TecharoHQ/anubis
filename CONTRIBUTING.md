@@ -4,7 +4,7 @@ Anubis is a Web AI Firewall Utility (WAIFU) written in Go. It uses sha256 proof-
 
 ## Build & Run
 
-Prerequisites: Go 1.24+, Node.js (any supported version), esbuild, gzip, zstd, brotli. Install all with `brew bundle` if you are using Homebrew.
+Prerequisites: Go 1.24+, Node.js (any supported version), esbuild, gzip, zstd, brotli, msitools. Install all with `brew bundle` if you are using Homebrew.
 
 ```shell
 npm ci           # install node dependencies

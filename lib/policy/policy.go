@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
@@ -23,6 +22,20 @@ import (
 
 	_ "github.com/TecharoHQ/anubis/lib/store/all"
 )
+
+// LogRotateTimeFormat is the timestamp a rotated log file is named after.
+//
+// It is RFC 3339 with the colons taken out. Windows reads a colon in a path
+// as the separator before an alternate data stream, so a name containing one
+// cannot be created: rotation would fail with ERROR_INVALID_NAME every time,
+// and because the rotating logger has already closed the file by then, every
+// subsequent line would cost another close, open and doomed rename while the
+// log grew past its limit without bound.
+//
+// The other characters Windows forbids in a name are < > " / \ | ? *, none of
+// which a time format produces. A rotated log file is a backup rather than an
+// interchange format, so nothing parses this.
+const LogRotateTimeFormat = "2006-01-02T15-04-05Z0700"
 
 var (
 	Applications = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -90,7 +103,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	case config.LogSinkFile:
 		out := &logrotate.Logger{
 			Filename:           c.Logging.Parameters.Filename,
-			FilenameTimeFormat: time.RFC3339,
+			FilenameTimeFormat: LogRotateTimeFormat,
 			MaxBytes:           c.Logging.Parameters.MaxBytes,
 			MaxAge:             c.Logging.Parameters.MaxAge,
 			MaxBackups:         c.Logging.Parameters.MaxBackups,

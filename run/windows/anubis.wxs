@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Anubis MSI installer.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="$(var.ProductCode)"
+           Name="Anubis"
+           Language="1033"
+           Version="$(var.Version)"
+           Manufacturer="Techaro"
+           UpgradeCode="92f5fc1f-f6f2-4bd1-bbef-79b8a46c665f">
+
+    <Package InstallerVersion="$(var.InstallerVersion)"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="Web AI Firewall Utility"
+             Comments="https://anubis.techaro.lol"/>
+
+    <Media Id="1" Cabinet="anubis.cab" EmbedCab="yes"/>
+
+    <!-- yeet maps commit count into the fourth version field only
+         (1.26.2-1-dev -> 1.26.2.1), and Windows ignores that field when
+         comparing product versions. Without AllowSameVersionUpgrades, an
+         installed 1.26.2.1 is neither less than nor greater than 1.26.2 (or
+         another 1.26.2.N build), so it matches neither the VersionMin nor
+         VersionMax row in the Upgrade table: RemoveExistingProducts never
+         fires, and two products end up registered that share component
+         GUIDs, the install path, and the service name. Uninstalling either
+         one then damages the other. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of Anubis is already installed."/>
+
+    <UIRef Id="WixUI_Minimal"/>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="VendorDir" Name="Techaro">
+          <Directory Id="INSTALLDIR" Name="Anubis">
+
+            <Directory Id="BINDIR" Name="bin">
+              <Component Id="cmp_anubis_exe" Win64="$(var.Win64)"
+                         Guid="61468d35-1310-4061-86aa-faa3e0f92abe">
+                <File Id="fil_anubis_exe" Name="anubis.exe" KeyPath="yes"
+                      Source="$(var.SourceDir)/bin/anubis.exe"/>
+                <ServiceInstall Id="svc_anubis"
+                                Name="Anubis"
+                                DisplayName="Anubis"
+                                Description="Weighs the souls of incoming HTTP requests to protect upstream resources from scraper bots."
+                                Type="ownProcess"
+                                Start="demand"
+                                ErrorControl="normal"
+                                Account="NT SERVICE\Anubis"
+                                Vital="yes"/>
+                <ServiceControl Id="svcctl_anubis" Name="Anubis"
+                                Stop="both" Remove="uninstall" Wait="yes"/>
+              </Component>
+
+              <!-- RemoveExistingProducts runs before InstallServices, so a
+                   major upgrade's ServiceControl (Event=162, above) stops and
+                   deletes the OLD service, and the new ServiceInstall
+                   recreates it with StartType="demand". Left alone, every
+                   upgrade silently discards an admin's `sc config anubis
+                   start= auto` and leaves Anubis stopped after reporting
+                   success. Start it back up, but only when this install is a
+                   major upgrade over an existing one: a fresh install has a
+                   placeholder target and no signing key, so it must not
+                   start. WIX_UPGRADE_DETECTED is the property MajorUpgrade
+                   sets when an earlier version of this product is present. -->
+              <Component Id="cmp_svc_start_on_upgrade" Win64="$(var.Win64)"
+                         Guid="8cd652bd-51f2-4255-af76-5f3d88a392db">
+                <Condition>WIX_UPGRADE_DETECTED</Condition>
+                <ServiceControl Id="svcctl_anubis_start_on_upgrade" Name="Anubis"
+                                Start="install" Wait="yes"/>
+              </Component>
+
+              <Component Id="cmp_robots2policy_exe" Win64="$(var.Win64)"
+                         Guid="6772cb0a-ae96-45bf-bb0d-fa148ee9dbcd">
+                <File Id="fil_robots2policy_exe" Name="anubis-robots2policy.exe" KeyPath="yes"
+                      Source="$(var.SourceDir)/bin/anubis-robots2policy.exe"/>
+              </Component>
+
+              <!-- An Environment-only component cannot use Guid="*": wixl
+                   derives the automatic GUID from a File child. -->
+              <Component Id="cmp_path" Win64="$(var.Win64)"
+                         Guid="a76c4ba2-32b4-4ea3-9977-05b68fcd9317">
+                <Environment Id="env_path" Name="PATH" Value="[BINDIR]"
+                             Part="last" Action="set" System="yes" Permanent="no"/>
+              </Component>
+            </Directory>
+
+            <Directory Id="ETCDIR" Name="etc">
+              <Component Id="cmp_etc_templates" Win64="$(var.Win64)"
+                         Guid="d916d7de-bd52-4103-ab9a-cf57554bbad4">
+                <File Id="fil_tmpl_env" Name="anubis.env" KeyPath="yes"
+                      Source="$(var.SourceDir)/etc/anubis.env"/>
+                <File Id="fil_tmpl_yaml" Name="anubis.yaml"
+                      Source="$(var.SourceDir)/etc/anubis.yaml"/>
+              </Component>
+            </Directory>
+
+            <Directory Id="DOCDIR" Name="doc"/>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- A deferred custom action cannot read installer properties, and its
+         executable path must be set by an earlier immediate action. -->
+    <CustomAction Id="SetAnubisExePath" Property="AnubisExePath"
+                  Value="[BINDIR]anubis.exe"/>
+    <CustomAction Id="BootstrapConfig" Property="AnubisExePath"
+                  ExeCommand="--windows-bootstrap-config"
+                  Execute="deferred" Impersonate="no" Return="check"/>
+
+    <InstallExecuteSequence>
+      <Custom Action="SetAnubisExePath" Before="BootstrapConfig"/>
+      <Custom Action="BootstrapConfig" After="InstallFiles">NOT REMOVE</Custom>
+    </InstallExecuteSequence>
+
+    <Feature Id="Main" Title="Anubis" Level="1">
+      <ComponentRef Id="cmp_anubis_exe"/>
+      <ComponentRef Id="cmp_svc_start_on_upgrade"/>
+      <ComponentRef Id="cmp_robots2policy_exe"/>
+      <ComponentRef Id="cmp_path"/>
+      <ComponentRef Id="cmp_etc_templates"/>
+      <ComponentGroupRef Id="DocFiles"/>
+    </Feature>
+  </Product>
+</Wix>
