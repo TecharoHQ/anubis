@@ -12,6 +12,7 @@ allgood
 alrest
 amazonbot
 anexia
+ansicpg
 anthro
 anubis
 anubistest
@@ -38,8 +39,10 @@ behaviour
 berr
 bezier
 bindhosts
+BINDIR
 bingbot
 Bitcoin
+bitness
 bitrate
 blocklist
 blocklists
@@ -96,6 +99,7 @@ crt
 Cscript
 daemonizing
 databento
+DATADIR
 dayjob
 dco
 DDOS
@@ -104,6 +108,7 @@ de
 Debian
 debrpm
 decaymap
+deflang
 devcontainers
 Diffbot
 discordapp
@@ -113,6 +118,7 @@ dnf
 dnsbl
 dnserr
 DNSTTL
+DOCDIR
 domainhere
 dont
 DONT
@@ -129,11 +135,14 @@ embe
 enbyware
 envoyproxy
 eral
+ETCDIR
 etld
 everyones
 evilbot
 evilsite
+exdtir
 expressionorlist
+extdir
 externalagent
 externalfetcher
 extldflags
@@ -154,6 +163,7 @@ Firecrawl
 firewalls
 flagenv
 fname
+fonttbl
 Fordola
 forgejo
 forwardauth
@@ -162,6 +172,8 @@ fsys
 fullchain
 gaissmai
 Galvus
+gdead
+gdeadbee
 geoip
 geoipchecker
 gha
@@ -221,6 +233,7 @@ hypertext
 iaskspider
 iaso
 iat
+icacls
 ifm
 Imagesift
 imgproxy
@@ -229,6 +242,8 @@ inbox
 ingressed
 inlines
 inp
+installdir
+INSTALLDIR
 internets
 iocaine
 iplist
@@ -287,12 +302,18 @@ mimi
 Minfilia
 minica
 mistralai
+mkmsi
 mnt
 Mojeek
 mojeekbot
 mozilla
 mqvh
 msgbox
+msibuild
+msiexec
+msiinfo
+msitools
+msiversion
 multicore
 mxschmitt
 myapp
@@ -326,6 +347,7 @@ opendns
 opengraph
 openrc
 oswald
+packagecode
 pag
 pagegen
 palemoon
@@ -420,6 +442,7 @@ Spintax
 spintext
 spyderbot
 srcip
+srcs
 srv
 ssh
 stackoverflow
@@ -433,10 +456,13 @@ subgrid
 subr
 subrequest
 subtest
+suminfo
+svcctl
 SVCNAME
 sysext
 tagline
 tarballs
+TARGETDIR
 tarrif
 taviso
 tbn
@@ -471,6 +497,7 @@ unmarshals
 unparseable
 unretryable
 updown
+uppercased
 urlsafe
 uvensys
 uvx
@@ -501,6 +528,7 @@ whois
 wildbase
 Wingate
 withthothmock
+wixl
 wolfbeast
 wordpress
 workaround
