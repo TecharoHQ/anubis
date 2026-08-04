@@ -3,7 +3,9 @@ package lib
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -60,6 +62,21 @@ type CookieOpts struct {
 	Expiry time.Duration
 }
 
+func (s *Server) cookieName(base string) string {
+	h := sha256.Sum256(fmt.Appendf(nil, "%t|%t|%t|%d|%s|%t|%s",
+		s.opts.CookieHttpOnly, s.opts.CookieSecure, s.opts.CookiePartitioned,
+		s.opts.CookieSameSite, s.opts.CookieDomain, s.opts.CookieDynamicDomain,
+		anubis.BasePrefix))
+	return base + "-" + hex.EncodeToString(h[:4])
+}
+
+// getCookie reads the cookie named base from the request. It applies the same
+// settings suffix that SetCookie applies, so that cookies written with other
+// settings are ignored.
+func (s *Server) getCookie(r *http.Request, base string) (*http.Cookie, error) {
+	return r.Cookie(s.cookieName(base))
+}
+
 func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var domain = s.opts.CookieDomain
 	var name = anubis.CookieName
@@ -87,7 +104,7 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:        name,
+		Name:        s.cookieName(name),
 		Value:       cookieOpts.Value,
 		Expires:     time.Now().Add(cookieOpts.Expiry),
 		SameSite:    sameSite,
@@ -121,7 +138,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:        name,
+		Name:        s.cookieName(name),
 		Value:       "",
 		MaxAge:      -1,
 		Expires:     time.Now().Add(-1 * time.Minute),

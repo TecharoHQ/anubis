@@ -41,6 +41,8 @@ func TestSetCookie(t *testing.T) {
 			srv := spawnAnubis(t, tt.options)
 			rw := httptest.NewRecorder()
 
+			tt.cookieName = srv.cookieName(tt.cookieName)
+
 			srv.SetCookie(rw, CookieOpts{Value: "test", Host: tt.host})
 
 			resp := rw.Result()
@@ -71,8 +73,8 @@ func TestClearCookie(t *testing.T) {
 
 	ckie := cookies[0]
 
-	if ckie.Name != anubis.CookieName {
-		t.Errorf("wanted cookie named %q, got cookie named %q", anubis.CookieName, ckie.Name)
+	if want := srv.cookieName(anubis.CookieName); ckie.Name != want {
+		t.Errorf("wanted cookie named %q, got cookie named %q", want, ckie.Name)
 	}
 
 	if ckie.MaxAge != -1 {
@@ -96,8 +98,8 @@ func TestClearCookieWithDomain(t *testing.T) {
 
 	ckie := cookies[0]
 
-	if ckie.Name != anubis.CookieName {
-		t.Errorf("wanted cookie named %q, got cookie named %q", anubis.CookieName, ckie.Name)
+	if want := srv.cookieName(anubis.CookieName); ckie.Name != want {
+		t.Errorf("wanted cookie named %q, got cookie named %q", want, ckie.Name)
 	}
 
 	if ckie.MaxAge != -1 {
@@ -121,8 +123,8 @@ func TestClearCookieWithDynamicDomain(t *testing.T) {
 
 	ckie := cookies[0]
 
-	if ckie.Name != anubis.CookieName {
-		t.Errorf("wanted cookie named %q, got cookie named %q", anubis.CookieName, ckie.Name)
+	if want := srv.cookieName(anubis.CookieName); ckie.Name != want {
+		t.Errorf("wanted cookie named %q, got cookie named %q", want, ckie.Name)
 	}
 
 	if ckie.Domain != "xeiaso.net" {

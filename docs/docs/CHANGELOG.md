@@ -11,11 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Update Bulgarian locale ([#1708](https://github.com/TecharoHQ/anubis/pull/1708))
-
 <!-- This changes the project to: -->
 
 - Add Basque (eu) localization.
+- Rename cookies based on cookie settings.
+- Update Bulgarian locale ([#1708](https://github.com/TecharoHQ/anubis/pull/1708))
 - Enabled the Partitioned flag on cookies by default ([#1701](https://github.com/TecharoHQ/anubis/issues/1701)).
 
 ## v1.27.0-pre2: Moenbryda Wilfsunnwyn
