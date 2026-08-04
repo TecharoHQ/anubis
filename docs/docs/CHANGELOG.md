@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add Basque (eu) localization.
 - Enabled the Partitioned flag on cookies by default ([#1701](https://github.com/TecharoHQ/anubis/issues/1701)).
 
 ## v1.27.0-pre2: Moenbryda Wilfsunnwyn
