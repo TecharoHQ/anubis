@@ -178,7 +178,7 @@ func New(opts Options) (*Server, error) {
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
 	if opts.Policy.Honeypot != nil && opts.Policy.Honeypot.Enabled {
-		mazeGen, err := naive.New(result.store, result.logger)
+		mazeGen, err := naive.New(opts.Policy.Honeypot, result.store, result.logger)
 		if err == nil {
 			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
 
