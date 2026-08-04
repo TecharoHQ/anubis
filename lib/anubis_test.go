@@ -369,16 +369,18 @@ func TestCookieSettings(t *testing.T) {
 				t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
 			}
 
+			wantCookieName := srv.cookieName(anubis.CookieName)
+
 			var ckie *http.Cookie
 			for _, cookie := range resp.Cookies() {
 				t.Logf("%#v", cookie)
-				if cookie.Name == anubis.CookieName {
+				if cookie.Name == wantCookieName {
 					ckie = cookie
 					break
 				}
 			}
 			if ckie == nil {
-				t.Errorf("Cookie %q not found", anubis.CookieName)
+				t.Errorf("Cookie %q not found", wantCookieName)
 				return
 			}
 
@@ -590,15 +592,17 @@ func TestBasePrefix(t *testing.T) {
 			}
 
 			// Check cookie path
+			wantCookieName := srv.cookieName(anubis.CookieName)
+
 			var ckie *http.Cookie
 			for _, cookie := range resp.Cookies() {
-				if cookie.Name == anubis.CookieName {
+				if cookie.Name == wantCookieName {
 					ckie = cookie
 					break
 				}
 			}
 			if ckie == nil {
-				t.Errorf("Cookie %q not found", anubis.CookieName)
+				t.Errorf("Cookie %q not found", wantCookieName)
 				return
 			}
 
@@ -896,7 +900,7 @@ func TestChallengeFor_ErrNotFound(t *testing.T) {
 	t.Run("make sure new test cookie is issued", func(t *testing.T) {
 		found := false
 		for _, cookie := range resp.Cookies() {
-			if cookie.Name == anubis.TestCookieName {
+			if cookie.Name == srv.cookieName(anubis.TestCookieName) {
 				if cookie.Value == wrongCookie {
 					t.Error("a new challenge cookie should be issued")
 				}
@@ -1075,7 +1079,7 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	req.Header.Set("X-Real-Ip", "203.0.113.4")
 	req.Header.Set("User-Agent", "NilChallengeTester/1.0")
-	req.AddCookie(&http.Cookie{Name: anubis.TestCookieName, Value: chall.ID})
+	req.AddCookie(&http.Cookie{Name: srv.cookieName(anubis.TestCookieName), Value: chall.ID})
 
 	rr := httptest.NewRecorder()
 

@@ -282,7 +282,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	ckie, err := r.Cookie(anubis.CookieName)
+	ckie, err := s.getCookie(r, anubis.CookieName)
 	if err != nil {
 		lg.DebugContext(r.Context(), "cookie not found", "path", r.URL.Path)
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
@@ -523,7 +523,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		cookiePath = strings.TrimSuffix(anubis.BasePrefix, "/") + "/"
 	}
 
-	if _, err := r.Cookie(anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
+	if _, err := s.getCookie(r, anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
 		lg.WarnContext(r.Context(), "user has cookies disabled, this is not an anubis bug")

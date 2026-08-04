@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -401,9 +402,11 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 				pwFail(t, page, "could not get cookies: %v", err)
 			}
 
+			// The cookie name has a suffix that is derived from the cookie
+			// settings, so match on the prefix only.
 			var found bool
 			for _, cookie := range cookies {
-				if cookie.Name == anubis.CookieName {
+				if strings.HasPrefix(cookie.Name, anubis.CookieName+"-") {
 					found = true
 					if cookie.Path != basePrefix+"/" {
 						t.Errorf("cookie path is wrong, wanted %s, got: %s", basePrefix+"/", cookie.Path)
