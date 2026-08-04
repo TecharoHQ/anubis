@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Enabled the Partitioned flag on cookies by default ([#1701](https://github.com/TecharoHQ/anubis/issues/1701)).
+
 ## v1.27.0-pre2: Moenbryda Wilfsunnwyn
 
 - Fix Windows MSI builds on prerelease tags such as `v1.27.0-pre1`.
