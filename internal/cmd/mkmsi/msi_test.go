@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"sort"
 	"strconv"
@@ -272,6 +273,10 @@ func componentConditions(t *testing.T, msi string) map[string]string {
 }
 
 func TestMSIContents(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("skipping on development machines")
+	}
+
 	msi := buildTestMSI(t, "amd64")
 
 	for _, tt := range []struct {
@@ -374,6 +379,10 @@ func TestMSIContents(t *testing.T) {
 // installed -- so a fresh install, which has a placeholder target and no
 // signing key, never starts the service.
 func TestMSIStartsServiceOnlyOnUpgrade(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("skipping on development machines")
+	}
+
 	msi := buildTestMSI(t, "amd64")
 
 	conditions := componentConditions(t, msi)
@@ -411,6 +420,10 @@ func TestMSIStartsServiceOnlyOnUpgrade(t *testing.T) {
 }
 
 func TestMSIArm64(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("skipping on development machines")
+	}
+
 	amd64 := buildTestMSI(t, "amd64")
 	arm64 := buildTestMSI(t, "arm64")
 
@@ -475,6 +488,10 @@ func extractStream(t *testing.T, msi, stream string) []byte {
 // what changes if someone swaps in a real image and the patch stops running,
 // since the stock artwork's size is fixed and different from Anubis's.
 func TestMSIInstallerImages(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("skipping on development machines")
+	}
+
 	msi := buildTestMSI(t, "amd64")
 
 	for _, img := range installerImages {
@@ -683,6 +700,10 @@ func requireSuminfoMatchesExceptTimestamps(t *testing.T, msi1, msi2 string) {
 // Everything else -- every other table, and every stream including the CAB
 // archive -- is required to be exactly byte-identical.
 func TestMSIReproducibleBuild(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("skipping on development machines")
+	}
+
 	requireTool(t, "wixl")
 	requireTool(t, "wixl-heat")
 	requireTool(t, "msiinfo")
