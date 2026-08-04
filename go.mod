@@ -29,6 +29,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.43.0
 	go.etcd.io/bbolt v1.5.0
 	golang.org/x/net v0.56.0
+	golang.org/x/sync v0.21.0
 	golang.org/x/sys v0.46.0
 	golang.org/x/text v0.38.0
 	google.golang.org/grpc v1.81.1
@@ -186,7 +187,6 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20250718183923-645b1fa84792 // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260508192327-42602be52be6 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
