@@ -37,6 +37,7 @@ bots:
   #   - Kagi
   #   - Marginalia
   #   - Mojeek
+  #   - Arquivo.pt
   - import: (data)/crawlers/_allow-good.yaml
   # Challenge Firefox AI previews
   - import: (data)/clients/x-firefox-ai.yaml

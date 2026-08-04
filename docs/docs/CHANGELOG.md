@@ -14,8 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Add Basque (eu) localization.
+- Enabled the Partitioned flag on cookies by default ([#1701](https://github.com/TecharoHQ/anubis/issues/1701)).
 
+## v1.27.0-pre2: Moenbryda Wilfsunnwyn
+
+- Fix Windows MSI builds on prerelease tags such as `v1.27.0-pre1`.
+
+## v1.27.0-pre1: Moenbryda Wilfsunnwyn
+
+- Bump AI-robots.txt to version 1.47
 - Add `(data)/bots/lyrenth.yaml` snippet that denies [Lyrenth](https://lyrenth.com/bot)'s `AIWebIndex` crawler and `AIWebIndex-Agent` on-demand fetcher by user agent and by their [published IP ranges](https://www.lyrenth.com/bot/ip-ranges.json). This is imported by `(data)/bots/_deny-pathological.yaml`.
+- Add a Windows MSI installer and wire Anubis to run as a Windows service. See [the Windows docs](./admin/environments/windows.mdx) for more information.
+- Allow [Arquivo.pt](https://arquivo.pt), the Portuguese web archive, by default via its crawling network
 
 ## v1.26.2: Papalymo Totolymo: Echo 2
 

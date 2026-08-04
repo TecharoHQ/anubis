@@ -10,3 +10,4 @@
 - import: (data)/crawlers/commoncrawl.yaml
 - import: (data)/crawlers/wikimedia-citoid.yaml
 - import: (data)/crawlers/yandexbot.yaml
+- import: (data)/crawlers/arquivo-pt.yaml

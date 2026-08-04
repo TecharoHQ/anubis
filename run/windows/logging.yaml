@@ -1,0 +1,13 @@
+# Anubis writes its log here and rotates it. Startup errors that happen before
+# this file is read go to anubis-startup.log in the same directory instead.
+logging:
+  sink: file
+  parameters:
+    # The installer writes the real directory here. It is normally the Techaro
+    # folder under C:\ProgramData, but %ProgramData% can be moved to another
+    # drive, so the shipped template does not name one.
+    file: __ANUBIS_DATA_DIR__\anubis.log
+    maxBackups: 3
+    maxBytes: 104857600
+    maxAge: 7
+    compress: true
