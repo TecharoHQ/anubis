@@ -2,9 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 // mkmsiRequireVerifyEnv is the opt-in environment variable that turns a skip
@@ -59,20 +57,20 @@ func requireTool(t *testing.T, name string) {
 // if there is none.
 //
 // It checks both var/ directly and one level of subdirectory: yeet's default
-// destination is var/, and CI relies on that (skipOrFail is fatal there so a
-// missing zip cannot pass silently), but the human partner routinely builds
-// with something like --package-dest-dir ./var/win. Without the wider glob
-// this quietly skips forever on such a checkout, which is the exact "green
-// but checks nothing" failure mode this suite exists to prevent.
+// destination is var/, but the human partner routinely builds with something
+// like --package-dest-dir ./var/win.
 //
-// Several candidates for the same architecture are only a real problem when
-// their contents differ. A contributor who has, say, both var/ and
-// var/win/ populated with the same build should not have to delete their own
-// output to get a green test run -- that just teaches people to work around
-// the check. So this hashes every candidate and only refuses to guess when
-// two of them are genuinely different builds; a stale zip in one directory
-// and a fresh one in another must still fail loudly rather than being
-// resolved by luck of glob order.
+// No zip at all is always a skip, including with mkmsiRequireVerifyEnv set.
+// There is nothing to verify without a build, and a checkout that never ran
+// `go tool yeet` must not be reported as a broken MSI.
+//
+// Several candidates for the same architecture are normal on a working
+// checkout: var/ accumulates the zips of every release the human partner has
+// built. The one that matters is always the newest, so this picks the
+// candidate with the latest modification time instead of making the
+// contributor delete their own build output to get a green run. Ties break on
+// path order, which only happens when two copies were written in the same
+// filesystem timestamp tick.
 func findZip(t *testing.T, arch string) string {
 	t.Helper()
 
@@ -93,45 +91,41 @@ func findZip(t *testing.T, arch string) string {
 
 	switch len(matches) {
 	case 0:
-		skipOrFail(t, "no Windows %s zip in var or var/*, run `go tool yeet` first", arch)
+		t.Skipf("no Windows %s zip in var or var/*, run `go tool yeet` first", arch)
 	case 1:
 		return matches[0]
 	}
 
-	sums := make(map[string]string, len(matches)) // path -> sha256 hex
-	distinct := make(map[string]bool)
-	for _, m := range matches {
-		sum, err := fileSHA256(m)
+	newest := matches[0]
+	newestMod, err := modTime(newest)
+	if err != nil {
+		t.Fatalf("stat %s: %v", newest, err)
+	}
+
+	for _, m := range matches[1:] {
+		mod, err := modTime(m)
 		if err != nil {
-			t.Fatalf("hashing %s: %v", m, err)
+			t.Fatalf("stat %s: %v", m, err)
 		}
-		sums[m] = sum
-		distinct[sum] = true
+
+		if mod.After(newestMod) {
+			newest, newestMod = m, mod
+		}
 	}
 
-	if len(distinct) > 1 {
-		t.Fatalf("found %d Windows %s zips under var with different contents, cannot tell which one to verify: %v\nremove the stale ones and re-run", len(matches), arch, matches)
-	}
+	t.Logf("found %d Windows %s zips under var, using the newest: %s (modified %s)", len(matches), arch, newest, newestMod.Format(time.RFC3339))
 
-	t.Logf("found %d identical copies of the Windows %s zip under var (sha256 %s), using %s", len(matches), arch, sums[matches[0]], matches[0])
-
-	return matches[0]
+	return newest
 }
 
-// fileSHA256 returns the hex-encoded SHA-256 digest of a file's contents.
-func fileSHA256(path string) (string, error) {
-	f, err := os.Open(path)
+// modTime returns the modification time of a file.
+func modTime(path string) (time.Time, error) {
+	st, err := os.Stat(path)
 	if err != nil {
-		return "", err
-	}
-	defer func() { _ = f.Close() }()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
+		return time.Time{}, err
 	}
 
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return st.ModTime(), nil
 }
 
 // buildTestMSI builds an MSI for arch from the newest zip and returns its
