@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+## v1.27.0-pre3: Moenbryda Wilfsunnwyn
+
 - Make the honeypot feature log detected addresses to the disk every minute when `honeypot.ip_log_file` is set. See the [IP address logging](./admin/honeypot/overview.mdx#ip-address-logging) section for more information.
 - Add Basque (eu) localization.
 - Rename cookies based on cookie settings.
