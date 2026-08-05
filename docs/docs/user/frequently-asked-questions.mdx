@@ -1,23 +1,21 @@
 # Frequently Asked Questions
 
-## Why can't you just put details about the proof of work challenge into the challenge page so I don't need to run JavaScript?
+## Why are challenge details not embedded into the human-readable part of challenge pages?
 
-A common question is something along the lines of "why can't you give me a shell script to run the challenge on my laptop so that I don't have to enable JavaScript". Malware has been known to show an interstitial that [asks the user to paste something into their run box on Windows](https://www.malwarebytes.com/blog/news/2025/03/fake-captcha-websites-hijack-your-clipboard-to-install-information-stealers), which will then make that machine a zombie in a botnet.
+Many people have asked why the challenge details are not embedded into challenge pages so they do not have to run JavaScript. There are many instances where malware [asks the user to paste something into their run box on Windows](https://www.malwarebytes.com/blog/news/2025/03/fake-captcha-websites-hijack-your-clipboard-to-install-information-stealers). This malware adds your computer to a botnet, steal information, or encrypt all file contents for a ransom.
 
-It would be in very bad taste to associate a security product such as Anubis with behavior similar to what malware uses. This would destroy user trust in the product and potentially result in reputational damage for the contributors. When at all possible, we want to avoid this happening.
+In order for Anubis' protection to be effective, Anubis must not give users instructions akin to this kind of malware. Anubis does not require user input and must function automatically via JavaScript. Anubis must not require users to paste code into terminals or run boxes to pass challenges.
 
-Technically inclined users are easily able to understand how the proof of work check works by either reading the JavaScript on the page or [reading the source code of the JavaScript program](https://github.com/TecharoHQ/anubis/tree/main/web/js). Please note that the format of the challenges and the algorithms used to solve them are liable to change without notice and are not considered part of the public API of Anubis. When such a change occurs, this will break your workarounds.
+Technically inclined users are able to understand how the proof of work challenge works and write their own solver. The format of the challenges and algorithms used are liable to change without notice. Any details about challenges are not part of the public API of Anubis. When such a change occurs, those workarounds will break.
 
-If [sufficient funding is raised](https://github.com/TecharoHQ/anubis/discussions/278), a browser extension that packages the proof of work checks and looks for Anubis challenge pages to solve them will be created.
+## Why does Anubis use Web Workers?
 
-## Why does Anubis use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to do its proof of work challenge?
+Anubis uses [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to execute challenge logic for two main reasons:
 
-Anubis uses [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to do its proof of work challenge for two main reasons:
+1. Browsers block the main rendering thread when JavaScript executes. The challenge logic comprises many blocking math operations. Executing challenge logic on the main thread can cause browsers to hang and not respond to user input. Running challenge logic in Web Workers fixes this.
+2. Web Workers enable executing JavaScript code across multiple CPU threads. Multithreading enables Anubis challenges to run in parallel across all system cores, making the challenge page complete as fast as possible. Anubis challenges scale horizontally because modern hardware advancements are mostly around parallelism.
 
-1. The proof of work operation is a lot of serially blocking calls. If you do serially blocking calls in JavaScript, some browsers will hang and not respond to user input. This is bad user experience. Using a Web Worker allows the browser to do this computation in the background so your browser will not hang.
-2. Web Workers allow you to do multithreaded execution of JavaScript code. This lets Anubis run its checks in parallel across all your system cores so that the challenge can complete as fast as possible. In the last decade, most CPU advancements have come from making cores and code extremely parallel. Using Web Workers lets Anubis take advantage of your hardware as much as possible so that the challenge finishes as fast as possible.
-
-If you use a browser extension such as [JShelter](https://jshelter.org/), you will need to [modify your JShelter configuration](./known-broken-extensions.md#jshelter) to allow Anubis' proof of work computation to complete.
+If you use a browser extension such as [JShelter](https://jshelter.org/), you will need to [modify settings](./known-broken-extensions.md#jshelter) to allow challenges to complete.
 
 ## Does Anubis mine Bitcoin?
 
@@ -25,21 +23,23 @@ No. Anubis does not mine Bitcoin or any other cryptocurrency.
 
 ## I disabled Just-in-time compilation in my browser. Why is Anubis slow?
 
-Anubis proof-of-work checks run an open source JavaScript program in your browser. These checks do a lot of complicated math and aim to be done quickly, so the execution speed depends on [Just-in-time (JIT) compilation](https://en.wikipedia.org/wiki/Just-in-time_compilation). JIT compiles JavaScript from the Internet into native machine code at runtime. The code produced by the JIT engine is almost as good as if it was written in a native programming language and compiled for your computer in particular. Without JIT, all JavaScript programs on every website you visit run through a slow interpreter.
+Anubis challenges run many complicated math operations in a tight loop. [Just-in-time (JIT) compilation](https://en.wikipedia.org/wiki/Just-in-time_compilation) optimizes JavaScript execution by a significant degree. The JIT enables browsers to execute code as if it was natively written for your computer. Anubis' JavaScript challenges benefit from JIT complication, running much faster with the JIT enabled.
 
-This interpreter is much slower than native code because it has to translate each low level JavaScript operation into many dozens of calls to execute. This means that using the interpreter incurs a massive performance hit by its very nature; it takes longer to add numbers than if the CPU just added the numbers directly.
+Without the JIT enabled, all JavaScript programs run through a slow interpreter. This slow interpreter translates single lines of JavaScript into many dozens of machine instructions instead of JIT-ing down to single machine instructions. It takes longer to emulate the JavaScript environment to add numbers than it does to have the JIT add the numbers directly.
 
-Some users choose to disable JIT as a hardening measure against theoretical browser exploits. This is a reasonable choice if you face targeted attacks from well-resourced adversaries (such as nation-state actors), but it comes with real performance costs.
+Some users choose to disable the JIT as a security hardening measure. Depending on threat profiles, this may be a reasonable action. Keep in mind that disabling the browser feature that makes Anubis fast makes Anubis slow.
 
-If you've disabled JIT and find Anubis checks slow, re-enabling JIT is the fix. There is no way for Anubis to work around this on our end.
+If you have disabled the JIT and find Anubis checks slow, please re-enable the JIT. There is no way for Anubis to work around you choosing to disable the browser feature that makes Anubis fast.
 
 ## What versions of browsers does Anubis support?
 
-Anubis is written mainly by a single person in a basement in Canada. As such it is impossible for Anubis to support every version of every browser on the planet. As such, here's a few rules of thumb for the browsers that Anubis focuses on supporting:
+Anubis supports at least the following:
 
-- At least the two (2) most recent LTS releases of Firefox and Chrome.
-- At least the version of Chromium as used by the Samsung Browser on Android.
-- At least the last version of Chromium and Firefox that are known to run on Windows 7.
-- At least the version of Safari that runs on the second-to-oldest iPhone model currently on the market.
+- Google Chrome/Chromium 75 and later
+- Mozilla Firefox 120 and later
+- Safari 10 and later
+- Pale Moon 33 and later
 
-We cannot give more cohesive version bounds than this. If you run into problems, please file an issue. Sometimes you may just need to upgrade hardware though.
+Anubis may support other browsers, but development prioritizes the above browsers. If you discover compatibility issues, please file a bug report with OS, browser, and hardware model number information.
+
+If you work on a browser that does not work with Anubis and want us to automatically test it, please [submit a functional test](https://github.com/TecharoHQ/anubis/tree/main/test/palemoon/amd64) so that we know of failures instantly.
