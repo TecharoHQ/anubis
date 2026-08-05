@@ -10,6 +10,7 @@ var ErrInvalidHoneypotMethod = errors.New("config.Honeypot: invalid implementati
 type Honeypot struct {
 	Enabled        bool   `json:"enabled" yaml:"enabled"`
 	Implementation string `json:"implementation" yaml:"implementation"`
+	IPLogFile      string `json:"ip_log_file" yaml:"ip_log_file"`
 }
 
 func (h Honeypot) Valid() error {

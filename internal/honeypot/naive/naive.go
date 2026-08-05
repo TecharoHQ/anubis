@@ -1,18 +1,25 @@
 package naive
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
+	"io"
 	"log/slog"
 	"math"
 	"math/rand/v2"
 	"net/http"
 	"net/netip"
+	"os"
+	"slices"
+	"sort"
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
+	"github.com/TecharoHQ/anubis/internal/bundler"
 	"github.com/TecharoHQ/anubis/internal/honeypot"
+	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
@@ -37,7 +44,7 @@ var titles string
 //go:embed affirmations.txt
 var affirmations string
 
-func New(st store.Interface, lg *slog.Logger) (*Impl, error) {
+func New(cfg *config.Honeypot, st store.Interface, lg *slog.Logger) (*Impl, error) {
 	affirmation, err := spintax.Parse(affirmations)
 	if err != nil {
 		return nil, fmt.Errorf("can't parse affirmations: %w", err)
@@ -53,6 +60,68 @@ func New(st store.Interface, lg *slog.Logger) (*Impl, error) {
 		return nil, fmt.Errorf("can't parse titles: %w", err)
 	}
 
+	var fout *os.File
+	var foutBundler *bundler.Bundler[string]
+
+	if cfg.IPLogFile != "" {
+		lg.InfoContext(context.Background(), "logging honeypot IP addresses", "foutName", cfg.IPLogFile)
+
+		fout, err = os.Create(cfg.IPLogFile)
+		if err != nil {
+			return nil, fmt.Errorf("can't open ip log file %q: %w", cfg.IPLogFile, err)
+		}
+
+		if _, err := fout.Seek(0, 0); err != nil {
+			return nil, fmt.Errorf("can't rewind ip log file %q: %w", cfg.IPLogFile, err)
+		}
+
+		if err := fout.Truncate(0); err != nil {
+			return nil, fmt.Errorf("can't truncate ip log file %q: %w", cfg.IPLogFile, err)
+		}
+
+		lg := lg.With("in", "foutBundler")
+
+		foutBundler = bundler.New(func(ctx context.Context, ips []string) {
+			st, err := fout.Stat()
+			if err != nil {
+				lg.ErrorContext(ctx, "can't stat ip log file", "foutName", cfg.IPLogFile, "err", err)
+				return
+			}
+
+			if st.Size() >= 65536 {
+				if _, err := fout.Seek(0, 0); err != nil {
+					lg.ErrorContext(ctx, "can't rewind ip log file", "foutName", cfg.IPLogFile, "err", err)
+					return
+				}
+
+				if err := fout.Truncate(0); err != nil {
+					lg.ErrorContext(ctx, "can't truncate ip log file", "foutName", cfg.IPLogFile, "err", err)
+					return
+				}
+			}
+
+			sort.Strings(ips)
+			ips = slices.Compact(ips)
+
+			buf := bytes.NewBuffer(nil)
+			for _, ip := range ips {
+				fmt.Fprintln(buf, ip)
+			}
+
+			if _, err := io.Copy(fout, buf); err != nil {
+				lg.ErrorContext(ctx, "can't write buffered IP addresses to output file", "foutName", cfg.IPLogFile, "err", err)
+				return
+			}
+
+			if err := fout.Sync(); err != nil {
+				lg.ErrorContext(ctx, "can't sync output file", "foutName", cfg.IPLogFile, "err", err)
+			}
+		})
+
+		foutBundler.BundleByteLimit = 32768
+		foutBundler.DelayThreshold = time.Minute
+	}
+
 	lg.Debug("initialized basic bullshit generator", "affirmations", affirmation.Count(), "bodies", body.Count(), "titles", title.Count())
 
 	return &Impl{
@@ -64,6 +133,8 @@ func New(st store.Interface, lg *slog.Logger) (*Impl, error) {
 		body:          body,
 		title:         title,
 		lg:            lg.With("component", "honeypot/naive"),
+		fout:          fout,
+		foutBundler:   foutBundler,
 	}, nil
 }
 
@@ -73,6 +144,8 @@ type Impl struct {
 	uaWeight      store.JSON[int]
 	networkWeight store.JSON[int]
 	lg            *slog.Logger
+	fout          *os.File
+	foutBundler   *bundler.Bundler[string]
 
 	affirmation, body, title spintax.Spintax
 }
@@ -148,6 +221,11 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	realIP, _ := internal.RealIP(r)
 	if !realIP.IsValid() {
 		realIP = netip.MustParseAddr(r.Header.Get("X-Real-Ip"))
+	}
+
+	if i.foutBundler != nil {
+		rip := realIP.String()
+		_ = i.foutBundler.Add(rip, len(rip)+1) // for the newline
 	}
 
 	network, ok := internal.ClampIP(realIP)

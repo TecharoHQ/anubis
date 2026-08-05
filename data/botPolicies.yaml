@@ -116,6 +116,10 @@ honeypot:
   ## Currently the only supported implementation is the naive method.
   ## See https://anubis.techaro.lol/docs/admin/honeypot/overview#implementation-notes for more information
   implementation: naive
+  ## Setting ip_log_file makes Anubis log IP addresses that hit honeypot URLs to a file.
+  ## Anubis writes to this file either once per minute or after Anubis records 32
+  ## kilobytes of IP addresses, whichever happens first.
+  #ip_log_file: ./var/honeypot.addrs
 
 # #
 # impressum:
