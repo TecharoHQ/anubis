@@ -4,15 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"net"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/TecharoHQ/anubis/data"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -27,7 +24,6 @@ var (
 	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
 	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
 	ErrRegexEndsWithNewline              = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
-	ErrInvalidImportStatement            = errors.New("config.ImportStatement: invalid source file")
 	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
 	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
 	ErrStatusCodeNotValid                = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
@@ -220,64 +216,6 @@ func (cr ChallengeRules) Valid() error {
 	}
 
 	return nil
-}
-
-type ImportStatement struct {
-	Import string `json:"import"`
-	Bots   []BotConfig
-}
-
-func (is *ImportStatement) open() (fs.File, error) {
-	if after, ok := strings.CutPrefix(is.Import, "(data)/"); ok {
-		fname := after
-		fin, err := data.BotPolicies.Open(fname)
-		return fin, err
-	}
-
-	return os.Open(is.Import)
-}
-
-func (is *ImportStatement) load() error {
-	fin, err := is.open()
-	if err != nil {
-		return fmt.Errorf("%w: %s: %w", ErrInvalidImportStatement, is.Import, err)
-	}
-	defer fin.Close() //nolint:errcheck
-
-	var imported []BotOrImport
-	var result []BotConfig
-
-	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&imported); err != nil {
-		return fmt.Errorf("can't parse %s: %w", is.Import, err)
-	}
-
-	var errs []error
-
-	for _, b := range imported {
-		if err := b.Valid(); err != nil {
-			errs = append(errs, err)
-		}
-
-		if b.ImportStatement != nil {
-			result = append(result, b.Bots...)
-		}
-
-		if b.BotConfig != nil {
-			result = append(result, *b.BotConfig)
-		}
-	}
-
-	if len(errs) != 0 {
-		return fmt.Errorf("config %s is not valid:\n%w", is.Import, errors.Join(errs...))
-	}
-
-	is.Bots = result
-
-	return nil
-}
-
-func (is *ImportStatement) Valid() error {
-	return is.load()
 }
 
 type BotOrImport struct {

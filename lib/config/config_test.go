@@ -2,12 +2,10 @@ package config_test
 
 import (
 	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/TecharoHQ/anubis/data"
 	. "github.com/TecharoHQ/anubis/lib/config"
 )
 
@@ -233,54 +231,6 @@ func TestConfigValidKnownGood(t *testing.T) {
 
 			if len(c.Bots) == 0 {
 				t.Error("wanted more than 0 bots, got zero")
-			}
-		})
-	}
-}
-
-// TestImportStatement asserts that every policy snippet in the data folder can
-// be imported and is valid. The list of files is discovered by walking the
-// embedded filesystem so that new folders and new snippets are covered without
-// having to remember to add them here.
-func TestImportStatement(t *testing.T) {
-	var importPaths []string
-
-	if err := fs.WalkDir(data.BotPolicies, ".", func(path string, d fs.DirEntry, err error) error {
-		switch {
-		case err != nil:
-			return err
-		case d.IsDir():
-			return nil
-		case path == "botPolicies.yaml": // an entire config, not a list of bots
-			return nil
-		}
-
-		switch filepath.Ext(path) {
-		case ".yaml", ".yml":
-			importPaths = append(importPaths, "(data)/"+path)
-		}
-
-		return nil
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	if len(importPaths) == 0 {
-		t.Fatal("no policy snippets found in the embedded data folder")
-	}
-
-	for _, importPath := range importPaths {
-		t.Run(importPath, func(t *testing.T) {
-			is := &ImportStatement{
-				Import: importPath,
-			}
-
-			if err := is.Valid(); err != nil {
-				t.Errorf("validation error: %v", err)
-			}
-
-			if len(is.Bots) == 0 {
-				t.Error("wanted bot definitions, but got none")
 			}
 		})
 	}
