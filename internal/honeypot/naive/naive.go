@@ -225,7 +225,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if i.foutBundler != nil {
 		rip := realIP.String()
-		i.foutBundler.Add(rip, len(rip)+1) // for the newline
+		_ = i.foutBundler.Add(rip, len(rip)+1) // for the newline
 	}
 
 	network, ok := internal.ClampIP(realIP)

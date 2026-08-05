@@ -26,7 +26,9 @@ func TestBundler(t *testing.T) {
 	})
 
 	for _, i := range input {
-		b.Add(i, 1)
+		if err := b.Add(i, 1); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	b.Flush()
