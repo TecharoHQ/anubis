@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - JavaScript served by the `fast` challenge is loaded using [`defer`](https://www.w3schools.com/tags/att_script_defer.asp) instead of `async` ([#1782](https://github.com/TecharoHQ/anubis/issues/1782)).
+- Updates IP list for DuckDuckBot ([#1810](https://github.com/TecharoHQ/anubis/pull/1810))
 
 ## v1.27.0-pre3: Moenbryda Wilfsunnwyn
 
