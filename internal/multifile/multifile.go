@@ -1,9 +1,7 @@
 // Package multifile combines multiple fs.File instances into one logical file.
 //
 // This is used in the configuration parsing subsystem to load multiple logical
-// bot rules files as one composite yaml file. This has some hacky internal
-// logic that handles the precise case of joining multiple YAML list entries
-// spread across many files into one composite YAML list.
+// bot rules files as one composite yaml file.
 //
 // See function YAMLList for more information.
 package multifile
@@ -25,15 +23,15 @@ var (
 )
 
 // YAMLList opens multiple files from the given filesystem and gloms them
-// together into one big YAML reader where each component file is separated by
-// two newlines.
+// together into one big YAML reader where each component file is its own
+// YAML document.
 //
-// This only works because all of Anubis' YAML files are properly formatted top
-// level lists. All the files are easily able to be joined and then parsed as
-// one big happy document.
+// This works because the import logic calls yaml decoding in a loop,
+// making sure that every YAML document is decoded until the file runs
+// out of data.
 //
-// If this ends up backfiring in the future, parse the YAML files into a []any
-// slice and then rendering it in memory as a YAML list.
+// Make sure to call yaml decoding in a loop until this file returns
+// io.EOF.
 func YAMLList(fsys fs.FS, fnames []string) (fs.File, error) {
 	var files []fs.File
 	var readers []io.Reader
@@ -61,8 +59,8 @@ func YAMLList(fsys fs.FS, fnames []string) (fs.File, error) {
 		}
 		files = append(files, fin)
 		readers = append(readers, fin)
-		readers = append(readers, bytes.NewBufferString("\n\n"))
-		mfi.size += 2
+		readers = append(readers, bytes.NewBufferString("\n---\n"))
+		mfi.size += 5
 
 		st, err := fin.Stat()
 		if err != nil {
@@ -71,6 +69,7 @@ func YAMLList(fsys fs.FS, fnames []string) (fs.File, error) {
 			}
 
 			errs = append(errs, fmt.Errorf("%w: %q: %w", ErrCantStat, fname, err))
+			continue
 		}
 
 		mfi.size += st.Size()
