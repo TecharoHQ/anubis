@@ -1,0 +1,6 @@
+bots:
+  - import: (data)/bots/headless-browsers.yaml
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
