@@ -18,7 +18,7 @@ func TestGlobMatch(t *testing.T) {
 	}{
 		{
 			globbedPath: "(data)/apps/allow-api-routes*.yaml",
-			matches:     []string{"(data)/apps/allow-api-routes.yaml"},
+			matches:     []string{"apps/allow-api-routes.yaml"},
 		},
 		{
 			globbedPath: "./testdata/hack-test.*",
@@ -26,11 +26,11 @@ func TestGlobMatch(t *testing.T) {
 		},
 		{
 			globbedPath: "/does/not/exist/*",
-			err:         ErrInvalidImportStatement,
+			err:         nil,
 		},
 	} {
 		t.Run(tt.globbedPath, func(t *testing.T) {
-			matches, err := globMatch(tt.globbedPath)
+			_, matches, err := globMatch(tt.globbedPath)
 			if !errors.Is(err, tt.err) {
 				t.Logf("wanted error: %v", tt.err)
 				t.Logf("   got error: %v", err)

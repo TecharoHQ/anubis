@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/TecharoHQ/anubis/data"
+	"github.com/TecharoHQ/anubis/internal/multifile"
 	"github.com/fvbommel/sortorder"
 	"github.com/goreleaser/fileglob"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -24,47 +26,62 @@ type ImportStatement struct {
 	Bots   []BotConfig
 }
 
-func globMatch(globbedPath string) ([]string, error) {
-	var useData = false
-	var fsys fs.FS = os.DirFS(".")
-
-	if strings.HasPrefix(globbedPath, "/") {
-		fsys = os.DirFS("/")
-	}
+func globMatch(globbedPath string) (fs.FS, []string, error) {
+	var fsys fs.FS = nil
 
 	if after, ok := strings.CutPrefix(globbedPath, "(data)/"); ok {
 		globbedPath = after
 		fsys = data.BotPolicies
-		useData = true
 	}
 
-	matches, err := fileglob.Glob(globbedPath, fileglob.WithFs(fsys), fileglob.MatchDirectoryAsFile)
+	var matches []string
+	var err error
+
+	switch {
+	case fsys == nil:
+		matches, err = filepath.Glob(globbedPath)
+	case fsys != nil:
+		matches, err = fileglob.Glob(globbedPath, fileglob.WithFs(fsys), fileglob.MatchDirectoryAsFile)
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, err)
+		return nil, nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, err)
 	}
 
 	sort.Sort(sortorder.Natural(matches))
 
 	var errs []error
 
-	for i, fname := range matches {
-		if useData {
-			matches[i] = "(data)/" + fname
-		}
-
-		if _, err := fs.Stat(fsys, fname); err != nil {
-			errs = append(errs, fmt.Errorf("%w: %q", ErrCantReadImportedFile, fname))
+	for _, fname := range matches {
+		switch {
+		case fsys == nil:
+			if _, err := os.Stat(fname); err != nil {
+				errs = append(errs, fmt.Errorf("%w: %q", ErrCantReadImportedFile, fname))
+			}
+		case fsys != nil:
+			if _, err := fs.Stat(fsys, fname); err != nil {
+				errs = append(errs, fmt.Errorf("%w: %q", ErrCantReadImportedFile, fname))
+			}
 		}
 	}
 
 	if len(errs) != 0 {
-		return nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, errors.Join(errs...))
+		return nil, nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, errors.Join(errs...))
 	}
 
-	return matches, nil
+	return fsys, matches, nil
 }
 
 func (is *ImportStatement) open() (fs.File, error) {
+	if fileglob.ContainsMatchers(is.Import) {
+		fsys, fnames, err := globMatch(is.Import)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, err)
+		}
+
+		return multifile.YAMLList(fsys, fnames)
+	}
+
 	if after, ok := strings.CutPrefix(is.Import, "(data)/"); ok {
 		fname := after
 		fin, err := data.BotPolicies.Open(fname)
