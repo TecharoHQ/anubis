@@ -4,6 +4,7 @@
     all:
       - >
         (  
+          userAgent.startsWith("Git/") ||
           userAgent.startsWith("git/") ||
           userAgent.contains("libgit") ||
           userAgent.startsWith("go-git") ||
