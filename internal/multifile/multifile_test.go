@@ -3,6 +3,7 @@ package multifile
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"io"
 	"io/fs"
 	"slices"
@@ -45,16 +46,25 @@ func runTestCase(tt testCase, t *testing.T, fsys fs.FS) {
 
 	var got []data
 
-	err = yaml.NewYAMLToJSONDecoder(fin).Decode(&got)
-	switch {
-	case err == nil && tt.wantYamlError:
-		t.Error("wanted yaml error but got none")
-	case err != nil && !tt.wantYamlError:
-		t.Errorf("did not want yaml error but got: %v", err)
-	default:
-		if err != nil {
-			t.Log(err)
+	dec := yaml.NewYAMLToJSONDecoder(fin)
+
+outer:
+	for {
+		var thisGot []data
+		err = dec.Decode(&thisGot)
+		switch {
+		case errors.Is(err, io.EOF):
+			break outer
+		case err == nil && tt.wantYamlError:
+			t.Error("wanted yaml error but got none")
+		case err != nil && !tt.wantYamlError:
+			t.Errorf("did not want yaml error but got: %v", err)
+		default:
+			if err != nil {
+				t.Log(err)
+			}
 		}
+		got = append(got, thisGot...)
 	}
 
 	if tt.validate != nil {
@@ -91,14 +101,12 @@ func TestYAMLList(t *testing.T) {
 			},
 		},
 		{
-			name:          "can't mix indentation",
-			fnames:        []string{"testdata/a.yaml", "testdata/b.yaml", "testdata/indented.yaml"},
-			wantYamlError: true,
+			name:   "mixed indentation",
+			fnames: []string{"testdata/a.yaml", "testdata/b.yaml", "testdata/indented.yaml"},
 		},
 		{
-			name:          "can't mix json and yaml",
-			fnames:        []string{"testdata/a.yaml", "testdata/data.json"},
-			wantYamlError: true,
+			name:   "mixed json and yaml",
+			fnames: []string{"testdata/a.yaml", "testdata/data.json"},
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

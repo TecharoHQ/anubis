@@ -52,6 +52,29 @@ func TestGlobMatch(t *testing.T) {
 	}
 }
 
+func TestImportMultiDocument(t *testing.T) {
+	for _, tt := range []struct {
+		name        string
+		globbedPath string
+		botCount    int
+	}{
+		{"multi-document", "./testdata/multi-document/*.yaml", 3},
+		{"single-file", "./testdata/multi-document/small-internet-browsers.yaml", 2},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			is := &ImportStatement{Import: tt.globbedPath}
+
+			if err := is.Valid(); err != nil {
+				t.Fatal(err)
+			}
+
+			if len(is.Bots) != tt.botCount {
+				t.Errorf("wanted bot count: %d, got: %d", tt.botCount, len(is.Bots))
+			}
+		})
+	}
+}
+
 // TestImportStatementGlobMatchedNothing asserts that an import statement whose
 // glob pattern matches no files fails with ErrGlobMatchedNothing instead of the
 // io.EOF that the YAML decoder would return for an empty document.
