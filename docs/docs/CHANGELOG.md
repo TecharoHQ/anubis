@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updates Alibaba cloud IP list ([#1813](https://github.com/TecharoHQ/anubis/pull/1813))
 - Updates Googlebot IP list ([#1812](https://github.com/TecharoHQ/anubis/pull/1812))
 - Updates IP list for DuckDuckBot ([#1810](https://github.com/TecharoHQ/anubis/pull/1810))
+- Update Huawei Cloud IP list ([#1814](https://github.com/TecharoHQ/anubis/pull/1814))
 
 ## v1.27.0-pre3: Moenbryda Wilfsunnwyn
 
