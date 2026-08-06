@@ -23,6 +23,7 @@ jobs:
           - gitweb
           - healthcheck
           - i18n
+          - lightpanda
           - log-file
           - nginx
           - palemoon/amd64
