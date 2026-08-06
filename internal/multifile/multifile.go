@@ -66,7 +66,10 @@ func YAMLList(fsys fs.FS, fnames []string) (fs.File, error) {
 
 		st, err := fin.Stat()
 		if err != nil {
-			fin.Close()
+			if closeErr := fin.Close(); closeErr != nil {
+				errs = append(errs, fmt.Errorf("%w: %q: %w", ErrCantClose, fname, err))
+			}
+
 			errs = append(errs, fmt.Errorf("%w: %q: %w", ErrCantStat, fname, err))
 		}
 
