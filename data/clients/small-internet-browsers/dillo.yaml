@@ -1,0 +1,16 @@
+- name: "reduce-weight-dillo"
+  action: WEIGH
+  weight:
+    adjust: -10 # dillo does not have JS and can solve metarefresh
+  expression:
+    all:
+      - '"Accept" in headers'
+      - '"Accept-Encoding" in headers'
+      - 'headers["Accept-Encoding"].contains("gzip")'
+      - 'headers["Accept-Encoding"].contains("deflate")'
+      - 'headers["Accept-Encoding"].contains("br")'
+      - '"Dnt" in headers'
+      - '"X-Http-Protocol" in headers'
+      - 'headers["X-Http-Protocol"] == "HTTP/1.1"'
+      - userAgent.startsWith("Dillo/")
+      - '!userAgent.contains("Mozilla")'
