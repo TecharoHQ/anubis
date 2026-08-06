@@ -49,12 +49,15 @@ require (
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/fahedouch/go-logrotate v0.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/gaissmai/bart v0.28.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/cel-go v0.28.1 // indirect
+	github.com/goreleaser/fileglob v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
