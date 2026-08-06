@@ -116,51 +116,7 @@ When Anubis loads files imported with a wildcard match, it sorts the files in [n
 
 Natural sort compares numbers numerically and words alphabetically. This makes `02-deny.yaml` load before `10-deny.yaml`.
 
-### Every matched file must be a top level list
-
-Anubis combines the matched files into one YAML document and then parses that document. Write each file as a list of rules at the top level, with no indentation and no `bots:` key.
-
-For example, take a folder `known-good` with two files in it:
-
-```yaml
-# known-good/techknowlogick.yaml
-- name: allow-techknowlogick-gitea
-  action: ALLOW
-  expression:
-    all:
-      - host == "git.techaro.lol"
-      - verifyFCrDNS(remoteAddress, "techknowlogick.com$")
-```
-
-```yaml
-# known-good/xe.yaml
-- name: allow-xe-gitea
-  action: ALLOW
-  expression:
-    all:
-      - host == "git.techaro.lol"
-      - verifyFCrDNS(remoteAddress, "xeiaso.net$")
-```
-
-When importing `known-good/*.yaml`, Anubis reads them as if you wrote both lists of rules into one file:
-
-```yaml
-- name: allow-techknowlogick-gitea
-  action: ALLOW
-  expression:
-    all:
-      - host == "git.techaro.lol"
-      - verifyFCrDNS(remoteAddress, "techknowlogick.com$")
-
-- name: allow-xe-gitea
-  action: ALLOW
-  expression:
-    all:
-      - host == "git.techaro.lol"
-      - verifyFCrDNS(remoteAddress, "xeiaso.net$")
-```
-
-:::warning
+:::tip
 
 Make sure your indentation is consistent across all files matched in a single import statement. Format your YAML files with [yq](https://github.com/mikefarah/yq) or configure your editor to format YAML files when you save.
 

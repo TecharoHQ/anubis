@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -111,8 +112,17 @@ func (is *ImportStatement) load() error {
 	var imported []BotOrImport
 	var result []BotConfig
 
-	if err := yaml.NewYAMLToJSONDecoder(fin).Decode(&imported); err != nil {
-		return fmt.Errorf("can't parse %s: %w", is.Import, err)
+	dec := yaml.NewYAMLToJSONDecoder(fin)
+	for {
+		var doc []BotOrImport
+		if err := dec.Decode(&doc); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return fmt.Errorf("%w: can't parse %s: %w", ErrInvalidImportStatement, is.Import, err)
+		}
+
+		imported = append(imported, doc...)
 	}
 
 	var errs []error

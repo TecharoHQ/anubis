@@ -1,0 +1,11 @@
+- name: "reduce-weight-palemoon"
+  user_agent_regex: "PaleMoon"
+  action: WEIGH
+  weight:
+    adjust: -5
+---
+- name: "reduce-weight-dillo"
+  user_agent_regex: "Dillo"
+  action: WEIGH
+  weight:
+    adjust: -5
