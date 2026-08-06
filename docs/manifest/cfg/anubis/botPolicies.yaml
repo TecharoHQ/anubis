@@ -74,6 +74,8 @@ bots:
     weight:
       adjust: -5
 
+  - import: (data)/clients/small-internet-browsers/*.yaml
+
 # The weight thresholds for when to trigger individual challenges. Any
 # CHALLENGE will take precedence over this.
 #
