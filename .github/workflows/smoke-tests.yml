@@ -29,6 +29,7 @@ jobs:
           #- palemoon/i386
           - robots_txt
           - traefik
+          - wildcard-match
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

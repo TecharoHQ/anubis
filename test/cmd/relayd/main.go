@@ -32,7 +32,7 @@ func main() {
 	flagenv.Parse()
 	flag.Parse()
 
-	internal.InitSlog(*slogLevel)
+	internal.InitSlog(*slogLevel, os.Stderr)
 
 	slog.Info("starting",
 		"bind", *bind,
