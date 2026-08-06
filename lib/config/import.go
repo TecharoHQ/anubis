@@ -19,12 +19,15 @@ import (
 var (
 	ErrInvalidImportStatement = errors.New("config.ImportStatement: invalid source file")
 	ErrCantReadImportedFile   = errors.New("config.ImportStatement: can't read imported file")
+	ErrGlobMatchedNothing     = errors.New("config.ImportStatement: glob pattern matched no files")
 )
 
 type ImportStatement struct {
 	Import string `json:"import"`
 	Bots   []BotConfig
 }
+
+const globHints = `recursive wildcards ("**") and alternation ("{yaml,yml}") are not supported`
 
 func globMatch(globbedPath string) (fs.FS, []string, error) {
 	var fsys fs.FS = nil
@@ -41,11 +44,18 @@ func globMatch(globbedPath string) (fs.FS, []string, error) {
 	case fsys == nil:
 		matches, err = filepath.Glob(globbedPath)
 	case fsys != nil:
-		matches, err = fileglob.Glob(globbedPath, fileglob.WithFs(fsys), fileglob.MatchDirectoryAsFile)
+		matches, err = fs.Glob(fsys, globbedPath)
 	}
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, err)
+	}
+
+	if len(matches) == 0 {
+		if strings.Contains(globbedPath, "**") || strings.Contains(globbedPath, "{") {
+			return nil, nil, fmt.Errorf("%w: note that %s", ErrGlobMatchedNothing, globHints)
+		}
+		return nil, nil, ErrGlobMatchedNothing
 	}
 
 	sort.Sort(sortorder.Natural(matches))
@@ -76,7 +86,7 @@ func (is *ImportStatement) open() (fs.File, error) {
 	if fileglob.ContainsMatchers(is.Import) {
 		fsys, fnames, err := globMatch(is.Import)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrInvalidImportStatement, err)
+			return nil, err
 		}
 
 		return multifile.YAMLList(fsys, fnames)

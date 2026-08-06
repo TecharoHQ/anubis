@@ -1,2 +1,2 @@
 bots:
-  - import: (data)/bots/*.{yaml,yml}
+  - import: (data)/bots/*.yaml

@@ -26,7 +26,13 @@ func TestGlobMatch(t *testing.T) {
 		},
 		{
 			globbedPath: "/does/not/exist/*",
-			err:         nil,
+			err:         ErrGlobMatchedNothing,
+		},
+		{
+			// filepath.Match has no alternation syntax, so the braces are
+			// matched literally and nothing is found.
+			globbedPath: "(data)/bots/*.{yaml,yml}",
+			err:         ErrGlobMatchedNothing,
 		},
 	} {
 		t.Run(tt.globbedPath, func(t *testing.T) {
@@ -41,6 +47,28 @@ func TestGlobMatch(t *testing.T) {
 				t.Logf("wanted files: %#v", tt.matches)
 				t.Logf("   got files: %#v", matches)
 				t.Error("unexpected file matches")
+			}
+		})
+	}
+}
+
+// TestImportStatementGlobMatchedNothing asserts that an import statement whose
+// glob pattern matches no files fails with ErrGlobMatchedNothing instead of the
+// io.EOF that the YAML decoder would return for an empty document.
+func TestImportStatementGlobMatchedNothing(t *testing.T) {
+	for _, globbedPath := range []string{
+		"(data)/bots/*.yml",
+		"(data)/does-not-exist/*.yaml",
+		"./testdata/does-not-exist/*.yaml",
+	} {
+		t.Run(globbedPath, func(t *testing.T) {
+			is := &ImportStatement{Import: globbedPath}
+
+			err := is.Valid()
+			if !errors.Is(err, ErrGlobMatchedNothing) {
+				t.Logf("wanted error: %v", ErrGlobMatchedNothing)
+				t.Logf("   got error: %v", err)
+				t.Error("unexpected error received")
 			}
 		})
 	}
