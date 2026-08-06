@@ -15,6 +15,12 @@ import (
 //go:embed locales/*.json
 var localeFS embed.FS
 
+// manifestFile lists the supported languages. It is metadata, not a translation
+// catalog: go-i18n derives a locale from the file name, and "manifest" registers
+// under language.Und, which then shadows the English fallback for requests that
+// ask for "und".
+const manifestFile = "manifest.json"
+
 type LocalizationService struct {
 	bundle *i18n.Bundle
 }
@@ -39,7 +45,7 @@ func NewLocalizationService() *LocalizationService {
 
 		loadedAny := false
 		for _, entry := range entries {
-			if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".json") {
+			if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".json") && entry.Name() != manifestFile {
 				filePath := "locales/" + entry.Name()
 				_, err := bundle.LoadMessageFileFS(localeFS, filePath)
 				if err != nil {

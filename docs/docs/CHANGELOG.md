@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updates IP list for DuckDuckBot ([#1810](https://github.com/TecharoHQ/anubis/pull/1810))
 - Update Huawei Cloud IP list ([#1814](https://github.com/TecharoHQ/anubis/pull/1814))
 - Add standard library rules for making Dillo less threatening to Anubis and [document how to enable them](./admin/faq.mdx#how-do-i-allow-small-internet-browsers-like-dillo-netsurf-and-pale-moon-to-bypass-anubis).
+- Fix a panic when a request asks for the undetermined language tag, such as `Accept-Language: und` ([#1776](https://github.com/TecharoHQ/anubis/issues/1776)).
 
 ## v1.27.0-pre3: Moenbryda Wilfsunnwyn
 
