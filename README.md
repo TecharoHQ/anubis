@@ -63,10 +63,10 @@ Anubis is brought to you by sponsors and donors like:
     height="64"
   />
 </a>
-<a href="https://fabulous.systems/">
+<a href="https://felsqualle.com">
   <img
-    src="./docs/static/img/sponsors/fabulous-systems.webp"
-    alt="Cat eyes over the word Emma in a serif font"
+    src="./docs/static/img/sponsors/felsqualle-logo.webp"
+    alt="The word felsqualle in dripping pixel-art letters"
     height="64"
   />
 </a>
@@ -81,6 +81,9 @@ Anubis is brought to you by sponsors and donors like:
 </a>
 <a href="https://wenet.pl/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/wenet-logo.webp" alt="Wenet" height="64">
+</a>
+<a href="https://spur.us/?utm_source=github&utm_medium=referral&utm_campaign=anubis-readme">
+  <img src="./docs/static/img/sponsors/spur-logo.webp" alt="Spur Intelligence" height="64">
 </a>
 
 ## Overview

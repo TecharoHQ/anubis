@@ -158,6 +158,7 @@ FCr
 fcrdns
 fcvg
 fediverse
+felsqualle
 ffprobe
 FFXIV
 fhdr
