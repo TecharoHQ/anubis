@@ -17,6 +17,42 @@ bots:
   - import: (data)/meta/default-config.yaml
 ```
 
+:::note
+
+The `(data)` pseudo-folder corresponds to a copy of the [`data`](https://github.com/TecharoHQ/anubis/tree/main/data) as of the time Anubis was compiled. If you want to dump a copy of the `(data)` folder out of your Anubis binary, run this command:
+
+```sh
+anubis --extract-resources ./var/anubis-resources
+```
+
+This will extract the contents of the `(data)` folder compiled into your copy of Anubis as well as the contents of static filesystem used for web assets. For example:
+
+```
+$ tree -L 2 ./var/anubis-resources/
+./var/anubis-resources/
+├── data
+│   ├── apps
+│   ├── botPolicies.yaml
+│   ├── bots
+│   ├── clients
+│   ├── common
+│   ├── crawlers
+│   ├── meta
+│   └── services
+└── static
+    ├── img
+    ├── js
+    ├── locales
+    ├── robots.txt
+    └── testdata
+```
+
+The contents of the `static` folder are not subject to any backwards compatibility promises and may change at any time without warning.
+
+Replace assets in the `static` folder using reverse proxy configuration at your peril, as doing so may break challenge verification logic.
+
+:::
+
 Of note, a bot rule can either have inline bot configuration or import a bot config snippet. You cannot do both in a single bot rule.
 
 ```yaml
@@ -36,6 +72,115 @@ config.BotOrImport: rule definition is invalid, you must set either bot rules or
 ```
 
 Paths can either be prefixed with `(data)` to import from the [the data folder in the Anubis source tree](https://github.com/TecharoHQ/anubis/tree/main/data) or anywhere on the filesystem. If you don't have access to the Anubis source tree, check /usr/share/docs/anubis/data or in the tarball you extracted Anubis from.
+
+## Importing many files at once
+
+If you want to import policies from many files at once, the import path can contain [wildcards](<https://en.wikipedia.org/wiki/Glob_(programming)>). Wildcard matches let you add rules by dropping a file into a folder instead of editing your main configuration file every time.
+
+For example:
+
+```yaml
+bots:
+  # Every rule file in the (data)/crawlers folder.
+  - import: (data)/crawlers/*.yaml
+  # Every rule file you put in /etc/anubis/known-good.
+  - import: /etc/anubis/known-good/*.yaml
+```
+
+### Supported wildcards
+
+Anubis uses the Go standard library function [`filepath.Match`](https://pkg.go.dev/path/filepath#Match) for matching. It supports four wildcards:
+
+| Wildcard | Matches                             | Example                                                                                |
+| :------- | :---------------------------------- | :------------------------------------------------------------------------------------- |
+| `*`      | Any run of characters in one folder | `crawlers/*.yaml` matches `crawlers/kagibot.yaml`, but not `crawlers/eu/kagibot.yaml`. |
+| `?`      | Exactly one character               | `??-allow.yaml` matches `00-allow.yaml` and `xe-allow.yaml`, but not `1-allow.yaml`.   |
+| `[0-9]`  | One character from a set or range   | `[0-9][0-9]-*.yaml` matches `00-monitoring.yaml`, but not `xe-monitoring.yaml`.        |
+| `[^0-9]` | One character not in a set or range | `[^0-9]*.yaml` matches `xe.yaml`, but not `00-xe.yaml`.                                |
+
+Use [this Go playground link](https://go.dev/play/p/Q2qayrjZw4A) to test pattern matches.
+
+### Matched files load in natural sort order
+
+Anubis matches requests top to bottom, similar to Apache's `DENY, ALLOW` ACL. Anubis uses the first rule that matches the request exactly. A rule that loads early can shadow a rule that loads later.
+
+When Anubis loads files imported with a wildcard match, it sorts the files in [natural sort order](https://en.wikipedia.org/wiki/Natural_sort_order). To control the order rules are loaded, put a number at the beginning of each filename:
+
+```text
+/etc/anubis/known-good/
+├── 00-allow-monitoring.yaml
+├── 01-allow-git-clients.yaml
+├── 02-allow-techaro-ci-bot.yaml
+└── 10-weigh-everything-else.yaml
+```
+
+Natural sort compares numbers numerically and words alphabetically. This makes `02-deny.yaml` load before `10-deny.yaml`.
+
+### Every matched file must be a top level list
+
+Anubis combines the matched files into one YAML document and then parses that document. Write each file as a list of rules at the top level, with no indentation and no `bots:` key.
+
+For example, take a folder `known-good` with two files in it:
+
+```yaml
+# known-good/techknowlogick.yaml
+- name: allow-techknowlogick-gitea
+  action: ALLOW
+  expression:
+    all:
+      - host == "git.techaro.lol"
+      - verifyFCrDNS(remoteAddress, "techknowlogick.com$")
+```
+
+```yaml
+# known-good/xe.yaml
+- name: allow-xe-gitea
+  action: ALLOW
+  expression:
+    all:
+      - host == "git.techaro.lol"
+      - verifyFCrDNS(remoteAddress, "xeiaso.net$")
+```
+
+When importing `known-good/*.yaml`, Anubis reads them as if you wrote both lists of rules into one file:
+
+```yaml
+- name: allow-techknowlogick-gitea
+  action: ALLOW
+  expression:
+    all:
+      - host == "git.techaro.lol"
+      - verifyFCrDNS(remoteAddress, "techknowlogick.com$")
+
+- name: allow-xe-gitea
+  action: ALLOW
+  expression:
+    all:
+      - host == "git.techaro.lol"
+      - verifyFCrDNS(remoteAddress, "xeiaso.net$")
+```
+
+:::warning
+
+Make sure your indentation is consistent across all files matched in a single import statement. Format your YAML files with [yq](https://github.com/mikefarah/yq) or configure your editor to format YAML files when you save.
+
+:::
+
+### Errors from wildcard imports
+
+A wildcard import that fails stops Anubis at startup. These are the common causes:
+
+| Error                                              | Cause                                                                                     |
+| :------------------------------------------------- | :---------------------------------------------------------------------------------------- |
+| `glob pattern matched no files`                    | The pattern matched nothing. Check the folder, the file extension, and the syntax.        |
+| `can't parse (data)/*: read apps/: is a directory` | The pattern matched a folder. End the pattern with `.yaml` so that it only matches files. |
+| `can't parse ...: yaml: line N: ...`               | One of the matched files is not a top level list, or its indentation is wrong.            |
+
+Patterns that match no files result in errors. The message names the pattern that failed:
+
+```text
+glob pattern matched no files: "(data)/bots/*.yml", note that recursive wildcards ("**") and alternation ("{yaml,yml}") are not supported
+```
 
 ## Importing the default configuration
 
@@ -82,7 +227,9 @@ This lets you import an entire ruleset at once:
 - import: (data)/bots/us-ai-scraper.yaml
 ```
 
-Use this with care, you can easily get yourself into a state where Anubis recursively imports things for eternity if you are not careful. The best way to use this is to make a "root import" named `_everything.yaml` or `_allow-good.yaml` so they sort to the top. Name your meta-imports after the main verb they are enforcing so that you can glance at the configuration file and understand what it's doing.
+Use this with care, you can easily get yourself into a state where Anubis recursively imports things for eternity if you are not careful.
+
+If you need to import many files, please consider using [glob matching](#importing-many-files-at-once) instead.
 
 ## Writing snippets
 
@@ -95,39 +242,4 @@ Here is an example snippet that allows [IPv6 Unique Local Addresses](https://en.
   action: ALLOW
   remote_addresses:
     - fc00::/7
-```
-
-## Extracting Anubis' embedded filesystem
-
-You can always extract the list of rules embedded into the Anubis binary with this command:
-
-```text
-anubis --extract-resources=static
-```
-
-This will dump the contents of Anubis' embedded data to a new folder named `static`:
-
-```text
-static
-├── apps
-│   └── gitea-rss-feeds.yaml
-├── botPolicies.json
-├── botPolicies.yaml
-├── bots
-│   ├── ai-catchall.yaml
-│   ├── cloudflare-workers.yaml
-│   ├── headless-browsers.yaml
-│   └── us-ai-scraper.yaml
-├── common
-│   ├── allow-private-addresses.yaml
-│   └── keep-internet-working.yaml
-└── crawlers
-    ├── bingbot.yaml
-    ├── duckduckbot.yaml
-    ├── googlebot.yaml
-    ├── internet-archive.yaml
-    ├── kagibot.yaml
-    ├── marginalia.yaml
-    ├── mojeekbot.yaml
-    └── qwantbot.yaml
 ```

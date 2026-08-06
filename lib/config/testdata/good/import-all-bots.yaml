@@ -1,0 +1,2 @@
+bots:
+  - import: (data)/bots/*.yaml

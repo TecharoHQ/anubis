@@ -1,0 +1,3 @@
+- name: challenge
+  user_agent_regex: CHALLENGE
+  action: CHALLENGE

@@ -240,7 +240,7 @@ func main() {
 	}
 
 	if *extractResources != "" {
-		if err := extractEmbedFS(data.BotPolicies, ".", *extractResources); err != nil {
+		if err := extractEmbedFS(data.BotPolicies, ".", filepath.Join(*extractResources, "data")); err != nil {
 			log.Fatal(err)
 		}
 		if err := extractEmbedFS(web.Static, "static", *extractResources); err != nil {
@@ -508,6 +508,10 @@ func run(ctx context.Context) {
 }
 
 func extractEmbedFS(fsys embed.FS, root string, destDir string) error {
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return err
+	}
+
 	return fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err

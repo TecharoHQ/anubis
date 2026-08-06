@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Allow importing bot policy rules [using wildcard matching](./admin/configuration/import.mdx#importing-many-files-at-once) ([#1815](https://github.com/TecharoHQ/anubis/issues/1815)).
 - JavaScript served by the `fast` challenge is loaded using [`defer`](https://www.w3schools.com/tags/att_script_defer.asp) instead of `async` ([#1782](https://github.com/TecharoHQ/anubis/issues/1782)).
 - Pre-release tags no longer populate the `latest` tag in Docker. Pre-releases can be installed by using the `pre` tag.
 - Updates Alibaba cloud IP list ([#1813](https://github.com/TecharoHQ/anubis/pull/1813))

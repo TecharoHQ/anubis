@@ -102,6 +102,7 @@ dacl
 daemonizing
 databento
 DATADIR
+datapkg
 dayjob
 dco
 DDOS
@@ -160,12 +161,15 @@ fediverse
 ffprobe
 FFXIV
 fhdr
+fileglob
+filemode
 financials
 finfos
 Firecrawl
 firewalls
 flagenv
 fname
+fnames
 fonttbl
 Fordola
 forgejo
@@ -174,6 +178,7 @@ fout
 fsys
 fucky
 fullchain
+fvbommel
 gaissmai
 Galvus
 gdead
@@ -199,6 +204,7 @@ gomod
 goodbot
 googlebot
 gopsutil
+goreleaser
 govulncheck
 goyaml
 GPG
@@ -321,6 +327,7 @@ msiinfo
 msitools
 msiversion
 multicore
+multifile
 mxschmitt
 myapp
 myclient
@@ -443,6 +450,7 @@ sloglint
 sls
 sni
 snipster
+sortorder
 Spambot
 spammer
 sparkline
@@ -479,6 +487,7 @@ tbn
 tbr
 techaro
 techarohq
+techknowlogick
 telegrambot
 templ
 templruntime
@@ -490,6 +499,7 @@ thothmock
 Tik
 Timpibot
 TLog
+toplevel
 Totolymo
 traefik
 trimpath
