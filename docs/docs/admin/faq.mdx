@@ -1,0 +1,13 @@
+# Frequently Asked Questions
+
+## How do I allow small internet browsers like Dillo, NetSurf, and Pale Moon to bypass Anubis?
+
+Small internet browsers are Anubis to identify. Anubis ships rules that decrease [request weight](./policies.mdx#request-weight) for these browsers to give them easier challenges. To import all small internet browsers at once, load the standard rule:
+
+```yaml
+bots:
+  # ...
+  - import: (data)/clients/small-internet-browsers/*.yaml
+```
+
+These policies will let users of these browsers through without having to solve expensive challenges.

@@ -114,6 +114,7 @@ decaymap
 deflang
 devcontainers
 Diffbot
+Dillo
 discordapp
 discordbot
 distros
