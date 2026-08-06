@@ -19,6 +19,7 @@ var (
 	dockerLabels      = flag.String("docker-labels", os.Getenv("DOCKER_METADATA_OUTPUT_LABELS"), "Docker image labels")
 	dockerRepo        = flag.String("docker-repo", "registry.int.xeserv.us/techaro/anubis", "Docker image repository for Anubis")
 	dockerTags        = flag.String("docker-tags", os.Getenv("DOCKER_METADATA_OUTPUT_TAGS"), "newline separated docker tags including the registry name")
+	dryRun            = flag.Bool("dry-run", false, "If set, don't actually run builds")
 	githubEventName   = flag.String("github-event-name", "", "GitHub event name")
 	pullRequestID     = flag.Int("pull-request-id", -1, "GitHub pull request ID")
 	slogLevel         = flag.String("slog-level", "INFO", "logging level (see https://pkg.go.dev/log/slog#hdr-Levels)")
@@ -102,14 +103,21 @@ func main() {
 		tags = append(tags, img.tag)
 	}
 
-	output, err := run(fmt.Sprintf("ko build --platform=all --base-import-paths --tags=%q --image-user=1000 --image-annotation=%q --image-label=%q ./cmd/anubis | tail -n1", strings.Join(tags, ","), *dockerAnnotations, *dockerLabels))
-	if err != nil {
-		log.Fatalf("can't run ko build, check stderr: %v", err)
+	cmd := fmt.Sprintf("ko build --platform=all --base-import-paths --tags=%q --image-user=1000 --image-annotation=%q --image-label=%q ./cmd/anubis | tail -n1", strings.Join(tags, ","), *dockerAnnotations, *dockerLabels)
+
+	switch *dryRun {
+	case true:
+		fmt.Println("[would run]", cmd)
+	case false:
+		output, err := run(cmd)
+		if err != nil {
+			log.Fatalf("can't run ko build, check stderr: %v", err)
+		}
+
+		sp := strings.SplitN(output, "@", 2)
+
+		setOutput("digest", sp[1])
 	}
-
-	sp := strings.SplitN(output, "@", 2)
-
-	setOutput("digest", sp[1])
 }
 
 type image struct {
