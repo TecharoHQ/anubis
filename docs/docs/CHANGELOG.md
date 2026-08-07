@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Amend default [Lightpanda](https://lightpanda.io/) rule to match current behaviour, add smoke test to ensure it keeps working ([#1822](https://github.com/TecharoHQ/anubis/issues/1822)).
 - Fix a panic when a request asks for the undetermined language tag, such as `Accept-Language: und` ([#1776](https://github.com/TecharoHQ/anubis/issues/1776)).
 - Allow user agents that start with capital-G `Git` in `(data)/clients/git.yaml`.
+- Stop clearing the authorization cookie when a challenged request did not send one. A subresource request that starts before the challenge is passed but finishes after it no longer deletes the cookie that `pass-challenge` just issued ([#1314](https://github.com/TecharoHQ/anubis/issues/1314)).
 
 ## v1.27.0-pre3: Moenbryda Wilfsunnwyn
 
