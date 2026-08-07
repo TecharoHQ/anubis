@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Amend default [Lightpanda](https://lightpanda.io/) rule to match current behaviour, add smoke test to ensure it keeps working ([#1822](https://github.com/TecharoHQ/anubis/issues/1822)).
 - Fix a panic when a request asks for the undetermined language tag, such as `Accept-Language: und` ([#1776](https://github.com/TecharoHQ/anubis/issues/1776)).
 - Allow user agents that start with capital-G `Git` in `(data)/clients/git.yaml`.
+- Add Croatian locale
 
 ## v1.27.0-pre3: Moenbryda Wilfsunnwyn
 
