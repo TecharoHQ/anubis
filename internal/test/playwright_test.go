@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -159,13 +160,19 @@ func daemonize(t *testing.T, command string) {
 	cmd.Stdin = nil
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+	// Run in its own process group so cleanup can reap the whole tree. Killing
+	// only sh leaves the server holding the test binary's stdout, which makes go
+	// test report "Test I/O incomplete" and fail even when every test passed.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("can't daemonize command: %v", err)
 	}
 
 	t.Cleanup(func() {
-		cmd.Process.Kill()
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+			t.Logf("can't kill process group of %d: %v", cmd.Process.Pid, err)
+		}
 	})
 }
 
@@ -230,9 +237,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 
 	for _, typ := range browsers {
 		t.Run(typ.Name()+"/warmup", func(t *testing.T) {
-			browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
-				ExposeNetwork: playwright.String("<loopback>"),
-			})
+			browser, err := typ.Connect(buildBrowserConnect(typ.Name()))
 			if err != nil {
 				t.Fatalf("could not connect to remote browser: %v", err)
 			}
@@ -318,9 +323,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 
 	for _, typ := range browsers {
 		t.Run(typ.Name()+"/basePrefix", func(t *testing.T) {
-			browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
-				ExposeNetwork: playwright.String("<loopback>"),
-			})
+			browser, err := typ.Connect(buildBrowserConnect(typ.Name()))
 			if err != nil {
 				t.Fatalf("could not connect to remote browser: %v", err)
 			}
@@ -422,6 +425,12 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 	}
 }
 
+// buildBrowserConnect returns the URL to connect to for the named browser.
+//
+// Callers pass no BrowserTypeConnectOptions: playwright-go does not implement
+// the SocksSupport channel that exposeNetwork relies on, so requesting it makes
+// the server close the connection. The browser therefore has to share the
+// host's loopback, which both supported runners do.
 func buildBrowserConnect(name string) string {
 	u, _ := url.Parse(*playwrightServer)
 
@@ -435,9 +444,7 @@ func buildBrowserConnect(name string) string {
 func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anubisURL string) (action, error) {
 	deadline, _ := t.Deadline()
 
-	browser, err := typ.Connect(buildBrowserConnect(typ.Name()), playwright.BrowserTypeConnectOptions{
-		ExposeNetwork: playwright.String("<loopback>"),
-	})
+	browser, err := typ.Connect(buildBrowserConnect(typ.Name()))
 	if err != nil {
 		return "", fmt.Errorf("could not connect to remote browser: %w", err)
 	}
@@ -604,7 +611,10 @@ func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
 		t.Fatal(err)
 	}
 
-	listener, err := net.Listen("tcp", ":0")
+	// Bind loopback explicitly: binding every interface makes ts.URL the
+	// unspecified address (http://[::]:port), which Firefox refuses to navigate
+	// to with NS_ERROR_CONNECTION_REFUSED.
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("can't listen on random port: %v", err)
 	}
