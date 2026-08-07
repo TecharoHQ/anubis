@@ -406,6 +406,75 @@ func TestCookieSettings(t *testing.T) {
 	}
 }
 
+// Regression test for https://github.com/TecharoHQ/anubis/issues/1314
+//
+// A request without an Anubis cookie must not answer with a Set-Cookie that
+// clears it. Browsers issue subresource requests in parallel with the
+// challenge, so such a response can land after pass-challenge has already
+// issued a valid cookie and would delete it. A request that does carry a
+// cookie Anubis rejects must still have it cleared.
+func TestChallengeDoesNotClearAbsentCookie(t *testing.T) {
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: loadPolicies(t, "testdata/zero_difficulty.yaml", 0),
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	t.Cleanup(ts.Close)
+
+	cookieName := srv.cookieName(anubis.CookieName)
+
+	for _, tc := range []struct {
+		name      string
+		cookie    *http.Cookie
+		wantClear bool
+	}{
+		{
+			name:      "absent cookie is left alone",
+			cookie:    nil,
+			wantClear: false,
+		},
+		{
+			name:      "unparseable token is cleared",
+			cookie:    &http.Cookie{Name: cookieName, Value: "not-a-jwt"},
+			wantClear: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, ts.URL+"/", nil)
+			if err != nil {
+				t.Fatalf("can't make request: %v", err)
+			}
+
+			if tc.cookie != nil {
+				req.AddCookie(tc.cookie)
+			}
+
+			resp, err := httpClient(t).Do(req)
+			if err != nil {
+				t.Fatalf("can't do request: %v", err)
+			}
+			t.Cleanup(func() { resp.Body.Close() }) //nolint:errcheck
+
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("wanted the challenge page with status %d, got: %d", http.StatusOK, resp.StatusCode)
+			}
+
+			var cleared bool
+			for _, ckie := range resp.Cookies() {
+				t.Logf("%#v", ckie)
+				if ckie.Name == cookieName && ckie.MaxAge < 0 {
+					cleared = true
+				}
+			}
+
+			if cleared != tc.wantClear {
+				t.Errorf("wanted cookie %q cleared: %v, got: %v", cookieName, tc.wantClear, cleared)
+			}
+		})
+	}
+}
+
 func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "OK") //nolint:errcheck

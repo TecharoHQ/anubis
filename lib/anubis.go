@@ -284,8 +284,10 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 
 	ckie, err := s.getCookie(r, anubis.CookieName)
 	if err != nil {
+		// Don't clear the cookie, there is none to clear. This response can land
+		// after a concurrent pass-challenge issued a valid one and would delete
+		// it. See https://github.com/TecharoHQ/anubis/issues/1314
 		lg.DebugContext(r.Context(), "cookie not found", "path", r.URL.Path)
-		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.RenderIndex(w, r, cr, rule, httpStatusOnly)
 		return
 	}

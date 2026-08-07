@@ -475,6 +475,7 @@ subauthorities
 subgrid
 subr
 subrequest
+subresource
 subtest
 suminfo
 svcctl
