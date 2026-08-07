@@ -23,6 +23,9 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://databento.com/?utm_source=anubis&utm_medium=sponsor&utm_campaign=anubis">
   <img src="./docs/static/img/sponsors/databento-logo.webp" alt="Databento" height="64" />
 </a>
+<a href="https://spur.us/?utm_source=github&utm_medium=referral&utm_campaign=anubis-readme">
+  <img src="./docs/static/img/sponsors/spur-logo.webp" alt="Spur Intelligence" height="64">
+</a>
 
 ### Gold Tier
 
@@ -81,9 +84,6 @@ Anubis is brought to you by sponsors and donors like:
 </a>
 <a href="https://wenet.pl/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/wenet-logo.webp" alt="Wenet" height="64">
-</a>
-<a href="https://spur.us/?utm_source=github&utm_medium=referral&utm_campaign=anubis-readme">
-  <img src="./docs/static/img/sponsors/spur-logo.webp" alt="Spur Intelligence" height="64">
 </a>
 
 ## Overview
