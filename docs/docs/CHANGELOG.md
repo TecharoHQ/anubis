@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
+
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
 Anubis v1.27.0 adds Windows Server support, automatically renames cookies based on settings to avoid infinite challenge loops, adds two new localizations, and more.
