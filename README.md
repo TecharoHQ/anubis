@@ -106,11 +106,11 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 
 ## Star History
 
-<a href="https://www.star-history.com/#TecharoHQ/anubis&Date">
+<a href="https://www.star-history.com/?type=date&repos=TecharoHQ%2Fanubis">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=TecharoHQ/anubis&type=date&theme=dark&legend=top-left&sealed_token=NijaGjH7lyOz9iUXAO-9vs88h2o0C6cmPKIfKSpvhUrnzP0KtL93_9gsGM0D66Miq8f1b9cynl8o1of6EhFiUQK-uBZqAQqxs6dhM8tcb5Q-YTicObjlrv5RpQUkEu0nVRJ6eoU208uQzm0yNfeOkMcBgvxqPmSVdoUTNB3wjfJodZlPzopX7oVp3aXO" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=TecharoHQ/anubis&type=date&legend=top-left&sealed_token=NijaGjH7lyOz9iUXAO-9vs88h2o0C6cmPKIfKSpvhUrnzP0KtL93_9gsGM0D66Miq8f1b9cynl8o1of6EhFiUQK-uBZqAQqxs6dhM8tcb5Q-YTicObjlrv5RpQUkEu0nVRJ6eoU208uQzm0yNfeOkMcBgvxqPmSVdoUTNB3wjfJodZlPzopX7oVp3aXO" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=TecharoHQ/anubis&type=date&legend=top-left&sealed_token=NijaGjH7lyOz9iUXAO-9vs88h2o0C6cmPKIfKSpvhUrnzP0KtL93_9gsGM0D66Miq8f1b9cynl8o1of6EhFiUQK-uBZqAQqxs6dhM8tcb5Q-YTicObjlrv5RpQUkEu0nVRJ6eoU208uQzm0yNfeOkMcBgvxqPmSVdoUTNB3wjfJodZlPzopX7oVp3aXO" />
  </picture>
 </a>
 
