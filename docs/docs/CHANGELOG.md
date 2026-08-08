@@ -13,41 +13,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
-## v1.27.0-pre4: Moenbryda Wilfsunnwyn
+## v1.27.0: Moenbryda Wilfsunnwyn
 
-- Add support for JSON sources to iplist2rule ([#1833](https://github.com/TecharoHQ/anubis/pull/1833))
+Anubis v1.27.0 adds Windows Server support, automatically renames cookies based on settings to avoid infinite challenge loops, adds two new localizations, and more.
+
+### Breaking change: cookie names are dynamically created based on cookie settings
+
+Anubis tries to avoid breaking changes as much as possible, but sometimes we have to make them for the sake of the users. This is technically a breaking change in something that is not part of the public API of Anubis; but some administrators rely heavily on cookie names in advanced configurations.
+
+It seems that browsers store cookies disambiguated with their options. This means you can have multiple cookies named the same but with different options. Browsers will send these cookies to the server without the list of options. This means that changing any cookie settings requires you to change `COOKIE_PREFIX`, creating a new "cookie epoch" that will set things properly.
+
+In order to be more robust, Anubis will automatically change cookie names based on the cookie settings. For example, the default configuration creates cookies named `techaro.lol-anubis-auth-347ddb4a`.
+
+Without this change, changing _any_ cookie setting without every client clearing their cookies causes challenges to become an infinite loop of thrashing, making it appear that Anubis "blocked" them.
+
+If this becomes onerous in practice for administrators of HAProxy and other advanced setups that rely on cookie names, we will add an escape hatch in the policy file.
+
+### Windows Server support (beta)
+
+Anubis now publishes `.msi` packages, allowing administrators to install and run Anubis on Windows Server. Please read the [Windows Server page](./admin/environments/windows.mdx) for more information.
+
+This support is beta-grade as the Anubis team does not have a lot of experience with developing software for Windows Server. Feedback is more than welcome.
+
+Please let us know how it works for you!
+
+### Pre-release docker images no longer populate the `latest` tag
+
+Due to a misconfiguration of the GitHub Action [docker/metadata-action](https://github.com/docker/metadata-action), pre-release Docker images previously populated the `:latest` tag. This means that administrators that expected the `:latest` tag to result in a stable release of Anubis got a prerelease version suddenly when they ran automatic updates.
+
+If administrators want to opt-in to the prerelease build track of Anubis for more frequent access to new features, they can use the `:pre` tag:
+
+```yaml
+image: ghcr.io/techarohq/anubis:pre
+```
+
+### Features
+
 - Allow importing bot policy rules [using wildcard matching](./admin/configuration/import.mdx#importing-many-files-at-once) ([#1815](https://github.com/TecharoHQ/anubis/issues/1815)).
-- Fix bot policy imports to not require pedantically correct YAML formatting.
-- JavaScript served by the `fast` challenge is loaded using [`defer`](https://www.w3schools.com/tags/att_script_defer.asp) instead of `async` ([#1782](https://github.com/TecharoHQ/anubis/issues/1782)).
-- Pre-release tags no longer populate the `latest` tag in Docker. Pre-releases can be installed by using the `pre` tag.
+- Add support for JSON sources to iplist2rule ([#1833](https://github.com/TecharoHQ/anubis/pull/1833))
+- Make the honeypot feature log detected addresses to the disk every minute when `honeypot.ip_log_file` is set. See the [IP address logging](./admin/honeypot/overview.mdx#ip-address-logging) section for more information.
+- Add standard library rules for making Dillo less threatening to Anubis and [document how to enable them](./admin/faq.mdx#how-do-i-allow-small-internet-browsers-like-dillo-netsurf-and-pale-moon-to-bypass-anubis).
+
+#### Crawlers
+
+- Allow [Arquivo.pt](https://arquivo.pt), the Portuguese web archive, by default via its crawling network.
+- Add `(data)/bots/lyrenth.yaml` snippet that denies [Lyrenth](https://lyrenth.com/bot)'s `AIWebIndex` crawler and `AIWebIndex-Agent` on-demand fetcher by user agent and by their [published IP ranges](https://www.lyrenth.com/bot/ip-ranges.json). This is imported by `(data)/bots/_deny-pathological.yaml`.
 - Updates Alibaba cloud IP list ([#1813](https://github.com/TecharoHQ/anubis/pull/1813))
 - Updates Googlebot IP list ([#1812](https://github.com/TecharoHQ/anubis/pull/1812))
 - Updates IP list for DuckDuckBot ([#1810](https://github.com/TecharoHQ/anubis/pull/1810))
 - Update Huawei Cloud IP list ([#1814](https://github.com/TecharoHQ/anubis/pull/1814))
-- Add standard library rules for making Dillo less threatening to Anubis and [document how to enable them](./admin/faq.mdx#how-do-i-allow-small-internet-browsers-like-dillo-netsurf-and-pale-moon-to-bypass-anubis).
+
+### Fixes
+
+- Fix bot policy imports to not require pedantically correct YAML formatting when using wildcard matching.
+- JavaScript served by the `fast` challenge is loaded using [`defer`](https://www.w3schools.com/tags/att_script_defer.asp) instead of `async` ([#1782](https://github.com/TecharoHQ/anubis/issues/1782)).
 - Amend default [Lightpanda](https://lightpanda.io/) rule to match current behaviour, add smoke test to ensure it keeps working ([#1822](https://github.com/TecharoHQ/anubis/issues/1822)).
 - Fix a panic when a request asks for the undetermined language tag, such as `Accept-Language: und` ([#1776](https://github.com/TecharoHQ/anubis/issues/1776)).
 - Allow user agents that start with capital-G `Git` in `(data)/clients/git.yaml`.
-- Add Croatian locale
-
-## v1.27.0-pre3: Moenbryda Wilfsunnwyn
-
-- Make the honeypot feature log detected addresses to the disk every minute when `honeypot.ip_log_file` is set. See the [IP address logging](./admin/honeypot/overview.mdx#ip-address-logging) section for more information.
-- Add Basque (eu) localization.
-- Rename cookies based on cookie settings.
-- Update Bulgarian locale ([#1708](https://github.com/TecharoHQ/anubis/pull/1708))
 - Enabled the Partitioned flag on cookies by default ([#1701](https://github.com/TecharoHQ/anubis/issues/1701)).
-
-## v1.27.0-pre2: Moenbryda Wilfsunnwyn
-
 - Fix Windows MSI builds on prerelease tags such as `v1.27.0-pre1`.
+- Bump AI-robots.txt to version 1.47.
 
-## v1.27.0-pre1: Moenbryda Wilfsunnwyn
+### i18n
 
-- Bump AI-robots.txt to version 1.47
-- Add `(data)/bots/lyrenth.yaml` snippet that denies [Lyrenth](https://lyrenth.com/bot)'s `AIWebIndex` crawler and `AIWebIndex-Agent` on-demand fetcher by user agent and by their [published IP ranges](https://www.lyrenth.com/bot/ip-ranges.json). This is imported by `(data)/bots/_deny-pathological.yaml`.
-- Add a Windows MSI installer and wire Anubis to run as a Windows service. See [the Windows docs](./admin/environments/windows.mdx) for more information.
-- Allow [Arquivo.pt](https://arquivo.pt), the Portuguese web archive, by default via its crawling network
+- Add Basque (eu) localization.
+- Update Bulgarian locale ([#1708](https://github.com/TecharoHQ/anubis/pull/1708))
+- Add Croatian (hr) localization.
 
 ## v1.26.2: Papalymo Totolymo: Echo 2
 
