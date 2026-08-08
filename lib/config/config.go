@@ -60,8 +60,8 @@ type BotConfig struct {
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
 
 	// Thoth features
-	GeoIP *GeoIP `json:"geoip,omitempty"`
-	ASNs  *ASNs  `json:"asns,omitempty"`
+	GeoIP *GeoIP `json:"geoip,omitempty" yaml:"geoip,omitempty"`
+	ASNs  *ASNs  `json:"asns,omitempty" yaml:"asns,omitempty"`
 
 	Name       string   `json:"name" yaml:"name"`
 	Action     Rule     `json:"action" yaml:"action"`

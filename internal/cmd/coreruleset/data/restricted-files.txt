@@ -1,0 +1,765 @@
+# Apache
+# (no slash; also guards against old.htaccess, old.htpasswd, etc.)
+.htaccess
+.htdigest
+.htpasswd
+# home level dotfiles (keep in sync with lfi-os-files.data).
+# Also include commented values (e.g., `# .env`), but not comments.
+# grep -E "^(#\s*)?\.\S+$" lfi-os-files.data | sed 's/^#\s*//'
+.access/
+.addressbook
+.anydesk/
+.aptitude/config
+.atom/
+.aws/
+.azure/
+.bash_
+.bashrc
+.boto
+.cache/
+.cache/notify-osd.log
+.cargo/
+.config.local.php
+.config/
+.coverage
+.coveralls.yml
+.credentials
+.cshrc
+.cups/
+.cvs
+.dbus/
+.deployment-secrets.txt
+.aiignore
+.cursorignore
+.docker/
+.dockerenv
+.dockerignore
+.drush/
+.env
+.envrc
+.eslintignore
+.fbcindex
+.forward
+.ftpconfig
+.gem/
+.git/
+.gitattributes
+.gitconfig
+.gitignore
+.gitkeep
+.gitmodules
+.gnome/
+.gnome2/
+.gnomerc/
+.gnupg/
+.google_authenticator
+.gsutil/
+.hg/
+.hgignore
+#/.history
+.hplip/hplip.conf
+.htaccess
+.htdigest
+.htpasswd
+.ipynb_checkpoints/
+.java/
+.ksh_history
+.kube/
+.lesshst
+.lftp/
+.lhistory
+.lighttpdpassword
+.lldb-history
+.local/bin/
+.local/lib/
+.local/share/
+.local/state/
+.lynx_cookies
+.minikube/
+.msmtprc
+.my.cnf
+.myscmserverinfo
+.mysql_history
+.nano_history
+.netrc
+.node_repl_history
+.npm/
+.npmrc
+.nsconfig
+.nsr
+.nvm/
+.oh-my-
+# .pac
+.pass
+.passwd
+.password-store
+.pearrc
+.pgpass
+.php_history
+.pinerc
+.pki/
+.proclog
+.procmailrc
+.profile
+.psql_history
+.pwd
+.pytest_cache/
+.python_history
+.rediscli_history
+.remote-sync.json
+.rhistory
+.rhosts
+.rustup
+.s3cfg
+.secrets
+.selected_editor
+.settings/
+.sh_history
+.snap/
+.sqlite_history
+.ssh/
+.subversion/
+.svn/
+.svnignore
+.tconn/
+.tcshrc
+.terraform.lock.hcl
+.terraform/
+.thunderbird/
+.tmux.conf
+.tools/
+.tor/
+.travis.yaml
+.travis.yml
+.vagrant.d/
+.vidalia/
+.vim/
+.viminfo
+.vimrc
+.vmware/
+.vscode
+.web.config.swp
+.wget-hsts
+.www_acl
+.wwwacl
+.xauthority
+.yarnrc
+.zhistory
+.zsh_history
+.zshenv
+.zshrc
+
+# Generic config filenames and common permutations
+config.asp
+config_dev.asp
+config-dev.asp
+config.dev.asp
+config_prod.asp
+config-prod.asp
+config.prod.asp
+config.sample.asp
+config-sample.asp
+config_sample.asp
+config_test.asp
+config-test.asp
+config.test.asp
+config.ini
+config_dev.ini
+config-dev.ini
+config.dev.ini
+config_prod.ini
+config-prod.ini
+config.prod.ini
+config.sample.ini
+config-sample.ini
+config_sample.ini
+config_test.ini
+config-test.ini
+config.test.ini
+config.json
+config_dev.json
+config-dev.json
+config.dev.json
+config_prod.json
+config-prod.json
+config.prod.json
+config.sample.json
+config-sample.json
+config_sample.json
+config_test.json
+config-test.json
+config.test.json
+config.php
+config_dev.php
+config-dev.php
+config.dev.php
+config_prod.php
+config-prod.php
+config.prod.php
+config.sample.php
+config-sample.php
+config_sample.php
+config_test.php
+config-test.php
+config.test.php
+config.pl
+config_dev.pl
+config-dev.pl
+config.dev.pl
+config_prod.pl
+config-prod.pl
+config.prod.pl
+config.sample.pl
+config-sample.pl
+config_sample.pl
+config_test.pl
+config-test.pl
+config.test.pl
+config.py
+config_dev.py
+config-dev.py
+config.dev.py
+config_prod.py
+config-prod.py
+config.prod.py
+config.sample.py
+config-sample.py
+config_sample.py
+config_test.py
+config-test.py
+config.test.py
+config.rb
+config_dev.rb
+config-dev.rb
+config.dev.rb
+config_prod.rb
+config-prod.rb
+config.prod.rb
+config.sample.rb
+config-sample.rb
+config_sample.rb
+config_test.rb
+config-test.rb
+config.test.rb
+config.toml
+config_dev.toml
+config-dev.toml
+config.dev.toml
+config_prod.toml
+config-prod.toml
+config.prod.toml
+config.sample.toml
+config-sample.toml
+config_sample.toml
+config_test.toml
+config-test.toml
+config.test.toml
+config.txt
+config_dev.txt
+config-dev.txt
+config.dev.txt
+config_prod.txt
+config-prod.txt
+config.prod.txt
+config.sample.txt
+config-sample.txt
+config_sample.txt
+config_test.txt
+config-test.txt
+config.test.txt
+config.xml
+config_dev.xml
+config-dev.xml
+config.dev.xml
+config_prod.xml
+config-prod.xml
+config.prod.xml
+config.sample.xml
+config-sample.xml
+config_sample.xml
+config_test.xml
+config-test.xml
+config.test.xml
+config.yaml
+config_dev.yaml
+config-dev.yaml
+config.dev.yaml
+config_prod.yaml
+config-prod.yaml
+config.prod.yaml
+config.sample.yaml
+config-sample.yaml
+config_sample.yaml
+config_test.yaml
+config-test.yaml
+config.test.yaml
+config.yml
+config_dev.yml
+config-dev.yml
+config.dev.yml
+config_prod.yml
+config-prod.yml
+config.prod.yml
+config.sample.yml
+config-sample.yml
+config_sample.yml
+config_test.yml
+config-test.yml
+config.test.yml
+config.sample.inc.php
+credentials.json
+secrets.json
+secrets.yaml
+secrets.yml
+# Compressed database dumps
+.sql.001
+.sql.7z
+.sql.bz
+.sql.ace
+.sql.arj
+.sql.cpio
+.sql.gz
+.sql.lha
+.sql.lz
+.sql.pa
+.sql.pea
+.sql.r00
+.sql.r01
+.sql.r02
+.sql.r03
+.sql.r04
+.sql.r05
+.sql.r06
+.sql.r07
+.sql.r08
+.sql.r09
+.sql.rar
+.sql.rev
+.sql.tar
+.sql.taz
+.sql.tbz
+.sql.tgz
+.sql.txz
+.sql.uha
+.sql.xz
+.sql.yz1
+.sql.z
+# GitLab Omnibus
+gitlab.rb
+gitlab_config_
+initial_root_password
+# AWS cli
+aws.yaml
+aws.yml
+aws-key.yaml
+aws-key.yml
+# October CMS credentials file
+/auth.json
+# Wordpress
+/debug.log
+/error.log
+/errors.log
+wp-config.
+wp-config-
+wp-config_
+# Symfony
+/config/parameters.yml
+/config/routing.yml
+/config/security.yml
+/config/services.yml
+# Drupal
+/sites/default/default.settings.php
+/sites/default/settings.php
+/sites/default/settings.local.php
+# PrestaShop configuration files
+/config/settings.inc.php
+/app/config/parameters.php
+# Magento
+/app/etc/env.php
+/app/etc/local.xml
+# ASP.NET
+/Web.config
+# Node
+/package.json
+/package-lock.json
+/npm-shrinkwrap.json
+/gruntfile.js
+/npm-debug.log
+/webpack.config.js
+/yarn.lock
+# Composer
+/composer.json
+/composer.lock
+/packages.json
+# OSX
+/.DS_Store
+# WS FTP
+/.ws_ftp.ini
+# New Per-Project Files
+.idea
+nbproject/
+bower.json
+.bowerrc
+.eslintrc
+.jshintrc
+.gitlab-ci.yml
+.travis.yml
+database.yaml
+database.yml
+Dockerfile
+# PHP_CodeSniffer configuration files
+.php_cs.dist
+.phpcs.xml
+phpcs.xml
+.phpcs.xml.dist
+phpcs.xml.dist
+# Windows desktop configuration file
+Desktop.ini
+# Windows Explorer cache of thumbnail images
+Thumbs.db
+# PHP configuration files
+.user.ini
+php.ini
+# Oracle WebLogic Server configuration file
+weblogic.xml
+# Common names for local PHP error logs
+php_error.log
+php_errors.log
+# Java directory for non-public application data
+META-INF/
+WEB-INF/
+# Fortinet SSL VPN session file
+sslvpn_websession
+# BlockCypher log file used in code examples
+BlockCypher.log
+# Roundcube Webmail
+config.inc.php
+config.sample.php
+defaults.inc.php
+# Contains credentials for SendGrid service
+sendgrid.env
+# Fish shell files
+.fish
+fish_variables
+# CVE-2023-5003
+ldap-authentication-report.csv
+# OpenStack-Ansible credentials file
+user_secrets.yml
+# File used by Visual Studio to store sensitive data
+secrets.json
+# Docker definition files, first two are commented out
+# as they are matched by the rest of the files
+#docker-compose.yml
+#docker-compose.yaml
+compose.yml
+compose.yaml
+# CVE-2023-49103
+phpinfo.php
+# Python cache
+__pycache__/
+# Windows system ini files
+boot.ini
+system.ini
+win.ini
+# NodeJS log file
+pm2.log
+# Generic log filename
+debug.log
+# Mysql/MariaDB config file
+debian.cnf
+my.cnf
+mysql.cnf
+mysqldump.cnf
+# FTP config files
+ftp-sync.json
+# Yarn log files
+yarn-debug.log
+yarn-error.log
+# Code coverage config file
+coverage.xml
+
+# /proc entries (keep in sync with lfi-os-files.data)
+# grep -E "^proc/" lfi-os-files.data
+proc/0
+proc/1
+proc/2
+proc/3
+proc/4
+proc/5
+proc/6
+proc/7
+proc/8
+proc/9
+proc/acpi
+proc/asound
+proc/bootconfig
+proc/buddyinfo
+proc/bus
+proc/cgroups
+proc/cmdline
+proc/config.gz
+proc/consoles
+proc/cpuinfo
+proc/crypto
+proc/devices
+proc/diskstats
+proc/dma
+proc/docker
+proc/driver
+proc/dynamic_debug
+proc/execdomains
+proc/fb
+proc/filesystems
+proc/fs
+proc/interrupts
+proc/iomem
+proc/ioports
+proc/ipmi
+proc/irq
+proc/kallsyms
+proc/kcore
+proc/key-users
+proc/keys
+proc/kmsg
+proc/kpagecgroup
+proc/kpagecount
+proc/kpageflags
+proc/latency_stats
+proc/loadavg
+proc/locks
+proc/mdstat
+proc/meminfo
+proc/misc
+proc/modules
+proc/mounts
+proc/mpt
+proc/mtd
+proc/mtrr
+proc/net
+proc/pagetypeinfo
+proc/partitions
+proc/pressure
+proc/sched_debug
+proc/schedstat
+proc/scsi
+proc/self
+proc/slabinfo
+proc/softirqs
+proc/stat
+proc/swaps
+proc/sys
+proc/sysrq-trigger
+proc/sysvipc
+proc/thread-self
+proc/timer_list
+proc/timer_stats
+proc/tty
+proc/uptime
+proc/version
+proc/version_signature
+proc/vmallocinfo
+proc/vmstat
+proc/zoneinfo
+/proc/
+
+sftp.json
+
+# /sys entries (keep in sync with lfi-os-files.data)
+# grep -E "^sys/" lfi-os-files.data
+sys/block
+sys/bus
+sys/class
+sys/dev
+sys/devices
+sys/firmware
+sys/fs
+sys/hypervisor
+sys/kernel
+sys/module
+sys/power
+/sys/
+
+# Vite.js development server endpoints (CVE-2025-30208)
+# These endpoints allow arbitrary file system access and should never be exposed
+/@fs/
+/@id/
+
+cargo.toml
+# ash shell
+.ashrc
+.ash_history
+# NuShell
+config.nu
+# Cshell history file
+.csh_history
+# KornShell config file
+.kshrc
+# Fish Startup file
+config.fish
+# tcsh history file
+.tcsh_history
+
+
+pyproject.toml
+pytest.ini
+go.mod
+go.sum
+setup.py
+build.zig.zon
+
+# GNU screen
+.screenrc
+
+# Chocolatey package manager
+.chocolatey/
+# Gradle build tool
+.gradle/
+# Python IDLE
+.idlerc/
+# Kaggle config
+.kaggle/
+# Keras deep learning framework
+.keras/
+# MyPy type checker cache
+.mypy_cache/
+# Red Hat Subscription Manager config
+.redhat/
+# NPM node modules
+node_modules/.bin/
+node_modules/.cache/
+# Bun Dir
+.bun/
+# Bun global config
+.bunfig.toml
+# Ruby Shell config
+.irbrc/
+# Ruby Shell history
+.irb_history
+# Pry REPL config
+.pryrc/
+# RubyGems config
+.gemrc
+# RubyGems dir
+.gem/
+# Bundler dir
+.bundle/
+# Ruby environment manager
+.rbenv/
+# RVM dir
+.rvm/
+# RuboCop config file
+.rubocop.yml
+# PIP config
+.pip/
+# Conda
+.condarc
+anaconda3/
+miniconda3/
+# PyEnv
+.pyenv/
+# Apache Maven
+.m2/
+# SDKMAN!
+.sdkman/
+# Eclipse IDE
+.eclipse/
+# NPM Global Dir
+.npm-global/
+# YarnRc config file
+.yarnrc.yml
+# Prettier
+.prettierrc
+# Node-GYP
+.node-gyp
+# Curl Config File
+.curlrc
+# Wget Config File
+.wgetrc
+# Perl REPL & Core files
+.perldb
+.perl_repl_history
+.perlhistory
+perl/lib
+perl/bin
+# CPAN & Cpan+
+.cpan/
+.cpanplus/
+# perlenv
+.plenv
+# Kotlin Core & Cache
+.konan/
+# Kotlin REPL
+.kotlinc_history
+# git credentials
+.git-credentials
+# OpenVPN config
+.openvpn/
+openvpn/
+# WireGuard config
+wg-clients/
+# gFTP dir
+.gftp/
+# LFTP Configuration File
+.lftprc
+# NCFTP Conf Dir
+.ncftp/
+# Rsync Exclude File and Logs
+.rsync_exclude
+rsync.log
+# Wine dir
+.wine/
+# Nano Config Files & Dirs
+.nanorc
+.nano/
+# PostGresQL connection file
+.pg_service.conf
+# MySQL Login file
+.mylogin.cnf
+# MongoDB config
+.mongodb/
+.mongoshrc.js
+# Mongo shell
+.dbshell
+# PGAdmin config
+.pgadmin/
+# pm2 configs/logs/database
+.pm2/
+# Stubby config
+.stubby.yml
+.getdns/
+# Dig config
+.digrc
+# Unbond config
+.unbound/
+# mb sync config
+.mbsyncrc
+# OfflineIMAP config
+.offlineimaprc
+# getmail config
+.getmail/
+# usermin config
+.usermin/
+# cpanel ssl cerificates configs
+.cpanel/
+# OpenSSL
+.openssl.cnf
+# Terraform plugin cache dir and config file
+.terraformrc
+.terraform.d/
+# Pulimi
+.pulumi/
+.linode-cli/
+.oci/
+.opc/
+# SQL*Plus startup files and history
+.sqlplus_history
+login.sql
+# Microsoft EditorConfig config
+.editorconfig
+# Data Dog config
+.datadog-agent/
+# WP Cli config
+.wp-cli/
+# IBM Cloud Cli config
+.bluemix/
+.ibmcloud/

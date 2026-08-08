@@ -1,0 +1,55 @@
+# AI coding assistant directories (issue #4474)
+# Block: high-confidence paths only. @pmFromFile substring match:
+# Directory entries (trailing slash) block that path and everything under it,
+# e.g. .claude/ blocks /.claude/* and any path containing .claude/
+
+# Anthropic Claude Code — settings, hooks, MCP refs, env; API keys in settings.local.json
+.claude/
+# Cursor IDE — MCP defs, API keys in env, project rules; high secrets risk
+.cursor/
+# Continue.dev — config with models, MCP servers, API keys
+.continue/
+# Aider — chat history, config; API keys in .aider.conf.yml
+.aider/
+# Roo Code (Roo Code Inc.) — MCP defs, API keys in env, alwaysAllow
+.roo/
+# Zed editor — project settings, MCP servers, language server config
+.zed/
+# Cline (Claude Dev) — rules, MCP settings; prompt-injection vector
+.cline/
+# Kiro — hooks (agentSpawn, preToolUse), steering, specs; automation creds
+.kiro/
+# Codeium Windsurf — project rules, MCP config
+.windsurf/
+# Atlassian Rovo Dev — project-level review-agent instructions, prompt-injection vector
+.rovodev/
+# OpenAI Codex CLI — project-scoped config.toml; model config, sandbox, MCP settings
+.codex/
+# OpenCode — agents, commands, plugins config
+.opencode/
+# Agent Zero — project config: project.json, .a0proj/variables.env, .a0proj/secrets.env (API keys, tokens)
+.a0proj/
+# Plandex — plans, context; config
+.plandex/
+# Fabric — patterns, fabric.env; env/secrets
+.fabric/
+# n8n — workflows, credentials (when N8N_USER_FOLDER in project); encryption key, SQLite
+.n8n/
+# JetBrains Junie
+.junie/
+# Gemini CLI Config File (Critical)
+.gemini/
+# OpenClaw
+.openclaw/
+# ClawdBot
+.clawdbot/
+# TrustClaw (In most installations but not official)
+.trustclaw/
+# ZeroClaw
+.zeroclaw/
+# Warp Terminal
+.warp/
+# Qwen Code
+.qwen_code
+# Crush AI
+.crush

@@ -6,11 +6,11 @@ import (
 	"errors"
 	"io"
 	"io/fs"
+	"path/filepath"
 	"slices"
 	"testing"
 
 	datapkg "github.com/TecharoHQ/anubis/data"
-	"github.com/goreleaser/fileglob"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -121,10 +121,32 @@ func TestYAMLList(t *testing.T) {
 }
 
 func TestReadAllOfData(t *testing.T) {
-	matches, err := fileglob.Glob("{apps,bots,bots/irc-bots,clients,common,crawlers,meta,services}/*.{yaml,yml}", fileglob.WithFs(datapkg.BotPolicies))
-	if err != nil {
+	var matches []string
+
+	if err := fs.WalkDir(datapkg.BotPolicies, ".", func(path string, d fs.DirEntry, err error) error {
+		switch {
+		case err != nil:
+			return err
+		case d.IsDir():
+			return nil
+		case path == "botPolicies.yaml": // skip the default config
+			return nil
+		}
+
+		switch filepath.Ext(path) {
+		case ".yaml", ".yml":
+			matches = append(matches, path)
+		}
+
+		return nil
+	}); err != nil {
 		t.Fatal(err)
 	}
+
+	if len(matches) == 0 {
+		t.Fatal("no policy snippets found in the embedded data folder, how did you do this?")
+	}
+
 	t.Log(matches)
 
 	fin, err := YAMLList(datapkg.BotPolicies, matches)
