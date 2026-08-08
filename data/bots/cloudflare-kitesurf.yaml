@@ -1,0 +1,11 @@
+- name: cloudflare-kitesurf
+  action: WEIGH
+  weight:
+    adjust: 15
+  expression:
+    any:
+      - '"Cdn-Loop" in headers'
+      - '"Cf-Ray" in headers'
+      - '"Cf-Ew-Via" in headers'
+      - '"Cf-Visitor" in headers'
+      - '"Cf-Worker" in headers'

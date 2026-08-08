@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
+- Add weighing rule for [Cloudflare Kitesurf](https://blog.cloudflare.com/kitesurf/). Kitesurf doesn't currently support Cookies, but it might in the future.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
