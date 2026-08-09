@@ -36,7 +36,7 @@
   "invalid_redirect": "Ugild vidaresending",
   "redirect_not_parseable": "Fekk ikkje tolka vidaresendings-URLen",
   "redirect_domain_not_allowed": "Vidaresendingsdomenet er ikkje tillate",
-  "missing_required_forwarded_headers": "Manglar påkravde X-Vidaresende-* headers",
+  "missing_required_forwarded_headers": "Manglar påkravde X-Forwarded-* headers",
   "failed_to_sign_jwt": "fekk ikkje signert JWT",
   "invalid_invocation": "Ugildt bruk av MakeChallenge",
   "client_error_browser": "Klientfeil: Sjekk at nettlesaren er oppdatert og prøv omatt seinare.",
