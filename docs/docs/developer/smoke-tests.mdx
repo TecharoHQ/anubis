@@ -1,0 +1,112 @@
+# Smoke testing
+
+Anubis has three types of tests:
+
+1. Unit tests in `_test.go` files, which test individual parts of the Anubis code.
+2. Integration tests in package `internal/test`, which tests common scenarios that Anubis is used with.
+3. Smoke tests in `test`, which test server infrastructure commonly used with Anubis.
+
+This guide helps you write a smoke test so you can make sure a given configuration is known to be supported because CI runs it constantly.
+
+## What is a smoke test?
+
+In Anubis, a smoke test is a folder with an executable file named `test.sh`. If the script returns exit code 0 (zero), it passed. If it returns any other exit code, it failed and is retried up to 10 (ten) times.
+
+### Shell script (simple)
+
+Here is an example smoke test that builds Anubis, points it to a simple HTTP endpoint, starts it up, and makes sure `curl` can reach that endpoint:
+
+```sh
+#!/usr/bin/env bash
+# test/example/test.sh
+
+set -euo pipefail
+
+function cleanup() {
+  pkill -P $$
+}
+
+trap cleanup EXIT SIGINT
+
+# Build static assets
+(cd ../.. && npm ci && npm run assets)
+
+go tool anubis --help 2>/dev/null ||:
+
+go run ../cmd/unixhttpd &
+
+go tool anubis \
+  --policy-fname ./anubis.yaml \
+  --use-remote-address \
+  --target=unix://$(pwd)/unixhttpd.sock &
+
+backoff-retry node ./test.mjs
+```
+
+```js
+// test.mjs
+
+async function fetchData() {
+  return fetch("http://localhost:8923/")
+    .then((resp) => {
+      if (resp.status !== 200) {
+        throw new Error(`wanted status 200, got status: ${resp.status}`);
+      }
+      return resp;
+    })
+    .then((resp) => resp.text());
+}
+
+(async () => {
+  const data = await fetchData();
+  if (!data.includes("test.mjs")) {
+    console.log(
+      "HTML response did not include `test.mjs` file, meaning Anubis is blocking this test",
+    );
+    process.exit(1);
+  }
+  console.log(data);
+  console.log("All is well");
+  process.exit(0);
+})();
+```
+
+### Docker compose (complicated)
+
+Some tests may require starting up infrastructure with `docker compose`. If this is the case, create a `docker-compose.yaml` file with the needed infrastructure and build the Anubis Docker image with `build_anubis_ko`:
+
+```sh
+#!/usr/bin/env bash
+# test/example/test.sh
+
+set -eo pipefail
+
+export VERSION=$GITHUB_COMMIT-test
+export KO_DOCKER_REPO=ko.local
+
+set -u
+
+source ../lib/lib.sh
+
+build_anubis_ko
+
+docker compose up -d
+
+backoff-retry node ./test.mjs
+```
+
+## Registering the test in CI
+
+All smoke tests are registered in matrix subjobs in `.github/workflows/smoke-tests.yml`. This allocates and uses a new CI worker per test. This appears slightly wasteful at first glance, however these tests are doing a lot of work that assumes port numbers in fiddly ways. It's easier to have dedicated machines for them than having to worry about sharing port numbers.
+
+To add a test named `linear-search`:
+
+```diff
+           - healthcheck
+           - i18n
+           - lightpanda
++          - linear-search
+           - log-file
+           - nginx
+           - palemoon/amd64
+```

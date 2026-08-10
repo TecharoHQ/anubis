@@ -1,33 +1,29 @@
 ---
-title: Building Anubis without Docker
+title: Packaging Anubis
 ---
+
+Anubis is a web application written in Go with components in JavaScript. Packaging it should be similar to other applications with the same constraints.
 
 :::note
 
-These instructions may work, but for right now they are informative for downstream packagers more than they are ready-made instructions for administrators wanting to run Anubis on their servers. Pre-made binary package support is being tracked in [#156](https://github.com/TecharoHQ/anubis/issues/156).
+Please do not sidestep the build logic shipped by Anubis. We assume that the build logic shipped by Anubis is run. Any deviations from the semantics of this build logic may result in bugs that we will be blamed for. Please make our lives easier by not reinventing the wheel.
 
 :::
 
 ## Entirely from source
 
-If you are doing a build entirely from source, here's what you need to do:
-
-:::info
-
-If you maintain a package for Anubis v1.15.x or older, you will need to update your package build. You may want to use one of the half-baked tarballs if your distro/environment of choice makes it difficult to use npm.
-
-:::
-
-### Tools needed
-
 In order to build a production-ready binary of Anubis, you need the following packages in your environment:
 
-- [Go](https://go.dev) at least version 1.24 - the programming language that Anubis is written in
-- [esbuild](https://esbuild.github.io/) - the JavaScript bundler Anubis uses for its production JS assets
-- [Node.JS & NPM](https://nodejs.org/en) - manages some build dependencies
-- `gzip` - compresses production JS (part of coreutils)
-- `zstd` - compresses production JS
-- `brotli` - compresses production JS
+- [Go](https://go.dev) at least version 1.26
+- [esbuild](https://esbuild.github.io/)
+- [Node.JS & NPM](https://nodejs.org/en) (latest LTS)
+- `gzip`
+- `zstd`
+- `brotli`
+
+Anubis does not require a C compiler to build, meaning it is fully compatible with cross-compilation.
+
+:::note
 
 To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.26.4` (this can be done from any version of Go):
 
@@ -36,10 +32,13 @@ go install golang.org/dl/go1.26.4@latest
 go1.26.4 download
 ```
 
+:::
+
 ### Install dependencies
 
 ```text
-make deps
+npm ci
+go mod download
 ```
 
 This will download Go and NPM dependencies.
@@ -47,7 +46,7 @@ This will download Go and NPM dependencies.
 ### Building static assets
 
 ```text
-make assets
+npm run assets
 ```
 
 This will build all static assets (CSS, JavaScript) for distribution.
@@ -55,12 +54,10 @@ This will build all static assets (CSS, JavaScript) for distribution.
 ### Building Anubis to the `./var` folder
 
 ```text
-make build
+npm run build
 ```
 
-From this point it is up to you to make sure that `./var/anubis` and `./var/robots2policy` end up in
-the right place. You may want to consult the `./run` folder for useful files such as a systemd unit
-and `anubis.env.default` file.
+From this point it is up to you to make sure that `./var/anubis` and `./var/robots2policy` end up in the right place. You may want to consult the `./run` folder for useful files such as a systemd unit and the `anubis.env.default` file. The default configuration file is in `./data/botPolicies.yaml`.
 
 ## "Pre-baked" tarball
 
@@ -77,7 +74,7 @@ When using this tarball, all you need to do is build `./cmd/anubis`:
 make prebaked-build
 ```
 
-Anubis will be built to `./var/anubis` and the robots2policy tool to `./var/robots2policy`.
+Anubis will be built to `./var/anubis` and the robots2policy tool to `./var/robots2policy`. Install these via your normal packaging process.
 
 ## Development dependencies
 

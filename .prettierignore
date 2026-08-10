@@ -1,4 +1,5 @@
 lib/config/testdata/bad/*
 *.inc
+*.wxs
 AGENTS.md
 CLAUDE.md
