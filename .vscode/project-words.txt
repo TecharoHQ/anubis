@@ -112,6 +112,7 @@ Debian
 debrpm
 decaymap
 deflang
+deprioritized
 devcontainers
 Diffbot
 Dillo
@@ -380,6 +381,7 @@ pidfile
 pids
 pipefail
 pki
+pkill
 podkova
 podman
 postcmd
@@ -474,6 +476,7 @@ storetest
 strcmp
 subauthorities
 subgrid
+subjobs
 subr
 subrequest
 subresource
@@ -516,6 +519,7 @@ unbreakdocker
 unifiedjs
 unintrusive
 unipromos
+unixhttpd
 unmarshal
 unmarshals
 unparseable
