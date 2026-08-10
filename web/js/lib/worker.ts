@@ -24,7 +24,7 @@ export interface WorkerArgs {
   difficulty: number;
   nonce: number;
   threads: number;
-};
+}
 
 // A spawner hands out workers that all run the same script. Which flavour of
 // spawner we get depends on whether we could pre-fetch the worker source.
@@ -39,9 +39,9 @@ export interface WorkerSpawner {
 export const directSpawner = (webWorkerURL: string): WorkerSpawner => {
   return {
     spawn: () => new Worker(webWorkerURL),
-    dispose: () => { },
+    dispose: () => {},
   };
-}
+};
 
 /**
  * createWorkerSpawner fetches the worker source _once_ and hands back a
@@ -55,13 +55,13 @@ export const directSpawner = (webWorkerURL: string): WorkerSpawner => {
  * which made an overloaded server even more overloaded, causing spurious
  * failures, which cause challenges to fail 100% of the time. This is
  * bad for uptime.
- * 
+ *
  * Annoyingly, `new Worker(url)` reports a load failure as an opaque event
  * that does not include the status code of the failed load, so there's
  * no real way to detect "503, back off and retry" from "404, you fetched
  * the wrong asset". To work around this we have to `fetch()` the contents
  * of the worker code and spawn it with a Blob.
- * 
+ *
  * If anything goes wrong or the server's Content-Security-Policy forbids
  * putting worker sources in Blobs, we fall back to the old behaviour with
  * the caveat that doing this is kinda hacky and terrible, but such is life.
@@ -85,7 +85,10 @@ export const createWorkerSpawner = async (
     // Every retry failed. Fall through to the direct spawner anyway: the
     // browser may still have a cached copy that `fetch` did not surface, and a
     // long shot beats a guaranteed failure.
-    console.warn("anubis: could not pre-fetch worker source (server may be under attack) using direct spawner in the vain hope that this works", err);
+    console.warn(
+      "anubis: could not pre-fetch worker source (server may be under attack) using direct spawner in the vain hope that this works",
+      err,
+    );
     return direct;
   }
 

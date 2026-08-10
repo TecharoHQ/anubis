@@ -13,7 +13,9 @@ async function fetchLanguages() {
 
 (async () => {
   const languages = await fetchLanguages();
-  console.log("Anubis is running, which means that importing configuration worked");
+  console.log(
+    "Anubis is running, which means that importing configuration worked",
+  );
 
   process.exit(0);
 })();

@@ -71,7 +71,7 @@ func FetchBlocklist(url string) ([]string, error) {
 }
 
 func isJSONBlocklist(url, contentType string) bool {
-	if contentType ==  "json" {
+	if contentType == "json" {
 		return true
 	}
 

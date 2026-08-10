@@ -43,10 +43,7 @@ export const isAbortError = (err: unknown): boolean =>
 const abortError = () => new DOMException("Aborted", "AbortError");
 
 /** sleep resolves after ms milliseconds, or rejects early if signal aborts. */
-export const sleep = (
-  ms: number,
-  signal?: AbortSignal | null,
-): Promise<void> =>
+export const sleep = (ms: number, signal?: AbortSignal | null): Promise<void> =>
   new Promise((resolve, reject) => {
     if (signal != null && signal.aborted) {
       reject(abortError());
@@ -75,7 +72,7 @@ export const sleep = (
  *
  * This ensures that clients retry actions with exponential backoff
  * including random jitter in order to avoid thundering herd problems.
- * 
+ *
  * This maxes out at `maxDelayMs` so that you can set the maximum
  * delay threshold to improve user experience.
  */
@@ -83,12 +80,13 @@ export const backoffDelay = (
   attempt: number,
   baseDelayMs: number = DEFAULT_BASE_DELAY_MS,
   maxDelayMs: number = DEFAULT_MAX_DELAY_MS,
-): number => Math.random() * Math.min(maxDelayMs, baseDelayMs * Math.pow(attempt, 2));
+): number =>
+  Math.random() * Math.min(maxDelayMs, baseDelayMs * Math.pow(attempt, 2));
 
 /**
  * retryAfterMs parses a Retry-After header into milliseconds, in either the
  * delta-seconds or the HTTP-date form. Returns null when absent or unparseable.
- * 
+ *
  * Anubis doesn't currently return this header, but HTTP middleware in the critical
  * path may end up doing so. In order to be defensive it is better to just handle
  * this before it becomes an issue.
@@ -163,7 +161,9 @@ export const fetchWithBackoff = async (
       return response;
     }
 
-    lastError = new Error(`anubis: ${url} returned HTTP ${response.status} (unretryable failure)`);
+    lastError = new Error(
+      `anubis: ${url} returned HTTP ${response.status} (unretryable failure)`,
+    );
 
     if (RETRYABLE_STATUSES.indexOf(response.status) === -1) {
       throw lastError;
