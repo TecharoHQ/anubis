@@ -90,6 +90,7 @@ image: ghcr.io/techarohq/anubis:pre
 ## v1.26.1: Papalymo Totolymo: Echo 1
 
 - Fix support for semicolon-delimited query parameters that was dropped when moving from [net/http/httputil#ReverseProxy](https://pkg.go.dev/net/http/httputil#ReverseProxy).Director (deprecated) to net/http/httputil#ReverseProxy.Rewrite. This re-enables support for upstreams like gitweb ([#1763](https://github.com/TecharoHQ/anubis/issues/1763)). A functional test has been added to ensure this does not repeat.
+- Consolidate the purejs and webcrypto workers into one sha256 browser worker to avoid code duplication.
 
 ### Challenge page robustness
 
