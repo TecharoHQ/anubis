@@ -98,7 +98,9 @@ function runWorkers(
         // spinning infinite loops behind that burn a core until navigation.
         cleanup();
         reject(
-          new Error(`anubis: could not start proof of work worker: ${err} (is your browser out of date?)`),
+          new Error(
+            `anubis: could not start proof of work worker: ${err} (is your browser out of date?)`,
+          ),
         );
         return;
       }
@@ -140,7 +142,11 @@ function runWorkers(
         // values that we can't introspect properly. When we hit this kind of
         // horrible state, throw an actual error so that the challenge page
         // has a better error message than "undefined".
-        reject(new Error("anubis: all proof of work workers failed at runtime (file a bug?)"));
+        reject(
+          new Error(
+            "anubis: all proof of work workers failed at runtime (file a bug?)",
+          ),
+        );
       };
 
       worker.postMessage({

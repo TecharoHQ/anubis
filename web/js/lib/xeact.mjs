@@ -35,7 +35,9 @@ OTHER DEALINGS IN THE SOFTWARE.
  */
 const h = (name, data = {}, children = []) => {
   const result =
-    typeof name == "function" ? name(data) : Object.assign(document.createElement(name), data);
+    typeof name == "function"
+      ? name(data)
+      : Object.assign(document.createElement(name), data);
   if (!Array.isArray(children)) {
     children = [children];
   }
@@ -148,7 +150,7 @@ const d = (ms) => {
 /**
  * Parse a given element as JSON and return it as a bare
  * object.
- * 
+ *
  * @type{function(id): any | null}
  */
 const j = (id) => {

@@ -19,7 +19,11 @@ const alreadyBooted =
 // @ts-ignore: tell the watchdog script it's done its job
 (window as any).__anubisBooted = true;
 
-const imageURL = (mood: string, cacheBuster: string, basePrefix: string): string =>
+const imageURL = (
+  mood: string,
+  cacheBuster: string,
+  basePrefix: string,
+): string =>
   u(`${basePrefix}/.within.website/x/cmd/anubis/static/img/${mood}.webp`, {
     cacheBuster,
   });
@@ -33,7 +37,9 @@ const getBrowserLanguage = async () => document.documentElement.lang;
 // an unhandled rejection here leaves the user staring at "Loading..." forever.
 // An untranslated challenge page still passes challenges, so the last resort is
 // an empty table, which makes t() fall through to the raw key.
-const loadTranslations = async (lang: string): Promise<Record<string, string>> => {
+const loadTranslations = async (
+  lang: string,
+): Promise<Record<string, string>> => {
   const basePrefix = j("anubis_base_prefix");
   if (basePrefix === null) {
     return {};
@@ -43,7 +49,7 @@ const loadTranslations = async (lang: string): Promise<Record<string, string>> =
     const response = await fetchWithBackoff(
       `${basePrefix}/.within.website/x/cmd/anubis/static/locales/${lang}.json`,
     );
-    return await response.json() as Record<string, string>;
+    return (await response.json()) as Record<string, string>;
   } catch (error) {
     console.warn(`Failed to load translations for ${lang}`, error);
     if (lang !== "en") {
@@ -75,7 +81,9 @@ const initTranslations = async () => {
 };
 
 const t = (key: string): string =>
-  translations[`js_${key}`] || translations[key] || `unknown translatable string: ${key}`;
+  translations[`js_${key}`] ||
+  translations[key] ||
+  `unknown translatable string: ${key}`;
 
 interface OhNoesParams {
   titleMsg: string;

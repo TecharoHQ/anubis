@@ -42,7 +42,9 @@ if (summaryPage === frontPage) {
 // And it must link onward to the commit view, proving gitweb rendered the repo.
 const fragment = "/?p=testing.git;a=commit";
 if (!summaryPage.includes(fragment)) {
-  console.log(`FAIL: summary page did not contain expected fragment: ${fragment}`);
+  console.log(
+    `FAIL: summary page did not contain expected fragment: ${fragment}`,
+  );
   console.log(summaryPage);
   failed = true;
 } else {
