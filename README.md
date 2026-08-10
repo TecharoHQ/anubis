@@ -23,6 +23,9 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://databento.com/?utm_source=anubis&utm_medium=sponsor&utm_campaign=anubis">
   <img src="./docs/static/img/sponsors/databento-logo.webp" alt="Databento" height="64" />
 </a>
+<a href="https://spur.us/?utm_source=github&utm_medium=referral&utm_campaign=anubis-readme">
+  <img src="./docs/static/img/sponsors/spur-logo.webp" alt="Spur Intelligence" height="64">
+</a>
 
 ### Gold Tier
 
@@ -82,9 +85,6 @@ Anubis is brought to you by sponsors and donors like:
 <a href="https://wenet.pl/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
   <img src="./docs/static/img/sponsors/wenet-logo.webp" alt="Wenet" height="64">
 </a>
-<a href="https://spur.us/?utm_source=github&utm_medium=referral&utm_campaign=anubis-readme">
-  <img src="./docs/static/img/sponsors/spur-logo.webp" alt="Spur Intelligence" height="64">
-</a>
 
 ## Overview
 
@@ -106,11 +106,11 @@ For live chat, please join the [Patreon](https://patreon.com/cadey) and ask in t
 
 ## Star History
 
-<a href="https://www.star-history.com/#TecharoHQ/anubis&Date">
+<a href="https://www.star-history.com/?type=date&repos=TecharoHQ%2Fanubis">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=TecharoHQ/anubis&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=TecharoHQ/anubis&type=date&theme=dark&legend=top-left&sealed_token=NijaGjH7lyOz9iUXAO-9vs88h2o0C6cmPKIfKSpvhUrnzP0KtL93_9gsGM0D66Miq8f1b9cynl8o1of6EhFiUQK-uBZqAQqxs6dhM8tcb5Q-YTicObjlrv5RpQUkEu0nVRJ6eoU208uQzm0yNfeOkMcBgvxqPmSVdoUTNB3wjfJodZlPzopX7oVp3aXO" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=TecharoHQ/anubis&type=date&legend=top-left&sealed_token=NijaGjH7lyOz9iUXAO-9vs88h2o0C6cmPKIfKSpvhUrnzP0KtL93_9gsGM0D66Miq8f1b9cynl8o1of6EhFiUQK-uBZqAQqxs6dhM8tcb5Q-YTicObjlrv5RpQUkEu0nVRJ6eoU208uQzm0yNfeOkMcBgvxqPmSVdoUTNB3wjfJodZlPzopX7oVp3aXO" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=TecharoHQ/anubis&type=date&legend=top-left&sealed_token=NijaGjH7lyOz9iUXAO-9vs88h2o0C6cmPKIfKSpvhUrnzP0KtL93_9gsGM0D66Miq8f1b9cynl8o1of6EhFiUQK-uBZqAQqxs6dhM8tcb5Q-YTicObjlrv5RpQUkEu0nVRJ6eoU208uQzm0yNfeOkMcBgvxqPmSVdoUTNB3wjfJodZlPzopX7oVp3aXO" />
  </picture>
 </a>
 
