@@ -36,13 +36,17 @@ const getMany = (ids: string[]): (HTMLElement | null)[] => ids.map(g);
 (() => {
   const tag = g("anubis-main");
   if (!tag) {
-    console.debug("can't find anubis main.mjs element via ID `anubis-main`, bailing");
+    console.debug(
+      "can't find anubis main.mjs element via ID `anubis-main`, bailing",
+    );
     return;
   }
 
   const src = tag.getAttribute("src");
   if (!src) {
-    console.debug("can't find src attribute of script element `anubis-main`, bailing");
+    console.debug(
+      "can't find src attribute of script element `anubis-main`, bailing",
+    );
     return;
   }
 
@@ -62,8 +66,10 @@ const getMany = (ids: string[]): (HTMLElement | null)[] => ids.map(g);
 
   const fail = () => {
     const els = getMany(["anubis-script-error", "status", "progress"]);
-    if (els.filter(x => x == null).length !== 0) {
-      console.debug("missing one of the following elements: anubis-script-error, status, progress. cannot proceed, bailing.");
+    if (els.filter((x) => x == null).length !== 0) {
+      console.debug(
+        "missing one of the following elements: anubis-script-error, status, progress. cannot proceed, bailing.",
+      );
       return;
     }
 
@@ -71,24 +77,23 @@ const getMany = (ids: string[]): (HTMLElement | null)[] => ids.map(g);
     el.style.display = "block";
     status.style.display = "none";
     progress.style.display = "none";
-  }
+  };
 
-  const settleFor = (gen: number) =>
-    () => {
-      if (booted() || gen !== generation) {
-        return;
-      }
+  const settleFor = (gen: number) => () => {
+    if (booted() || gen !== generation) {
+      return;
+    }
 
-      generation++;
-      attempt++;
-      if (attempt > MAX_ATTEMPTS) {
-        fail();
-        return;
-      }
+    generation++;
+    attempt++;
+    if (attempt > MAX_ATTEMPTS) {
+      fail();
+      return;
+    }
 
-      const delay = backoffDelay(attempt, BASE_DELAY_MS, MAX_DELAY_MS);
-      setTimeout(inject, delay);
-    };
+    const delay = backoffDelay(attempt, BASE_DELAY_MS, MAX_DELAY_MS);
+    setTimeout(inject, delay);
+  };
 
   const inject = () => {
     if (booted()) {

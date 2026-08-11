@@ -126,9 +126,11 @@
     ".github/FUNDING.yml",
     ".github/workflows/spelling.yml",
     "data/**",
+    "docs/build/**",
     "docs/blog/tags.yml",
     "docs/docs/user/known-instances.md",
     "docs/manifest/**",
+    "docs/node_modules/**",
     "docs/static/.nojekyll",
     "internal/glob/glob_test.go",
     "internal/honeypot/naive/affirmations.txt",
@@ -141,7 +143,8 @@
     "internal/ogtags/ogtags_fuzz_test.go",
     "lib/policy/config/testdata/bad/unparseable.json",
     "test/**",
-    "web/static/**"
+    "web/static/**",
+    "var/**"
   ],
   "flagWords": [
     "attache",

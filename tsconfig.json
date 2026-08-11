@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "paths": {
-      "@lib/*": [
-        "./web/js/lib/*"
-      ]
+      "@lib/*": ["./web/js/lib/*"]
     }
   }
 }
