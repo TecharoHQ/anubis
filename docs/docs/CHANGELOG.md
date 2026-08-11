@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
 - Add weighing rule for [Cloudflare Kitesurf](https://blog.cloudflare.com/kitesurf/). Kitesurf doesn't currently support Cookies, but it might in the future.
+- Improved Norwegian Nynorsk localization.
 - Stop clearing the authorization cookie when a challenged request did not send one. A subresource request that starts before the challenge is passed but finishes after it no longer deletes the cookie that `pass-challenge` just issued ([#1314](https://github.com/TecharoHQ/anubis/issues/1314)).
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
