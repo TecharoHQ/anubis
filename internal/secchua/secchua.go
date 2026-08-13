@@ -7,16 +7,19 @@ package secchua
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
 var (
 	ErrClientMismatch             = errors.New("secchua: Clients do not match")
+	ErrClientNilMismatch          = errors.New("secchua: one Client is nil and the other is not")
 	ErrClientVersionCountMismatch = errors.New("secchua: Client version count mismatch")
 	ErrClientMobileMismatch       = errors.New("secchua: Client mobile flag mismatch")
 	ErrClientPlatformMismatch     = errors.New("secchua: Client platform mismatch")
 	ErrClientArchMismatch         = errors.New("secchua: Client architecture mismatch")
 	ErrClientBitnessMismatch      = errors.New("secchua: Client bitness mismatch")
+	ErrMobileIsInvalid            = errors.New("secchua: Sec-Ch-Ua-Mobile is not a structured field boolean")
 )
 
 // Client is the information about a client that was parsed from the Sec-Ch-Ua header family.
@@ -33,10 +36,63 @@ type Client struct {
 	Bitness  string    `json:"bitness"`
 }
 
+// ParseClient parses information from the incoming HTTP request and returns a [Client] struct or an error
+// describing what went wrong.
+//
+//	(&Client{}, nil) -> no error
+//	(nil, nil) -> no data parsed
+//	(nil, error) -> parsing error
+//
+// Callers MUST take care to NOT reject requests that don't parse correctly. Errors being detected should
+// result in Debug logs, not Error logs. If they are Error logs, admins will file issues asking why an error
+// is being logged.
+func ParseClient(r *http.Request) (*Client, error) {
+	if len(r.Header.Values("Sec-Ch-Ua")) == 0 {
+		return nil, nil
+	}
+
+	result := Client{
+		Platform: r.Header.Get("Sec-Ch-Ua-Platform"),
+		Arch:     r.Header.Get("Sec-Ch-Ua-Arch"),
+		Bitness:  r.Header.Get("Sec-Ch-Ua-Bitness"),
+	}
+
+	if got := r.Header.Get("Sec-Ch-Ua-Mobile"); got != "" {
+		switch got {
+		case bareFalse:
+			result.Mobile = new(false)
+		case bareTrue:
+			result.Mobile = new(true)
+		default:
+			return nil, fmt.Errorf("%w: %q", ErrMobileIsInvalid, got)
+		}
+	}
+
+	secChUa := strings.Join(r.Header.Values("Sec-Ch-Ua"), ", ")
+	versions, err := ParseCanonical(secChUa)
+	if err != nil {
+		return nil, fmt.Errorf("while parsing Sec-Ch-Ua: %w", err)
+	}
+	result.Versions = versions
+
+	return &result, nil
+}
+
 // Equals ensures that two parsed bits of client information match eachother.
 //
 // This assumes that Versions is sorted by Name.
-func (lhs Client) Equals(rhs Client) error {
+//
+// A nil [Client] is the "no data parsed" result from [ParseClient]. Two nil Clients are equal, but a nil
+// Client never matches a non-nil one.
+func (lhs *Client) Equals(rhs *Client) error {
+	if lhs == nil || rhs == nil {
+		if lhs == rhs {
+			return nil
+		}
+
+		return fmt.Errorf("%w: %w: want: %v, got: %v", ErrClientMismatch, ErrClientNilMismatch, lhs, rhs)
+	}
+
 	var errs []error
 
 	if len(lhs.Versions) != len(rhs.Versions) {
