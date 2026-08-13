@@ -17,6 +17,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, hone
 			<link rel="stylesheet" href={ anubis.BasePrefix + xess.URL }/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<meta name="robots" content="noindex,nofollow"/>
+			<meta http-equiv="Accept-CH" content="Sec-CH-UA-Arch, Sec-CH-UA-Bitness"/>
 			for key, value := range ogTags {
 				<meta property={ key } content={ value }/>
 			}
