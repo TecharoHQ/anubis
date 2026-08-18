@@ -82,6 +82,7 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var name = anubis.CookieName
 	var path = "/"
 	var sameSite = s.opts.CookieSameSite
+	var partitioned = s.opts.CookiePartitioned
 
 	if cookieOpts.Name != "" {
 		name = cookieOpts.Name
@@ -103,6 +104,13 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		sameSite = http.SameSiteLaxMode
 	}
 
+	// Partitioned cookies must be Secure (CHIPS); browsers reject a
+	// Partitioned cookie that lacks Secure. Drop the flag rather than emit
+	// a cookie the client will silently discard.
+	if partitioned && !s.opts.CookieSecure {
+		partitioned = false
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        s.cookieName(name),
 		Value:       cookieOpts.Value,
@@ -111,7 +119,7 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		Domain:      domain,
 		HttpOnly:    s.opts.CookieHttpOnly,
 		Secure:      s.opts.CookieSecure,
-		Partitioned: s.opts.CookiePartitioned,
+		Partitioned: partitioned,
 		Path:        path,
 	})
 }
@@ -121,6 +129,7 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 	var name = anubis.CookieName
 	var path = "/"
 	var sameSite = s.opts.CookieSameSite
+	var partitioned = s.opts.CookiePartitioned
 
 	if cookieOpts.Name != "" {
 		name = cookieOpts.Name
@@ -137,13 +146,20 @@ func (s *Server) ClearCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		sameSite = http.SameSiteLaxMode
 	}
 
+	// Partitioned cookies must be Secure (CHIPS); browsers reject a
+	// Partitioned cookie that lacks Secure. Drop the flag rather than emit
+	// a cookie the client will silently discard.
+	if partitioned && !s.opts.CookieSecure {
+		partitioned = false
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:        s.cookieName(name),
 		Value:       "",
 		MaxAge:      -1,
 		Expires:     time.Now().Add(-1 * time.Minute),
 		SameSite:    sameSite,
-		Partitioned: s.opts.CookiePartitioned,
+		Partitioned: partitioned,
 		Domain:      domain,
 		HttpOnly:    s.opts.CookieHttpOnly,
 		Secure:      s.opts.CookieSecure,

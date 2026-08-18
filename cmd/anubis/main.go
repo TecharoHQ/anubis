@@ -168,6 +168,9 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 		slog.Warn("TARGET_INSECURE_SKIP_VERIFY is set to true, TLS certificate validation will not be performed", "target", target)
 		transport.TLSClientConfig.InsecureSkipVerify = true
 	}
+	if *cookiePartitioned && !*cookieSecure {
+		slog.Warn("cookie-partitioned is enabled but cookie-secure is disabled; browsers reject Partitioned cookies without Secure, so the Partitioned flag will be dropped", "cookie-partitioned", *cookiePartitioned, "cookie-secure", *cookieSecure)
+	}
 	if targetSNI != "" && targetSNI != "auto" {
 		transport.TLSClientConfig.ServerName = targetSNI
 	}
