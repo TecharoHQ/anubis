@@ -18,20 +18,16 @@ package test
 import (
 	"flag"
 	"fmt"
-	"net"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
 
 	"github.com/TecharoHQ/anubis"
-	libanubis "github.com/TecharoHQ/anubis/lib"
 	"github.com/mxschmitt/playwright-go"
 )
 
@@ -599,51 +595,5 @@ func spawnAnubis(t *testing.T) string {
 }
 
 func spawnAnubisWithOptions(t *testing.T, basePrefix string) string {
-	t.Helper()
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "text/html")
-		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
-	})
-
-	policy, err := libanubis.LoadPoliciesOrDefault(t.Context(), "", anubis.DefaultDifficulty, "info", false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Bind loopback explicitly: binding every interface makes ts.URL the
-	// unspecified address (http://[::]:port), which Firefox refuses to navigate
-	// to with NS_ERROR_CONNECTION_REFUSED.
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("can't listen on random port: %v", err)
-	}
-
-	addr := listener.Addr().(*net.TCPAddr)
-	host := "localhost"
-	port := strconv.Itoa(addr.Port)
-
-	s, err := libanubis.New(libanubis.Options{
-		Next:           h,
-		Policy:         policy,
-		ServeRobotsTXT: true,
-		Target:         "http://" + host + ":" + port,
-		BasePrefix:     basePrefix,
-	})
-	if err != nil {
-		t.Fatalf("can't construct libanubis.Server: %v", err)
-	}
-
-	ts := &httptest.Server{
-		Listener: listener,
-		Config:   &http.Server{Handler: s},
-	}
-	ts.Start()
-	t.Log(ts.URL)
-
-	t.Cleanup(func() {
-		ts.Close()
-	})
-
-	return ts.URL
+	return spawnAnubisWithCSP(t, basePrefix, "")
 }

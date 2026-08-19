@@ -1,0 +1,42 @@
+# Content-Security-Policy advice
+
+Many web server configuration guides recommend setting a strict [Content-Security-Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) on your web applications in order to avoid [Cross-Site-Scripting (XSS)](https://en.wikipedia.org/wiki/Cross-site_scripting) from being able to affect your services. The way Anubis works can conflict with some common CSP settings that many guides and web applications enforce out of the gate.
+
+:::warning
+
+Browsers cache the contents of `Content-Security-Policy` headers for a very long time. Please be sure to test any of these changes on staging domains before deploying changes to production.
+
+:::
+
+The most strict yet correct CSP for Anubis looks like this (reformatted for readability):
+
+```text
+default-src 'none';
+script-src  'self' 'unsafe-inline';
+style-src   'self' 'unsafe-inline';
+img-src     'self';
+font-src    'self' data:;
+connect-src 'self';
+worker-src  'self' blob:;
+base-uri    'none';
+form-action 'self';
+```
+
+This is an overly strict CSP and you **will** need to edit this as it **will** interfere with the normal operation of many web applications, especially ones that include resources from remote destinations to function (EG: the image CDN for a social media network).
+
+Breaking it down:
+
+| Setting                      | Justification                                                                                                                                                                                                                                                                                                                                                                                                   |
+| :--------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default-src 'none'`         | Blocks every kind of subresource load unless specified below. This denies by default. This setting alone is likely to break web applications.                                                                                                                                                                                                                                                                   |
+| `script-src 'self'`          | Anubis checks that load JavaScript from the server via the `<script>` tag needs to be allowed to load JavaScript from the server.                                                                                                                                                                                                                                                                               |
+| `script-src 'unsafe-inline'` | Anubis has fallback behaviour to make sure that JavaScript loaded from `<script>` tags actually gets loaded. Browsers don't expose errors for servers returning non-JavaScript responses when trying to load JavaScript programs, so Anubis embeds a small inline JavaScript program that makes sure the JavaScript actually gets loaded from the server and retries with exponential backoff in case it fails. |
+| `style-src 'unsafe-inline'`  | Anubis has some critical parts of its CSS embedded directly into the challenge page. This setting also triggers the use of the HTML `style="..."` attribute and JavaScript `DOMElement.style` properties. This is required for Anubis to function as it triggers success/failure message visibility and styling.                                                                                                |
+| `style-src 'self'`           | Anubis loads CSS from the server. Not loading CSS from the server may make Anubis think that a client is a bot.                                                                                                                                                                                                                                                                                                 |
+| `img-src 'self'`             | Anubis loads its image resources from the server. Not loading these images from the server may make Anubis think the client is a bot.                                                                                                                                                                                                                                                                           |
+| `font-src data:`             | Anubis embeds fonts into its stylesheet so that errant scrapers think the Anubis challenge page is a legitimate webpage.                                                                                                                                                                                                                                                                                        |
+| `connect-src 'self'`         | Anubis pre-fetches worker source and translation locales from the server.                                                                                                                                                                                                                                                                                                                                       |
+| `worker-src blob:`           | Anubis pre-fetches worker source to avoid fanning out a request for every hardware thread to read that worker source. If this is not set, Anubis falls back to the expensive fanning out requests for every hardware thread.                                                                                                                                                                                    |
+| `worker-src 'self'`          | In fallback scenarios, Anubis loads worker source by fanning out requests per hardware thread to load the same JavaScript source. Disabling this makes the JavaScript code not load, which causes Anubis' frontend code to throw an error.                                                                                                                                                                      |
+| `base-uri 'none'`            | Restricts the URLs allowed in [HTML `<base>` elements](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/base). Anubis does not use this HTML element.                                                                                                                                                                                                                                       |
+| `form-action 'self'`         | Controls where `<form>` actions may go. Anubis does not use HTML forms, but your web application might.                                                                                                                                                                                                                                                                                                         |
