@@ -31,6 +31,9 @@ export interface WorkerArgs {
 export interface WorkerSpawner {
   // spawn a single worker based on the template
   spawn: () => Worker;
+  // demote to fallback/less efficient logic instead of using more efficient
+  // logic.
+  demote: () => boolean;
   // destroy this instance, manual cleanup logic so you don't leak Blob
   // instances, etc.
   dispose: () => void;
@@ -39,7 +42,8 @@ export interface WorkerSpawner {
 export const directSpawner = (webWorkerURL: string): WorkerSpawner => {
   return {
     spawn: () => new Worker(webWorkerURL),
-    dispose: () => {},
+    demote: () => false,
+    dispose: () => { },
   };
 };
 
@@ -62,9 +66,10 @@ export const directSpawner = (webWorkerURL: string): WorkerSpawner => {
  * the wrong asset". To work around this we have to `fetch()` the contents
  * of the worker code and spawn it with a Blob.
  *
- * If anything goes wrong or the server's Content-Security-Policy forbids
- * putting worker sources in Blobs, we fall back to the old behaviour with
- * the caveat that doing this is kinda hacky and terrible, but such is life.
+ * If anything goes wrong or the server's Content-Security-Policy (CSP) 
+ * forbids putting worker sources in Blobs, we fall back to the old behaviour
+ * with the caveat that doing this is kinda hacky and terrible, but such is
+ * life.
  */
 export const createWorkerSpawner = async (
   webWorkerURL: string,
@@ -95,18 +100,30 @@ export const createWorkerSpawner = async (
   let useBlob = true;
 
   return {
-    spawn: () => {
+    spawn: (): Worker => {
       if (useBlob) {
         try {
           return new Worker(blobURL);
         } catch (err) {
-          // Most likely a CSP that forbids blob: workers.
+          // XXX(Xe): Chrome, Firefox, and WebKit won't trigger this, but it's best
+          // to be defensive here.
           console.warn("anubis: blob worker rejected, using direct URL", err);
           useBlob = false;
         }
       }
       return new Worker(webWorkerURL);
     },
-    dispose: () => URL.revokeObjectURL(blobURL),
+    demote: (): boolean => {
+      if (!useBlob) {
+        return false;
+      }
+
+      console.warn(
+        "anubis: blob workers are not running, falling back to loading workers from their own URL (does this site's Content-Security-Policy allow blob: in worker-src?)",
+      );
+      useBlob = false;
+      return true;
+    },
+    dispose: (): void => URL.revokeObjectURL(blobURL),
   };
 };
