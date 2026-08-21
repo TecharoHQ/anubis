@@ -70,6 +70,8 @@ The cache expiration time is controlled by `OG_EXPIRY_TIME`.
 
 When `OG_CACHE_CONSIDER_HOST` is enabled, Anubis will include the host in the cache key for Open Graph tags. This ensures that tags are cached separately for different hosts.
 
+When fetching the target, Anubis forwards the visitor's original host as `X-Forwarded-Host`, mirroring what the normal proxy path sends. This lets backends that resolve their site from that header (e.g. WordPress multisite behind per-instance origin vhosts) serve the correct tags even when `--target-host` is set.
+
 ## Example
 
 Here is an example of how to configure Open Graph tags in your Anubis setup:
