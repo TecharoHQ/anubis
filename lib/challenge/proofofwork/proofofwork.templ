@@ -10,6 +10,7 @@ templ page(localizer *localization.SimpleLocalizer) {
 		<img id="image" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/pensive.webp?cacheBuster=" + anubis.Version }/>
 		<img style="display:none;" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/happy.webp?cacheBuster=" + anubis.Version }/>
 		<p id="status">{ localizer.T("loading") }</p>
+		<p id="fun-fact" style="font-size:0.85em;color:#666;margin:0.5rem 0;"></p>
 		<p id="anubis-script-error" style="display:none;">{ localizer.T("script_load_error") }</p>
 		<script id="anubis-main" defer type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
 		@bootstrap()
