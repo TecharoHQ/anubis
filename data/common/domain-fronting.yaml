@@ -7,4 +7,5 @@
   expression:
     all:
       - '"X-Tls-Sni-Name" in headers'
+      - 'headers["X-Tls-Sni-Name"] != ""'
       - 'headers["X-Tls-Sni-Name"] != host'
