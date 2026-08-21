@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Display a random fun fact on the proof-of-work challenge loading page to improve user experience while waiting for verification ([#1618](https://github.com/TecharoHQ/anubis/issues/1618)).
 - Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
 - Add weighing rule for [Cloudflare Kitesurf](https://blog.cloudflare.com/kitesurf/). Kitesurf doesn't currently support Cookies, but it might in the future.
 - Improved Norwegian Nynorsk localization.

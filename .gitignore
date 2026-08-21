@@ -22,3 +22,5 @@ node_modules
 doc/VERSION
 
 web/static/locales/*.json
+web/static/funfacts/*.json
+web/static/funFacts.index.tmp.mjs

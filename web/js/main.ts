@@ -85,6 +85,29 @@ const t = (key: string): string =>
   translations[key] ||
   `unknown translatable string: ${key}`;
 
+// Load fun facts for the given language, falling back to English on failure.
+// Mirrors loadTranslations: never throws, returns [] so the caller can skip
+// rendering without breaking the challenge flow.
+const loadFunFacts = async (lang: string): Promise<string[]> => {
+  const basePrefix = j("anubis_base_prefix");
+  if (basePrefix === null) {
+    return [];
+  }
+
+  try {
+    const response = await fetchWithBackoff(
+      `${basePrefix}/.within.website/x/cmd/anubis/static/funfacts/${lang}.json`,
+    );
+    return (await response.json()) as string[];
+  } catch (error) {
+    console.warn(`Failed to load fun facts for ${lang}`, error);
+    if (lang !== "en") {
+      return await loadFunFacts("en");
+    }
+    return [];
+  }
+};
+
 interface OhNoesParams {
   titleMsg: string;
   statusMsg: string;
@@ -117,6 +140,7 @@ interface OhNoesParams {
   const image: HTMLImageElement = g("image") as HTMLImageElement;
   const title: HTMLHeadingElement = g("title") as HTMLHeadingElement;
   const progress: HTMLDivElement = g("progress") as HTMLDivElement;
+  const funFact: HTMLParagraphElement = g("fun-fact") as HTMLParagraphElement;
 
   const anubisVersion = j("anubis_version");
   const basePrefix = j("anubis_base_prefix");
@@ -136,9 +160,23 @@ interface OhNoesParams {
     status.innerHTML = statusMsg;
     image.src = imageSrc;
     progress.style.display = "none";
+    if (funFact) {
+      funFact.style.display = "none";
+    }
   };
 
   status.innerHTML = t("calculating");
+
+  // Display a fun fact above the progress bar (async, non-blocking)
+  if (funFact) {
+    loadFunFacts(currentLang ?? "en").then((facts) => {
+      if (facts.length === 0 || funFact.style.display === "none") {
+        return;
+      }
+      const randomIndex = Math.floor(Math.random() * facts.length);
+      funFact.textContent = facts[randomIndex];
+    });
+  }
 
   for (const { value, name, msg } of dependencies) {
     if (!value) {
