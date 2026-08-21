@@ -40,6 +40,14 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(ctx context.Context, urlStr stri
 
 	// Add proxy headers
 	req.Header.Set("X-Forwarded-Proto", "https")
+	// Mirror what httputil.ReverseProxy does on the normal proxy path: tell the
+	// backend which public hostname the visitor actually used. Without this, a
+	// backend that is reached under a private origin hostname (target-host) and
+	// resolves its own vhost/site from X-Forwarded-Host cannot tell which site
+	// the OG tags are being requested for.
+	if originalHost != "" {
+		req.Header.Set("X-Forwarded-Host", originalHost)
+	}
 	req.Header.Set("User-Agent", "Anubis-OGTag-Fetcher/1.0") // For tracking purposes
 
 	serverName := hostForRequest

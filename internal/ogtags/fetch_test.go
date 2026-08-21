@@ -136,3 +136,65 @@ func (c *OGTagCache) fetchHTMLDocument(ctx context.Context, urlStr string, origi
 	cacheKey := c.generateCacheKey(urlStr, originalHost)
 	return c.fetchHTMLDocumentWithCache(ctx, urlStr, originalHost, cacheKey)
 }
+
+// TestFetchForwardsOriginalHostHeader pins the behaviour that the OG fetcher tells
+// the backend which public hostname the visitor used, mirroring what
+// httputil.ReverseProxy does on the normal proxy path.
+func TestFetchForwardsOriginalHostHeader(t *testing.T) {
+	for _, tt := range []struct {
+		name              string
+		targetHost        string
+		originalHost      string
+		wantHost          string
+		wantForwardedHost string
+	}{
+		{
+			name:              "target host pinned, original host still forwarded",
+			targetHost:        "origin-herisau.sp-ar.ch",
+			originalHost:      "sp-ar.ch",
+			wantHost:          "origin-herisau.sp-ar.ch",
+			wantForwardedHost: "sp-ar.ch",
+		},
+		{
+			name:              "no target host falls back to original host",
+			targetHost:        "",
+			originalHost:      "sp-ar.ch",
+			wantHost:          "sp-ar.ch",
+			wantForwardedHost: "sp-ar.ch",
+		},
+		{
+			name:              "no original host means no forwarded host header",
+			targetHost:        "origin-herisau.sp-ar.ch",
+			originalHost:      "",
+			wantHost:          "origin-herisau.sp-ar.ch",
+			wantForwardedHost: "",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var gotHost, gotForwardedHost string
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotHost = r.Host
+				gotForwardedHost = r.Header.Get("X-Forwarded-Host")
+				w.Header().Set("Content-Type", "text/html")
+				w.Write([]byte(`<html><head><meta property="og:title" content="ok"></head></html>`)) //nolint:errcheck
+			}))
+			defer ts.Close()
+
+			cache := NewOGTagCache("", config.OpenGraph{
+				Enabled:    true,
+				TimeToLive: time.Minute,
+			}, memory.New(t.Context()), TargetOptions{Host: tt.targetHost})
+
+			if _, err := cache.fetchHTMLDocument(t.Context(), ts.URL, tt.originalHost); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if gotHost != tt.wantHost {
+				t.Errorf("Host header: got %q, want %q", gotHost, tt.wantHost)
+			}
+			if gotForwardedHost != tt.wantForwardedHost {
+				t.Errorf("X-Forwarded-Host header: got %q, want %q", gotForwardedHost, tt.wantForwardedHost)
+			}
+		})
+	}
+}
