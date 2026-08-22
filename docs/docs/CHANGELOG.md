@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- iplist2rule writes to stdout if output filename is absent ([#1836](https://github.com/TecharoHQ/anubis/pull/1836))
+
 <!-- This changes the project to: -->
 
 - Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
