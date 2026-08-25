@@ -1,0 +1,11 @@
+# Domain Fronting is an old Great Firewall bypass method that has since been patched
+# by the team behind the Great Firewall. Recently a bunch of bots have been starting
+# to use this in an attempt to make either HTTP servers or web applications act as
+# open proxies. It's probably better to block this.
+- name: domain-fronting
+  action: DENY
+  expression:
+    all:
+      - '"X-Tls-Sni-Name" in headers'
+      - 'headers["X-Tls-Sni-Name"] != ""'
+      - 'headers["X-Tls-Sni-Name"] != host'
