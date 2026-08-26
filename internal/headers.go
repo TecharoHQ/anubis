@@ -93,17 +93,23 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 	})
 }
 
-// XForwardedForToXRealIP sets the X-Real-Ip header based on the contents
-// of the X-Forwarded-For header.
+// XForwardedForToXRealIP overwrites the X-Real-Ip header from the (already
+// recomputed) X-Forwarded-For header, so client-forged values cannot reach
+// policy evaluation or the upstream target.
 func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-Ip") == "" && xffHeader != "" {
-			ip := xff.Parse(xffHeader)
-			slog.DebugContext(r.Context(), "setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
-			r.Header.Set("X-Real-Ip", ip)
-			if addr, err := netip.ParseAddr(ip); err == nil {
-				r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
-			}
+		ip := xff.Parse(r.Header.Get("X-Forwarded-For"))
+		if ip == "" {
+			slog.DebugContext(r.Context(), "removing X-Real-Ip, no usable X-Forwarded-For", "x-forwarded-for", r.Header.Get("X-Forwarded-For"))
+			r.Header.Del("X-Real-Ip")
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		slog.DebugContext(r.Context(), "setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", r.Header.Get("X-Forwarded-For"))
+		r.Header.Set("X-Real-Ip", ip)
+		if addr, err := netip.ParseAddr(ip); err == nil {
+			r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
 		}
 
 		next.ServeHTTP(w, r)

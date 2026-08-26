@@ -186,3 +186,68 @@ func TestComputeXFFHeader(t *testing.T) {
 		})
 	}
 }
+
+func TestXForwardedForToXRealIPOverwritesForgedHeader(t *testing.T) {
+	var realIP = "sentinel"
+
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		realIP = r.Header.Get("X-Real-Ip")
+		if addr, ok := RealIP(r); !ok || addr.String() != "203.0.113.5" {
+			t.Errorf("wanted RealIP context to be 203.0.113.5, got: %v (%v)", addr, ok)
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.Header.Set("X-Real-Ip", "5.6.7.8")
+	r.Header.Set("X-Forwarded-For", "203.0.113.5")
+
+	w := httptest.NewRecorder()
+
+	XForwardedForToXRealIP(h).ServeHTTP(w, r)
+
+	if realIP != "203.0.113.5" {
+		t.Errorf("wanted X-Real-Ip to be overwritten with 203.0.113.5, got: %q", realIP)
+	}
+}
+
+func TestXForwardedForToXRealIPDeletesWhenXFFUnusable(t *testing.T) {
+	var realIP = "sentinel"
+
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		realIP = r.Header.Get("X-Real-Ip")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.Header.Set("X-Real-Ip", "5.6.7.8")
+	r.Header.Set("X-Forwarded-For", "10.0.0.5")
+
+	w := httptest.NewRecorder()
+
+	XForwardedForToXRealIP(h).ServeHTTP(w, r)
+
+	if realIP != "" {
+		t.Errorf("wanted X-Real-Ip to be deleted when X-Forwarded-For is unusable, got: %q", realIP)
+	}
+}
+
+func TestXForwardedForToXRealIPFillsWhenUnset(t *testing.T) {
+	var realIP = "sentinel"
+
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		realIP = r.Header.Get("X-Real-Ip")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.Header.Set("X-Forwarded-For", "203.0.113.5")
+
+	w := httptest.NewRecorder()
+
+	XForwardedForToXRealIP(h).ServeHTTP(w, r)
+
+	if realIP != "203.0.113.5" {
+		t.Errorf("wanted X-Real-Ip to be filled with 203.0.113.5, got: %q", realIP)
+	}
+}
