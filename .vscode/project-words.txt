@@ -332,6 +332,7 @@ msitools
 msiversion
 multicore
 multifile
+multisite
 mxschmitt
 myapp
 myclient

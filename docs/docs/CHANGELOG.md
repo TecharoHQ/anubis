@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop clearing the authorization cookie when a challenged request did not send one. A subresource request that starts before the challenge is passed but finishes after it no longer deletes the cookie that `pass-challenge` just issued ([#1314](https://github.com/TecharoHQ/anubis/issues/1314)).
 - Fix proof of work worker spawning fallback logic to properly detect Content-Security-Policy failures and fall back to the older logic that fans out to one request per hardware core ([#1864](https://github.com/TecharoHQ/anubis/issues/1864)).
 - [Content-Security-Policy advice](./admin/configuration/content-security-policy.mdx) has been added to the documentation.
-- Fix Open Graph tag fetching to forward the visitor's original host as `X-Forwarded-Host`, so backends that resolve their site from that header can serve tags when `--target-host` is set.
+- Passthru `Host` header as `X-Forwarded-Host` in Open Graph requests so backends can dispatch based on host.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 

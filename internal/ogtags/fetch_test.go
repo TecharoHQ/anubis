@@ -137,9 +137,8 @@ func (c *OGTagCache) fetchHTMLDocument(ctx context.Context, urlStr string, origi
 	return c.fetchHTMLDocumentWithCache(ctx, urlStr, originalHost, cacheKey)
 }
 
-// TestFetchForwardsOriginalHostHeader pins the behaviour that the OG fetcher tells
-// the backend which public hostname the visitor used, mirroring what
-// httputil.ReverseProxy does on the normal proxy path.
+// TestFetchForwardsOriginalHostHeader ensures the fetcher forwards the public
+// hostname as X-Forwarded-Host so name-based backends can dispatch.
 func TestFetchForwardsOriginalHostHeader(t *testing.T) {
 	for _, tt := range []struct {
 		name              string
