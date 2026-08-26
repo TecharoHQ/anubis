@@ -73,6 +73,7 @@ Assuming you are protecting `anubistest.techaro.lol`, you need the following ser
        RequestHeader set "X-Real-Ip" expr=%{REMOTE_ADDR}
        RequestHeader set X-Forwarded-Proto "https"
        RequestHeader set "X-Http-Version" "%{SERVER_PROTOCOL}s"
+       RequestHeader set "X-TLS-SNI-Name" "%{SSL_TLS_SNI}s"
 
        ProxyPreserveHost On
 
