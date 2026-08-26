@@ -22,6 +22,6 @@ As a workaround, you should configure your web server to parse an alternative so
 
 If you do not control the web server upstream of Anubis, the `custom-real-ip-header` command line flag accepts a header value that Anubis will read the real client IP address from. Anubis will set the `X-Real-IP` header to the IP address found in the custom header.
 
-The `X-Real-IP` header will be automatically inferred from `X-Forwarded-For` if not set, setting it explicitly is not necessary as long as `X-Forwarded-For` contains only the real client IP. However setting it explicitly can eliminate spoofed values if your web server doesn't set this.
+The `X-Real-IP` header is always inferred from the flattened `X-Forwarded-For`, overwriting any client-supplied value: a request that arrives with a forged `X-Real-IP` cannot keep it through to policy checks or the upstream target. If the flattened `X-Forwarded-For` yields no usable IP, the `X-Real-IP` header is removed. If your web server knows the client IP better than the flattened `X-Forwarded-For` does, have it expose that IP in a dedicated header (such as `CF-Connecting-IP`) and pass that header's name to the `custom-real-ip-header` flag, or enable `use-remote-address`; both overwrite `X-Real-IP` with the operator-controlled source.
 
 See [Cloudflare](environments/cloudflare.mdx) for an example configuration.
