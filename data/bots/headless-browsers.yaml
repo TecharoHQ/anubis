@@ -10,3 +10,6 @@
 - name: headless-chromium
   user_agent_regex: HeadlessChromium
   action: DENY
+- name: hyperbrowser # https://github.com/hyperbrowserai/HyperAgent/issues/91
+  user_agent_regex: (?i:hyperbrowser)
+  action: DENY
