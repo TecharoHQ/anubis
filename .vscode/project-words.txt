@@ -225,6 +225,7 @@ gzw
 handrolled
 Hashcash
 hashrate
+hashx
 hdr
 headermap
 healthcheck
