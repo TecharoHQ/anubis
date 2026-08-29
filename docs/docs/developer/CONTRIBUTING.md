@@ -8,6 +8,9 @@ Prerequisites:
 
 - Go 1.26 or later.
 - Node.js (any supported LTS version).
+- Rust version 1.80 or later.
+- Optionally: Wasmtime
+- Optionally: binaryen version 130 (exact match).
 - esbuild, gzip, zstd, brotli, msitools
 
 If you have [Homebrew](https://brew.sh) installed: install all development tools at once with `brew bundle`.
