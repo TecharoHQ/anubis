@@ -147,3 +147,7 @@ blockquote {
 footer {
   text-align: center;
 }
+
+.agent-registration {
+  display: none;
+}

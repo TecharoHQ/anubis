@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Detect and block trivial attempts at [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting) as bots have been starting to use that to try and turn web applications or HTTP servers into open proxies.
 - Add [HyperAgent](https://github.com/hyperbrowserai/HyperAgent/issues/91) to the headless browsers block rule.
 - Fix Dutch localization typo in the "go home" link.
+- Add AI agent honeypot to Anubis pages that causes agents to voluntarily offer their users' information to the server so that administrators can contact them.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
