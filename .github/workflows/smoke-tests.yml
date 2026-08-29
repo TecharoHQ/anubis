@@ -18,6 +18,7 @@ jobs:
           - docker-registry
           - double_slash
           - forced-language
+          - fun-facts
           - git-clone
           - git-push
           - gitweb

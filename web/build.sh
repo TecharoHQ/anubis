@@ -49,6 +49,12 @@ for file in js/**/*.ts js/**/*.mjs; do
     continue
   fi
 
+  # js/funFacts/ holds per-language fact modules consumed by the emit-json
+  # script.  They are bundled into JSON at build time, not served as JS.
+  if [[ "$file" == js/funFacts/* ]]; then
+    continue
+  fi
+
   out="static/${file}"
   if [[ "$file" == *.ts ]]; then
     out="static/${file%.ts}.mjs"
@@ -61,3 +67,6 @@ for file in js/**/*.ts js/**/*.mjs; do
   zstd -f -k --ultra -22 "$out"
   brotli -fZk "$out"
 done
+
+# Emit per-language fun-fact JSON from the TypeScript registry in js/funFacts/
+node js/funFacts/emit-json.mjs static/funfacts
