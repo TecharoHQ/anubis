@@ -393,6 +393,8 @@ github.com/suzuki-shunsuke/urfave-cli-help-all v0.0.4 h1:YGHgrVjGTYHY98II6zijXUH
 github.com/suzuki-shunsuke/urfave-cli-help-all v0.0.4/go.mod h1:sSi6xaUaHfaqu32ECLeyE7NTMv+ZM5dW0JikhllaalY=
 github.com/testcontainers/testcontainers-go v0.43.0 h1:oEQx5MW2DGd9z3AeEQfB2lPM0eLs7ztyaGRu75bFo5A=
 github.com/testcontainers/testcontainers-go v0.43.0/go.mod h1:+VxkT2NQnKOZPKi6praMuMKYHYyOGXr0XSBSlSMCzFo=
+github.com/tetratelabs/wazero v1.12.1-0.20260714071631-236c2458ed22 h1:TnM7no4lj5GodEnEBnB3iR1MHf+BpGH88LPhs2Hhs80=
+github.com/tetratelabs/wazero v1.12.1-0.20260714071631-236c2458ed22/go.mod h1:LvKtzl2RqO4gyF27BiXU+nKAjcV8f38U+kP/q2vgxh0=
 github.com/tklauser/go-sysconf v0.3.16 h1:frioLaCQSsF5Cy1jgRBrzr6t502KIIwQ0MArYICU0nA=
 github.com/tklauser/go-sysconf v0.3.16/go.mod h1:/qNL9xxDhc7tx3HSRsLWNnuzbVfh3e7gh/BmM179nYI=
 github.com/tklauser/numcpus v0.11.0 h1:nSTwhKH5e1dMNsCdVBukSZrURJRoHbSEQjdEbY+9RXw=
