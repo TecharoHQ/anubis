@@ -143,6 +143,10 @@ thresholds:
 
 dnsbl: false
 
+logging:
+  sink: stdio
+  level: "WARN"
+
 impressum:
   footer: |
     This website is hosted by Techaro. If you have any complaints or notes about the service, please contact <a href="mailto:support@techaro.lol">support@techaro.lol</a> and we will assist you as soon as possible.
