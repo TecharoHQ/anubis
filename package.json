@@ -23,7 +23,7 @@
     "package": "go tool yeet",
     "lint": "make lint",
     "spellcheck": "cspell --no-progress --config .vscode/cspell.json \"**\"",
-    "prepare": "husky && go mod download",
+    "prepare": "husky && go mod download && cargo fetch",
     "format": "prettier -w . 2>&1 >/dev/null && go tool goimports -w ."
   },
   "author": "",
