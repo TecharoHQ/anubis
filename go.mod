@@ -29,6 +29,7 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/shirou/gopsutil/v4 v4.26.6
 	github.com/testcontainers/testcontainers-go v0.43.0
+	github.com/tetratelabs/wazero v1.12.1-0.20260714071631-236c2458ed22
 	go.etcd.io/bbolt v1.5.0
 	golang.org/x/net v0.56.0
 	golang.org/x/sync v0.21.0
