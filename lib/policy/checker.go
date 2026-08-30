@@ -42,9 +42,9 @@ func NewRemoteAddrChecker(cidrs []string) (checker.Impl, error) {
 }
 
 func (rac *RemoteAddrChecker) Check(r *http.Request) (bool, error) {
-	host := r.Header.Get("X-Real-Ip")
+	host := r.Header.Get("X-Real-IP")
 	if host == "" {
-		return false, fmt.Errorf("%w: header X-Real-Ip is not set", ErrMisconfiguration)
+		return false, fmt.Errorf("%w: header X-Real-IP is not set", ErrMisconfiguration)
 	}
 
 	addr, err := netip.ParseAddr(host)

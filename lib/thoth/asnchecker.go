@@ -41,7 +41,7 @@ func (asnc *ASNChecker) Check(r *http.Request) (bool, error) {
 	defer cancel()
 
 	ipInfo, err := asnc.iptoasn.Lookup(ctx, &iptoasnv1.LookupRequest{
-		IpAddress: r.Header.Get("X-Real-Ip"),
+		IpAddress: r.Header.Get("X-Real-IP"),
 	})
 	if err != nil {
 		switch {

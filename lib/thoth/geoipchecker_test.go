@@ -44,7 +44,7 @@ func TestGeoIPChecker(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("%v", cs), func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
-			req.Header.Set("X-Real-Ip", cs.ipAddress)
+			req.Header.Set("X-Real-IP", cs.ipAddress)
 
 			match, err := asnc.Check(req)
 

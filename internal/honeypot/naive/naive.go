@@ -162,7 +162,7 @@ func (i *Impl) CheckNetwork() checker.Impl {
 	return checker.Func(func(r *http.Request) (bool, error) {
 		realIP, _ := internal.RealIP(r)
 		if !realIP.IsValid() {
-			realIP = netip.MustParseAddr(r.Header.Get("X-Real-Ip"))
+			realIP = netip.MustParseAddr(r.Header.Get("X-Real-IP"))
 		}
 
 		network, ok := internal.ClampIP(realIP)
@@ -220,7 +220,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	realIP, _ := internal.RealIP(r)
 	if !realIP.IsValid() {
-		realIP = netip.MustParseAddr(r.Header.Get("X-Real-Ip"))
+		realIP = netip.MustParseAddr(r.Header.Get("X-Real-IP"))
 	}
 
 	if i.foutBundler != nil {
