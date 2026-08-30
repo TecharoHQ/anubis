@@ -1,0 +1,9 @@
+# Forces every client through the argon2id WASM challenge so that the browser
+# tests exercise the WASM path rather than the default "fast" challenge.
+bots:
+  - name: everyone
+    user_agent_regex: .
+    action: CHALLENGE
+    challenge:
+      algorithm: argon2id
+      difficulty: 2
