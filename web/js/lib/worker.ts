@@ -5,11 +5,12 @@ export const getHardwareConcurrency = () =>
     ? navigator.hardwareConcurrency
     : 1;
 
-export type ProgressCallback = (nonce: number) => void;
+export type ProgressCallback = (nonce: number | string) => void;
 
 export interface ProcessOptions {
   basePrefix: string;
   version: string;
+  algorithm: string;
 }
 
 export interface ProcessResult {
