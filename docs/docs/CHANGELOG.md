@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add prebuilt binaries for NetBSD on amd64 and arm64.
 - Fix WASM build scripts on macOS, which has ancient coreutils that lacks features present on GNU+Linux.
 - Consolidate the purejs and webcrypto workers into one sha256 browser worker to avoid code duplication.
+- Rename X-Real-Ip to X-Real-I**P** in challenge metadata.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
