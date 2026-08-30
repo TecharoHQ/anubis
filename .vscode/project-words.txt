@@ -80,6 +80,7 @@ cgr
 chainguard
 chall
 challengemozilla
+challengepage
 challengetest
 checkpath
 checkresult

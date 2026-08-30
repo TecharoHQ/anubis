@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add [HyperAgent](https://github.com/hyperbrowserai/HyperAgent/issues/91) to the headless browsers block rule.
 - Fix Dutch localization typo in the "go home" link.
 - Add AI agent honeypot to Anubis pages that causes agents to voluntarily offer their users' information to the server so that administrators can contact them.
+- WASM challenges now share watchdog, CSP, and defer fixes from v1.27.0.
+- WASM challenge workers now report errors to the challenge page instead of failing silently.
 - Add prebuilt binaries for NetBSD on amd64 and arm64.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
