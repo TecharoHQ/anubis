@@ -82,7 +82,7 @@ func TestRemoteAddrChecker(t *testing.T) {
 			}
 
 			if tt.ip != "" {
-				r.Header.Add("X-Real-Ip", tt.ip)
+				r.Header.Add("X-Real-IP", tt.ip)
 			}
 
 			ok, err := rac.Check(r)

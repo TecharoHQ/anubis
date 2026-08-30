@@ -110,7 +110,7 @@ func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request)
 		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
 		defer cancel()
 
-		ip := r.Header.Get("X-Real-Ip")
+		ip := r.Header.Get("X-Real-IP")
 		if info, err := s.policy.ThothClient.IPToASN.Lookup(ctx, &iptoasnv1.LookupRequest{IpAddress: ip}); err == nil && info.GetAnnounced() {
 			asn := strconv.FormatUint(uint64(info.GetAsNumber()), 10)
 			lg = lg.With("asn", info.GetAsNumber(), "asn_description", info.GetDescription())
@@ -180,7 +180,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		PolicyRuleHash: rule.Hash(),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
-			"X-Real-Ip":  r.Header.Get("X-Real-Ip"),
+			"X-Real-Ip":  r.Header.Get("X-Real-IP"),
 		},
 	}
 
@@ -273,7 +273,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		policy.Applications.WithLabelValues(cr.Name, string(cr.Rule), asn, asnDesc).Add(1)
 	}
 
-	ip := r.Header.Get("X-Real-Ip")
+	ip := r.Header.Get("X-Real-IP")
 
 	if s.handleDNSBL(w, r, ip, lg) {
 		return
@@ -612,7 +612,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	lg.Info("challenge accepted", "challenge", chall.ID)
+	lg.InfoContext(r.Context(), "challenge accepted", "challenge", chall.ID)
 
 	// generate JWT cookie
 	var tokenString string
@@ -672,7 +672,7 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
-	host := r.Header.Get("X-Real-Ip")
+	host := r.Header.Get("X-Real-IP")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
 	}

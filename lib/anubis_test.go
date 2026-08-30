@@ -498,7 +498,7 @@ func TestCheckDefaultDifficultyMatchesPolicy(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			req.Header.Add("X-Real-Ip", "127.0.0.1")
+			req.Header.Add("X-Real-IP", "127.0.0.1")
 
 			cr, bot, err := s.check(req, s.logger)
 			if err != nil {
@@ -755,7 +755,7 @@ func TestCloudflareWorkersRule(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				req.Header.Add("X-Real-Ip", "127.0.0.1")
+				req.Header.Add("X-Real-IP", "127.0.0.1")
 				req.Header.Add("Cf-Worker", "true")
 
 				cr, _, err := s.check(req, s.logger)
@@ -774,7 +774,7 @@ func TestCloudflareWorkersRule(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				req.Header.Add("X-Real-Ip", "127.0.0.1")
+				req.Header.Add("X-Real-IP", "127.0.0.1")
 
 				cr, _, err := s.check(req, s.logger)
 				if err != nil {
@@ -1146,7 +1146,7 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 	q.Set("id", chall.ID)
 	q.Set("challenge", chall.RandomData)
 	req.URL.RawQuery = q.Encode()
-	req.Header.Set("X-Real-Ip", "203.0.113.4")
+	req.Header.Set("X-Real-IP", "203.0.113.4")
 	req.Header.Set("User-Agent", "NilChallengeTester/1.0")
 	req.AddCookie(&http.Cookie{Name: srv.cookieName(anubis.TestCookieName), Value: chall.ID})
 
@@ -1182,7 +1182,7 @@ func TestXForwardedForNoDoubleComma(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req.Header.Set("X-Real-Ip", "10.0.0.1")
+	req.Header.Set("X-Real-IP", "10.0.0.1")
 
 	resp, err := ts.Client().Do(req)
 	if err != nil {

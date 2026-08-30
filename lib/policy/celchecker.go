@@ -64,7 +64,7 @@ func (cr *CELRequest) Parent() cel.Activation { return nil }
 func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	switch name {
 	case "remoteAddress":
-		return cr.Header.Get("X-Real-Ip"), true
+		return cr.Header.Get("X-Real-IP"), true
 	case "contentLength":
 		return cr.ContentLength, true
 	case "host":
