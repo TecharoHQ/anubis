@@ -4,7 +4,6 @@ Actorified
 actorifiedstore
 actorify
 admins
-agentban
 agentic
 Aibrew
 alibaba
@@ -261,7 +260,6 @@ inlines
 inp
 installdir
 INSTALLDIR
-intelliga
 internets
 iocaine
 iplist
@@ -365,7 +363,6 @@ oklch
 omgili
 omgilibot
 openai
-opencode
 opendns
 opengraph
 openrc

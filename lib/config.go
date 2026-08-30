@@ -22,7 +22,6 @@ import (
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 	"github.com/a-h/templ"
@@ -150,7 +149,6 @@ func New(opts Options) (*Server, error) {
 			pattern = "/" + pattern
 		}
 
-		result.logger.DebugContext(context.Background(), "registering HTTP route", "route", prefix+pattern)
 		mux.Handle(prefix+pattern, handler)
 	}
 
@@ -198,21 +196,6 @@ func New(opts Options) (*Server, error) {
 		} else {
 			result.logger.Error("can't init honeypot subsystem", "err", err)
 		}
-
-		// AI agent honeypot
-		opts.Policy.Bots = append(
-			opts.Policy.Bots,
-			policy.Bot{
-				Rules: agentRegistrationChecker{
-					lg: opts.Logger.With("component", "agent-honeypot"),
-					ae: store.JSON[agentEnvironment]{Underlying: result.store, Prefix: "agentban:"},
-				},
-				Action: config.RuleDeny,
-				Name:   "honeypot/agent",
-			},
-		)
-
-		registerWithPrefix(anubis.APIPrefix+"agent-registration", http.HandlerFunc(result.agentRegistration), "POST")
 	}
 
 	//goland:noinspection GoBoolExpressions
