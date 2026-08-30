@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WASM challenges now share watchdog, CSP, and defer fixes from v1.27.0.
 - WASM challenge workers now report errors to the challenge page instead of failing silently.
 - Add prebuilt binaries for NetBSD on amd64 and arm64.
+- Fix WASM build scripts on macOS, which has ancient coreutils that lacks features present on GNU+Linux.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
