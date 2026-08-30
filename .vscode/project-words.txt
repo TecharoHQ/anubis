@@ -101,6 +101,7 @@ Cotoyogi
 Cromite
 crt
 Cscript
+Ctarget
 dacl
 daemonizing
 databento
@@ -111,10 +112,12 @@ dco
 DDOS
 ddwrt
 de
+dealign
 Debian
 debrpm
 decaymap
 deflang
+denan
 deprioritized
 devcontainers
 Diffbot
@@ -181,6 +184,7 @@ Fordola
 forgejo
 forwardauth
 fout
+fptoint
 fsys
 fucky
 fullchain
@@ -335,8 +339,10 @@ msiexec
 msiinfo
 msitools
 msiversion
+mtimes
 multicore
 multifile
+multivalue
 mxschmitt
 myapp
 myclient
@@ -355,6 +361,7 @@ nobots
 NOFILE
 nolint
 NONINFRINGEMENT
+nontrapping
 nosleep
 nullglob
 oci
@@ -417,6 +424,7 @@ rcvar
 redhat
 redir
 redirectscheme
+reencode
 refactors
 reimagining
 remoteip
@@ -427,11 +435,13 @@ Rhul
 rififi
 risc
 rjack
+rlibs
 ruleset
 runlevels
 RUnlock
 runtimedir
 runtimedirectory
+RUSTFLAGS
 Ryzen
 Samsung
 sarif
@@ -531,6 +541,7 @@ unmarshal
 unmarshals
 unparseable
 unretryable
+untee
 updown
 uppercased
 uppercases
@@ -554,6 +565,8 @@ VPS
 Vultr
 WAIFU
 Warde
+wasmtime
+wazero
 wcg
 weblate
 webmaster
