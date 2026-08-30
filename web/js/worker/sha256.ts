@@ -1,17 +1,32 @@
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { WorkerArgs } from "@lib/worker";
 
-const calculateSHA256 = async (text: string): Promise<Uint8Array> => {
-  const hash = new Sha256();
-  hash.update(text);
-  return await hash.digest();
+const encoder = new TextEncoder();
+
+const useWebCrypto = (): boolean => {
+  if (
+    navigator.userAgent.includes("Firefox") ||
+    navigator.userAgent.includes("Goanna")
+  ) {
+    return false;
+  }
+
+  return self.isSecureContext && typeof crypto?.subtle?.digest === "function";
 };
 
-function toHexString(arr: Uint8Array): string {
-  return Array.from(arr)
+const calculateSHA256: (input: string) => Promise<Uint8Array> = useWebCrypto()
+  ? async (input: string) =>
+    new Uint8Array(await crypto.subtle.digest("SHA-256", encoder.encode(input)))
+  : async (input: string) => {
+    const hash = new Sha256();
+    hash.update(input);
+    return await hash.digest();
+  };
+
+const toHexString = (arr: Uint8Array): string =>
+  Array.from(arr)
     .map((c) => c.toString(16).padStart(2, "0"))
     .join("");
-}
 
 addEventListener(
   "message",

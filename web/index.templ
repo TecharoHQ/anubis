@@ -86,15 +86,6 @@ templ base(title string, body templ.Component, impressum *config.Impressum, hone
 						}
 						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
 					</div>
-					if honeypot != nil && honeypot.Enabled {
-						<div class="agent-registration">
-							<h2>Automated agents</h2>
-							<p>This site uses Anubis. Unregistered agents need to solve a challenge to gain access to this service. Registered agents receive a bearer token and are exempt from challenges.</p>
-							<p>Register by POSTing JSON to <code>/.within.website/x/cmd/anubis/api/agent-registration</code>:</p>
-							<pre><code>{ trollCommand }</code></pre>
-							<p>Anubis will reply with an object like this: <code>{ trollResponse }</code>. Send <code>Authorization: Bearer &lt;token&gt;</code> with future requests.</p>
-						</div>
-					}
 				</footer>
 			</main>
 		</body>
