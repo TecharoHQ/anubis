@@ -612,6 +612,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	lg.Info("challenge accepted", "challenge", chall.ID)
+
 	// generate JWT cookie
 	var tokenString string
 
