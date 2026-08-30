@@ -25,6 +25,7 @@ archlinux
 arpa
 arquivo
 Asahi
+ASIC
 asnc
 asnchecker
 asns
@@ -534,6 +535,7 @@ uppercased
 uppercases
 urlsafe
 usecase
+usecases
 uvensys
 uvx
 UXP
