@@ -8,6 +8,8 @@ const methods = [
   ["linux", "arm64", [deb, rpm, sysext, tarball]],
   ["linux", "ppc64le", [deb, rpm, sysext, tarball]],
   ["linux", "riscv64", [deb, rpm, sysext, tarball]],
+  ["netbsd", "amd64", [tarball]],
+  ["netbsd", "arm64", [tarball]],
   ["windows", "amd64", [tarball]],
   ["windows", "arm64", [tarball]],
 ];

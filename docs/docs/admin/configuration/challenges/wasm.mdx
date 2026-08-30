@@ -1,0 +1,94 @@
+# Proof of Work (WebAssembly)
+
+Anubis supports using [WebAssembly](https://en.wikipedia.org/wiki/WebAssembly) to speed up proof of work validation. Proof of work functions as a randomized delay to prevent clients from overwhelming your server with traffic. All WebAssembly proof of work functions are written in Rust.
+
+:::note
+
+When clients are configured to disable WebAssembly, Anubis falls back to a pure JavaScript implementation of the WebAssembly-based check logic. As clients that disable WebAssembly usually disable the JavaScript JIT (the thing that makes JavaScript fast), this makes checks slower.
+
+Additionally due to complicated facts and circumstances involving it being complicated to pass the messages from the wasm2js world back to JavaScript, the progress bar will not update while a wasm2js check is running. This is a known issue and will be fixed in a later release.
+
+:::
+
+## Implementations
+
+Anubis offers the following WebAssembly proof of work functions:
+
+- [argon2id](#argon2id) (via the [`argon2id`](https://docs.rs/argon2/latest/argon2/) crate)
+- [hashx](#hashx) (via the [`hashx`](https://docs.rs/hashx/latest/hashx/index.html) crate)
+- [sha256](#sha256) (via the [`sha2`](https://docs.rs/sha2/latest/sha2/) crate)
+
+:::note
+
+The difficulty values for the WebAssembly based checks are going to be much greater than the equivalent difficulty values for the [JavaScript based checks](./proof-of-work.mdx). Generally these count the number of leading _bits_ that much match instead of the number of leading _nibbles_ that must match. Here's a rough translation table:
+
+| `fast` difficulty | `argon2id` difficulty | `sha256` difficulty | `hashx` difficulty |
+| :---------------- | :-------------------- | :------------------ | :----------------- |
+| `4`               | `4`                   | `16`                | `15`               |
+| `2`               | `2`                   | `8`                 | `7`                |
+| `6`               | `6`                   | `24`                | `20`               |
+
+:::
+
+## `argon2id`
+
+Uses the memory-hard [Argon2](https://en.wikipedia.org/wiki/Argon2) key derivation function as a hashing algorithm. This uses a large fixed-size memory region in order to make brute-force attacks computationally expensive.
+
+Usage:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: argon2id
+      difficulty: 6
+```
+
+## `hashx`
+
+Uses the ASIC-resistant [hashx](https://github.com/tevador/hashx) as the proof of work function. This is resistant to GPU and ASIC attacks. In practice this means that users need to be using a standards-compliant browser to pass the challenge.
+
+Usage:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: hashx
+      difficulty: 16
+```
+
+## `sha256`
+
+Uses [SHA-256](https://en.wikipedia.org/wiki/SHA-2) as the proof of work function.
+
+:::note
+
+This is included mostly as a fallback for usecases that specifically require this hashing function. There are known tools that solve this particular challenge. Prefer [`argon2id`](#argon2id) or [`hashx`](#hashx) unless you know what you are doing and have a very specific usecase in mind.
+
+:::
+
+Usage:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: sha256
+      difficulty: 16
+```

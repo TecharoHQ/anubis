@@ -40,6 +40,7 @@ import (
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
+	_ "github.com/TecharoHQ/anubis/lib/challenge/wasm"
 )
 
 type contextKey int
@@ -610,6 +611,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
+	lg.Info("challenge accepted", "challenge", chall.ID)
 
 	// generate JWT cookie
 	var tokenString string

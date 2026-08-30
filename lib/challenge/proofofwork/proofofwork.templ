@@ -2,6 +2,7 @@ package proofofwork
 
 import (
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/challenge/challengepage"
 	"github.com/TecharoHQ/anubis/lib/localization"
 )
 
@@ -12,7 +13,7 @@ templ page(localizer *localization.SimpleLocalizer) {
 		<p id="status">{ localizer.T("loading") }</p>
 		<p id="anubis-script-error" style="display:none;">{ localizer.T("script_load_error") }</p>
 		<script id="anubis-main" defer type="module" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/js/main.mjs?cacheBuster=" + anubis.Version }></script>
-		@bootstrap()
+		@challengepage.Bootstrap()
 		<div id="progress" role="progressbar" aria-labelledby="status">
 			<div class="bar-inner"></div>
 		</div>

@@ -25,6 +25,7 @@ archlinux
 arpa
 arquivo
 Asahi
+ASIC
 asnc
 asnchecker
 asns
@@ -79,6 +80,7 @@ cgr
 chainguard
 chall
 challengemozilla
+challengepage
 challengetest
 checkpath
 checkresult
@@ -534,6 +536,7 @@ uppercased
 uppercases
 urlsafe
 usecase
+usecases
 uvensys
 uvx
 UXP
