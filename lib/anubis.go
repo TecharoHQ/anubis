@@ -240,11 +240,65 @@ func (s *Server) maybeReverseProxyOrPage(w http.ResponseWriter, r *http.Request)
 	s.maybeReverseProxy(w, r, false)
 }
 
+const (
+	downstreamRiskRuleHeader   = "X-Anubis-Rule"
+	downstreamRiskActionHeader = "X-Anubis-Action"
+	downstreamRiskStatusHeader = "X-Anubis-Status"
+)
+
+func isDownstreamRiskHeader(name string) bool {
+	switch http.CanonicalHeaderKey(name) {
+	case downstreamRiskRuleHeader, downstreamRiskActionHeader, downstreamRiskStatusHeader:
+		return true
+	}
+	return false
+}
+
+func removeDownstreamRiskConnectionTokens(header http.Header) {
+	connectionValues := header.Values("Connection")
+	header.Del("Connection")
+	for _, value := range connectionValues {
+		var remaining []string
+		for token := range strings.SplitSeq(value, ",") {
+			token = strings.TrimSpace(token)
+			if token == "" || isDownstreamRiskHeader(token) {
+				continue
+			}
+			remaining = append(remaining, token)
+		}
+		if len(remaining) != 0 {
+			header.Add("Connection", strings.Join(remaining, ", "))
+		}
+	}
+}
+
+func clearDownstreamRiskHeaders(header http.Header) {
+	// Remove client-supplied values for headers owned by Anubis.
+	header.Del(downstreamRiskRuleHeader)
+	header.Del(downstreamRiskActionHeader)
+	header.Del(downstreamRiskStatusHeader)
+
+	// Remove Connection options that could strip those headers downstream.
+	removeDownstreamRiskConnectionTokens(header)
+}
+
+func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status string) {
+	removeDownstreamRiskConnectionTokens(header)
+	header.Set(downstreamRiskRuleHeader, cr.Name)
+	header.Set(downstreamRiskActionHeader, string(cr.Rule))
+	if status == "" {
+		header.Del(downstreamRiskStatusHeader)
+		return
+	}
+	header.Set(downstreamRiskStatusHeader, status)
+}
+
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
 
 	if s.opts.OpenGraph.Enabled {
 		if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
+			clearDownstreamRiskHeaders(r.Header)
 			lg.DebugContext(r.Context(), "serving opengraph tag asset")
 			s.ServeHTTPNext(w, r)
 			return
@@ -265,8 +319,6 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	r.Header.Add("X-Anubis-Rule", cr.Name)
-	r.Header.Add("X-Anubis-Action", string(cr.Rule))
 	lg = lg.With("check_result", cr)
 	{
 		asn, asnDesc := asnFromContext(r.Context())
@@ -346,7 +398,7 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
-	r.Header.Add("X-Anubis-Status", "PASS")
+	setDownstreamRiskHeaders(r.Header, cr, "PASS")
 	s.ServeHTTPNext(w, r)
 }
 
@@ -362,6 +414,7 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 	switch cr.Rule {
 	case config.RuleAllow:
 		lg.DebugContext(r.Context(), "allowing traffic to origin (explicit)")
+		setDownstreamRiskHeaders(r.Header, cr, "")
 		s.ServeHTTPNext(w, r)
 		return true
 	case config.RuleDeny:
