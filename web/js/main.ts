@@ -179,7 +179,7 @@ interface OhNoesParams {
   try {
     const t0 = Date.now();
     const { hash, nonce } = await process(
-      { basePrefix, version: anubisVersion },
+      { basePrefix, version: anubisVersion, algorithm: rules.algorithm },
       challenge.randomData,
       rules.difficulty,
       null,

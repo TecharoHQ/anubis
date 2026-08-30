@@ -15,7 +15,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-//go:generate ./build.sh
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
@@ -27,7 +26,7 @@ type Impl struct {
 	Algorithm string
 }
 
-func (i *Impl) Setup(mux *http.ServeMux) {}
+func (i *Impl) Setup(mux *http.ServeMux) error { return nil }
 
 func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)

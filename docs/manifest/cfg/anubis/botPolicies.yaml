@@ -143,6 +143,10 @@ thresholds:
 
 dnsbl: false
 
+logging:
+  sink: stdio
+  level: "WARN"
+
 impressum:
   footer: |
     This website is hosted by Techaro. If you have any complaints or notes about the service, please contact <a href="mailto:support@techaro.lol">support@techaro.lol</a> and we will assist you as soon as possible.
@@ -204,3 +208,15 @@ store:
   backend: bbolt
   parameters:
     path: /xe/data/anubis/data.bdb
+
+## Honeypot configuration
+honeypot:
+  ## If not set, Anubis will assume you meant `true`.
+  enabled: true
+  ## Currently the only supported implementation is the naive method.
+  ## See https://anubis.techaro.lol/docs/admin/honeypot/overview#implementation-notes for more information
+  implementation: naive
+  ## Setting ip_log_file makes Anubis log IP addresses that hit honeypot URLs to a file.
+  ## Anubis writes to this file either once per minute or after Anubis records 32
+  ## kilobytes of IP addresses, whichever happens first.
+  #ip_log_file: ./var/honeypot.addrs

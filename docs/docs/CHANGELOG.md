@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add WebAssembly-based proof of work checks to decrease client load and increase the complexity required to scrape past Anubis. See [Proof of Work (WebAssembly)](./admin/configuration/challenges/wasm.mdx) for more information.
+- Use a bundled version of `wasm2js` in order to make the WebAssembly proof of work checks run in non-wasm environments.
+- Make the bundled `wasm2js`/`wasm-opt` WebAssembly modules build reproducibly and fix the build on arm64.
 - Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
 - Add weighing rule for [Cloudflare Kitesurf](https://blog.cloudflare.com/kitesurf/). Kitesurf doesn't currently support Cookies, but it might in the future.
 - Improved Norwegian Nynorsk localization.
@@ -21,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Content-Security-Policy advice](./admin/configuration/content-security-policy.mdx) has been added to the documentation.
 - Passthru `Host` header as `X-Forwarded-Host` in Open Graph requests so backends can dispatch based on host.
 - Detect and block trivial attempts at [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting) as bots have been starting to use that to try and turn web applications or HTTP servers into open proxies.
+- Add [HyperAgent](https://github.com/hyperbrowserai/HyperAgent/issues/91) to the headless browsers block rule.
+- Fix Dutch localization typo in the "go home" link.
+- WASM challenges now share watchdog, CSP, and defer fixes from v1.27.0.
+- WASM challenge workers now report errors to the challenge page instead of failing silently.
+- Add prebuilt binaries for NetBSD on amd64 and arm64.
+- Fix WASM build scripts on macOS, which has ancient coreutils that lacks features present on GNU+Linux.
+- Consolidate the purejs and webcrypto workers into one sha256 browser worker to avoid code duplication.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 

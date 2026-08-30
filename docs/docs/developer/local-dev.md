@@ -17,6 +17,8 @@ Anubis requires the following tools to be installed to do local development:
 - [Go](https://go.dev) - the programming language that Anubis is written in
 - [esbuild](https://esbuild.github.io/) - the JavaScript bundler Anubis uses for its production JS assets
 - [Node.JS & NPM](https://nodejs.org/en) - manages some build dependencies
+- Optionally: [Wasmtime](https://wasmtime.dev/) - used to run the fallback vendored version of binaryen committed to this repository.
+- Optionally: [binaryen version 130](https://github.com/WebAssembly/binaryen/releases/tag/version_130) (exact match) - optimizes and compiles WebAssembly code so that it runs on all browsers Anubis supports.
 - `gzip` - compresses production JS (part of coreutils)
 - `zstd` - compresses production JS
 - `brotli` - compresses production JS
@@ -64,27 +66,20 @@ DOCKER_REPO=registry.host/org/repo DOCKER_METADATA_OUTPUT_TAGS=registry.host/org
 
 For more information, see [Building native packages is complicated](https://xeiaso.net/blog/2025/anubis-packaging/) and [#156: Debian, RPM, and binary tarball packages](https://github.com/TecharoHQ/anubis/issues/156).
 
-Install `yeet`:
-
-:::note
-
-`yeet` will soon be moved to a dedicated TecharoHQ repository. This is currently done in a hacky way in order to get this ready for user feedback.
-
-:::
-
-```text
-go install within.website/x/cmd/yeet@v1.13.4
-```
-
 Install the dependencies for Anubis:
 
 ```text
 npm ci
-go mod download
 ```
 
-Build the packages into `./var`:
+Build the static assets:
 
 ```text
-yeet
+npm run assets
+```
+
+Build the packages into `./var/packages`:
+
+```text
+go tool yeet --package-dest-dir ./var/packages
 ```
