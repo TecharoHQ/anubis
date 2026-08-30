@@ -180,7 +180,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		PolicyRuleHash: rule.Hash(),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
-			"X-Real-Ip":  r.Header.Get("X-Real-IP"),
+			"X-Real-IP":  r.Header.Get("X-Real-IP"),
 		},
 	}
 
@@ -674,7 +674,7 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
 	host := r.Header.Get("X-Real-IP")
 	if host == "" {
-		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-Ip header is not set")
+		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-IP header is not set")
 	}
 
 	addr := net.ParseIP(host)

@@ -242,7 +242,7 @@ func TestPlaywrightBrowser(t *testing.T) {
 			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
 				AcceptDownloads: playwright.Bool(false),
 				ExtraHttpHeaders: map[string]string{
-					"X-Real-Ip": "127.0.0.1",
+					"X-Real-IP": "127.0.0.1",
 				},
 				UserAgent: playwright.String("Sephiroth"),
 			})
@@ -328,7 +328,7 @@ func TestPlaywrightWithBasePrefix(t *testing.T) {
 			ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
 				AcceptDownloads: playwright.Bool(false),
 				ExtraHttpHeaders: map[string]string{
-					"X-Real-Ip": "127.0.0.1",
+					"X-Real-IP": "127.0.0.1",
 				},
 				UserAgent: playwright.String("Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0"),
 			})
@@ -449,7 +449,7 @@ func executeTestCase(t *testing.T, tc testCase, typ playwright.BrowserType, anub
 	ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
 		AcceptDownloads: playwright.Bool(false),
 		ExtraHttpHeaders: map[string]string{
-			"X-Real-Ip": tc.realIP,
+			"X-Real-IP": tc.realIP,
 		},
 		UserAgent: playwright.String(tc.userAgent),
 	})

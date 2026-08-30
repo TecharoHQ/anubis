@@ -119,7 +119,7 @@ func mustSolveChallenge(t *testing.T, typ playwright.BrowserType, anubisURL stri
 	ctx, err := browser.NewContext(playwright.BrowserNewContextOptions{
 		AcceptDownloads: playwright.Bool(false),
 		ExtraHttpHeaders: map[string]string{
-			"X-Real-Ip": placeholderIP,
+			"X-Real-IP": placeholderIP,
 		},
 		UserAgent: playwright.String("Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0"),
 	})

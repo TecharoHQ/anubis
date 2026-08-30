@@ -2,7 +2,7 @@
 title: When using Caddy with Gitea/Forgejo
 ---
 
-Gitea/Forgejo relies on the reverse proxy setting the `X-Real-Ip` header. Caddy does not do this out of the gate. Modify your Caddyfile like this:
+Gitea/Forgejo relies on the reverse proxy setting the `X-Real-IP` header. Caddy does not do this out of the gate. Modify your Caddyfile like this:
 
 ```python
 ellenjoe.int.within.lgbt {
@@ -12,7 +12,7 @@ ellenjoe.int.within.lgbt {
   # diff-add
   reverse_proxy http://localhost:3000 {
     # diff-add
-    header_up X-Real-Ip {remote_host}
+    header_up X-Real-IP {remote_host}
   # diff-add
   }
   # ...

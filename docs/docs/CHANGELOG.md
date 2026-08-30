@@ -1035,7 +1035,7 @@ Livia sas Junius: Echo 2
 
 Livia sas Junius: Echo 1
 
-- Set the `X-Real-Ip` header based on the contents of `X-Forwarded-For`
+- Set the `X-Real-IP` header based on the contents of `X-Forwarded-For`
   [#62](https://github.com/TecharoHQ/anubis/issues/62)
 
 ## v1.14.0
