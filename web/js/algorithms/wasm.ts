@@ -1,88 +1,71 @@
-import { ProgressCallback, ProcessOptions, getHardwareConcurrency } from "@lib/worker";
-import { u } from "@lib/xeact.mjs";
+import {
+  ProgressCallback,
+  ProcessOptions,
+  ProcessResult,
+  defaultThreads,
+  runWorkers,
+} from "@lib/worker";
+import { fetchWithBackoff } from "@lib/backoff";
 import { simd } from "wasm-feature-detect";
-import isWASMSupported, { WASMUnsupportedError } from "@lib/wasm-supported";
+import isWASMSupported from "@lib/wasm-supported";
 import wasm2js from "./wasm2js";
 
-export default function process(
+// compileModule fetches and compiles the WebAssembly module for an algorithm.
+//
+// The module comes from the same server that is already being hammered, so it
+// gets the same exponential backoff treatment as every other challenge asset.
+const compileModule = async (
+  url: string,
+  signal: AbortSignal | null,
+): Promise<WebAssembly.Module> => {
+  const response = await fetchWithBackoff(url, { signal });
+
+  try {
+    return await WebAssembly.compileStreaming(response.clone());
+  } catch (err) {
+    // XXX(Xe): compileStreaming insists on an `application/wasm` Content-Type.
+    // Anubis serves that, but middleware in front of Anubis has been known to
+    // rewrite it. Buffering the whole module works regardless.
+    console.warn(
+      "anubis: streaming WebAssembly compilation failed, buffering instead",
+      err,
+    );
+    return await WebAssembly.compile(await response.arrayBuffer());
+  }
+};
+
+export default async function process(
   options: ProcessOptions,
   data: string,
   difficulty: number = 5,
   signal: AbortSignal | null = null,
   progressCallback?: ProgressCallback,
-  threads: number = Math.trunc(Math.max(getHardwareConcurrency() / 2, 1)),
-): Promise<string> {
+  threads: number = defaultThreads(),
+): Promise<ProcessResult> {
   const { basePrefix, version, algorithm } = options;
 
   if (!isWASMSupported) {
-    return wasm2js(options, data, difficulty, signal, progressCallback, threads);
+    return wasm2js(
+      options,
+      data,
+      difficulty,
+      signal,
+      progressCallback,
+      threads,
+    );
   }
 
-  return new Promise(async (resolve, reject) => {
-    let wasmFeatures = "baseline";
+  const wasmFeatures = (await simd()) ? "simd128" : "baseline";
+  const module = await compileModule(
+    `${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${wasmFeatures}/${algorithm}.wasm?cacheBuster=${version}`,
+    signal,
+  );
 
-    if (await simd()) {
-      wasmFeatures = "simd128";
-    }
-
-    let module = await fetch(u(`${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${wasmFeatures}/${algorithm}.wasm?cacheBuster=${version}`))
-      .then(x => WebAssembly.compileStreaming(x));
-
-    const webWorkerURL = `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/wasm.mjs?cacheBuster=${version}`;
-
-    const workers: Worker[] = [];
-    let settled = false;
-
-    const onAbort = () => {
-      console.log("PoW aborted");
-      cleanup();
-      reject(new DOMException("Aborted", "AbortError"));
-    };
-
-    const cleanup = () => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      workers.forEach((w) => w.terminate());
-      if (signal != null) {
-        signal.removeEventListener("abort", onAbort);
-      }
-    };
-
-    if (signal != null) {
-      if (signal.aborted) {
-        return onAbort();
-      }
-      signal.addEventListener("abort", onAbort, { once: true });
-    }
-
-    for (let i = 0; i < threads; i++) {
-      let worker = new Worker(webWorkerURL);
-      workers.push(worker);
-
-      worker.onmessage = (event) => {
-        if (typeof event.data === "number") {
-          progressCallback?.(event.data);
-        } else {
-          cleanup();
-          resolve(event.data);
-        }
-      }
-
-      worker.onerror = (event) => {
-        cleanup();
-        reject(event);
-      }
-
-      worker.postMessage({
-        data,
-        difficulty,
-        nonce: i,
-        threads,
-        algorithm,
-        module,
-      });
-    }
+  return runWorkers({
+    webWorkerURL: `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/wasm.mjs?cacheBuster=${version}`,
+    message: { data, difficulty, algorithm, module },
+    threads,
+    signal,
+    progressCallback,
   });
-};
+}
