@@ -665,7 +665,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	lg.InfoContext(r.Context(), "challenge accepted", "challenge", chall.ID)
+	lg.InfoContext(r.Context(), "challenge accepted")
 
 	// generate JWT cookie
 	var tokenString string
