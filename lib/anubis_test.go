@@ -283,58 +283,64 @@ func TestCookieSettings(t *testing.T) {
 	const cookieDomain = "127.0.0.1"
 
 	testCases := []struct {
-		name         string
-		partitioned  bool
-		secure       bool
-		httpOnly     bool
-		sameSite     http.SameSite
-		wantSameSite http.SameSite
-		expiration   time.Duration
+		name            string
+		partitioned     bool
+		wantPartitioned bool
+		secure          bool
+		httpOnly        bool
+		sameSite        http.SameSite
+		wantSameSite    http.SameSite
+		expiration      time.Duration
 	}{
 		{
-			name:         "secure samesite none is preserved",
-			partitioned:  true,
-			secure:       true,
-			httpOnly:     false,
-			sameSite:     http.SameSiteNoneMode,
-			wantSameSite: http.SameSiteNoneMode,
-			expiration:   anubis.CookieDefaultExpirationTime,
+			name:            "secure samesite none is preserved",
+			partitioned:     true,
+			wantPartitioned: true,
+			secure:          true,
+			httpOnly:        false,
+			sameSite:        http.SameSiteNoneMode,
+			wantSameSite:    http.SameSiteNoneMode,
+			expiration:      anubis.CookieDefaultExpirationTime,
 		},
 		{
-			name:         "secure samesite none with httponly is preserved",
-			partitioned:  true,
-			secure:       true,
-			httpOnly:     true,
-			sameSite:     http.SameSiteNoneMode,
-			wantSameSite: http.SameSiteNoneMode,
-			expiration:   anubis.CookieDefaultExpirationTime,
+			name:            "secure samesite none with httponly is preserved",
+			partitioned:     true,
+			wantPartitioned: true,
+			secure:          true,
+			httpOnly:        true,
+			sameSite:        http.SameSiteNoneMode,
+			wantSameSite:    http.SameSiteNoneMode,
+			expiration:      anubis.CookieDefaultExpirationTime,
 		},
 		{
-			name:         "insecure samesite none downgrades to lax",
-			partitioned:  true,
-			secure:       false,
-			httpOnly:     false,
-			sameSite:     http.SameSiteNoneMode,
-			wantSameSite: http.SameSiteLaxMode,
-			expiration:   anubis.CookieDefaultExpirationTime,
+			name:            "insecure samesite none downgrades to lax",
+			partitioned:     true,
+			wantPartitioned: false,
+			secure:          false,
+			httpOnly:        false,
+			sameSite:        http.SameSiteNoneMode,
+			wantSameSite:    http.SameSiteLaxMode,
+			expiration:      anubis.CookieDefaultExpirationTime,
 		},
 		{
-			name:         "insecure samesite lax with httponly is preserved",
-			partitioned:  false,
-			secure:       false,
-			httpOnly:     true,
-			sameSite:     http.SameSiteLaxMode,
-			wantSameSite: http.SameSiteLaxMode,
-			expiration:   anubis.CookieDefaultExpirationTime,
+			name:            "insecure samesite lax with httponly is preserved",
+			partitioned:     false,
+			wantPartitioned: false,
+			secure:          false,
+			httpOnly:        true,
+			sameSite:        http.SameSiteLaxMode,
+			wantSameSite:    http.SameSiteLaxMode,
+			expiration:      anubis.CookieDefaultExpirationTime,
 		},
 		{
-			name:         "custom expiration is honored",
-			partitioned:  false,
-			secure:       true,
-			httpOnly:     false,
-			sameSite:     http.SameSiteLaxMode,
-			wantSameSite: http.SameSiteLaxMode,
-			expiration:   10 * time.Minute,
+			name:            "custom expiration is honored",
+			partitioned:     false,
+			wantPartitioned: false,
+			secure:          true,
+			httpOnly:        false,
+			sameSite:        http.SameSiteLaxMode,
+			wantSameSite:    http.SameSiteLaxMode,
+			expiration:      10 * time.Minute,
 		},
 	}
 
@@ -387,8 +393,8 @@ func TestCookieSettings(t *testing.T) {
 			if ckie.Domain != cookieDomain {
 				t.Errorf("cookie domain is wrong, wanted %s, got: %s", cookieDomain, ckie.Domain)
 			}
-			if ckie.Partitioned != tc.partitioned {
-				t.Errorf("wanted partitioned flag %v, got: %v", tc.partitioned, ckie.Partitioned)
+			if ckie.Partitioned != tc.wantPartitioned {
+				t.Errorf("wanted partitioned flag %v, got: %v", tc.wantPartitioned, ckie.Partitioned)
 			}
 			if ckie.HttpOnly != tc.httpOnly {
 				t.Errorf("wanted httponly flag %v, got: %v", tc.httpOnly, ckie.HttpOnly)
