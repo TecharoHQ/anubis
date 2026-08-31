@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+shopt -s nullglob
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -16,7 +17,7 @@ newest_src="$(mtimes "${src_dirs[@]}" -type f | sort -n | tail -1)"
 # (e.g. the output dirs haven't been created, in which case find would error out).
 oldest_dst="$(mtimes "${dst_dirs[@]}" -type f -name '*.wasm.js' 2>/dev/null | sort -n | head -1 || true)"
 
-if [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
+if all_populated '*.wasm.js' "${dst_dirs[@]}" && [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
 	echo "wasm2js artifacts are up to date, skipping build"
 	exit 0
 fi
@@ -36,7 +37,13 @@ run_wasm2js() {
 
 mkdir -p ./web/js/gen/wasm2js
 
-for fname in ./web/static/wasm/baseline/*.wasm; do
+srcs=(./web/static/wasm/baseline/*.wasm)
+if [ "${#srcs[@]}" -eq 0 ]; then
+	echo "no modules in ./web/static/wasm/baseline, run wasm/scripts/build_wasm.sh first" >&2
+	exit 1
+fi
+
+for fname in "${srcs[@]}"; do
 	output="./web/js/gen/wasm2js/$(basename "${fname}").js"
 	run_wasm2js "${fname}" -o "${output}"
 	# wasm2js emits an import of the anubis host module on line 1; replace it with

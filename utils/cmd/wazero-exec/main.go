@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/experimental"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+	"github.com/tetratelabs/wazero/sys"
 )
 
 func defaultCacheDir() string {
@@ -44,6 +46,13 @@ func main() {
 	defer cancel()
 	if err := run(ctx, flag.Arg(0), flag.Args()); err != nil {
 		fmt.Fprintf(os.Stderr, "can't run program %s: %v\n", flag.Arg(0), err)
+
+		var exitErr *sys.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() != 0 {
+			os.Exit(int(exitErr.ExitCode()))
+		}
+
+		os.Exit(1)
 	}
 }
 
@@ -89,7 +98,7 @@ func run(ctx context.Context, fname string, args []string) error {
 
 	mod, err := runtime.InstantiateModule(ctx, compiled, config)
 	if err != nil {
-		return fmt.Errorf("can't run program %s: %w", fname, err)
+		return fmt.Errorf("can't instantiate module: %w", err)
 	}
 	if err := mod.Close(ctx); err != nil {
 		return err
