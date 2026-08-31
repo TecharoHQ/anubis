@@ -14,3 +14,18 @@ fi
 mtimes() {
 	find "$@" -exec stat "${stat_mtime_args[@]}" {} +
 }
+
+# all_populated PATTERN DIR... succeeds when every DIR holds at least one file
+# matching PATTERN. Timestamps alone can't answer "are the artifacts there?":
+# a run that dies partway through leaves one output directory filled and the
+# next one empty, and every source file is older than whatever that run managed
+# to write. Check that the files exist before believing the clock.
+all_populated() {
+	local pattern="${1}"
+	shift
+
+	local dir
+	for dir in "$@"; do
+		compgen -G "${dir}/${pattern}" >/dev/null || return 1
+	done
+}

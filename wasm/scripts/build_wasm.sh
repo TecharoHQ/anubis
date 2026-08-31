@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+shopt -s nullglob
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -42,17 +43,35 @@ run_wasm_opt() {
 	fi
 }
 
+copy_modules() {
+	local src="${1}" dst="${2}"
+
+	local files=("${src}"/*.wasm)
+	if [ "${#files[@]}" -eq 0 ]; then
+		echo "cargo built no modules in ${src}" >&2
+		exit 1
+	fi
+
+	cp -vf "${files[@]}" "${dst}"
+}
+
 # reencode DIR FEATURE_FLAGS... rewrites every module in DIR against FEATURE_FLAGS.
 reencode() {
 	local dir="${1}"
 	shift
 
+	local files=("${dir}"/*.wasm)
+	if [ "${#files[@]}" -eq 0 ]; then
+		echo "no modules to re-encode in ${dir}" >&2
+		exit 1
+	fi
+
 	local out err
-	for fname in "${dir}"/*.wasm; do
+	for fname in "${files[@]}"; do
 		out="$(mktemp "${fname}.XXXXXX")"
 		err="$(mktemp)"
 		# stderr is held back because wasm-opt warns on every module that no passes
-		# were specified; the re-encode is the point. Show it if the module fails.
+		# were specified.
 		if ! run_wasm_opt "$@" "${fname}" -o "${out}" 2>"${err}"; then
 			cat "${err}" >&2
 			rm -f "${out}" "${err}"
@@ -71,7 +90,7 @@ newest_src="$(mtimes "${src_dirs[@]}" -type f | sort -n | tail -1)"
 # (e.g. the output dirs haven't been created, in which case find would error out).
 oldest_dst="$(mtimes "${dst_dirs[@]}" -type f -name '*.wasm' 2>/dev/null | sort -n | head -1 || true)"
 
-if [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
+if all_populated '*.wasm' "${dst_dirs[@]}" && [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
 	echo "wasm artifacts are up to date, skipping build"
 	exit 0
 fi
@@ -82,14 +101,14 @@ cargo clean --quiet
 
 # With simd128
 RUSTFLAGS='-C target-feature=+simd128' cargo build --quiet --release --target wasm32-unknown-unknown
-cp -vf ./target/wasm32-unknown-unknown/release/*.wasm ./web/static/wasm/simd128
+copy_modules ./target/wasm32-unknown-unknown/release ./web/static/wasm/simd128
 reencode ./web/static/wasm/simd128 ${simd128_features}
 
 cargo clean --quiet
 
 # Without simd128
 cargo build --quiet --release --target wasm32-unknown-unknown
-cp -vf ./target/wasm32-unknown-unknown/release/*.wasm ./web/static/wasm/baseline
+copy_modules ./target/wasm32-unknown-unknown/release ./web/static/wasm/baseline
 reencode ./web/static/wasm/baseline ${baseline_features}
 
 cargo clean --quiet
