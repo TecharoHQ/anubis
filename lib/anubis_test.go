@@ -1172,6 +1172,268 @@ func TestPassChallengeXSS(t *testing.T) {
 	})
 }
 
+// Regression test for https://github.com/TecharoHQ/anubis/issues/1596: the Referer
+// header a visitor arrived with (e.g. an external social/referral link) must survive
+// the challenge round trip instead of being replaced by the internal challenge page
+// as the apparent referrer once the request reaches the upstream origin.
+func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
+	const originalReferer = "https://example-external.test/some/post?utm=abc"
+
+	var forwarded []string
+	srv := spawnAnubis(t, Options{
+		Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			forwarded = append(forwarded, r.Header.Get("Referer"))
+			w.WriteHeader(http.StatusNoContent)
+		}),
+		Policy:           loadPolicies(t, "testdata/zero_difficulty.yaml", 0),
+		CookieExpiration: 10 * time.Minute,
+	})
+
+	ts := httptest.NewServer(internal.RemoteXRealIP(true, "tcp", srv))
+	defer ts.Close()
+
+	cli := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	// The visitor arrives from an external site and gets challenged.
+	req, err := http.NewRequest(http.MethodPost, ts.URL+"/.within.website/x/cmd/anubis/api/make-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+	req.Header.Set("Referer", originalReferer)
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	q := req.URL.Query()
+	q.Set("redir", "/")
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		t.Fatalf("can't request challenge: %v", err)
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	var chall challengeResp
+	if err := json.NewDecoder(resp.Body).Decode(&chall); err != nil {
+		t.Fatalf("can't decode challenge: %v", err)
+	}
+
+	var testCookie *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == srv.cookieName(anubis.TestCookieName) {
+			testCookie = c
+		}
+	}
+	if testCookie == nil {
+		t.Fatal("make-challenge did not set the verification cookie")
+	}
+
+	// Solve the (zero-difficulty) challenge and pass it.
+	nonce := 0
+	calculated := internal.SHA256sum(fmt.Sprintf("%s%d", chall.Challenge, nonce))
+
+	passReq, err := http.NewRequest(http.MethodGet, ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+	passReq.Header.Set("User-Agent", "Mozilla/5.0")
+	passReq.AddCookie(testCookie)
+	pq := passReq.URL.Query()
+	pq.Set("response", calculated)
+	pq.Set("nonce", fmt.Sprint(nonce))
+	pq.Set("redir", "/")
+	pq.Set("elapsedTime", "420")
+	pq.Set("id", chall.ID)
+	passReq.URL.RawQuery = pq.Encode()
+
+	passResp, err := cli.Do(passReq)
+	if err != nil {
+		t.Fatalf("can't do request: %v", err)
+	}
+	defer passResp.Body.Close() //nolint:errcheck
+
+	if passResp.StatusCode != http.StatusFound {
+		body, _ := io.ReadAll(passResp.Body)
+		t.Fatalf("wanted %d from pass-challenge, got %d: %s", http.StatusFound, passResp.StatusCode, body)
+	}
+
+	var authCookie, relayCookie *http.Cookie
+	for _, c := range passResp.Cookies() {
+		switch c.Name {
+		case srv.cookieName(anubis.CookieName):
+			authCookie = c
+		case srv.cookieName(originalRefererCookieName):
+			relayCookie = c
+		}
+	}
+	if authCookie == nil {
+		t.Fatal("pass-challenge did not set the auth cookie")
+	}
+	if relayCookie == nil {
+		t.Fatal("pass-challenge did not set the original referer relay cookie")
+	}
+	if want := url.QueryEscape(originalReferer); relayCookie.Value != want {
+		t.Errorf("wanted relay cookie value %q, got %q", want, relayCookie.Value)
+	}
+
+	location := passResp.Header.Get("Location")
+	if location == "" {
+		t.Fatal("pass-challenge did not return a redirect Location")
+	}
+
+	// This simulates the browser's follow-up navigation to the real page. A real
+	// browser sends the challenge page itself as Referer here (same-site redirect);
+	// use that misleading value to prove Anubis overrides it with the true original
+	// referrer rather than just forwarding whatever the browser happened to send.
+	followReq, err := http.NewRequest(http.MethodGet, ts.URL+location, nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+	followReq.Header.Set("User-Agent", "Mozilla/5.0")
+	followReq.Header.Set("Referer", ts.URL+"/.within.website/x/cmd/anubis/api/pass-challenge")
+	followReq.AddCookie(authCookie)
+	followReq.AddCookie(relayCookie)
+
+	followResp, err := cli.Do(followReq)
+	if err != nil {
+		t.Fatalf("can't do request: %v", err)
+	}
+	defer followResp.Body.Close() //nolint:errcheck
+
+	if len(forwarded) != 1 {
+		t.Fatalf("wanted exactly one proxied request, got %d", len(forwarded))
+	}
+	if forwarded[0] != originalReferer {
+		t.Errorf("wanted upstream Referer %q, got %q", originalReferer, forwarded[0])
+	}
+
+	var relayCleared bool
+	for _, c := range followResp.Cookies() {
+		if c.Name == srv.cookieName(originalRefererCookieName) && c.MaxAge < 0 {
+			relayCleared = true
+		}
+	}
+	if !relayCleared {
+		t.Error("wanted the original referer relay cookie to be cleared after use")
+	}
+
+	// A later, ordinary navigation doesn't carry the (already consumed) relay cookie,
+	// so its own Referer must pass through untouched.
+	nextReferer := "https://example.test/some-other-internal-page"
+	nextReq, err := http.NewRequest(http.MethodGet, ts.URL+"/", nil)
+	if err != nil {
+		t.Fatalf("can't make request: %v", err)
+	}
+	nextReq.Header.Set("User-Agent", "Mozilla/5.0")
+	nextReq.Header.Set("Referer", nextReferer)
+	nextReq.AddCookie(authCookie)
+
+	nextResp, err := cli.Do(nextReq)
+	if err != nil {
+		t.Fatalf("can't do request: %v", err)
+	}
+	defer nextResp.Body.Close() //nolint:errcheck
+
+	if len(forwarded) != 2 {
+		t.Fatalf("wanted exactly two proxied requests total, got %d", len(forwarded))
+	}
+	if forwarded[1] != nextReferer {
+		t.Errorf("wanted upstream Referer %q on subsequent request, got %q", nextReferer, forwarded[1])
+	}
+}
+
+// document.referrer itself can't be fixed (it's the browser's own record of the
+// challenge-page navigation, not something a proxy or script can override), so
+// withRefererAttributionQuery is the opt-in fallback: it hands the original
+// referrer's host to the destination page via utm_source/utm_medium, which
+// client-side analytics tools such as Plausible read instead of
+// document.referrer when present.
+func TestWithRefererAttributionQuery(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		enabled     bool
+		redir       string
+		origReferer string
+		host        string
+		want        string
+	}{
+		{
+			name:        "disabled leaves redir untouched",
+			enabled:     false,
+			redir:       "/page",
+			origReferer: "https://example-external.test/post",
+			host:        "site.tld",
+			want:        "/page",
+		},
+		{
+			name:    "no captured referer leaves redir untouched",
+			enabled: true,
+			redir:   "/page",
+			host:    "site.tld",
+			want:    "/page",
+		},
+		{
+			name:        "same-site referer leaves redir untouched",
+			enabled:     true,
+			redir:       "/page",
+			origReferer: "https://site.tld/other-page",
+			host:        "site.tld",
+			want:        "/page",
+		},
+		{
+			name:        "unparseable referer leaves redir untouched",
+			enabled:     true,
+			redir:       "/page",
+			origReferer: "://not a url",
+			host:        "site.tld",
+			want:        "/page",
+		},
+		{
+			name:        "external referer with no existing query gets utm params",
+			enabled:     true,
+			redir:       "/page",
+			origReferer: "https://example-external.test/some/post",
+			host:        "site.tld",
+			want:        "/page?utm_medium=referral&utm_source=example-external.test",
+		},
+		{
+			name:        "existing unrelated query is preserved alongside new params",
+			enabled:     true,
+			redir:       "/page?foo=bar",
+			origReferer: "https://example-external.test/some/post",
+			host:        "site.tld",
+			want:        "/page?foo=bar&utm_medium=referral&utm_source=example-external.test",
+		},
+		{
+			name:        "existing utm_source is not clobbered",
+			enabled:     true,
+			redir:       "/page?utm_source=newsletter",
+			origReferer: "https://example-external.test/some/post",
+			host:        "site.tld",
+			want:        "/page?utm_source=newsletter",
+		},
+		{
+			name:        "existing ref param is not clobbered",
+			enabled:     true,
+			redir:       "/page?ref=already-set",
+			origReferer: "https://example-external.test/some/post",
+			host:        "site.tld",
+			want:        "/page?ref=already-set",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := &Server{opts: Options{PreserveRefererQueryParam: tc.enabled}}
+
+			got := srv.withRefererAttributionQuery(tc.redir, tc.origReferer, tc.host)
+			if got != tc.want {
+				t.Errorf("wanted %q, got %q", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
 

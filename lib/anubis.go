@@ -181,6 +181,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
 			"X-Real-IP":  r.Header.Get("X-Real-IP"),
+			"Referer":    r.Header.Get("Referer"),
 		},
 	}
 
@@ -244,6 +245,14 @@ const (
 	downstreamRiskRuleHeader   = "X-Anubis-Rule"
 	downstreamRiskActionHeader = "X-Anubis-Action"
 	downstreamRiskStatusHeader = "X-Anubis-Status"
+
+	// originalRefererCookieName carries the Referer header seen on the request that
+	// triggered a challenge across the redirect back to the original URL. Browsers
+	// don't send it on that follow-up navigation since it's a same-site redirect, so
+	// without this relay upstream analytics see the challenge page as the referrer
+	// instead of the site the visitor actually came from. See
+	// https://github.com/TecharoHQ/anubis/issues/1596
+	originalRefererCookieName = "techaro.lol-anubis-original-referer"
 )
 
 func isDownstreamRiskHeader(name string) bool {
@@ -398,8 +407,27 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
+	s.restoreOriginalReferer(w, r, cookiePath)
+
 	setDownstreamRiskHeaders(r.Header, cr, "PASS")
 	s.ServeHTTPNext(w, r)
+}
+
+// restoreOriginalReferer looks for the one-shot cookie set by PassChallenge and, if
+// present, overwrites the request's Referer header with the value it carries before
+// the request is proxied upstream. The cookie only survives the single redirect from
+// PassChallenge back to the original URL, so this only ever fires for that one request.
+func (s *Server) restoreOriginalReferer(w http.ResponseWriter, r *http.Request, cookiePath string) {
+	ckie, err := s.getCookie(r, originalRefererCookieName)
+	if err != nil || ckie.Value == "" {
+		return
+	}
+
+	s.ClearCookie(w, CookieOpts{Name: originalRefererCookieName, Path: cookiePath, Host: r.Host})
+
+	if referer, err := url.QueryUnescape(ckie.Value); err == nil {
+		r.Header.Set("Referer", referer)
+	}
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
@@ -701,6 +729,16 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	s.SetCookie(w, CookieOpts{Path: cookiePath, Host: r.Host, Value: tokenString})
 
+	if origReferer := chall.Metadata["Referer"]; origReferer != "" {
+		s.SetCookie(w, CookieOpts{
+			Path:   cookiePath,
+			Host:   r.Host,
+			Name:   originalRefererCookieName,
+			Value:  url.QueryEscape(origReferer),
+			Expiry: 1 * time.Minute,
+		})
+	}
+
 	chall.Spent = true
 	j := store.JSON[challenge.Challenge]{Underlying: s.store}
 	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
@@ -712,7 +750,54 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		challengesValidated.WithLabelValues(rule.Challenge.Algorithm, asn, asnDesc).Inc()
 	}
 	lg.DebugContext(r.Context(), "challenge passed, redirecting to app")
-	http.Redirect(w, r, redir, http.StatusFound)
+	http.Redirect(w, r, s.withRefererAttributionQuery(redir, chall.Metadata["Referer"], r.Host), http.StatusFound)
+}
+
+// refererAttributionQueryParams lists query parameters that already carry
+// campaign or referrer attribution. When the redirect target has any of these,
+// withRefererAttributionQuery leaves it alone rather than overwrite genuine
+// campaign data.
+var refererAttributionQueryParams = []string{
+	"ref", "source",
+	"utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+	"gclid", "msclkid",
+}
+
+// withRefererAttributionQuery appends utm_source/utm_medium query parameters
+// derived from the original external Referer to redir, so client-side analytics
+// tools that fall back to query parameters when document.referrer is unusable
+// (e.g. Plausible, GA4) can still attribute the visit. This exists because
+// document.referrer itself cannot be fixed here: it reflects the browser's
+// actual navigation history -- the challenge page -- and neither Anubis nor any
+// page script can override it. Opt-in via PreserveRefererQueryParam since it
+// changes the URL the visitor lands on. See
+// https://github.com/TecharoHQ/anubis/issues/1596
+func (s *Server) withRefererAttributionQuery(redir, origReferer, host string) string {
+	if !s.opts.PreserveRefererQueryParam || origReferer == "" {
+		return redir
+	}
+
+	refURL, err := url.Parse(origReferer)
+	if err != nil || refURL.Host == "" || refURL.Host == host {
+		return redir
+	}
+
+	u, err := url.Parse(redir)
+	if err != nil {
+		return redir
+	}
+
+	q := u.Query()
+	for _, name := range refererAttributionQueryParams {
+		if q.Has(name) {
+			return redir
+		}
+	}
+
+	q.Set("utm_source", refURL.Host)
+	q.Set("utm_medium", "referral")
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 func cr(name string, rule config.Rule, weight int) policy.CheckResult {
