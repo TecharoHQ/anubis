@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename X-Real-Ip to X-Real-I**P** in challenge metadata.
 - Fix client-supplied `X-Anubis-*` header spoofing
 - Log "challenge accepted" at INFO level when challenge is accepted, providing challenge lifecycle observability at quieter log levels than DEBUG.
+- Fix `npm run test:integration` and the Playwright CI step, which were pinned to `playwright@1.61.1` while `go.mod`'s `mxschmitt/playwright-go` had already been bumped to a client expecting protocol 1.62.x, causing every Playwright-driven test to fail with a version mismatch.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
