@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/TecharoHQ/anubis"
-	"github.com/sebest/xff"
 )
 
 type realIPKey struct{}
@@ -25,6 +24,7 @@ func RealIP(r *http.Request) (netip.Addr, bool) {
 // TODO: move into config
 type XFFComputePreferences struct {
 	StripPrivate  bool
+	TrustedIps    string
 	StripLoopback bool
 	StripCGNAT    bool
 	StripLLU      bool
@@ -93,12 +93,28 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 	})
 }
 
+func XForwardedForParse(ipList string) string {
+	ipArray := strings.Split(ipList, ",")
+	slices.Reverse(ipArray)
+	for _, ip := range ipArray {
+                ip = strings.TrimSpace(ip)
+                if IP := net.ParseIP(ip); IP == nil {
+                        slog.Debug("skipping IP, unparseable", "ip", ip)
+                        continue;
+                } else {
+                        slog.Debug("valid IP", "ip", ip)
+                        return ip
+                }
+        }
+        return ""
+}
+
 // XForwardedForToXRealIP sets the X-Real-IP header based on the contents
 // of the X-Forwarded-For header.
 func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-IP") == "" && xffHeader != "" {
-			ip := xff.Parse(xffHeader)
+			ip := XForwardedForParse(xffHeader)
 			slog.DebugContext(r.Context(), "setting X-Real-IP from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
 			r.Header.Set("X-Real-IP", ip)
 			if addr, err := netip.ParseAddr(ip); err == nil {
@@ -112,12 +128,13 @@ func XForwardedForToXRealIP(next http.Handler) http.Handler {
 
 // XForwardedForUpdate sets or updates the X-Forwarded-For header, adding
 // the known remote address to an existing chain if present
-func XForwardedForUpdate(stripPrivate bool, next http.Handler) http.Handler {
+func XForwardedForUpdate(stripPrivate bool, trustedIps string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer next.ServeHTTP(w, r)
 
 		pref := XFFComputePreferences{
 			StripPrivate:  stripPrivate,
+			TrustedIps:    trustedIps,
 			StripLoopback: true,
 			StripCGNAT:    true,
 			Flatten:       true,
@@ -191,6 +208,17 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 			// spoof an XFF header
 			slog.Debug("failed to parse XFF segment", "err", err)
 			break
+		}
+		// If TrustedIPs is defined, treat XFF like a trust chain. Remove all entries right of the first trusted proxy.
+		// Given an "X-Forward-For: 8.8.8.8, 1.1.1.1, 10.58.103.1, 10.10.1.1, 10.10.2.2" and a trusted proxy of 10.58.103.1, 
+		// X-Forwarded-For should contain "8.8.8.8, 1.1.1.1" because we trust that 10.58.103.1 reports its upstream faithfully.
+		if pref.TrustedIps != "" {
+			slog.Debug("checking segmentIP to see if it's in trustedIps", "segmentIP", segmentIP, "TrustedIps", pref.TrustedIps);
+			var TIP = netip.MustParsePrefix(pref.TrustedIps)
+			if TIP.Contains(segmentIP) {
+				slog.Debug("found trusted proxy, skipping remainder of X-Forwarded-For", "segmentIP", segmentIP)
+				break
+			}
 		}
 		if pref.StripPrivate && segmentIP.IsPrivate() {
 			continue
