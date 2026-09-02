@@ -12,6 +12,7 @@ export default async function process(
   difficulty: number = 5,
   signal: AbortSignal | null = null,
   progressCallback?: ProgressCallback,
+  scale: number = 16,
   threads: number = defaultThreads(),
 ): Promise<ProcessResult> {
   console.debug("fast algo");
@@ -22,5 +23,6 @@ export default async function process(
     threads,
     signal,
     progressCallback,
+    scale,
   });
 }
