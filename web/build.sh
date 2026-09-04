@@ -49,9 +49,9 @@ for file in js/**/*.ts js/**/*.mjs; do
     continue
   fi
 
-  # js/funFacts/ holds per-language fact modules consumed by the emit-json
+  # js/fun-facts/ holds per-language fact modules consumed by the emit-json
   # script.  They are bundled into JSON at build time, not served as JS.
-  if [[ "$file" == js/funFacts/* ]]; then
+  if [[ "$file" == js/fun-facts/* ]]; then
     continue
   fi
 
@@ -68,5 +68,5 @@ for file in js/**/*.ts js/**/*.mjs; do
   brotli -fZk "$out"
 done
 
-# Emit per-language fun-fact JSON from the TypeScript registry in js/funFacts/
-node js/funFacts/emit-json.mjs static/funfacts
+# Emit per-language fun-fact JSON from the TypeScript registry in js/fun-facts/
+node js/fun-facts/emit-json.mjs static/funfacts

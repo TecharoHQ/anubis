@@ -181,6 +181,7 @@ fout
 fsys
 fucky
 fullchain
+funfacts
 fvbommel
 gaissmai
 Galvus

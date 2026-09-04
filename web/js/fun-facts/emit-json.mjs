@@ -1,18 +1,18 @@
 // Emit per-language fun-fact JSON files from the TypeScript registry.
 //
-// This script is invoked by web/build.sh.  It bundles js/funFacts/index.ts
+// This script is invoked by web/build.sh.  It bundles js/fun-facts/index.ts
 // with esbuild into a temporary .mjs, dynamically imports it to read the
 // `funFactsByLang` map, then writes one JSON file per language into the
 // output directory.  The temporary module is deleted afterwards.
 //
-// Usage: node js/funFacts/emit-json.mjs <output-dir>
+// Usage: node js/fun-facts/emit-json.mjs <output-dir>
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 
 const outDir = resolve(process.argv[2] ?? "static/funfacts");
-const entryPath = resolve("js/funFacts/index.ts");
-const tmpModule = resolve("static/funFacts.index.tmp.mjs");
+const entryPath = resolve("js/fun-facts/index.ts");
+const tmpModule = resolve("static/fun-facts.index.tmp.mjs");
 
 await build({
   entryPoints: [entryPath],
