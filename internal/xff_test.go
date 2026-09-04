@@ -23,7 +23,7 @@ func TestXForwardedForUpdateIgnoreUnix(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	XForwardedForUpdate(true, h).ServeHTTP(w, r)
+	XForwardedForUpdate(true, "", h).ServeHTTP(w, r)
 
 	if r.RemoteAddr != remoteAddr {
 		t.Errorf("wanted remoteAddr to be %s, got: %s", r.RemoteAddr, remoteAddr)
@@ -43,7 +43,7 @@ func TestXForwardedForUpdateAddToChain(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	srv := httptest.NewServer(XForwardedForUpdate(true, h))
+	srv := httptest.NewServer(XForwardedForUpdate(true, "10.20.30.40/32", h))
 
 	r, err := http.NewRequest(http.MethodGet, srv.URL, nil)
 	if err != nil {
