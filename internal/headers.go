@@ -94,6 +94,8 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 }
 
 func XForwardedForParse(ipList string) string {
+	// This returns the first valid IP from XFF in reverse order, after XFF filtering
+	// eg if XFF contains "8.8.8.8, 1.1.1.1" this should return "1.1.1.1"
 	ipArray := strings.Split(ipList, ",")
 	slices.Reverse(ipArray)
 	for _, ip := range ipArray {
@@ -137,7 +139,7 @@ func XForwardedForUpdate(stripPrivate bool, trustedIps string, next http.Handler
 			TrustedIps:    trustedIps,
 			StripLoopback: true,
 			StripCGNAT:    true,
-			Flatten:       true,
+			Flatten:       false,
 			StripLLU:      true,
 		}
 
@@ -212,12 +214,14 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 		// If TrustedIPs is defined, treat XFF like a trust chain. Remove all entries right of the first trusted proxy.
 		// Given an "X-Forward-For: 8.8.8.8, 1.1.1.1, 10.58.103.1, 10.10.1.1, 10.10.2.2" and a trusted proxy of 10.58.103.1, 
 		// X-Forwarded-For should contain "8.8.8.8, 1.1.1.1" because we trust that 10.58.103.1 reports its upstream faithfully.
+		// we're parsing the list in reverse, so if we encounter a trusted IP, we should reset the forwardedList.
 		if pref.TrustedIps != "" {
 			slog.Debug("checking segmentIP to see if it's in trustedIps", "segmentIP", segmentIP, "TrustedIps", pref.TrustedIps);
 			var TIP = netip.MustParsePrefix(pref.TrustedIps)
 			if TIP.Contains(segmentIP) {
-				slog.Debug("found trusted proxy, skipping remainder of X-Forwarded-For", "segmentIP", segmentIP)
-				break
+				slog.Debug("found trusted proxy, disregarding already-processed IPs", "segmentIP", segmentIP)
+				forwardedList = nil
+				continue
 			}
 		}
 		if pref.StripPrivate && segmentIP.IsPrivate() {
@@ -240,6 +244,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 	slices.Reverse(forwardedList)
 	var xffHeaderString string
 	if len(forwardedList) == 0 {
+		slog.Debug("forwardedList empty")
 		xffHeaderString = ""
 		return xffHeaderString, nil
 	}
@@ -248,6 +253,7 @@ func computeXFFHeader(remoteAddr string, origXFFHeader string, pref XFFComputePr
 	} else {
 		xffHeaderString = strings.Join(forwardedList, ",")
 	}
+	slog.Debug("final X-Forwarded-For", "xffHeaderString", xffHeaderString)
 	return xffHeaderString, nil
 }
 
