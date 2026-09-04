@@ -139,7 +139,7 @@ func XForwardedForUpdate(stripPrivate bool, trustedIps string, next http.Handler
 			TrustedIps:    trustedIps,
 			StripLoopback: true,
 			StripCGNAT:    true,
-			Flatten:       false,
+			Flatten:       true,
 			StripLLU:      true,
 		}
 
