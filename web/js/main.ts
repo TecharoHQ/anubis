@@ -174,7 +174,6 @@ interface OhNoesParams {
 
   let lastSpeedUpdate = 0;
   let showingApology = false;
-  const likelihood = Math.pow(16, -rules.difficulty);
 
   try {
     const t0 = Date.now();
@@ -183,7 +182,7 @@ interface OhNoesParams {
       challenge.randomData,
       rules.difficulty,
       null,
-      (iters: number) => {
+      (iters: number, scale: number) => {
         const delta = Date.now() - t0;
         // only update the speed every second so it's less visually distracting
         if (delta - lastSpeedUpdate > 1000) {
@@ -196,6 +195,7 @@ interface OhNoesParams {
         // and then slow down as things get increasingly unlikely. quadratic felt
         // the best in testing, but this may need adjustment in the future.
 
+        const likelihood = Math.pow(scale, -rules.difficulty);
         const probability = Math.pow(1 - likelihood, iters);
         const distance = (1 - Math.pow(probability, 2)) * 100;
         progress.ariaValueNow = `${distance}`;
