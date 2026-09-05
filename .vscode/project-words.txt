@@ -53,6 +53,7 @@ blueskybot
 boi
 Bokm
 Bokmål
+botgenerate
 botnet
 botstopper
 BPort
@@ -91,6 +92,7 @@ CLAUDE
 cloudflare
 cloudsolutions
 Codespaces
+commoncrawl
 confd
 containerbuild
 containerregistry
@@ -468,6 +470,7 @@ shoneypot
 shopt
 Sidetrade
 simprint
+Siri
 sitemap
 sloglint
 sls
@@ -608,6 +611,7 @@ xxhash
 Y'shtola
 yae
 YAMLTo
+yandexbot
 Yda
 yeet
 yeetfile
