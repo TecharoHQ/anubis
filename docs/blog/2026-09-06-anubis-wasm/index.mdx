@@ -286,7 +286,7 @@ Yes, I really have been testing Anubis by hand in god knows how many browsers. W
 
 :::
 
-I built a harness that I call "chromesweep" that lets me spawn many Googles Chrome (term c.f. Attornies General, et.al) in their default configuration to try and hit a version of Anubis listening over HTTPS. Getting this far meant making a library of all of these browser versions. I've put that library up on Github at [TecharoHQ/gubal](https://github.com/TecharoHQ/gubal) in case it's useful for you.
+I built a harness that I call "chromesweep" that lets me spawn many Googles Chrome (term c.f. Attorneys General, et.al) in their default configuration to try and hit a version of Anubis listening over HTTPS. Getting this far meant making a library of all of these browser versions. I've put that library up on Github at [TecharoHQ/gubal](https://github.com/TecharoHQ/gubal) in case it's useful for you.
 
 One of the other big problems I ran into while getting browser testing working was making sure that my Googles Chrome strictly stay within the bounds of my Kubernetes cluster's network. Chrome this old is actively radioactive and I want to treat it like the security threat it is. As such, I set up a strict [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to only allow it to access the Anubis instance under test and make DNS queries. I also wrap each Chrome pod in a microVM with [Kata containers](https://katacontainers.io/) as an additional layer of security.
 
