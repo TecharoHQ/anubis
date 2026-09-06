@@ -26,6 +26,8 @@ import (
 	"syscall"
 	"time"
 
+	mathrand "math/rand"
+
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
 	"github.com/TecharoHQ/anubis/internal"
@@ -136,29 +138,35 @@ func parseSameSite(s string) http.SameSite {
 }
 
 func makeReverseProxy(target string, targetSNI string, targetHost string, insecureSkipVerify bool, targetDisableKeepAlive bool) (http.Handler, error) {
-	targetUri, err := url.Parse(target)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse target URL: %w", err)
-	}
-
 	transport := http.DefaultTransport.(*http.Transport).Clone()
+	targetUris := make([]*url.URL, 0, strings.Count(target, ","))
+	for _, oneTarget := range strings.Split(target, ",") {
+		oneTarget = strings.TrimSpace(oneTarget)
+		// either log and fail open, or fail closed
+		// failing close since this function doesn't do logging otherwise
+		targetUri, err := url.Parse(oneTarget)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse target URL: %w", err)
+		}
+
+		// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
+		if targetUri.Scheme == "unix" {
+			// clean path up so we don't use the socket path in proxied requests
+			addr := targetUri.Path
+			targetUri.Path = ""
+			// tell transport how to dial unix sockets
+			transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
+				dialer := net.Dialer{}
+				return dialer.DialContext(ctx, "unix", addr)
+			}
+			// tell transport how to handle the unix url scheme
+			transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
+		}
+		targetUris = append(targetUris, targetUri)
+	}
 
 	if targetDisableKeepAlive {
 		transport.DisableKeepAlives = true
-	}
-
-	// https://github.com/oauth2-proxy/oauth2-proxy/blob/4e2100a2879ef06aea1411790327019c1a09217c/pkg/upstream/http.go#L124
-	if targetUri.Scheme == "unix" {
-		// clean path up so we don't use the socket path in proxied requests
-		addr := targetUri.Path
-		targetUri.Path = ""
-		// tell transport how to dial unix sockets
-		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
-			dialer := net.Dialer{}
-			return dialer.DialContext(ctx, "unix", addr)
-		}
-		// tell transport how to handle the unix url scheme
-		transport.RegisterProtocol("unix", libanubis.UnixRoundTripper{Transport: transport})
 	}
 
 	if insecureSkipVerify || targetSNI != "" {
@@ -175,6 +183,8 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 	rp := &httputil.ReverseProxy{
 		Transport: transport,
 		Rewrite: func(r *httputil.ProxyRequest) {
+			// pick a random target amongst available targets
+			targetUri := targetUris[mathrand.Intn(len(targetUris))]
 			r.SetURL(targetUri)
 			// SetURL clears Out.Host; preserve the inbound Host, matching the
 			// previous NewSingleHostReverseProxy default.
