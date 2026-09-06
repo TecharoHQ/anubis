@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename X-Real-Ip to X-Real-I**P** in challenge metadata.
 - Fix client-supplied `X-Anubis-*` header spoofing
 - Log "challenge accepted" at INFO level when challenge is accepted, providing challenge lifecycle observability at quieter log levels than DEBUG.
+- Clarify getChallenge failure response and cite related log entry. 
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
