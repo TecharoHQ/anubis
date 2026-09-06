@@ -612,11 +612,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.ErrorContext(r.Context(), "getChallenge failed", "err", err)
-		algorithm := "unknown"
-		if rule.Challenge != nil {
-			algorithm = rule.Challenge.Algorithm
-		}
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "getChallenge failed"), makeCode(err))
 		return
 	}
 
