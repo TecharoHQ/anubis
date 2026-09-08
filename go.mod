@@ -26,7 +26,6 @@ require (
 	github.com/nikandfor/spintax v0.0.0-20181023094358-fc346b245bb3
 	github.com/prometheus/client_golang v1.24.1
 	github.com/redis/go-redis/v9 v9.22.0
-	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/shirou/gopsutil/v4 v4.26.7
 	github.com/testcontainers/testcontainers-go v0.44.0
 	github.com/tetratelabs/wazero v1.12.1-0.20260714071631-236c2458ed22
