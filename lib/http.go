@@ -54,6 +54,57 @@ func matchRedirectDomain(allowed []string, host string) bool {
 	return false
 }
 
+var (
+	ErrInvalidRedirect          = errors.New("invalid redirect")
+	ErrRedirectDomainNotAllowed = errors.New("redirect domain not allowed")
+)
+
+// validateRedirect validates the form-decoded target without changing its escaping.
+func (s *Server) validateRedirect(redir string) (*url.URL, error) {
+	if strings.HasPrefix(redir, " ") || strings.ContainsAny(redir, "\\") {
+		return nil, ErrInvalidRedirect
+	}
+	for _, c := range redir {
+		if c < 0x20 || c == 0x7f {
+			return nil, ErrInvalidRedirect
+		}
+	}
+	u, err := url.Parse(redir)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrInvalidRedirect, err)
+	}
+	if u.Opaque != "" {
+		return nil, ErrInvalidRedirect
+	}
+	switch u.Scheme {
+	case "":
+		if u.Host != "" || strings.HasPrefix(u.Path, "//") || strings.ContainsAny(u.Path, "\\") {
+			return nil, ErrInvalidRedirect
+		}
+	case "http", "https":
+		if u.Hostname() == "" {
+			return nil, ErrInvalidRedirect
+		}
+	default:
+		return nil, ErrInvalidRedirect
+	}
+	if u.Host != "" && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, u.Host) {
+		return nil, ErrRedirectDomainNotAllowed
+	}
+	return u, nil
+}
+
+func (s *Server) rejectRedirect(w http.ResponseWriter, r *http.Request, err error) {
+	lg, _ := s.getRequestLogger(r)
+	localizer := localization.GetLocalizer(r)
+	message := "invalid_redirect"
+	if errors.Is(err, ErrRedirectDomainNotAllowed) {
+		message = "redirect_domain_not_allowed"
+	}
+	lg.DebugContext(r.Context(), "invalid redirect", "err", err)
+	s.respondWithStatus(w, r, localizer.T(message), "", http.StatusBadRequest)
+}
+
 type CookieOpts struct {
 	Value  string
 	Host   string
@@ -424,37 +475,8 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		localizer := localization.GetLocalizer(r)
 
 		redir := r.FormValue("redir")
-		urlParsed, err := url.Parse(redir)
-		if err != nil {
-			s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), makeCode(err), http.StatusBadRequest)
-			return
-		}
-
-		if urlParsed.Opaque != "" || (urlParsed.Scheme == "" && strings.HasPrefix(redir, "//")) {
-			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
-			return
-		}
-
-		// validate URL scheme to prevent javascript:, data:, file:, tel:, etc.
-		switch urlParsed.Scheme {
-		case "", "http", "https":
-			// allowed: empty scheme means relative URL
-		default:
-			lg, _ := s.getRequestLogger(r)
-			lg.WarnContext(r.Context(), "XSS attempt blocked, invalid redirect scheme", "scheme", urlParsed.Scheme, "redir", redir)
-			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
-			return
-		}
-
-		hostNotAllowed := len(urlParsed.Host) > 0 &&
-			len(s.opts.RedirectDomains) != 0 &&
-			!matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)
-		hostMismatch := r.URL.Host != "" && urlParsed.Host != "" && urlParsed.Host != r.URL.Host
-
-		if hostNotAllowed || hostMismatch {
-			lg, _ := s.getRequestLogger(r)
-			lg.DebugContext(r.Context(), "domain not allowed", "domain", urlParsed.Host)
-			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), makeCode(err), http.StatusBadRequest)
+		if _, err := s.validateRedirect(redir); err != nil {
+			s.rejectRedirect(w, r, err)
 			return
 		}
 

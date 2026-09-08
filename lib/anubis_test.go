@@ -1176,8 +1176,9 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 	pol := loadPolicies(t, "testdata/zero_difficulty.yaml", 0)
 
 	srv := spawnAnubis(t, Options{
-		Next:   http.NewServeMux(),
-		Policy: pol,
+		Next:            http.NewServeMux(),
+		Policy:          pol,
+		RedirectDomains: []string{"allowed.example"},
 	})
 
 	allowThreshold, err := policy.ParsedThresholdFromConfig(config.Threshold{
@@ -1216,12 +1217,34 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 	req.Header.Set("User-Agent", "NilChallengeTester/1.0")
 	req.AddCookie(&http.Cookie{Name: srv.cookieName(anubis.TestCookieName), Value: chall.ID})
 
+	for _, target := range []string{"https:///evil.com/", "https://evil.com/", "//evil.com", `/\evil.com`} {
+		badReq := req.Clone(req.Context())
+		badQuery := badReq.URL.Query()
+		badQuery.Set("redir", target)
+		badReq.URL.RawQuery = badQuery.Encode()
+		badResponse := httptest.NewRecorder()
+		srv.PassChallenge(badResponse, badReq)
+		if badResponse.Code != http.StatusBadRequest || badResponse.Header().Get("Location") != "" || len(badResponse.Result().Cookies()) != 0 {
+			t.Fatalf("invalid target %q: got %d, %v", target, badResponse.Code, badResponse.Header())
+		}
+		stored, err := j.Get(req.Context(), "challenge:"+chall.ID)
+		if err != nil || stored.Spent {
+			t.Fatalf("invalid redirect changed challenge state: spent=%v, err=%v", stored.Spent, err)
+		}
+	}
+	const target = "https://allowed.example/safe%2Fpath?q=%2F%2Fevil.com#fragment"
+	q.Set("redir", target)
+	req.URL.RawQuery = q.Encode()
+
 	rr := httptest.NewRecorder()
 
 	srv.PassChallenge(rr, req)
 
 	if rr.Code != http.StatusFound {
 		t.Fatalf("expected redirect when validating challenge, got %d", rr.Code)
+	}
+	if rr.Header().Get("Location") != target {
+		t.Fatalf("unexpected Location: %q", rr.Header().Get("Location"))
 	}
 }
 
