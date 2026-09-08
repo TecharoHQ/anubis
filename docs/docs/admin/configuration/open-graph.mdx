@@ -7,6 +7,12 @@ title: Open Graph Configuration
 
 This page provides detailed information on how to configure [Open Graph tag](https://ogp.me/) passthrough in Anubis. This enables social previews of resources protected by Anubis without having to exempt each scraper individually.
 
+:::note
+
+If you enable this, make sure your application renders only the minimal HTML for OpenGraph metadata when you get the User-Agent string `Anubis-OGTag-Fetcher/1.0`. Otherwise you will incur massive load on protected pages that have never been referenced before.
+
+:::
+
 ## Configuration Options
 
 Open Graph settings are configured in the `openGraph` section of the [Policy File](../policies.mdx).
@@ -14,7 +20,7 @@ Open Graph settings are configured in the `openGraph` section of the [Policy Fil
 ```yaml
 openGraph:
   # Enables Open Graph passthrough
-  enabled: true
+  enabled: false
   # Enables the use of the HTTP host in the cache key, this enables
   # caching metadata for multiple http hosts at once.
   considerHost: true
@@ -35,32 +41,9 @@ openGraph:
       away so that you can maintain uptime at work!
 ```
 
-<details>
-<summary>Configuration flags / envvars (old)</summary>
-
-Open Graph passthrough used to be configured with configuration flags / environment variables. Reference to these settings are maintained for backwards compatibility's sake.
-
-| Name                     | Description                                               | Type     | Default | Example                       |
-| ------------------------ | --------------------------------------------------------- | -------- | ------- | ----------------------------- |
-| `OG_PASSTHROUGH`         | Enables or disables the Open Graph tag passthrough system | Boolean  | `true`  | `OG_PASSTHROUGH=true`         |
-| `OG_EXPIRY_TIME`         | Configurable cache expiration time for Open Graph tags    | Duration | `24h`   | `OG_EXPIRY_TIME=1h`           |
-| `OG_CACHE_CONSIDER_HOST` | Enables or disables the use of the host in the cache key  | Boolean  | `false` | `OG_CACHE_CONSIDER_HOST=true` |
-
-</details>
-
-## Usage
-
-To configure Open Graph tags, you can set the following environment variables, environment file or as flags in your Anubis configuration:
-
-```sh
-export OG_PASSTHROUGH=true
-export OG_EXPIRY_TIME=1h
-export OG_CACHE_CONSIDER_HOST=false
-```
-
 ## Implementation Details
 
-When `OG_PASSTHROUGH` is enabled, Anubis will:
+When Open Graph passthrough is enabled, Anubis will:
 
 1. Check a local cache for the requested URL's Open Graph tags.
 2. If a cached entry exists and is still valid, return the cached tags.
