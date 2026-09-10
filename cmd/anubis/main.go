@@ -90,6 +90,8 @@ var (
 	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
 	thothToken           = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
 	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
+
+	preserveRefererQueryParam = flag.Bool("preserve-referer-query-param", false, "if true, appends the original external Referer host as utm_source/utm_medium query parameters to the post-challenge redirect URL, for analytics tools that rely on document.referrer or UTM tags instead of the HTTP Referer header. See https://github.com/TecharoHQ/anubis/issues/1596")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -427,31 +429,32 @@ func run(ctx context.Context) {
 	}
 
 	s, err := libanubis.New(libanubis.Options{
-		BasePrefix:               *basePrefix,
-		StripBasePrefix:          *stripBasePrefix,
-		Next:                     rp,
-		Policy:                   policy,
-		TargetHost:               *targetHost,
-		TargetSNI:                *targetSNI,
-		TargetInsecureSkipVerify: *targetInsecureSkipVerify,
-		ServeRobotsTXT:           *robotsTxt,
-		ED25519PrivateKey:        ed25519Priv,
-		HS512Secret:              []byte(*hs512Secret),
-		CookieDomain:             *cookieDomain,
-		CookieDynamicDomain:      *cookieDynamicDomain,
-		CookieExpiration:         *cookieExpiration,
-		CookiePartitioned:        *cookiePartitioned,
-		RedirectDomains:          redirectDomainsList,
-		Target:                   *target,
-		WebmasterEmail:           *webmasterEmail,
-		OpenGraph:                policy.OpenGraph,
-		CookieSecure:             *cookieSecure,
-		CookieHttpOnly:           *cookieHttpOnly,
-		CookieSameSite:           parseSameSite(*cookieSameSite),
-		PublicUrl:                *publicUrl,
-		JWTRestrictionHeader:     *jwtRestrictionHeader,
-		Logger:                   policy.Logger.With("subsystem", "anubis"),
-		DifficultyInJWT:          *difficultyInJWT,
+		BasePrefix:                *basePrefix,
+		StripBasePrefix:           *stripBasePrefix,
+		Next:                      rp,
+		Policy:                    policy,
+		TargetHost:                *targetHost,
+		TargetSNI:                 *targetSNI,
+		TargetInsecureSkipVerify:  *targetInsecureSkipVerify,
+		ServeRobotsTXT:            *robotsTxt,
+		ED25519PrivateKey:         ed25519Priv,
+		HS512Secret:               []byte(*hs512Secret),
+		CookieDomain:              *cookieDomain,
+		CookieDynamicDomain:       *cookieDynamicDomain,
+		CookieExpiration:          *cookieExpiration,
+		CookiePartitioned:         *cookiePartitioned,
+		RedirectDomains:           redirectDomainsList,
+		Target:                    *target,
+		WebmasterEmail:            *webmasterEmail,
+		OpenGraph:                 policy.OpenGraph,
+		CookieSecure:              *cookieSecure,
+		CookieHttpOnly:            *cookieHttpOnly,
+		CookieSameSite:            parseSameSite(*cookieSameSite),
+		PublicUrl:                 *publicUrl,
+		JWTRestrictionHeader:      *jwtRestrictionHeader,
+		Logger:                    policy.Logger.With("subsystem", "anubis"),
+		DifficultyInJWT:           *difficultyInJWT,
+		PreserveRefererQueryParam: *preserveRefererQueryParam,
 	})
 	if err != nil {
 		log.Fatalf("can't construct libanubis.Server: %v", err)
