@@ -1517,7 +1517,7 @@ func TestXForwardedForNoDoubleComma(t *testing.T) {
 	})
 
 	h = internal.XForwardedForToXRealIP(h)
-	h = internal.XForwardedForUpdate(false, h)
+	h = internal.XForwardedForUpdate(false, "", h)
 
 	pol := loadPolicies(t, "testdata/permissive.yaml", 4)
 
