@@ -11,7 +11,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -585,19 +584,12 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
-	redirURL, err := url.ParseRequestURI(redir)
-	if err != nil {
-		lg.ErrorContext(r.Context(), "invalid redirect", "err", err)
-		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), makeCode(err), http.StatusBadRequest)
-		return
+	redirURL, err := s.validateRedirect(redir)
+	if err == nil && (redir == "" || (redirURL.Scheme == "" && !strings.HasPrefix(redir, "/"))) {
+		err = ErrInvalidRedirect
 	}
-
-	switch redirURL.Scheme {
-	case "", "http", "https":
-		// allowed
-	default:
-		lg.ErrorContext(r.Context(), "XSS attempt blocked, invalid redirect scheme", "scheme", redirURL.Scheme)
-		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
+	if err != nil {
+		s.rejectRedirect(w, r, err)
 		return
 	}
 
@@ -617,17 +609,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	// used by the path checker rule
 	r.URL = redirURL
-
-	urlParsed, err := r.URL.Parse(redir)
-	if err != nil {
-		s.respondWithError(w, r, localizer.T("redirect_not_parseable"), makeCode(err))
-		return
-	}
-	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
-		lg.DebugContext(r.Context(), "domain not allowed", "domain", urlParsed.Host)
-		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"), "")
-		return
-	}
 
 	cr, rule, err := s.check(r, lg)
 	if err != nil {
