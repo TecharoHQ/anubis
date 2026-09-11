@@ -280,8 +280,8 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	lg, r := s.getRequestLogger(r)
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") && randomChance(64) {
-		lg.ErrorContext(r.Context(), "client was given a challenge but does not in fact support gzip compression")
-		s.respondWithError(w, r, localizer.T("client_error_browser"), "")
+		lg.InfoContext(r.Context(), "client was given a challenge but does not in fact support gzip compression")
+		s.respondWithStatus(w, r, localizer.T("client_error_browser"), "", s.policy.StatusCodes.Deny)
 		return
 	}
 

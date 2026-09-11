@@ -731,6 +731,75 @@ func TestCustomStatusCodes(t *testing.T) {
 	}
 }
 
+func TestNonGzipClientGetsDenyStatus(t *testing.T) {
+	pol := loadPolicies(t, "testdata/aggressive_403.yaml", 0)
+
+	srv := spawnAnubis(t, Options{
+		Next:   http.NewServeMux(),
+		Policy: pol,
+	})
+
+	var logs bytes.Buffer
+	srv.logger = slog.New(slog.NewJSONHandler(&logs, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	const requests = 4096
+
+	var challenged, denied int
+
+	for i := 0; i < requests; i++ {
+		req := httptest.NewRequest("GET", "http://example.com/", nil)
+		req.Header.Set("X-Real-IP", "127.0.0.1")
+		req.Header.Set("User-Agent", "CHALLENGE")
+		req.Header.Set("Accept-Encoding", "br")
+
+		w := httptest.NewRecorder()
+		srv.maybeReverseProxyOrPage(w, req)
+
+		switch w.Code {
+		case pol.StatusCodes.Challenge:
+			challenged++
+		case pol.StatusCodes.Deny:
+			denied++
+		default:
+			t.Fatalf("request %d: got status %d, wanted %d (challenge) or %d (deny)", i, w.Code, pol.StatusCodes.Challenge, pol.StatusCodes.Deny)
+		}
+	}
+
+	t.Logf("%d of %d requests were challenged, %d were rejected", challenged, requests, denied)
+
+	if denied == 0 {
+		t.Fatalf("no request out of %d was rejected, the one in 64 gzip check never fired", requests)
+	}
+
+	const rejectionMessage = "client was given a challenge but does not in fact support gzip compression"
+
+	var logged int
+
+	for _, line := range strings.Split(logs.String(), "\n") {
+		if !strings.Contains(line, rejectionMessage) {
+			continue
+		}
+
+		logged++
+
+		var record struct {
+			Level string `json:"level"`
+		}
+
+		if err := json.Unmarshal([]byte(line), &record); err != nil {
+			t.Fatalf("can't parse log line %q: %v", line, err)
+		}
+
+		if record.Level != slog.LevelInfo.String() {
+			t.Errorf("rejection was logged at %s, wanted %s", record.Level, slog.LevelInfo)
+		}
+	}
+
+	if logged != denied {
+		t.Errorf("%d requests were rejected but %d rejections were logged", denied, logged)
+	}
+}
+
 func assertHeaderValues(t *testing.T, header http.Header, name string, want ...string) {
 	t.Helper()
 

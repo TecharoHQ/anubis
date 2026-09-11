@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restore the original `Referer` header on the request forwarded to the target after a challenge is passed, so server-side logs and analytics no longer see the internal challenge page as the referrer. Add an opt-in `--preserve-referer-query-param` flag that also appends `utm_source`/`utm_medium` query parameters to the post-challenge redirect for client-side analytics tools (e.g. Plausible) that read query parameters instead of `document.referrer`, which cannot be corrected from the server side ([#1596](https://github.com/TecharoHQ/anubis/issues/1596)).
 - Clarify getChallenge failure response and cite related log entry. 
 - Share redirect validation between challenge completion and subrequest authentication. Reject ambiguous URL forms before checking allowed domains.
+- Respond with the configured `DENY` status code instead of HTTP 500 when a challenged client is rejected for not advertising gzip support, and log that rejection at `INFO` instead of `ERROR`. The rejection is deliberate, so it no longer shows up in 5xx rates or as a server fault. The log message text is unchanged, but fail2ban filters that match on the `ERROR` level need updating ([#1009](https://github.com/TecharoHQ/anubis/issues/1009)).
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
