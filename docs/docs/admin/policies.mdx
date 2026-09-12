@@ -219,7 +219,10 @@ Anubis offers the following storage backends:
 
 - [`memory`](#memory) -- A simple in-memory hashmap
 - [`bbolt`](#bbolt) -- An on-disk key/value store backed by [bbolt](https://github.com/etcd-io/bbolt), an embedded key/value database for Go programs
+- [`s3api`](#s3api) -- Amazon S3 based storage or another compatible object store
 - [`valkey`](#valkey) -- A remote in-memory key/value database backed by [Valkey](https://valkey.io/) (or another database compatible with the [RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) protocol)
+
+:::warning
 
 If no storage backend is set in the policy file, Anubis will use the [`memory`](#memory) backend by default. This is equivalent to the following in the policy file:
 
@@ -228,6 +231,10 @@ store:
   backend: memory
   parameters: {}
 ```
+
+This means that all session data that is required for the challenge mechanism to work is stored **IN PROCESS MEMORY** that is **NOT** shared between instances of Anubis. If you set up Anubis with multiple instances using the `memory` storage backend, your users will sometimes get "Administrator has misconfigured Anubis" error messages when it cannot look up the aforementioned session data.
+
+:::
 
 ### `memory`
 
