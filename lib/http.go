@@ -19,6 +19,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/glob"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
@@ -55,8 +56,9 @@ func matchRedirectDomain(allowed []string, host string) bool {
 }
 
 var (
-	ErrInvalidRedirect          = errors.New("invalid redirect")
-	ErrRedirectDomainNotAllowed = errors.New("redirect domain not allowed")
+	ErrInvalidRedirect           = errors.New("invalid redirect")
+	ErrRedirectDomainNotAllowed  = errors.New("redirect domain not allowed")
+	ErrUnknownChallengeExtension = errors.New("unknown challenge extension")
 )
 
 // validateRedirect validates the form-decoded target without changing its escaping.
@@ -259,6 +261,24 @@ func makeCode(err error) string {
 	return builder.String()
 }
 
+func mergeExtensions(r *http.Request, chall *challenge.Challenge, component templ.Component) (templ.Component, error) {
+	if len(chall.Extensions) == 0 {
+		return component, nil
+	}
+
+	result := make([]templ.Component, 0, len(chall.Extensions)+1) // add a part for the base <head> template
+	for _, name := range chall.Extensions {
+		ext, ok := extension.Get(name)
+		if !ok {
+			return nil, fmt.Errorf("%w: %q", ErrUnknownChallengeExtension, name)
+		}
+		result = append(result, ext.Head(r, chall))
+	}
+	result = append(result, component)
+
+	return templ.Join(result...), nil
+}
+
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, rule *policy.Bot, returnHTTPStatusOnly bool) {
 	localizer := localization.GetLocalizer(r)
 
@@ -344,6 +364,13 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	if err != nil {
 		lg.ErrorContext(r.Context(), "[unexpected] challenge component render failed, please open an issue", "err", err) // This is likely a bug in the template. Should never be triggered as CI tests for this.
 		s.respondWithError(w, r, fmt.Sprintf("%s \"RenderIndex\"", localizer.T("internal_server_error")), makeCode(err))
+		return
+	}
+
+	component, err = mergeExtensions(r, chall, component)
+	if err != nil {
+		lg.ErrorContext(r.Context(), "can't render challenge extensions", "err", err, "note", ErrActualAnubisBug)
+		s.respondWithError(w, r, fmt.Sprintf(`%s "RenderIndex"`, localizer.T("internal_server_error")), makeCode(err))
 		return
 	}
 

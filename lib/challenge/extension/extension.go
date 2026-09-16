@@ -3,6 +3,7 @@ package extension
 import (
 	"log/slog"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
@@ -28,6 +29,18 @@ func Get(name string) (impl Impl, ok bool) {
 	defer regLock.RUnlock()
 	result, ok := registry[name]
 	return result, ok
+}
+
+// Names returns the names of all loaded challenge extensions.
+func Names() []string {
+	regLock.RLock()
+	defer regLock.RUnlock()
+	result := make([]string, 0, len(registry))
+	for name := range registry {
+		result = append(result, name)
+	}
+	sort.Strings(result)
+	return result
 }
 
 // Impl is the implementation of a given challenge extension.
