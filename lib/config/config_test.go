@@ -252,7 +252,7 @@ func TestConfigValidBad(t *testing.T) {
 
 			_, err = Load(fin, filepath.Join("testdata", "bad", st.Name()))
 			if err == nil {
-				t.Fatal("validation should have failed but didn't somehow")
+				t.Fatalf("validation should have failed but didn't somehow: %v", err)
 			} else {
 				t.Log(err)
 			}

@@ -185,15 +185,19 @@ func (b *BotConfig) Valid() error {
 }
 
 type ChallengeRules struct {
-	Algorithm  string `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
-	Difficulty int    `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
-	ReportAs   int    `json:"report_as,omitempty" yaml:"report_as,omitempty"`
+	Algorithm  string   `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
+	Difficulty int      `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
+	ReportAs   int      `json:"report_as,omitempty" yaml:"report_as,omitempty"`
+	Extensions []string `json:"extensions,omitempty" yaml:"extensions,omitempty"`
 }
 
 var (
 	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 0)")
 	ErrChallengeDifficultyTooHigh = errors.New("config.ChallengeRules: difficulty is too high (must be <= 64)")
 	ErrChallengeMustHaveAlgorithm = errors.New("config.ChallengeRules: must have algorithm name set")
+	ErrChallengeExtensionUnknown  = errors.New("config.ChallengeRules: unknown challenge extension")
+	ErrChallengeExtensionEmpty    = errors.New("config.ChallengeRules: extension name must not be empty")
+	ErrChallengeExtensionRepeated = errors.New("config.ChallengeRules: extension name was repeated")
 )
 
 func (cr ChallengeRules) Valid() error {
@@ -209,6 +213,20 @@ func (cr ChallengeRules) Valid() error {
 
 	if cr.Difficulty > 64 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
+	}
+
+	if len(cr.Extensions) != 0 {
+		seen := make(map[string]struct{}, len(cr.Extensions))
+		for _, name := range cr.Extensions {
+			_, repeated := seen[name]
+			switch {
+			case name == "":
+				errs = append(errs, ErrChallengeExtensionEmpty)
+			case repeated:
+				errs = append(errs, fmt.Errorf("%w: %q", ErrChallengeExtensionRepeated, name))
+			}
+			seen[name] = struct{}{}
+		}
 	}
 
 	if len(errs) != 0 {
