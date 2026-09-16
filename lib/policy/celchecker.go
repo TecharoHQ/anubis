@@ -94,6 +94,6 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	case "load_15m":
 		return expressions.Load15(), true
 	default:
-		return nil, false
+		return expressions.ResolveBotVariable(name, cr.Request)
 	}
 }
