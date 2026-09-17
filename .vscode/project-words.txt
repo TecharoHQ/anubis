@@ -106,6 +106,7 @@ cromulent
 crt
 Cscript
 csdl
+cssload
 Ctarget
 CUDA
 dacl
@@ -198,6 +199,7 @@ fullchain
 fvbommel
 gaissmai
 Galvus
+gclid
 gdead
 gdeadbee
 geoip
@@ -344,6 +346,7 @@ mojeekbot
 Moto
 mozilla
 mqvh
+msclkid
 msgbox
 msibuild
 msiexec
@@ -364,6 +367,7 @@ myuser
 NArg
 nbf
 Necron
+neilotoole
 nepeat
 netsurf
 nginx
@@ -484,6 +488,7 @@ Sidetrade
 simprint
 sitemap
 sloglint
+slogt
 sls
 sni
 snipster
@@ -548,6 +553,7 @@ uberspace
 ubuntu
 Unbreak
 unbreakdocker
+unfeatures
 unifiedjs
 unintrusive
 unipromos
