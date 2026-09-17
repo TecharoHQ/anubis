@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add WebAssembly-based proof of work checks to decrease client load and increase the complexity required to scrape past Anubis. See [Proof of Work (WebAssembly)](./admin/configuration/challenges/wasm.mdx) for more information.
 - Use a bundled version of `wasm2js` in order to make the WebAssembly proof of work checks run in non-wasm environments.
 - Make the bundled `wasm2js`/`wasm-opt` WebAssembly modules build reproducibly and fix the build on arm64.
+- Add the concept of [Challenge Extensions](./admin/configuration/challenges/extensions/index.mdx) and add the sample [css-load](./admin/configuration/challenges/extensions/css-load.mdx) extension.
 - Fix `npm run test:integration` so the Playwright suite can connect to browsers and Firefox can reach the test server again.
 - Add weighing rule for [Cloudflare Kitesurf](https://blog.cloudflare.com/kitesurf/). Kitesurf doesn't currently support Cookies, but it might in the future.
 - Improved Norwegian Nynorsk localization.
@@ -36,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log "challenge accepted" at INFO level when challenge is accepted, providing challenge lifecycle observability at quieter log levels than DEBUG.
 - Fix `npm run test:integration` and the Playwright CI step, which were pinned to `playwright@1.61.1` while `go.mod`'s `mxschmitt/playwright-go` had already been bumped to a client expecting protocol 1.62.x, causing every Playwright-driven test to fail with a version mismatch.
 - Restore the original `Referer` header on the request forwarded to the target after a challenge is passed, so server-side logs and analytics no longer see the internal challenge page as the referrer. Add an opt-in `--preserve-referer-query-param` flag that also appends `utm_source`/`utm_medium` query parameters to the post-challenge redirect for client-side analytics tools (e.g. Plausible) that read query parameters instead of `document.referrer`, which cannot be corrected from the server side ([#1596](https://github.com/TecharoHQ/anubis/issues/1596)).
-- Clarify getChallenge failure response and cite related log entry. 
+- Clarify getChallenge failure response and cite related log entry.
 - Share redirect validation between challenge completion and subrequest authentication. Reject ambiguous URL forms before checking allowed domains.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
