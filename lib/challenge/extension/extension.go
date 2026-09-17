@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 )
 
@@ -47,7 +48,7 @@ func Names() []string {
 type Impl interface {
 	// Setup registers any relevant extension routes. Routes MUST include
 	// anubis.BasePrefix.
-	Setup(mux *http.ServeMux) error
+	Setup(mux *http.ServeMux, st store.Interface) error
 
 	// Head returns additional data that is put into the HTML <head> block
 	// on the challenge page.

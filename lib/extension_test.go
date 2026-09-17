@@ -16,6 +16,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/challenge/extension"
+	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 )
 
@@ -33,7 +34,7 @@ type testExtension struct {
 	seenIDs     []string
 }
 
-func (te *testExtension) Setup(mux *http.ServeMux) error { return nil }
+func (te *testExtension) Setup(mux *http.ServeMux, st store.Interface) error { return nil }
 
 func (te *testExtension) Head(r *http.Request, chall *challenge.Challenge) templ.Component {
 	return templ.Raw(testExtensionMarker)

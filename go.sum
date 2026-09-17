@@ -316,6 +316,8 @@ github.com/mxschmitt/playwright-go v0.6201.1 h1:KBBDopE+IIdjAp2FIk6zhLcKCCSSx/T6
 github.com/mxschmitt/playwright-go v0.6201.1/go.mod h1:vLBP2yVO1gokUlb9ENA+YE3VQaVqf2A9BGxcb7aPjMI=
 github.com/natefinch/atomic v1.0.1 h1:ZPYKxkqQOx3KZ+RsbnP/YsgvxWQPGxjC0oBt2AhwV0A=
 github.com/natefinch/atomic v1.0.1/go.mod h1:N/D/ELrljoqDyT3rZrsUmtsuzvHkeB/wWjHV22AZRbM=
+github.com/neilotoole/slogt/v2 v2.0.0 h1:Kz8VWdkjXZnkVvN1hsGYI1ervWhlcDcIcVizUJbLbH8=
+github.com/neilotoole/slogt/v2 v2.0.0/go.mod h1:M/RN37tAuM3cpb/wD6lCpOSvphLMjuAzA/IV2hqJh3E=
 github.com/nicksnyder/go-i18n/v2 v2.6.1 h1:JDEJraFsQE17Dut9HFDHzCoAWGEQJom5s0TRd17NIEQ=
 github.com/nicksnyder/go-i18n/v2 v2.6.1/go.mod h1:Vee0/9RD3Quc/NmwEjzzD7VTZ+Ir7QbXocrkhOzmUKA=
 github.com/nikandfor/spintax v0.0.0-20181023094358-fc346b245bb3 h1:foZ9X1bz2KmW7b8Yx5V0LAQKhTazdllv5rnGUe6iGTY=

@@ -30,6 +30,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
@@ -38,11 +39,13 @@ import (
 	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
 	// challenge implementations
-	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/wasm"
+
+	// extension implementations
+	_ "github.com/TecharoHQ/anubis/lib/challenge/extension/css-load"
 )
 
 type contextKey int
