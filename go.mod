@@ -22,6 +22,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lum8rjack/go-ja4h v0.0.0-20250828030157-fa5266d50650
 	github.com/mxschmitt/playwright-go v0.6201.1
+	github.com/neilotoole/slogt/v2 v2.0.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/nikandfor/spintax v0.0.0-20181023094358-fc346b245bb3
 	github.com/prometheus/client_golang v1.24.1
@@ -146,7 +147,6 @@ require (
 	github.com/moby/term v0.5.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
-	github.com/neilotoole/slogt/v2 v2.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
