@@ -64,7 +64,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *challenge.Validate
 	case errors.Is(err, store.ErrNotFound):
 		return challenge.NewError("css-load", "Please ensure your browser has modern web standards enabled", fmt.Errorf("%w: CSS was not fetched", challenge.ErrFailed))
 	case err != nil:
-		lg.Debug("store unavailable", "err", err)
+		lg.DebugContext(r.Context(), "store unavailable", "err", err)
 		return nil // fail open
 	}
 	return nil

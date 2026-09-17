@@ -77,7 +77,7 @@ func readChallengePageBody(t *testing.T, resp *http.Response) string {
 		if err != nil {
 			t.Fatalf("can't read gzipped response: %v", err)
 		}
-		defer gz.Close()
+		defer gz.Close() //nolint:errcheck
 		body = gz
 	}
 
