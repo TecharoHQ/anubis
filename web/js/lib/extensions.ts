@@ -6,8 +6,26 @@ declare global {
 }
 
 /**
+ * Register an extension with the global Anubis extensions array.
+ *
+ * This makes challenge passing block on extension functions
+ * finishing.
+ *
+ * @param ext - the async promise associated with the extension.
+ */
+export function registerExtension(ext: Promise<unknown>) {
+  window.__anubisExtensions ??= [];
+  window.__anubisExtensions.push(ext);
+}
+
+/**
  * Wait for challenge extensions to finish work and submit data to
  * the server. Gives up after timeoutMs.
+ *
+ * Choose timeoutMs carefully, a longer value makes clients wait
+ * longer, which can cause user complaints.
+ *
+ * @param [timeoutMs=5000] - the timeout for extension functions
  */
 export async function waitForExtensions(timeoutMs: number = 5000): Promise<void> {
   const pending = window.__anubisExtensions ?? [];
