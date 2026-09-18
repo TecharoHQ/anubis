@@ -165,6 +165,62 @@ func TestBotValid(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "only filter by dynamic remote addresses",
+			bot: BotConfig{
+				Name:              "openai-searchbot",
+				Action:            RuleAllow,
+				DynamicRemoteAddr: p("https://openai.com/searchbot.json"),
+			},
+			err: nil,
+		},
+		{
+			name: "filter by user agent and dynamic remote addresses",
+			bot: BotConfig{
+				Name:              "openai-searchbot",
+				Action:            RuleAllow,
+				UserAgentRegex:    p("OAI-SearchBot"),
+				DynamicRemoteAddr: p("https://openai.com/searchbot.json"),
+			},
+			err: nil,
+		},
+		{
+			name: "invalid dynamic remote addresses url",
+			bot: BotConfig{
+				Name:              "openai-searchbot",
+				Action:            RuleAllow,
+				DynamicRemoteAddr: p("not a url"),
+			},
+			err: ErrInvalidDynamicRemoteAddrURL,
+		},
+		{
+			name: "dynamic remote addresses ftp scheme",
+			bot: BotConfig{
+				Name:              "openai-searchbot",
+				Action:            RuleAllow,
+				DynamicRemoteAddr: p("ftp://example.com/bots.json"),
+			},
+			err: ErrInvalidDynamicRemoteAddrURL,
+		},
+		{
+			name: "dynamic remote addresses empty url",
+			bot: BotConfig{
+				Name:              "openai-searchbot",
+				Action:            RuleAllow,
+				DynamicRemoteAddr: p(""),
+			},
+			err: ErrInvalidDynamicRemoteAddrURL,
+		},
+		{
+			name: "remote addresses and dynamic remote addresses",
+			bot: BotConfig{
+				Name:              "openai-searchbot",
+				Action:            RuleAllow,
+				RemoteAddr:        []string{"0.0.0.0/0"},
+				DynamicRemoteAddr: p("https://openai.com/searchbot.json"),
+			},
+			err: ErrBotMustHaveRemoteAddrOrDynamicNotBoth,
+		},
+		{
 			name: "weight rule without weight",
 			bot: BotConfig{
 				Name:           "weight-adjust-if-mozilla",
@@ -294,6 +350,12 @@ func TestBotConfigZero(t *testing.T) {
 	b.RemoteAddr = []string{"::/0"}
 	if b.Zero() {
 		t.Error("config.BotConfig with remote addresses is zero value")
+	}
+
+	var d BotConfig
+	d.DynamicRemoteAddr = p("https://openai.com/searchbot.json")
+	if d.Zero() {
+		t.Error("config.BotConfig with dynamic remote addresses is zero value")
 	}
 
 	b.Challenge = &ChallengeRules{
