@@ -136,6 +136,53 @@ func TestClearCookieWithDynamicDomain(t *testing.T) {
 	}
 }
 
+func TestSetCookiePartitionedRequiresSecure(t *testing.T) {
+	// Per CHIPS, a Partitioned cookie must also be Secure; browsers reject a
+	// Partitioned cookie that lacks Secure and behave as if no cookie was set.
+	// Both SetCookie and ClearCookie must drop the Partitioned flag when
+	// CookieSecure is false, and keep it when CookieSecure is true.
+	emitters := []struct {
+		name string
+		call func(srv *Server, rw *httptest.ResponseRecorder)
+	}{
+		{name: "SetCookie", call: func(srv *Server, rw *httptest.ResponseRecorder) {
+			srv.SetCookie(rw, CookieOpts{Value: "test", Host: "localhost"})
+		}},
+		{name: "ClearCookie", call: func(srv *Server, rw *httptest.ResponseRecorder) {
+			srv.ClearCookie(rw, CookieOpts{Host: "localhost"})
+		}},
+	}
+
+	for _, tt := range []struct {
+		name            string
+		secure          bool
+		wantPartitioned bool
+	}{
+		{name: "dropped without secure", secure: false, wantPartitioned: false},
+		{name: "kept with secure", secure: true, wantPartitioned: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, emit := range emitters {
+				t.Run(emit.name, func(t *testing.T) {
+					srv := spawnAnubis(t, Options{CookiePartitioned: true, CookieSecure: tt.secure})
+					rw := httptest.NewRecorder()
+
+					emit.call(srv, rw)
+
+					cookies := rw.Result().Cookies()
+					if len(cookies) != 1 {
+						t.Fatalf("wanted 1 cookie, got %d cookies", len(cookies))
+					}
+
+					if got := cookies[0].Partitioned; got != tt.wantPartitioned {
+						t.Errorf("CookieSecure=%v: wanted Partitioned=%v, got Partitioned=%v", tt.secure, tt.wantPartitioned, got)
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestRenderIndexRedirect(t *testing.T) {
 	s := &Server{
 		opts: Options{
