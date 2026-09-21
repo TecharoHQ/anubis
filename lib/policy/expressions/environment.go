@@ -17,7 +17,7 @@ import (
 // Anubis can fail loudly and early when something is invalid instead
 // of blowing up at runtime.
 func BotEnvironment(dnsObj *dns.Dns) (*cel.Env, error) {
-	return New(
+	opts := []cel.EnvOption{
 		// Variables exposed to CEL programs:
 		cel.Variable("remoteAddress", cel.StringType),
 		cel.Variable("contentLength", cel.IntType),
@@ -191,7 +191,9 @@ func BotEnvironment(dnsObj *dns.Dns) (*cel.Env, error) {
 				}),
 			),
 		),
-	)
+	}
+
+	return New(append(opts, getBotVariables()...)...)
 }
 
 // NewThreshold creates a new CEL environment for threshold checking.

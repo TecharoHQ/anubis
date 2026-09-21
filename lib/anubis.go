@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
@@ -41,6 +43,9 @@ import (
 	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/wasm"
+
+	// extension implementations
+	_ "github.com/TecharoHQ/anubis/lib/challenge/extension/css-load"
 )
 
 type contextKey int
@@ -178,6 +183,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		IssuedAt:       time.Now(),
 		Difficulty:     rule.Challenge.Difficulty,
 		PolicyRuleHash: rule.Hash(),
+		Extensions:     slices.Clone(rule.Challenge.Extensions),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
 			"X-Real-IP":  r.Header.Get("X-Real-IP"),
@@ -580,6 +586,14 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) validateExtension(name string, r *http.Request, lg *slog.Logger, in *challenge.ValidateInput) error {
+	ext, ok := extension.Get(name)
+	if !ok {
+		return fmt.Errorf("%w: %q", ErrUnknownChallengeExtension, name)
+	}
+	return ext.Validate(r, lg, in)
+}
+
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
@@ -668,6 +682,23 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 				s.respondWithError(w, r, cerr.PublicReason, makeCode(err))
 				return
 			}
+		}
+	}
+
+	for _, name := range chall.Extensions {
+		if err := s.validateExtension(name, r, lg, in); err != nil {
+			asn, asnDesc := asnFromContext(r.Context())
+			failedValidations.WithLabelValues("extension/"+name, asn, asnDesc).Inc()
+			s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+			lg.ErrorContext(r.Context(), "challenge extension failed", "extension", name, "err", err)
+
+			var cerr *challenge.Error
+			if errors.As(err, &cerr) {
+				s.respondWithStatus(w, r, cerr.PublicReason, makeCode(err), cerr.StatusCode)
+			} else {
+				s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+			}
+			return
 		}
 	}
 

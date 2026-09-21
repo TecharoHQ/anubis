@@ -1,0 +1,10 @@
+bots:
+  - name: everyone
+    user_agent_regex: .
+    action: CHALLENGE
+    challenge:
+      algorithm: metarefresh
+      difficulty: 1
+      extensions:
+        - test-extension
+        - test-extension

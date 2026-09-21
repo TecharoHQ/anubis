@@ -19,6 +19,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/honeypot/naive"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
@@ -91,6 +92,15 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok {
 			validationErrs = append(validationErrs, fmt.Errorf("%w %s", policy.ErrChallengeRuleHasWrongAlgorithm, b.Challenge.Algorithm))
 		}
+		if err := checkExtensions(b.Name, b.Challenge); err != nil {
+			validationErrs = append(validationErrs, err)
+		}
+	}
+
+	for _, t := range anubisPolicy.Thresholds {
+		if err := checkExtensions(t.Name, t.Challenge); err != nil {
+			validationErrs = append(validationErrs, err)
+		}
 	}
 
 	if len(validationErrs) != 0 {
@@ -98,6 +108,26 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 	}
 
 	return anubisPolicy, err
+}
+
+func checkExtensions(ruleName string, cr *config.ChallengeRules) error {
+	if cr == nil {
+		return nil
+	}
+
+	var errs []error
+
+	for _, name := range cr.Extensions {
+		if _, ok := extension.Get(name); !ok {
+			errs = append(errs, fmt.Errorf("%w %q in rule %q, known extensions: %v", ErrUnknownChallengeExtension, name, ruleName, extension.Names()))
+		}
+	}
+
+	if len(errs) != 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
 }
 
 func New(opts Options) (*Server, error) {
@@ -210,6 +240,13 @@ func New(opts Options) (*Server, error) {
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)
 		if err := impl.Setup(mux); err != nil {
+			challSetupErrs = append(challSetupErrs, fmt.Errorf("error setting up challenge method %s: %w", implKind, err))
+		}
+	}
+
+	for _, implKind := range extension.Names() {
+		impl, _ := extension.Get(implKind)
+		if err := impl.Setup(mux, result.store); err != nil {
 			challSetupErrs = append(challSetupErrs, fmt.Errorf("error setting up challenge method %s: %w", implKind, err))
 		}
 	}
