@@ -17,7 +17,7 @@ import (
 )
 
 func discardLogger() *slog.Logger {
-	return slog.New(slog.NewTextHandler(io.Discard, nil))
+	return slog.New(slog.DiscardHandler)
 }
 
 func newTestDynamicChecker(url string) *DynamicRemoteAddrChecker {
