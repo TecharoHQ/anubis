@@ -158,10 +158,10 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			}
 		}
 
-		if b.DynamicRemoteAddr != nil {
-			c, err := NewDynamicRemoteAddrChecker(ctx, *b.DynamicRemoteAddr, result.Logger.With("rule", b.Name))
+		if b.RemoteAddressesURL != nil {
+			c, err := NewRemoteAddressesURLChecker(ctx, *b.RemoteAddressesURL, result.Logger.With("rule", b.Name))
 			if err != nil {
-				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s dynamic remote addr set: %w", b.Name, err))
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s remote addresses url: %w", b.Name, err))
 			} else {
 				cl = append(cl, c)
 			}

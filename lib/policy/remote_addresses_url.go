@@ -21,17 +21,17 @@ import (
 )
 
 const (
-	dynamicRefreshInterval = 24 * time.Hour
-	dynamicRetryInterval   = 15 * time.Minute
-	dynamicMaxRetries      = 5
-	dynamicHTTPTimeout     = 30 * time.Second
-	dynamicMaxBodyBytes    = 8 << 20
+	remoteAddressesURLRefreshInterval = 24 * time.Hour
+	remoteAddressesURLRetryInterval   = 15 * time.Minute
+	remoteAddressesURLMaxRetries      = 5
+	remoteAddressesURLHTTPTimeout     = 30 * time.Second
+	remoteAddressesURLMaxBodyBytes    = 8 << 20
 )
 
-// DynamicRemoteAddrChecker matches client IPs against a prefix list fetched
+// RemoteAddressesURLChecker matches client IPs against a prefix list fetched
 // from a remote JSON document. The list starts empty and is replaced on each
 // successful refresh. Failed fetches never clobber a previously loaded list.
-type DynamicRemoteAddrChecker struct {
+type RemoteAddressesURLChecker struct {
 	url    string
 	logger *slog.Logger
 	client *http.Client
@@ -52,24 +52,24 @@ type DynamicRemoteAddrChecker struct {
 	stopped chan struct{}
 }
 
-func NewDynamicRemoteAddrChecker(ctx context.Context, rawURL string, logger *slog.Logger) (checker.Impl, error) {
+func NewRemoteAddressesURLChecker(ctx context.Context, rawURL string, logger *slog.Logger) (checker.Impl, error) {
 	if logger == nil {
 		logger = slog.Default()
 	}
 
-	if err := validateDynamicURL(rawURL); err != nil {
+	if err := parseRemoteAddressesURL(rawURL); err != nil {
 		return nil, err
 	}
 
-	c := &DynamicRemoteAddrChecker{
+	c := &RemoteAddressesURLChecker{
 		url:             rawURL,
 		logger:          logger,
-		client:          &http.Client{Timeout: dynamicHTTPTimeout},
+		client:          &http.Client{Timeout: remoteAddressesURLHTTPTimeout},
 		prefixTable:     new(bart.Lite),
 		hash:            internal.FastHash(""),
-		refreshInterval: dynamicRefreshInterval,
-		retryInterval:   dynamicRetryInterval,
-		maxRetries:      dynamicMaxRetries,
+		refreshInterval: remoteAddressesURLRefreshInterval,
+		retryInterval:   remoteAddressesURLRetryInterval,
+		maxRetries:      remoteAddressesURLMaxRetries,
 		stopped:         make(chan struct{}),
 	}
 
@@ -77,16 +77,16 @@ func NewDynamicRemoteAddrChecker(ctx context.Context, rawURL string, logger *slo
 	return c, nil
 }
 
-func validateDynamicURL(rawURL string) error {
+func parseRemoteAddressesURL(rawURL string) error {
 	rawURL = strings.TrimSpace(rawURL)
 	u, err := url.Parse(rawURL)
 	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
-		return fmt.Errorf("%w: %q", config.ErrInvalidDynamicRemoteAddrURL, rawURL)
+		return fmt.Errorf("%w: %q", config.ErrInvalidRemoteAddressesURL, rawURL)
 	}
 	return nil
 }
 
-func (c *DynamicRemoteAddrChecker) Check(r *http.Request) (bool, error) {
+func (c *RemoteAddressesURLChecker) Check(r *http.Request) (bool, error) {
 	host := r.Header.Get("X-Real-IP")
 	if host == "" {
 		return false, fmt.Errorf("%w: header X-Real-IP is not set", ErrMisconfiguration)
@@ -112,13 +112,13 @@ func (c *DynamicRemoteAddrChecker) Check(r *http.Request) (bool, error) {
 	return table.Contains(addr), nil
 }
 
-func (c *DynamicRemoteAddrChecker) Hash() string {
+func (c *RemoteAddressesURLChecker) Hash() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.hash
 }
 
-func (c *DynamicRemoteAddrChecker) run(ctx context.Context) {
+func (c *RemoteAddressesURLChecker) run(ctx context.Context) {
 	defer close(c.stopped)
 
 	for {
@@ -142,14 +142,14 @@ func (c *DynamicRemoteAddrChecker) run(ctx context.Context) {
 	}
 }
 
-func (c *DynamicRemoteAddrChecker) refreshOnce(ctx context.Context) time.Duration {
+func (c *RemoteAddressesURLChecker) refreshOnce(ctx context.Context) time.Duration {
 	if c.cycleStart.IsZero() {
 		c.cycleStart = time.Now()
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url, nil)
 	if err != nil {
-		return c.handleRetryable(ctx, "can't build dynamic remote address list request", err)
+		return c.handleRetryable(ctx, "can't build remote_addresses_url request", err)
 	}
 	req.Header.Set("User-Agent", "TecharoHQ-Anubis/"+anubis.Version)
 	req.Header.Set("Accept", "application/json")
@@ -159,28 +159,28 @@ func (c *DynamicRemoteAddrChecker) refreshOnce(ctx context.Context) time.Duratio
 		if ctx.Err() != nil {
 			return 0
 		}
-		return c.handleRetryable(ctx, "can't fetch dynamic remote address list", err)
+		return c.handleRetryable(ctx, "can't fetch remote_addresses_url", err)
 	}
 	defer resp.Body.Close() //nolint:errcheck
 
 	switch {
 	case resp.StatusCode >= 500:
-		return c.handleRetryable(ctx, "dynamic remote address list fetch returned server error", fmt.Errorf("http status %d", resp.StatusCode))
+		return c.handleRetryable(ctx, "remote_addresses_url fetch returned server error", fmt.Errorf("http status %d", resp.StatusCode))
 	case resp.StatusCode >= 400:
-		c.logger.WarnContext(ctx, "dynamic remote address list fetch returned client error", "url", c.url, "status", resp.StatusCode)
+		c.logger.WarnContext(ctx, "remote_addresses_url fetch returned client error", "url", c.url, "status", resp.StatusCode)
 		return c.delayUntilNextCycle()
 	case resp.StatusCode < 200 || resp.StatusCode > 299:
-		return c.handleRetryable(ctx, "dynamic remote address list fetch returned unexpected status", fmt.Errorf("http status %d", resp.StatusCode))
+		return c.handleRetryable(ctx, "remote_addresses_url fetch returned unexpected status", fmt.Errorf("http status %d", resp.StatusCode))
 	}
 
-	pl, err := iplist.Parse(io.LimitReader(resp.Body, dynamicMaxBodyBytes))
+	pl, err := iplist.Parse(io.LimitReader(resp.Body, remoteAddressesURLMaxBodyBytes))
 	if err != nil {
-		c.logger.WarnContext(ctx, "failed to parse dynamic remote address list", "url", c.url, "err", err)
+		c.logger.WarnContext(ctx, "failed to parse remote_addresses_url", "url", c.url, "err", err)
 		return c.delayUntilNextCycle()
 	}
 
 	if err := c.applyList(pl); err != nil {
-		c.logger.WarnContext(ctx, "failed to apply dynamic remote address list", "url", c.url, "err", err)
+		c.logger.WarnContext(ctx, "failed to apply remote_addresses_url", "url", c.url, "err", err)
 		return c.delayUntilNextCycle()
 	}
 
@@ -189,9 +189,9 @@ func (c *DynamicRemoteAddrChecker) refreshOnce(ctx context.Context) time.Duratio
 	return c.refreshInterval
 }
 
-func (c *DynamicRemoteAddrChecker) applyList(pl *iplist.PrefixList) error {
+func (c *RemoteAddressesURLChecker) applyList(pl *iplist.PrefixList) error {
 	if pl.CreationTime != "" && pl.CreationTime == c.creationTime {
-		c.logger.Debug("dynamic remote address list unchanged, skip rebuild", "url", c.url, "creationTime", pl.CreationTime)
+		c.logger.Debug("remote_addresses_url unchanged, skip rebuild", "url", c.url, "creationTime", pl.CreationTime)
 		return nil
 	}
 
@@ -214,22 +214,22 @@ func (c *DynamicRemoteAddrChecker) applyList(pl *iplist.PrefixList) error {
 	c.rebuildCount++
 	c.mu.Unlock()
 
-	c.logger.Info("updated dynamic remote address list", "url", c.url, "prefixes", len(cidrs), "creationTime", pl.CreationTime)
+	c.logger.Info("updated remote_addresses_url", "url", c.url, "prefixes", len(cidrs), "creationTime", pl.CreationTime)
 	return nil
 }
 
-func (c *DynamicRemoteAddrChecker) handleRetryable(ctx context.Context, msg string, err error) time.Duration {
+func (c *RemoteAddressesURLChecker) handleRetryable(ctx context.Context, msg string, err error) time.Duration {
 	c.consecutiveFail++
 	if c.consecutiveFail < c.maxRetries {
 		c.logger.WarnContext(ctx, msg, "url", c.url, "attempt", c.consecutiveFail, "err", err)
 		return c.retryInterval
 	}
 
-	c.logger.WarnContext(ctx, "dynamic remote address list fetch failed, giving up until next refresh window", "url", c.url, "attempts", c.consecutiveFail, "err", err)
+	c.logger.WarnContext(ctx, "remote_addresses_url fetch failed, giving up until next refresh window", "url", c.url, "attempts", c.consecutiveFail, "err", err)
 	return c.delayUntilNextCycle()
 }
 
-func (c *DynamicRemoteAddrChecker) delayUntilNextCycle() time.Duration {
+func (c *RemoteAddressesURLChecker) delayUntilNextCycle() time.Duration {
 	c.consecutiveFail = 0
 	remaining := time.Until(c.cycleStart.Add(c.refreshInterval))
 	if remaining < 0 {

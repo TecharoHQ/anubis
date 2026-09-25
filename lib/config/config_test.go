@@ -165,60 +165,60 @@ func TestBotValid(t *testing.T) {
 			err: nil,
 		},
 		{
-			name: "only filter by dynamic remote addresses",
+			name: "only filter by remote addresses url",
 			bot: BotConfig{
-				Name:              "openai-searchbot",
-				Action:            RuleAllow,
-				DynamicRemoteAddr: p("https://openai.com/searchbot.json"),
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p("https://openai.com/searchbot.json"),
 			},
 			err: nil,
 		},
 		{
-			name: "filter by user agent and dynamic remote addresses",
+			name: "filter by user agent and remote addresses url",
 			bot: BotConfig{
-				Name:              "openai-searchbot",
-				Action:            RuleAllow,
-				UserAgentRegex:    p("OAI-SearchBot"),
-				DynamicRemoteAddr: p("https://openai.com/searchbot.json"),
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				UserAgentRegex:     p("OAI-SearchBot"),
+				RemoteAddressesURL: p("https://openai.com/searchbot.json"),
 			},
 			err: nil,
 		},
 		{
-			name: "invalid dynamic remote addresses url",
+			name: "invalid remote addresses url",
 			bot: BotConfig{
-				Name:              "openai-searchbot",
-				Action:            RuleAllow,
-				DynamicRemoteAddr: p("not a url"),
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p("not a url"),
 			},
-			err: ErrInvalidDynamicRemoteAddrURL,
+			err: ErrInvalidRemoteAddressesURL,
 		},
 		{
-			name: "dynamic remote addresses ftp scheme",
+			name: "remote addresses url ftp scheme",
 			bot: BotConfig{
-				Name:              "openai-searchbot",
-				Action:            RuleAllow,
-				DynamicRemoteAddr: p("ftp://example.com/bots.json"),
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p("ftp://example.com/bots.json"),
 			},
-			err: ErrInvalidDynamicRemoteAddrURL,
+			err: ErrInvalidRemoteAddressesURL,
 		},
 		{
-			name: "dynamic remote addresses empty url",
+			name: "remote addresses url empty",
 			bot: BotConfig{
-				Name:              "openai-searchbot",
-				Action:            RuleAllow,
-				DynamicRemoteAddr: p(""),
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p(""),
 			},
-			err: ErrInvalidDynamicRemoteAddrURL,
+			err: ErrInvalidRemoteAddressesURL,
 		},
 		{
-			name: "remote addresses and dynamic remote addresses",
+			name: "remote addresses and remote addresses url",
 			bot: BotConfig{
-				Name:              "openai-searchbot",
-				Action:            RuleAllow,
-				RemoteAddr:        []string{"0.0.0.0/0"},
-				DynamicRemoteAddr: p("https://openai.com/searchbot.json"),
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddr:         []string{"0.0.0.0/0"},
+				RemoteAddressesURL: p("https://openai.com/searchbot.json"),
 			},
-			err: ErrBotMustHaveRemoteAddrOrDynamicNotBoth,
+			err: ErrBotMustHaveRemoteAddrOrURLNotBoth,
 		},
 		{
 			name: "weight rule without weight",
@@ -353,9 +353,9 @@ func TestBotConfigZero(t *testing.T) {
 	}
 
 	var d BotConfig
-	d.DynamicRemoteAddr = p("https://openai.com/searchbot.json")
+	d.RemoteAddressesURL = p("https://openai.com/searchbot.json")
 	if d.Zero() {
-		t.Error("config.BotConfig with dynamic remote addresses is zero value")
+		t.Error("config.BotConfig with remote_addresses_url is zero value")
 	}
 
 	b.Challenge = &ChallengeRules{

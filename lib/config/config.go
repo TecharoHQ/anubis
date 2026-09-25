@@ -15,21 +15,21 @@ import (
 )
 
 var (
-	ErrNoBotRulesDefined                     = errors.New("config: must define at least one (1) bot rule")
-	ErrBotMustHaveName                       = errors.New("config.Bot: must set name")
-	ErrBotMustHaveUserAgentOrPath            = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, dynamic_remote_addresses, expression, or Thoth keyword")
-	ErrBotMustHaveUserAgentOrPathNotBoth     = errors.New("config.Bot: must set either user_agent_regex, path_regex, and not both")
-	ErrBotMustHaveRemoteAddrOrDynamicNotBoth = errors.New("config.Bot: must set either remote_addresses or dynamic_remote_addresses, and not both")
-	ErrInvalidDynamicRemoteAddrURL           = errors.New("config.Bot: invalid dynamic_remote_addresses URL")
-	ErrUnknownAction                         = errors.New("config.Bot: unknown action")
-	ErrInvalidUserAgentRegex                 = errors.New("config.Bot: invalid user agent regex")
-	ErrInvalidPathRegex                      = errors.New("config.Bot: invalid path regex")
-	ErrInvalidHeadersRegex                   = errors.New("config.Bot: invalid headers regex")
-	ErrInvalidCIDR                           = errors.New("config.Bot: invalid CIDR")
-	ErrRegexEndsWithNewline                  = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
-	ErrCantSetBotAndImportValuesAtOnce       = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
-	ErrMustSetBotOrImportRules               = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
-	ErrStatusCodeNotValid                    = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
+	ErrNoBotRulesDefined                 = errors.New("config: must define at least one (1) bot rule")
+	ErrBotMustHaveName                   = errors.New("config.Bot: must set name")
+	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, remote_addresses_url, expression, or Thoth keyword")
+	ErrBotMustHaveUserAgentOrPathNotBoth = errors.New("config.Bot: must set either user_agent_regex, path_regex, and not both")
+	ErrBotMustHaveRemoteAddrOrURLNotBoth = errors.New("config.Bot: must set either remote_addresses or remote_addresses_url, and not both")
+	ErrInvalidRemoteAddressesURL         = errors.New("config.Bot: invalid remote_addresses_url")
+	ErrUnknownAction                     = errors.New("config.Bot: unknown action")
+	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
+	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
+	ErrInvalidHeadersRegex               = errors.New("config.Bot: invalid headers regex")
+	ErrInvalidCIDR                       = errors.New("config.Bot: invalid CIDR")
+	ErrRegexEndsWithNewline              = errors.New("config.Bot: regular expression ends with newline (try >- instead of > in yaml)")
+	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
+	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
+	ErrStatusCodeNotValid                = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
 )
 
 type Rule string
@@ -66,10 +66,10 @@ type BotConfig struct {
 	GeoIP *GeoIP `json:"geoip,omitempty"`
 	ASNs  *ASNs  `json:"asns,omitempty"`
 
-	Name              string   `json:"name" yaml:"name"`
-	Action            Rule     `json:"action" yaml:"action"`
-	RemoteAddr        []string `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
-	DynamicRemoteAddr *string  `json:"dynamic_remote_addresses,omitempty" yaml:"dynamic_remote_addresses,omitempty"`
+	Name               string   `json:"name" yaml:"name"`
+	Action             Rule     `json:"action" yaml:"action"`
+	RemoteAddr         []string `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+	RemoteAddressesURL *string  `json:"remote_addresses_url,omitempty" yaml:"remote_addresses_url,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -80,7 +80,7 @@ func (b BotConfig) Zero() bool {
 		len(b.HeadersRegex) != 0,
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
-		b.DynamicRemoteAddr != nil,
+		b.RemoteAddressesURL != nil,
 		b.Challenge != nil,
 		b.GeoIP != nil,
 		b.ASNs != nil,
@@ -103,7 +103,7 @@ func (b *BotConfig) Valid() error {
 	allFieldsEmpty := b.UserAgentRegex == nil &&
 		b.PathRegex == nil &&
 		len(b.RemoteAddr) == 0 &&
-		b.DynamicRemoteAddr == nil &&
+		b.RemoteAddressesURL == nil &&
 		len(b.HeadersRegex) == 0 &&
 		b.ASNs == nil &&
 		b.GeoIP == nil
@@ -116,8 +116,8 @@ func (b *BotConfig) Valid() error {
 		errs = append(errs, ErrBotMustHaveUserAgentOrPathNotBoth)
 	}
 
-	if len(b.RemoteAddr) > 0 && b.DynamicRemoteAddr != nil {
-		errs = append(errs, ErrBotMustHaveRemoteAddrOrDynamicNotBoth)
+	if len(b.RemoteAddr) > 0 && b.RemoteAddressesURL != nil {
+		errs = append(errs, ErrBotMustHaveRemoteAddrOrURLNotBoth)
 	}
 
 	if b.UserAgentRegex != nil {
@@ -164,8 +164,8 @@ func (b *BotConfig) Valid() error {
 		}
 	}
 
-	if b.DynamicRemoteAddr != nil {
-		if err := validateDynamicRemoteAddrURL(*b.DynamicRemoteAddr); err != nil {
+	if b.RemoteAddressesURL != nil {
+		if err := validateRemoteAddressesURL(*b.RemoteAddressesURL); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -200,11 +200,11 @@ func (b *BotConfig) Valid() error {
 	return nil
 }
 
-func validateDynamicRemoteAddrURL(raw string) error {
+func validateRemoteAddressesURL(raw string) error {
 	raw = strings.TrimSpace(raw)
 	u, err := url.Parse(raw)
 	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
-		return fmt.Errorf("%w: %q", ErrInvalidDynamicRemoteAddrURL, raw)
+		return fmt.Errorf("%w: %q", ErrInvalidRemoteAddressesURL, raw)
 	}
 	return nil
 }

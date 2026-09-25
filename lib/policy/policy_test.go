@@ -184,7 +184,7 @@ func TestConfigReferencesJA4H(t *testing.T) {
 	}
 }
 
-func TestParseConfigDynamicRemoteAddresses(t *testing.T) {
+func TestParseConfigRemoteAddressesURL(t *testing.T) {
 	body := `{
 		"creationTime": "2025-01-02T03:04:05.000000",
 		"prefixes": [{"ipv4Prefix": "20.42.10.176/28"}]
@@ -206,7 +206,7 @@ func TestParseConfigDynamicRemoteAddresses(t *testing.T) {
 bots:
   - name: openai-searchbot
     action: ALLOW
-    dynamic_remote_addresses: %q
+    remote_addresses_url: %q
 `, ts.URL)
 
 	type parseResult struct {
@@ -260,5 +260,5 @@ bots:
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	t.Fatal("dynamic remote address list was not loaded in time")
+	t.Fatal("remote addresses url list was not loaded in time")
 }

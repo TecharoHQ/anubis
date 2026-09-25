@@ -3,4 +3,4 @@ bots:
     action: ALLOW
     remote_addresses:
       - "0.0.0.0/0"
-    dynamic_remote_addresses: "https://openai.com/searchbot.json"
+    remote_addresses_url: "https://openai.com/searchbot.json"
