@@ -20,8 +20,8 @@ func discardLogger() *slog.Logger {
 	return slog.New(slog.DiscardHandler)
 }
 
-func newTestDynamicChecker(url string) *DynamicRemoteAddrChecker {
-	return &DynamicRemoteAddrChecker{
+func newTestRemoteAddressesURLChecker(url string) *RemoteAddressesURLChecker {
+	return &RemoteAddressesURLChecker{
 		url:             url,
 		logger:          discardLogger(),
 		client:          &http.Client{Timeout: 5 * time.Second},
@@ -33,7 +33,7 @@ func newTestDynamicChecker(url string) *DynamicRemoteAddrChecker {
 	}
 }
 
-func checkIP(t *testing.T, c *DynamicRemoteAddrChecker, ip string) bool {
+func checkIP(t *testing.T, c *RemoteAddressesURLChecker, ip string) bool {
 	t.Helper()
 	r, err := http.NewRequest(http.MethodGet, "/", nil)
 	if err != nil {
@@ -63,8 +63,8 @@ const samplePrefixList = `{
 	]
 }`
 
-func TestDynamicRemoteAddrChecker_emptyBeforeFetch(t *testing.T) {
-	c := newTestDynamicChecker("http://127.0.0.1:1/missing.json")
+func TestRemoteAddressesURLChecker_emptyBeforeFetch(t *testing.T) {
+	c := newTestRemoteAddressesURLChecker("http://127.0.0.1:1/missing.json")
 	if checkIP(t, c, "20.42.10.176") {
 		t.Fatal("empty list should not match any IP")
 	}
@@ -73,7 +73,7 @@ func TestDynamicRemoteAddrChecker_emptyBeforeFetch(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_successfulFetch(t *testing.T) {
+func TestRemoteAddressesURLChecker_successfulFetch(t *testing.T) {
 	var gotUA string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotUA = r.Header.Get("User-Agent")
@@ -82,7 +82,7 @@ func TestDynamicRemoteAddrChecker_successfulFetch(t *testing.T) {
 	}))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	delay := c.refreshOnce(t.Context())
 	if delay != c.refreshInterval {
 		t.Fatalf("delay = %v, want %v", delay, c.refreshInterval)
@@ -118,11 +118,11 @@ func TestDynamicRemoteAddrChecker_successfulFetch(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_http5xx(t *testing.T) {
+func TestRemoteAddressesURLChecker_http5xx(t *testing.T) {
 	ts := httptest.NewServer(jsonHandler(http.StatusInternalServerError, "nope"))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	c.cycleStart = time.Now()
 
 	delay := c.refreshOnce(t.Context())
@@ -137,11 +137,11 @@ func TestDynamicRemoteAddrChecker_http5xx(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_http5xxGivesUpAfterMaxRetries(t *testing.T) {
+func TestRemoteAddressesURLChecker_http5xxGivesUpAfterMaxRetries(t *testing.T) {
 	ts := httptest.NewServer(jsonHandler(http.StatusBadGateway, "nope"))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	c.cycleStart = time.Now()
 	c.consecutiveFail = 4
 
@@ -154,7 +154,7 @@ func TestDynamicRemoteAddrChecker_http5xxGivesUpAfterMaxRetries(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_http5xxKeepsExistingList(t *testing.T) {
+func TestRemoteAddressesURLChecker_http5xxKeepsExistingList(t *testing.T) {
 	var status atomic.Int32
 	status.Store(http.StatusOK)
 
@@ -167,7 +167,7 @@ func TestDynamicRemoteAddrChecker_http5xxKeepsExistingList(t *testing.T) {
 	}))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	if delay := c.refreshOnce(t.Context()); delay != c.refreshInterval {
 		t.Fatalf("initial fetch delay = %v, want %v", delay, c.refreshInterval)
 	}
@@ -185,11 +185,11 @@ func TestDynamicRemoteAddrChecker_http5xxKeepsExistingList(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_http4xx(t *testing.T) {
+func TestRemoteAddressesURLChecker_http4xx(t *testing.T) {
 	ts := httptest.NewServer(jsonHandler(http.StatusNotFound, "missing"))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	c.cycleStart = time.Now()
 
 	delay := c.refreshOnce(t.Context())
@@ -204,11 +204,11 @@ func TestDynamicRemoteAddrChecker_http4xx(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_invalidJSON(t *testing.T) {
+func TestRemoteAddressesURLChecker_invalidJSON(t *testing.T) {
 	ts := httptest.NewServer(jsonHandler(http.StatusOK, `{not json`))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	c.cycleStart = time.Now()
 
 	delay := c.refreshOnce(t.Context())
@@ -220,12 +220,12 @@ func TestDynamicRemoteAddrChecker_invalidJSON(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_invalidCIDR(t *testing.T) {
+func TestRemoteAddressesURLChecker_invalidCIDR(t *testing.T) {
 	body := `{"creationTime": "t", "prefixes": [{"ipv4Prefix": "not-a-cidr"}]}`
 	ts := httptest.NewServer(jsonHandler(http.StatusOK, body))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	c.cycleStart = time.Now()
 
 	delay := c.refreshOnce(t.Context())
@@ -237,11 +237,11 @@ func TestDynamicRemoteAddrChecker_invalidCIDR(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_unchangedCreationTime(t *testing.T) {
+func TestRemoteAddressesURLChecker_unchangedCreationTime(t *testing.T) {
 	ts := httptest.NewServer(jsonHandler(http.StatusOK, samplePrefixList))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	if delay := c.refreshOnce(t.Context()); delay != c.refreshInterval {
 		t.Fatalf("first fetch delay = %v, want %v", delay, c.refreshInterval)
 	}
@@ -261,7 +261,7 @@ func TestDynamicRemoteAddrChecker_unchangedCreationTime(t *testing.T) {
 	}
 }
 
-func TestDynamicRemoteAddrChecker_creationTimeChangeRebuilds(t *testing.T) {
+func TestRemoteAddressesURLChecker_creationTimeChangeRebuilds(t *testing.T) {
 	var body atomic.Value
 	body.Store(samplePrefixList)
 
@@ -271,7 +271,7 @@ func TestDynamicRemoteAddrChecker_creationTimeChangeRebuilds(t *testing.T) {
 	}))
 	t.Cleanup(ts.Close)
 
-	c := newTestDynamicChecker(ts.URL)
+	c := newTestRemoteAddressesURLChecker(ts.URL)
 	c.refreshOnce(t.Context())
 
 	body.Store(`{
@@ -291,14 +291,14 @@ func TestDynamicRemoteAddrChecker_creationTimeChangeRebuilds(t *testing.T) {
 	}
 }
 
-func TestNewDynamicRemoteAddrChecker_invalidURL(t *testing.T) {
-	_, err := NewDynamicRemoteAddrChecker(t.Context(), "not a url", discardLogger())
-	if !errors.Is(err, config.ErrInvalidDynamicRemoteAddrURL) {
-		t.Fatalf("err = %v, want %v", err, config.ErrInvalidDynamicRemoteAddrURL)
+func TestNewRemoteAddressesURLChecker_invalidURL(t *testing.T) {
+	_, err := NewRemoteAddressesURLChecker(t.Context(), "not a url", discardLogger())
+	if !errors.Is(err, config.ErrInvalidRemoteAddressesURL) {
+		t.Fatalf("err = %v, want %v", err, config.ErrInvalidRemoteAddressesURL)
 	}
 }
 
-func TestNewDynamicRemoteAddrChecker_runStopsOnCancel(t *testing.T) {
+func TestNewRemoteAddressesURLChecker_runStopsOnCancel(t *testing.T) {
 	started := make(chan struct{})
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		select {
@@ -311,11 +311,11 @@ func TestNewDynamicRemoteAddrChecker_runStopsOnCancel(t *testing.T) {
 	t.Cleanup(ts.Close)
 
 	ctx, cancel := context.WithCancel(t.Context())
-	impl, err := NewDynamicRemoteAddrChecker(ctx, ts.URL, discardLogger())
+	impl, err := NewRemoteAddressesURLChecker(ctx, ts.URL, discardLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := impl.(*DynamicRemoteAddrChecker)
+	c := impl.(*RemoteAddressesURLChecker)
 
 	select {
 	case <-started:
