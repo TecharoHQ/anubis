@@ -1,11 +1,15 @@
 package policy
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/data"
@@ -178,4 +182,83 @@ func TestConfigReferencesJA4H(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseConfigRemoteAddressesURL(t *testing.T) {
+	body := `{
+		"creationTime": "2025-01-02T03:04:05.000000",
+		"prefixes": [{"ipv4Prefix": "20.42.10.176/28"}]
+	}`
+
+	release := make(chan struct{})
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-release:
+		case <-r.Context().Done():
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, body)
+	}))
+	t.Cleanup(ts.Close)
+
+	yaml := fmt.Sprintf(`
+bots:
+  - name: openai-searchbot
+    action: ALLOW
+    remote_addresses_url: %q
+`, ts.URL)
+
+	type parseResult struct {
+		cfg *ParsedConfig
+		err error
+	}
+	ch := make(chan parseResult, 1)
+	go func() {
+		cfg, err := ParseConfig(t.Context(), strings.NewReader(yaml), "dynamic.yaml", anubis.DefaultDifficulty, "error", false)
+		ch <- parseResult{cfg, err}
+	}()
+
+	var parsed *ParsedConfig
+	select {
+	case res := <-ch:
+		if res.err != nil {
+			t.Fatalf("ParseConfig: %v", res.err)
+		}
+		parsed = res.cfg
+	case <-time.After(2 * time.Second):
+		t.Fatal("ParseConfig blocked on remote fetch")
+	}
+
+	if len(parsed.Bots) != 1 {
+		t.Fatalf("got %d bots, want 1", len(parsed.Bots))
+	}
+
+	close(release)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-Real-IP", "20.42.10.176")
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		ok, err := parsed.Bots[0].Rules.Check(req)
+		if err != nil {
+			t.Fatalf("Check: %v", err)
+		}
+		if ok {
+			miss := httptest.NewRequest(http.MethodGet, "/", nil)
+			miss.Header.Set("X-Real-IP", "1.1.1.1")
+			matched, err := parsed.Bots[0].Rules.Check(miss)
+			if err != nil {
+				t.Fatalf("Check unrelated IP: %v", err)
+			}
+			if matched {
+				t.Fatal("unrelated IP should not match")
+			}
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatal("remote addresses url list was not loaded in time")
 }

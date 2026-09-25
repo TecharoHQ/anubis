@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clarify getChallenge failure response and cite related log entry.
 - Share redirect validation between challenge completion and subrequest authentication. Reject ambiguous URL forms before checking allowed domains.
 - Respond with the configured `DENY` status code instead of HTTP 500 when a challenged client is rejected for not advertising gzip support, and log that rejection at `INFO` instead of `ERROR`. The rejection is deliberate, so it no longer shows up in 5xx rates or as a server fault. The log message text is unchanged, but fail2ban filters that match on the `ERROR` level need updating ([#1009](https://github.com/TecharoHQ/anubis/issues/1009)).
+- Anubis now can use dynamic IP lists from providers like OpenAI or Google instead of static IP lists.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
