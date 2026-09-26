@@ -416,6 +416,7 @@ func run(ctx context.Context) {
 
 	anubis.CookieName = *cookiePrefix + "-auth"
 	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
+	anubis.OriginalRefererCookieName = *cookiePrefix + "-original-referer"
 	anubis.ForcedLanguage = *forcedLanguage
 	anubis.UseSimplifiedExplanation = *useSimplifiedExplanation
 
