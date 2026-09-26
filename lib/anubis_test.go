@@ -1421,20 +1421,20 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 // document.referrer when present.
 func TestWithRefererAttributionQuery(t *testing.T) {
 	for _, tc := range []struct {
-		name         string
-		enabled      bool
-		redir        string
+		name        string
+		enabled     bool
+		redir       string
 		origReferer string
-		host         string
-		want         string
+		host        string
+		want        string
 	}{
 		{
-			name:         "disabled leaves redir untouched",
-			enabled:      false,
-			redir:        "/page",
+			name:        "disabled leaves redir untouched",
+			enabled:     false,
+			redir:       "/page",
 			origReferer: "https://example-external.test/post",
-			host:         "site.tld",
-			want:         "/page",
+			host:        "site.tld",
+			want:        "/page",
 		},
 		{
 			name:    "no captured referer leaves redir untouched",
@@ -1444,52 +1444,52 @@ func TestWithRefererAttributionQuery(t *testing.T) {
 			want:    "/page",
 		},
 		{
-			name:         "same-site referer leaves redir untouched",
-			enabled:      true,
-			redir:        "/page",
+			name:        "same-site referer leaves redir untouched",
+			enabled:     true,
+			redir:       "/page",
 			origReferer: "https://site.tld/other-page",
-			host:         "site.tld",
-			want:         "/page",
+			host:        "site.tld",
+			want:        "/page",
 		},
 		{
-			name:         "unparseable referer leaves redir untouched",
-			enabled:      true,
-			redir:        "/page",
+			name:        "unparseable referer leaves redir untouched",
+			enabled:     true,
+			redir:       "/page",
 			origReferer: "://not a url",
-			host:         "site.tld",
-			want:         "/page",
+			host:        "site.tld",
+			want:        "/page",
 		},
 		{
-			name:         "external referer with no existing query gets utm params",
-			enabled:      true,
-			redir:        "/page",
+			name:        "external referer with no existing query gets utm params",
+			enabled:     true,
+			redir:       "/page",
 			origReferer: "https://example-external.test/some/post",
-			host:         "site.tld",
-			want:         "/page?utm_medium=referral&utm_source=example-external.test",
+			host:        "site.tld",
+			want:        "/page?utm_medium=referral&utm_source=example-external.test",
 		},
 		{
-			name:         "existing unrelated query is preserved alongside new params",
-			enabled:      true,
-			redir:        "/page?foo=bar",
+			name:        "existing unrelated query is preserved alongside new params",
+			enabled:     true,
+			redir:       "/page?foo=bar",
 			origReferer: "https://example-external.test/some/post",
-			host:         "site.tld",
-			want:         "/page?foo=bar&utm_medium=referral&utm_source=example-external.test",
+			host:        "site.tld",
+			want:        "/page?foo=bar&utm_medium=referral&utm_source=example-external.test",
 		},
 		{
-			name:         "existing utm_source is not clobbered",
-			enabled:      true,
-			redir:        "/page?utm_source=newsletter",
+			name:        "existing utm_source is not clobbered",
+			enabled:     true,
+			redir:       "/page?utm_source=newsletter",
 			origReferer: "https://example-external.test/some/post",
-			host:         "site.tld",
-			want:         "/page?utm_source=newsletter",
+			host:        "site.tld",
+			want:        "/page?utm_source=newsletter",
 		},
 		{
-			name:         "existing ref param is not clobbered",
-			enabled:      true,
-			redir:        "/page?ref=already-set",
+			name:        "existing ref param is not clobbered",
+			enabled:     true,
+			redir:       "/page?ref=already-set",
 			origReferer: "https://example-external.test/some/post",
-			host:         "site.tld",
-			want:         "/page?ref=already-set",
+			host:        "site.tld",
+			want:        "/page?ref=already-set",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
