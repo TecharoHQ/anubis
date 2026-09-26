@@ -32,6 +32,14 @@ var CookieName = "techaro.lol-anubis"
 // if cookies are enabled on the client's browser.
 var TestCookieName = "techaro.lol-anubis-cookie-verification"
 
+// OriginalRefererCookieName carries the Referer header seen on the request that
+// triggered a challenge across the redirect back to the original URL. Browsers
+// don't send it on that follow-up navigation since it's a same-site redirect, so
+// without this relay upstream analytics see the challenge page as the referer
+// instead of the site the visitor actually came from. See
+// https://github.com/TecharoHQ/anubis/issues/1596
+var OriginalRefererCookieName = "techaro.lol-anubis-original-referer"
+
 // CookieDefaultExpirationTime is the amount of time before the cookie/JWT expires.
 const CookieDefaultExpirationTime = 7 * 24 * time.Hour
 
