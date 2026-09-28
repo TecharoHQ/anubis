@@ -16,7 +16,7 @@ import (
 var (
 	ErrNoBotRulesDefined                 = errors.New("config: must define at least one (1) bot rule")
 	ErrBotMustHaveName                   = errors.New("config.Bot: must set name")
-	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, expression, or Thoth keyword")
+	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, expression, asns, or geoip")
 	ErrBotMustHaveUserAgentOrPathNotBoth = errors.New("config.Bot: must set either user_agent_regex, path_regex, and not both")
 	ErrUnknownAction                     = errors.New("config.Bot: unknown action")
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
@@ -59,7 +59,7 @@ type BotConfig struct {
 	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
 
-	// Thoth features
+	// IP metadata features, backed by the top-level geoip block
 	GeoIP *GeoIP `json:"geoip,omitempty"`
 	ASNs  *ASNs  `json:"asns,omitempty"`
 
@@ -292,6 +292,7 @@ type fileConfig struct {
 	Logging     *Logging            `json:"logging"`
 	Metrics     *Metrics            `json:"metrics,omitempty"`
 	Honeypot    *Honeypot           `json:"honeypot"`
+	GeoIP       *GeoIPDatabases     `json:"geoip,omitempty"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -345,6 +346,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.GeoIP != nil {
+		if err := c.GeoIP.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -390,6 +397,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		Logging:     c.Logging,
 		Metrics:     c.Metrics,
 		Honeypot:    c.Honeypot,
+		GeoIP:       c.GeoIP,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -483,6 +491,7 @@ type Config struct {
 	DNSTTL      DnsTTL
 	Metrics     *Metrics
 	Honeypot    *Honeypot
+	GeoIP       *GeoIPDatabases
 }
 
 func (c Config) Valid() error {
