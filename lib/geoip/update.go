@@ -61,9 +61,10 @@ func newUpdater(cfg *config.GeoIPAutoUpdate) (*updater, error) {
 	}, nil
 }
 
-// update checks MaxMind for a newer copy of src. When there is one, it
-// writes the download next to src.path, verifies it, renames it over
-// src.path, and swaps it in. It reports whether a new database was installed.
+// update checks MaxMind for a newer copy of src. When there is one, it saves
+// the download as a new file named after the Unix timestamp of the update,
+// verifies it, and swaps it in. It never renames over or rewrites a file that
+// is mapped. It reports whether a new database was installed.
 func (u *updater) update(ctx context.Context, src *source) (bool, error) {
 	resp, err := u.cli.Download(ctx, src.edition, src.md5)
 	if err != nil {
@@ -75,49 +76,53 @@ func (u *updater) update(ctx context.Context, src *source) (bool, error) {
 		return false, nil
 	}
 
-	tmpName, gotMD5, err := writeTemp(src.path, resp.Reader)
+	fname := src.nextVersionPath(time.Now().Unix())
+
+	gotMD5, err := writeVersion(fname, resp.Reader)
 	if err != nil {
 		return false, fmt.Errorf("geoip: can't save %s download: %w", src.edition, err)
 	}
-	defer os.Remove(tmpName) //nolint:errcheck // fails harmlessly once renamed
 
 	if gotMD5 != resp.MD5 {
+		os.Remove(fname) //nolint:errcheck
 		return false, fmt.Errorf("%w: %s: want %s, got %s", ErrChecksumMismatch, src.edition, resp.MD5, gotMD5)
 	}
 
-	// Map and check the new database before it replaces the old file, so a
-	// bad download never replaces a good one. The mapping stays valid across
-	// the rename because it refers to the file, not the name.
-	rdr, err := src.open(tmpName)
+	rdr, err := src.open(fname)
 	if err != nil {
+		os.Remove(fname) //nolint:errcheck
 		return false, fmt.Errorf("geoip: downloaded %s is not valid: %w", src.edition, err)
 	}
 
-	if err := os.Rename(tmpName, src.path); err != nil {
-		rdr.Close() //nolint:errcheck
-		return false, fmt.Errorf("geoip: can't replace %s: %w", src.path, err)
-	}
-
-	src.install(rdr, gotMD5)
-
-	if fi, err := os.Stat(src.path); err == nil {
-		src.modTime = fi.ModTime()
-	}
-
+	src.install(rdr, fname, gotMD5)
 	return true, nil
 }
 
-// writeTemp streams r into a synced temporary file next to path and returns
-// its name and MD5 checksum. The caller removes the file.
-func writeTemp(path string, r io.Reader) (string, string, error) {
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", "", err
+// nextVersionPath returns the file name for a download made at ts. If that
+// name is taken, such as after the clock steps backwards, it moves forward to
+// the next free second so the new file still sorts as the newest.
+func (src *source) nextVersionPath(ts int64) string {
+	if latest, ok := src.latest(); ok {
+		if lts, ok := parseVersion(filepath.Base(latest), filepath.Base(src.path)+"."); ok && lts >= ts {
+			ts = lts + 1
+		}
 	}
 
-	tmp, err := os.CreateTemp(dir, "."+filepath.Base(path)+".*.tmp")
+	return src.versionPath(ts)
+}
+
+// writeVersion streams r into a staging file, syncs it, and renames it to
+// fname. Nothing maps fname yet, so the rename is safe on every platform. It
+// returns the MD5 checksum of what was written.
+func writeVersion(fname string, r io.Reader) (string, error) {
+	if err := os.MkdirAll(filepath.Dir(fname), 0o755); err != nil {
+		return "", err
+	}
+
+	tmpName := fname + tmpSuffix
+	tmp, err := os.OpenFile(tmpName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	h := md5.New()
@@ -132,15 +137,15 @@ func writeTemp(path string, r io.Reader) (string, string, error) {
 		err = cerr
 	}
 	if err == nil {
-		err = os.Chmod(tmp.Name(), 0o644)
+		err = os.Rename(tmpName, fname)
 	}
 
 	if err != nil {
-		os.Remove(tmp.Name()) //nolint:errcheck
-		return "", "", err
+		os.Remove(tmpName) //nolint:errcheck
+		return "", err
 	}
 
-	return tmp.Name(), hex.EncodeToString(h.Sum(nil)), nil
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 // run keeps the databases fresh until ctx is canceled. With an updater it
@@ -190,7 +195,11 @@ func (db *DB) checkUpdate(ctx context.Context, lg *slog.Logger, up *updater, src
 	}
 
 	if updated {
-		lg.InfoContext(ctx, "updated geoip database")
+		lg.InfoContext(ctx, "updated geoip database", "file", src.current)
+	}
+
+	if err := src.cleanup(); err != nil {
+		lg.DebugContext(ctx, "can't clean up old geoip databases yet", "err", err)
 	}
 }
 

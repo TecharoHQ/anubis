@@ -51,7 +51,13 @@ type source struct {
 	edition string
 	reader  atomic.Pointer[maxminddb.Reader]
 
-	// md5 and modTime are only touched during New and by the update goroutine.
+	// versioned is true when automatic updates manage this database. Each
+	// download is then kept in its own timestamped file next to path.
+	versioned bool
+
+	// current, md5, and modTime are only touched during New and by the update
+	// goroutine. current is the file backing the active reader.
+	current string
 	md5     string
 	modTime time.Time
 }
@@ -92,11 +98,11 @@ func New(ctx context.Context, lg *slog.Logger, cfg *config.GeoIPDatabases) (*DB,
 	var errs []error
 
 	if cfg.ASN != nil {
-		db.asn = &source{kind: KindASN, path: cfg.ASN.Path, edition: cfg.ASNEditionID()}
+		db.asn = &source{kind: KindASN, path: cfg.ASN.Path, edition: cfg.ASNEditionID(), versioned: up != nil}
 	}
 
 	if cfg.Country != nil {
-		db.country = &source{kind: KindCountry, path: cfg.Country.Path, edition: cfg.CountryEditionID()}
+		db.country = &source{kind: KindCountry, path: cfg.Country.Path, edition: cfg.CountryEditionID(), versioned: up != nil}
 	}
 
 	for _, src := range db.sources() {
@@ -108,6 +114,13 @@ func New(ctx context.Context, lg *slog.Logger, cfg *config.GeoIPDatabases) (*DB,
 
 		if err != nil {
 			errs = append(errs, err)
+			continue
+		}
+
+		if src.versioned {
+			if err := src.cleanup(); err != nil {
+				lg.DebugContext(ctx, "can't clean up old geoip databases yet", "edition", src.edition, "err", err)
+			}
 		}
 	}
 
@@ -222,24 +235,32 @@ func (db *DB) LookupCountry(addr netip.Addr) (cc string, ok bool) {
 	}
 }
 
-// load maps the database file and swaps it in.
+// load maps the database file and swaps it in. Versioned sources load their
+// newest download, falling back to path so an existing file can seed them.
 func (src *source) load() error {
-	fi, err := os.Stat(src.path)
-	if err != nil {
-		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, src.path, err)
+	fname := src.path
+	if src.versioned {
+		if latest, ok := src.latest(); ok {
+			fname = latest
+		}
 	}
 
-	sum, err := fileMD5(src.path)
+	fi, err := os.Stat(fname)
 	if err != nil {
-		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, src.path, err)
+		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, fname, err)
 	}
 
-	rdr, err := src.open(src.path)
+	sum, err := fileMD5(fname)
 	if err != nil {
-		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, src.path, err)
+		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, fname, err)
 	}
 
-	src.install(rdr, sum)
+	rdr, err := src.open(fname)
+	if err != nil {
+		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, fname, err)
+	}
+
+	src.install(rdr, fname, sum)
 	src.modTime = fi.ModTime()
 	return nil
 }
@@ -265,8 +286,9 @@ func (src *source) open(path string) (*maxminddb.Reader, error) {
 // maxminddb unmaps a reader's file when the reader is garbage collected, and
 // every lookup result keeps its reader reachable, so the old mapping lives
 // exactly as long as something needs it.
-func (src *source) install(rdr *maxminddb.Reader, sum string) {
+func (src *source) install(rdr *maxminddb.Reader, fname, sum string) {
 	src.reader.Store(rdr)
+	src.current = fname
 	src.md5 = sum
 	databaseBuildTime.WithLabelValues(string(src.kind)).Set(float64(rdr.Metadata.BuildEpoch))
 }

@@ -369,9 +369,26 @@ func TestNewDownloadsMissingDatabase(t *testing.T) {
 		t.Error("wanted downloaded database to be loaded")
 	}
 
-	if _, err := os.Stat(asnPath); err != nil {
-		t.Errorf("wanted downloaded database on disk: %v", err)
+	if _, err := os.Stat(asnPath); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("the configured path should not be written, stat: %v", err)
 	}
+
+	versions := versionFiles(t, asnPath)
+	if len(versions) != 1 {
+		t.Fatalf("wanted one timestamped download, got %v", versions)
+	}
+}
+
+// versionFiles lists the timestamped downloads and staging files next to path.
+func versionFiles(t *testing.T, path string) []string {
+	t.Helper()
+
+	matches, err := filepath.Glob(path + ".*")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return matches
 }
 
 func TestUpdate(t *testing.T) {
@@ -426,13 +443,6 @@ func TestUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			db, err := geoip.New(t.Context(), discardLogger(), &config.GeoIPDatabases{
-				ASN: &config.GeoIPDatabase{Path: asnPath},
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
-
 			fake, srv := newFakeMaxMind(t, tt.serve(t))
 			if tt.badMD5 {
 				fake.md5 = "00000000000000000000000000000000"
@@ -441,7 +451,16 @@ func TestUpdate(t *testing.T) {
 				fake.status = tt.status
 			}
 
-			updated, err := db.UpdateASN(t.Context(), autoUpdateConfig(t, srv.URL))
+			cfg := autoUpdateConfig(t, srv.URL)
+			db, err := geoip.New(t.Context(), discardLogger(), &config.GeoIPDatabases{
+				ASN:        &config.GeoIPDatabase{Path: asnPath},
+				AutoUpdate: cfg,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			updated, err := db.UpdateASN(t.Context(), cfg)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("wantErr: %v, got: %v", tt.wantErr, err)
 			}
@@ -471,16 +490,17 @@ func TestUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if changed := !bytes.Equal(onDisk, original); changed != tt.wantUpdated {
-				t.Errorf("file on disk changed: want %v, got %v", tt.wantUpdated, changed)
+			if !bytes.Equal(onDisk, original) {
+				t.Error("the configured path was modified, updates must go to new files")
 			}
 
-			leftovers, err := filepath.Glob(filepath.Join(filepath.Dir(asnPath), ".*.tmp"))
-			if err != nil {
-				t.Fatal(err)
+			versions := versionFiles(t, asnPath)
+			wantVersions := 0
+			if tt.wantUpdated {
+				wantVersions = 1
 			}
-			if len(leftovers) != 0 {
-				t.Errorf("temporary files left behind: %v", leftovers)
+			if len(versions) != wantVersions {
+				t.Errorf("timestamped files: want %d, got %v", wantVersions, versions)
 			}
 		})
 	}
@@ -499,5 +519,91 @@ func TestContext(t *testing.T) {
 
 	if _, ok := geoip.FromContext(geoip.With(t.Context(), nil)); ok {
 		t.Error("nil DB in context should not count")
+	}
+}
+
+func TestVersionedStartupAndCleanup(t *testing.T) {
+	asnPath, _ := geoiptest.WriteFixtures(t)
+
+	older := asnPath + ".1700000000"
+	newer := asnPath + ".1800000000"
+	for fname, records := range map[string][]geoiptest.Record{
+		older: geoiptest.DefaultRecords,
+		newer: updatedRecords,
+	} {
+		if err := os.WriteFile(fname, geoiptest.ASNDatabase(t, records), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Files that must be ignored when picking the newest version.
+	for _, fname := range []string{asnPath + ".1900000000.tmp", asnPath + ".bak", asnPath + ".1900000000x"} {
+		if err := os.WriteFile(fname, []byte("junk"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, srv := newFakeMaxMind(t, geoiptest.ASNDatabase(t, updatedRecords))
+	cfg := autoUpdateConfig(t, srv.URL)
+
+	db, err := geoip.New(t.Context(), discardLogger(), &config.GeoIPDatabases{
+		ASN:        &config.GeoIPDatabase{Path: asnPath},
+		AutoUpdate: cfg,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if asn, _, ok := db.LookupASN(netip.MustParseAddr("3.3.3.3")); !ok || asn != 999 {
+		t.Fatalf("wanted newest version to be loaded, got AS%d (ok: %v)", asn, ok)
+	}
+
+	for fname, want := range map[string]bool{
+		asnPath:                     true,
+		newer:                       true,
+		older:                       false,
+		asnPath + ".1900000000.tmp": false,
+		asnPath + ".bak":            true,
+		asnPath + ".1900000000x":    true,
+	} {
+		_, err := os.Stat(fname)
+		if got := err == nil; got != want {
+			t.Errorf("%s exists: want %v, got %v", filepath.Base(fname), want, got)
+		}
+	}
+
+	// The server has the same database, so no new file appears.
+	updated, err := db.UpdateASN(t.Context(), cfg)
+	if err != nil || updated {
+		t.Fatalf("wanted no update, got updated=%v err=%v", updated, err)
+	}
+}
+
+func TestVersionAfterClockStep(t *testing.T) {
+	asnPath, _ := geoiptest.WriteFixtures(t)
+
+	// A version from the future, as if the clock stepped backwards since.
+	future := asnPath + ".9999999999"
+	if err := os.WriteFile(future, geoiptest.ASNDatabase(t, geoiptest.DefaultRecords), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, srv := newFakeMaxMind(t, geoiptest.ASNDatabase(t, updatedRecords))
+	cfg := autoUpdateConfig(t, srv.URL)
+
+	db, err := geoip.New(t.Context(), discardLogger(), &config.GeoIPDatabases{
+		ASN:        &config.GeoIPDatabase{Path: asnPath},
+		AutoUpdate: cfg,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if updated, err := db.UpdateASN(t.Context(), cfg); err != nil || !updated {
+		t.Fatalf("wanted an update, got updated=%v err=%v", updated, err)
+	}
+
+	if _, err := os.Stat(asnPath + ".10000000000"); err != nil {
+		t.Errorf("wanted the new version to sort after the future one: %v", err)
 	}
 }
