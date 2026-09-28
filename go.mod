@@ -3,7 +3,6 @@ module github.com/TecharoHQ/anubis
 go 1.26.3
 
 require (
-	github.com/TecharoHQ/thoth-proto v0.5.0
 	github.com/a-h/templ v0.3.1020
 	github.com/aws/aws-sdk-go-v2 v1.45.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.1
@@ -17,8 +16,6 @@ require (
 	github.com/google/cel-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/goreleaser/fileglob v1.4.0
-	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4
 	github.com/joho/godotenv v1.5.1
 	github.com/lum8rjack/go-ja4h v0.0.0-20250828030157-fa5266d50650
 	github.com/maxmind/geoipupdate/v8 v8.0.0
@@ -47,7 +44,6 @@ require (
 
 require (
 	al.essio.dev/pkg/shellescape v1.6.0 // indirect
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 // indirect
 	cel.dev/expr v0.25.2 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/AlekSi/pointer v1.2.0 // indirect

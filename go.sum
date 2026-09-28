@@ -1,7 +1,5 @@
 al.essio.dev/pkg/shellescape v1.6.0 h1:NxFcEqzFSEVCGN2yq7Huv/9hyCEGVa/TncnOOBBeXHA=
 al.essio.dev/pkg/shellescape v1.6.0/go.mod h1:6sIqp7X2P6mThCQ7twERpZTuigpr6KbZWtls1U8I890=
-buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 h1:j9yeqTWEFrtimt8Nng2MIeRrpoCvQzM9/g25XTvqUGg=
-buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1/go.mod h1:tvtbpgaVXZX4g6Pn+AnzFycuRK3MOz5HJfEGeEllXYM=
 cel.dev/expr v0.25.2 h1:K6j46C81hXtZQfuX60cVWQFBJahKSE2gfRbNuvr5bFs=
 cel.dev/expr v0.25.2/go.mod h1:hrXvqGP6G6gyx8UAHSHJ5RGk//1Oj5nXQ2NI02Nrsg4=
 dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
@@ -38,8 +36,6 @@ github.com/ProtonMail/gopenpgp/v3 v3.4.0 h1:WW0VK+mZjbu5SqhWNm58TYKFxyvduiUHTfyI
 github.com/ProtonMail/gopenpgp/v3 v3.4.0/go.mod h1:bGdV9f6edhmd581wzXsQCTKdH8bXBbyhkgDKPjwPc6U=
 github.com/Songmu/gitconfig v0.2.2 h1:tiQY2KZqgdgjs1C7slWd31EB8NbItN7BOKxCIHSlK4Y=
 github.com/Songmu/gitconfig v0.2.2/go.mod h1:lZ0lKL6K+xvT+QzmmGxHQgOnneiWcbhGAV2DKI6PBpM=
-github.com/TecharoHQ/thoth-proto v0.5.0 h1:Fa663s4soYiURSU8MfW9tZ2wF+LsCRSaYmjUSyagfBM=
-github.com/TecharoHQ/thoth-proto v0.5.0/go.mod h1:C/U7FqTxpVn4V/qebC/GcW32I0h9xzsmWehF27KFOJs=
 github.com/TecharoHQ/yeet v0.12.1 h1:iRY3pfnwAg52ZhjbjnRUCIaZcRrdrTHEuM7R5EQ2ZUg=
 github.com/TecharoHQ/yeet v0.12.1/go.mod h1:jGPbUZ9B8EIdnDjaZsFN655wJn9c6YfozsFHTaCBeG4=
 github.com/Xe/erofs v0.6.1 h1:GnrHZ+dxAQG9+Gy+hI06ANT9X8CA79uDwbaZqNad4bU=
@@ -245,10 +241,6 @@ github.com/goreleaser/fileglob v1.4.0 h1:Y7zcUnzQjT1gbntacGAkIIfLv+OwojxTXBFxjSF
 github.com/goreleaser/fileglob v1.4.0/go.mod h1:1pbHx7hhmJIxNZvm6fi6WVrnP0tndq6p3ayWdLn1Yf8=
 github.com/goreleaser/nfpm/v2 v2.45.2 h1:sWBXUErMSKHMvT8f1mgtY3yn2jbNBAE2TNBXNXpSDGc=
 github.com/goreleaser/nfpm/v2 v2.45.2/go.mod h1:NxYAJCKAuq8NpL57WvL39xIK39/1jViS9hD6MDwKTgw=
-github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0 h1:QGLs/O40yoNK9vmy4rhUGBVyMf1lISBGtXRpsu/Qu/o=
-github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0/go.mod h1:hM2alZsMUni80N33RBe6J0e423LB+odMj7d3EMP9l20=
-github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4 h1:9ZJYjPEJpcleIKcqysXOo14NLQYwu23fzmKRFpIjPjc=
-github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4/go.mod h1:0xydIeg2omQ9DH6zYMP24Kk57793rnLUvP8fwdbFvz8=
 github.com/hashicorp/go-version v1.7.0 h1:5tqGy27NaOTB8yJKUZELlFAS/LTKJkrmONwQKeRZfjY=
 github.com/hashicorp/go-version v1.7.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/huandu/xstrings v1.5.0 h1:2ag3IFq9ZDANvthTwTiqSSZLjDc+BedvHPAp5tJy2TI=
