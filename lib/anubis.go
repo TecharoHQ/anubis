@@ -251,14 +251,6 @@ const (
 	downstreamRiskRuleHeader   = "X-Anubis-Rule"
 	downstreamRiskActionHeader = "X-Anubis-Action"
 	downstreamRiskStatusHeader = "X-Anubis-Status"
-
-	// originalRefererCookieName carries the Referer header seen on the request that
-	// triggered a challenge across the redirect back to the original URL. Browsers
-	// don't send it on that follow-up navigation since it's a same-site redirect, so
-	// without this relay upstream analytics see the challenge page as the referrer
-	// instead of the site the visitor actually came from. See
-	// https://github.com/TecharoHQ/anubis/issues/1596
-	originalRefererCookieName = "techaro.lol-anubis-original-referer"
 )
 
 func isDownstreamRiskHeader(name string) bool {
@@ -424,12 +416,12 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 // the request is proxied upstream. The cookie only survives the single redirect from
 // PassChallenge back to the original URL, so this only ever fires for that one request.
 func (s *Server) restoreOriginalReferer(w http.ResponseWriter, r *http.Request, cookiePath string) {
-	ckie, err := s.getCookie(r, originalRefererCookieName)
+	ckie, err := s.getCookie(r, anubis.OriginalRefererCookieName)
 	if err != nil || ckie.Value == "" {
 		return
 	}
 
-	s.ClearCookie(w, CookieOpts{Name: originalRefererCookieName, Path: cookiePath, Host: r.Host})
+	s.ClearCookie(w, CookieOpts{Name: anubis.OriginalRefererCookieName, Path: cookiePath, Host: r.Host})
 
 	if referer, err := url.QueryUnescape(ckie.Value); err == nil {
 		r.Header.Set("Referer", referer)
@@ -742,7 +734,7 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		s.SetCookie(w, CookieOpts{
 			Path:   cookiePath,
 			Host:   r.Host,
-			Name:   originalRefererCookieName,
+			Name:   anubis.OriginalRefererCookieName,
 			Value:  url.QueryEscape(origReferer),
 			Expiry: 1 * time.Minute,
 		})

@@ -1333,7 +1333,7 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 		switch c.Name {
 		case srv.cookieName(anubis.CookieName):
 			authCookie = c
-		case srv.cookieName(originalRefererCookieName):
+		case srv.cookieName(anubis.OriginalRefererCookieName):
 			relayCookie = c
 		}
 	}
@@ -1355,7 +1355,7 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 	// This simulates the browser's follow-up navigation to the real page. A real
 	// browser sends the challenge page itself as Referer here (same-site redirect);
 	// use that misleading value to prove Anubis overrides it with the true original
-	// referrer rather than just forwarding whatever the browser happened to send.
+	// referer rather than just forwarding whatever the browser happened to send.
 	followReq, err := http.NewRequest(http.MethodGet, ts.URL+location, nil)
 	if err != nil {
 		t.Fatalf("can't make request: %v", err)
@@ -1380,7 +1380,7 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 
 	var relayCleared bool
 	for _, c := range followResp.Cookies() {
-		if c.Name == srv.cookieName(originalRefererCookieName) && c.MaxAge < 0 {
+		if c.Name == srv.cookieName(anubis.OriginalRefererCookieName) && c.MaxAge < 0 {
 			relayCleared = true
 		}
 	}
