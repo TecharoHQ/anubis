@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"log/slog"
 	"net/netip"
@@ -221,46 +222,66 @@ func (db *DB) LookupCountry(addr netip.Addr) (cc string, ok bool) {
 	}
 }
 
-// load reads the database from disk and swaps it in.
+// load maps the database file and swaps it in.
 func (src *source) load() error {
 	fi, err := os.Stat(src.path)
 	if err != nil {
 		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, src.path, err)
 	}
 
-	data, err := os.ReadFile(src.path)
+	sum, err := fileMD5(src.path)
 	if err != nil {
 		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, src.path, err)
 	}
 
-	sum := md5.Sum(data)
-	if err := src.swap(data, hex.EncodeToString(sum[:])); err != nil {
+	rdr, err := src.open(src.path)
+	if err != nil {
 		return fmt.Errorf("%w %s: %w", ErrCantOpenDatabase, src.path, err)
 	}
 
+	src.install(rdr, sum)
 	src.modTime = fi.ModTime()
 	return nil
 }
 
-// swap parses data as a database, checks that it is the right kind, and
-// makes it the active reader.
-//
-// The database is held in memory instead of being mmapped so that an old
-// reader stays valid for any lookup still using it after a swap. The garbage
-// collector frees it once nothing refers to it.
-func (src *source) swap(data []byte, sum string) error {
-	rdr, err := maxminddb.OpenBytes(data)
+// open mmaps the database at path and checks that it is the right kind.
+func (src *source) open(path string) (*maxminddb.Reader, error) {
+	rdr, err := maxminddb.Open(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !strings.Contains(rdr.Metadata.DatabaseType, string(src.kind)) {
-		return fmt.Errorf("%w: wanted a %s database, got %q", ErrWrongDatabaseType, src.kind, rdr.Metadata.DatabaseType)
+		rdr.Close() //nolint:errcheck
+		return nil, fmt.Errorf("%w: wanted a %s database, got %q", ErrWrongDatabaseType, src.kind, rdr.Metadata.DatabaseType)
 	}
 
+	return rdr, nil
+}
+
+// install makes rdr the active reader.
+//
+// The old reader is not closed here because a lookup may still be using it.
+// maxminddb unmaps a reader's file when the reader is garbage collected, and
+// every lookup result keeps its reader reachable, so the old mapping lives
+// exactly as long as something needs it.
+func (src *source) install(rdr *maxminddb.Reader, sum string) {
 	src.reader.Store(rdr)
 	src.md5 = sum
 	databaseBuildTime.WithLabelValues(string(src.kind)).Set(float64(rdr.Metadata.BuildEpoch))
+}
 
-	return nil
+func fileMD5(path string) (string, error) {
+	fin, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer fin.Close() //nolint:errcheck
+
+	h := md5.New()
+	if _, err := io.Copy(h, fin); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

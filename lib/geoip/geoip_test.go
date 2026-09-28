@@ -224,6 +224,22 @@ var updatedRecords = append([]geoiptest.Record{
 	{CIDR: "3.3.3.0/24", ASN: 999, Organization: "new network"},
 }, geoiptest.DefaultRecords...)
 
+// replaceFile swaps in new contents at path with a rename, the way
+// geoipupdate does. Writing a mapped database in place would change the
+// memory of the reader that is already loaded.
+func replaceFile(t *testing.T, path string, data []byte) {
+	t.Helper()
+
+	tmp := path + ".new"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Rename(tmp, path); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestReloadFromDisk(t *testing.T) {
 	asnPath, _ := geoiptest.WriteFixtures(t)
 
@@ -242,9 +258,7 @@ func TestReloadFromDisk(t *testing.T) {
 	// Unchanged file: nothing happens.
 	db.CheckASNFile(t.Context(), discardLogger())
 
-	if err := os.WriteFile(asnPath, geoiptest.ASNDatabase(t, updatedRecords), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	replaceFile(t, asnPath, geoiptest.ASNDatabase(t, updatedRecords))
 	future := time.Now().Add(time.Hour)
 	if err := os.Chtimes(asnPath, future, future); err != nil {
 		t.Fatal(err)
@@ -257,9 +271,7 @@ func TestReloadFromDisk(t *testing.T) {
 	}
 
 	// A corrupt file must not replace the loaded database.
-	if err := os.WriteFile(asnPath, []byte("not a database"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	replaceFile(t, asnPath, []byte("not a database"))
 	future = future.Add(time.Hour)
 	if err := os.Chtimes(asnPath, future, future); err != nil {
 		t.Fatal(err)

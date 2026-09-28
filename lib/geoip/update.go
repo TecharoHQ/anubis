@@ -24,7 +24,7 @@ var (
 )
 
 const (
-	// maxDatabaseSize caps how much of a download is read into memory.
+	// maxDatabaseSize caps how much of a download is written to disk.
 	// GeoIP2-City, the largest common edition, is well under this.
 	maxDatabaseSize = 512 << 20
 
@@ -62,8 +62,8 @@ func newUpdater(cfg *config.GeoIPAutoUpdate) (*updater, error) {
 }
 
 // update checks MaxMind for a newer copy of src. When there is one, it
-// verifies the download, writes it over src.path, and swaps it in. It
-// reports whether a new database was installed.
+// writes the download next to src.path, verifies it, renames it over
+// src.path, and swaps it in. It reports whether a new database was installed.
 func (u *updater) update(ctx context.Context, src *source) (bool, error) {
 	resp, err := u.cli.Download(ctx, src.edition, src.md5)
 	if err != nil {
@@ -75,34 +75,30 @@ func (u *updater) update(ctx context.Context, src *source) (bool, error) {
 		return false, nil
 	}
 
-	data, err := io.ReadAll(io.LimitReader(resp.Reader, maxDatabaseSize+1))
+	tmpName, gotMD5, err := writeTemp(src.path, resp.Reader)
 	if err != nil {
-		return false, fmt.Errorf("geoip: can't read %s download: %w", src.edition, err)
+		return false, fmt.Errorf("geoip: can't save %s download: %w", src.edition, err)
 	}
+	defer os.Remove(tmpName) //nolint:errcheck // fails harmlessly once renamed
 
-	if len(data) > maxDatabaseSize {
-		return false, fmt.Errorf("%w: %s is larger than %d bytes", ErrDatabaseTooLarge, src.edition, maxDatabaseSize)
-	}
-
-	sum := md5.Sum(data)
-	gotMD5 := hex.EncodeToString(sum[:])
 	if gotMD5 != resp.MD5 {
 		return false, fmt.Errorf("%w: %s: want %s, got %s", ErrChecksumMismatch, src.edition, resp.MD5, gotMD5)
 	}
 
-	// Parse and check the new database before it touches the disk, so a bad
-	// download never replaces a good file.
-	oldMD5 := src.md5
-	if err := src.swap(data, gotMD5); err != nil {
+	// Map and check the new database before it replaces the old file, so a
+	// bad download never replaces a good one. The mapping stays valid across
+	// the rename because it refers to the file, not the name.
+	rdr, err := src.open(tmpName)
+	if err != nil {
 		return false, fmt.Errorf("geoip: downloaded %s is not valid: %w", src.edition, err)
 	}
 
-	if err := writeFileAtomic(src.path, data); err != nil {
-		// Keep serving the new data from memory, but restore the old checksum
-		// so the next check downloads it again and retries the write.
-		src.md5 = oldMD5
-		return true, fmt.Errorf("geoip: can't save %s to %s: %w", src.edition, src.path, err)
+	if err := os.Rename(tmpName, src.path); err != nil {
+		rdr.Close() //nolint:errcheck
+		return false, fmt.Errorf("geoip: can't replace %s: %w", src.path, err)
 	}
+
+	src.install(rdr, gotMD5)
 
 	if fi, err := os.Stat(src.path); err == nil {
 		src.modTime = fi.ModTime()
@@ -111,39 +107,40 @@ func (u *updater) update(ctx context.Context, src *source) (bool, error) {
 	return true, nil
 }
 
-// writeFileAtomic writes data to a temporary file next to path, syncs it,
-// and renames it over path.
-func writeFileAtomic(path string, data []byte) error {
+// writeTemp streams r into a synced temporary file next to path and returns
+// its name and MD5 checksum. The caller removes the file.
+func writeTemp(path string, r io.Reader) (string, string, error) {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
+		return "", "", err
 	}
 
 	tmp, err := os.CreateTemp(dir, "."+filepath.Base(path)+".*.tmp")
 	if err != nil {
-		return err
-	}
-	defer os.Remove(tmp.Name()) //nolint:errcheck
-
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close() //nolint:errcheck
-		return err
+		return "", "", err
 	}
 
-	if err := tmp.Sync(); err != nil {
-		tmp.Close() //nolint:errcheck
-		return err
+	h := md5.New()
+	n, err := io.Copy(io.MultiWriter(tmp, h), io.LimitReader(r, maxDatabaseSize+1))
+	if err == nil && n > maxDatabaseSize {
+		err = fmt.Errorf("%w: larger than %d bytes", ErrDatabaseTooLarge, maxDatabaseSize)
+	}
+	if err == nil {
+		err = tmp.Sync()
+	}
+	if cerr := tmp.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Chmod(tmp.Name(), 0o644)
 	}
 
-	if err := tmp.Close(); err != nil {
-		return err
+	if err != nil {
+		os.Remove(tmp.Name()) //nolint:errcheck
+		return "", "", err
 	}
 
-	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
-		return err
-	}
-
-	return os.Rename(tmp.Name(), path)
+	return tmp.Name(), hex.EncodeToString(h.Sum(nil)), nil
 }
 
 // run keeps the databases fresh until ctx is canceled. With an updater it
