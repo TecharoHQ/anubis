@@ -17,26 +17,7 @@ templ page(localizer *localization.SimpleLocalizer) {
 		<div id="progress" role="progressbar" aria-labelledby="status">
 			<div class="bar-inner"></div>
 		</div>
-		<details>
-			if anubis.UseSimplifiedExplanation {
-				<p>
-					{ localizer.T("simplified_explanation") }
-				</p>
-			} else {
-				<p>
-					{ localizer.T("ai_companies_explanation") }
-				</p>
-				<p>
-					{ localizer.T("anubis_compromise") }
-				</p>
-				<p>
-					{ localizer.T("hack_purpose") }
-				</p>
-				<p>
-					{ localizer.T("jshelter_note") }
-				</p>
-			}
-		</details>
+		@challengepage.Explanation(localizer)
 		<noscript>
 			<p>
 				{ localizer.T("javascript_required") }

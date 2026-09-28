@@ -1,0 +1,15 @@
+package challengepage
+
+import "github.com/TecharoHQ/anubis/lib/localization"
+
+// Explanation renders the "Why am I seeing this?" details block.
+templ Explanation(localizer *localization.SimpleLocalizer) {
+	<details>
+		<p>
+			@templ.Raw(explanationHTML(localizer.T("simplified_explanation")))
+		</p>
+		<p>
+			{ localizer.T("jshelter_note") }
+		</p>
+	</details>
+}

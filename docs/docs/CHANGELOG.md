@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
+
 - Fix the original-referer cookie not being affected by the `COOKIE_PREFIX` setting ([#1977](https://github.com/TecharoHQ/anubis/pull/1977))
+- Default to the simplified explanation to avoid people misinterpreting words. `USE_SIMPLIFIED_EXPLANATION` is now deprecated.
 
 ## v1.28.0-pre2: Wuk Lamat
 

@@ -52,7 +52,7 @@ var (
 	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", true, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
 	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
-	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
+	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", true, "deprecated: has no effect, the simplified explanation is always used")
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
@@ -418,7 +418,10 @@ func run(ctx context.Context) {
 	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
 	anubis.OriginalRefererCookieName = *cookiePrefix + "-original-referer"
 	anubis.ForcedLanguage = *forcedLanguage
-	anubis.UseSimplifiedExplanation = *useSimplifiedExplanation
+
+	if *useSimplifiedExplanation {
+		lg.WarnContext(ctx, "USE_SIMPLIFIED_EXPLANATION is deprecated and has no effect, the simplified explanation is always used")
+	}
 
 	// If OpenGraph configuration values are not set in the config file, use the
 	// values from flags / envvars.

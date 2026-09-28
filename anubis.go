@@ -62,6 +62,3 @@ const DefaultDifficulty = 4
 // ForcedLanguage is the language being used instead of the one of the request's Accept-Language header
 // if being set.
 var ForcedLanguage = ""
-
-// UseSimplifiedExplanation can be set to true for using the simplified explanation
-var UseSimplifiedExplanation = false
