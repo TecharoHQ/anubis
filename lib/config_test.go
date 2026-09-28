@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/TecharoHQ/anubis"
+	"github.com/TecharoHQ/anubis/lib/geoip/geoiptest"
 	"github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
 func TestInvalidChallengeMethod(t *testing.T) {
@@ -42,14 +42,14 @@ func TestGoodConfigs(t *testing.T) {
 
 	for _, st := range finfos {
 		t.Run(st.Name(), func(t *testing.T) {
-			t.Run("with-thoth", func(t *testing.T) {
-				ctx := thothmock.WithMockThoth(t)
+			t.Run("with-geoip", func(t *testing.T) {
+				ctx := geoiptest.WithMockGeoIP(t)
 				if _, err := LoadPoliciesOrDefault(ctx, filepath.Join("config", "testdata", "good", st.Name()), anubis.DefaultDifficulty, "info", false); err != nil {
 					t.Fatal(err)
 				}
 			})
 
-			t.Run("without-thoth", func(t *testing.T) {
+			t.Run("without-geoip", func(t *testing.T) {
 				if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("config", "testdata", "good", st.Name()), anubis.DefaultDifficulty, "info", false); err != nil {
 					t.Fatal(err)
 				}
