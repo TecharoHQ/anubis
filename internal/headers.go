@@ -75,7 +75,7 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 		// For local sockets there is no real remote address but the localhost
 		// address should be sensible.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r.Header.Set("X-Real-IP", "127.0.0.1")
+			setPeerForwardingHeaders(r, "127.0.0.1")
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -85,12 +85,24 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 		if err != nil {
 			panic(err) // this should never happen
 		}
-		r.Header.Set("X-Real-IP", host)
+		setPeerForwardingHeaders(r, host)
 		if addr, err := netip.ParseAddr(host); err == nil {
 			r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func setPeerForwardingHeaders(r *http.Request, host string) {
+	r.Header.Del("Forwarded")
+	r.Header.Set("X-Real-IP", host)
+	r.Header.Set("X-Forwarded-For", host)
+	r.Header.Set("X-Forwarded-Host", r.Host)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	r.Header.Set("X-Forwarded-Proto", scheme)
 }
 
 // XForwardedForToXRealIP sets the X-Real-IP header based on the contents
