@@ -462,14 +462,20 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 }
 
 func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger) bool {
+	return s.handleDNSBLWithLookup(w, r, ip, lg, dnsbl.Lookup)
+}
+
+func (s *Server) handleDNSBLWithLookup(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger, lookup func(string) (dnsbl.DroneBLResponse, error)) bool {
 	db := &store.JSON[dnsbl.DroneBLResponse]{Underlying: s.store, Prefix: "dronebl:"}
 	if s.policy.DNSBL && ip != "" {
 		resp, err := db.Get(r.Context(), ip)
 		if err != nil {
 			lg.DebugContext(r.Context(), "looking up ip in dnsbl")
-			resp, err := dnsbl.Lookup(ip)
+			resp, err = lookup(ip)
 			if err != nil {
 				lg.ErrorContext(r.Context(), "can't look up ip in dnsbl", "err", err)
+				s.respondWithStatus(w, r, localization.GetLocalizer(r).T("internal_server_error"), "", http.StatusServiceUnavailable)
+				return true
 			}
 			_ = db.Set(r.Context(), ip, resp, 24*time.Hour) // worst case we do the dns lookup again
 			asn, asnDesc := asnFromContext(r.Context())
