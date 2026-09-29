@@ -493,6 +493,7 @@ sls
 sni
 snipster
 sortorder
+soteria
 Spambot
 spammer
 sparkline

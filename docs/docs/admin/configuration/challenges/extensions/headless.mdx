@@ -1,0 +1,91 @@
+---
+title: Headless Browser Detection
+---
+
+import EnterpriseOnly from "@site/src/components/EnterpriseOnly";
+
+<EnterpriseOnly link="../../../botstopper/" />
+
+BotStopper can run basic headless browser detection on challenge pages. This detector is a small proprietary bit of code that examines browsers for signs of automation tooling. Before the client submits a challenge, the detector sends a report to BotStopper. This report is used in a few ways:
+
+- If the report contains any hard signals, the challenge fails no matter what the browser submitted. This catches many careless implementations of browser automation tooling.
+- If any component request for any part of the detector module contains unexpected changes (IE: User-Agent strings changing mid detection), the challenge fails.
+
+## Enabling the extension
+
+To enable headless browser detection, add `headless` to the `extensions` list of a challenge:
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: sha256
+      difficulty: 16
+      extensions:
+        - headless
+```
+
+:::note
+
+This detection process requires the execution of JavaScript and WebAssembly in user browsers. There is currently no way to mitigate this requirement and a no-JS mode for this detector is not currently planned. Please adjust your deployment expectations around this fact.
+
+:::
+
+## Caveats to keep in mind
+
+This challenge extension relies on many _subtle_ behaviors of browser behaviour. You **MUST** keep these caveats in mind when deploying this extension:
+
+- Your site **MUST** be served over HTTPS. All of the component assets for this extension are precompressed with [Brotli](https://developer.mozilla.org/en-US/docs/Glossary/Brotli_compression). Browsers do not accept plaintext server responses that are compressed with Brotli.
+- Your reverse proxy or CDN **MUST** send all the headers that clients sent **unaltered**, including but not limited to the `User-Agent` string, client hints headers, and any `Accept-*` headers.
+- If BotStopper sees any discrepancies between what it expects to see from browsers and what browsers actually return, the challenge will fail.
+- The detector adds about 35Ki to challenge pages served to browsers.
+- The detector uses the `eval` JavaScript function. If your `Content-Security-Policy` header on the challenge page blocks `unsafe-eval`, none of the detection probes will work.
+
+## CEL variables
+
+This extension exposes an expression variable:
+
+| Name                         | Type  | Description                                                         |
+| :--------------------------- | :---- | :------------------------------------------------------------------ |
+| `headlessNetworkHardReports` | int32 | The stored hard reports for the network associated with the client. |
+
+### `headlessNetworkHardReports`
+
+As headless browsers fail checks, the IPv4/IPv6 minimum routable prefix associated with that failure is stored in BotStopper's store. This can be used to give clients from those networks more difficult challenges as a deterrence method. For example:
+
+```yaml
+bots:
+  - name: headless-network
+    action: CHALLENGE
+    expression: headlessNetworkHardReports >= 3
+    challenge:
+      algorithm: soteria # A difficult challenge for most hardware
+      difficulty: 20
+```
+
+Headless network hard reports will expire after 24 hours by default. This may be configured with the headless extension flags.
+
+## Flags
+
+| Flag / environment variable                       | Default | Value                                                                   |
+| :------------------------------------------------ | :------ | :---------------------------------------------------------------------- |
+| `--headless-network-ttl` / `HEADLESS_NETWORK_TTL` | `24h`   | The time that BotStopper keeps the count of hard reports for a network. |
+
+This will be replaced with a configuration file value in the near future.
+
+## Metrics
+
+This extension exposes metrics that may be useful for internal dashboards:
+
+- `botstopper_headless_reports_total{result}`: The number of reports for each result, broken down by reason.
+- `botstopper_headless_signal_hits_total{signal}`: The number of hits for each signal.
+- `botstopper_headless_refusals_total{reason}`: The number of challenges that failed because of the detector by reason (such as `missing`, `assets`, `hard`, and `error`).
+
+## Methodology flaws
+
+Headless browsers are constantly evolving to evade these kinds of checks. This will need to become a dynamically updating component of BotStopper. Additionally, many of the checks involved with this are sent by the client as there is no way for the server to determine these values without getting them from the client. Clients may lie.
