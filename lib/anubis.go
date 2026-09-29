@@ -211,6 +211,14 @@ func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challen
 		rule = &policy.Bot{
 			Rules: &checker.List{},
 		}
+	} else {
+		copiedRule := *rule
+		if rule.Challenge != nil {
+			copiedChallenge := *rule.Challenge
+			copiedChallenge.Extensions = slices.Clone(rule.Challenge.Extensions)
+			copiedRule.Challenge = &copiedChallenge
+		}
+		rule = &copiedRule
 	}
 
 	if chall.Difficulty == 0 {
@@ -303,7 +311,6 @@ func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status 
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
-
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
