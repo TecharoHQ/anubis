@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-	"path"
 	"regexp"
 	"strings"
 
@@ -125,13 +124,13 @@ func (pc *PathChecker) Check(r *http.Request) (bool, error) {
 			if parsed, err := url.ParseRequestURI(originalUrl); err == nil {
 				originalUrl = parsed.Path
 			}
-			if pc.regexp.MatchString(originalUrl) {
+			if pc.regexp.MatchString(pathForPolicy(originalUrl)) {
 				return true, nil
 			}
 		}
 	}
 
-	if pc.regexp.MatchString(r.URL.Path) {
+	if pc.regexp.MatchString(pathForPolicy(r.URL.Path)) {
 		return true, nil
 	}
 
@@ -206,9 +205,28 @@ func (pc *ParsedConfig) ValidateRequestPath(r *http.Request) error {
 		}
 	}
 	for _, p := range paths {
-		if p != "" && strings.TrimSuffix(p, "/") != strings.TrimSuffix(path.Clean(p), "/") {
-			return ErrMisconfiguration
+		for segment := range strings.SplitSeq(p, "/") {
+			if segment == "." || segment == ".." {
+				return ErrMisconfiguration
+			}
 		}
 	}
 	return nil
+}
+
+// pathForPolicy collapses repeated slashes for rule evaluation without changing
+// the path forwarded to the origin. Dot segments are rejected separately.
+func pathForPolicy(p string) string {
+	if !strings.Contains(p, "//") {
+		return p
+	}
+	var result strings.Builder
+	result.Grow(len(p))
+	for i := range len(p) {
+		if p[i] == '/' && i > 0 && p[i-1] == '/' {
+			continue
+		}
+		result.WriteByte(p[i])
+	}
+	return result.String()
 }

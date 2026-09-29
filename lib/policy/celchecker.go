@@ -85,10 +85,10 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 				if err != nil {
 					return nil, false
 				}
-				return u.Path, true
+				return pathForPolicy(u.Path), true
 			}
 		}
-		return cr.URL.Path, true
+		return pathForPolicy(cr.URL.Path), true
 	case "query":
 		return expressions.URLValues{Values: cr.URL.Query()}, true
 	case "headers":
