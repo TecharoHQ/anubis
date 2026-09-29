@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -26,14 +27,24 @@ func TestHTTPServerClosesIncompleteHeaders(t *testing.T) {
 	called := make(chan struct{}, 1)
 	s := NewHTTPServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { called <- struct{}{} }))
 	s.ReadHeaderTimeout = 50 * time.Millisecond
-	go s.Serve(listener)
-	t.Cleanup(func() { s.Close() })
+	go func() {
+		if err := s.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			t.Error(err)
+		}
+	}()
+	t.Cleanup(func() {
+		if err := s.Close(); err != nil {
+			t.Error(err)
+		}
+	})
 	conn, err := net.Dial("tcp", listener.Addr().String())
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(time.Second))
+	defer func() { _ = conn.Close() }()
+	if err := conn.SetDeadline(time.Now().Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := io.WriteString(conn, "GET / HTTP/1.1\r\nHost: example.com\r\nX-Incomplete: "); err != nil {
 		t.Fatal(err)
 	}

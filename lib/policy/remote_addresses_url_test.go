@@ -354,15 +354,23 @@ func TestRemoteAddressesURLRejectsEmptyReplacement(t *testing.T) {
 
 func TestRemoteAddressesURLRedirectOrigin(t *testing.T) {
 	var reached atomic.Bool
-	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { reached.Store(true); io.WriteString(w, samplePrefixList) }))
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached.Store(true)
+		if _, err := io.WriteString(w, samplePrefixList); err != nil {
+			t.Error(err)
+		}
+	}))
 	defer other.Close()
 	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/external" {
+		switch r.URL.Path {
+		case "/external":
 			http.Redirect(w, r, other.URL, http.StatusFound)
-		} else if r.URL.Path == "/local" {
+		case "/local":
 			http.Redirect(w, r, "/feed", http.StatusFound)
-		} else {
-			io.WriteString(w, samplePrefixList)
+		default:
+			if _, err := io.WriteString(w, samplePrefixList); err != nil {
+				t.Error(err)
+			}
 		}
 	}))
 	defer origin.Close()

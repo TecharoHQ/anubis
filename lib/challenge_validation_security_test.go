@@ -39,7 +39,7 @@ func TestPassChallengeRejectsEveryValidationError(t *testing.T) {
 			cli := httpClient(t)
 			chall := makeChallenge(t, ts, cli)
 			resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode < 400 {
 				t.Errorf("validation error accepted: status %d", resp.StatusCode)
 			}

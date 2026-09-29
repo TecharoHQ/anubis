@@ -19,7 +19,9 @@ func TestOGRedirectOrigin(t *testing.T) {
 			other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				reached.Store(true)
 				w.Header().Set("Content-Type", "text/html")
-				w.Write([]byte(`<meta property="og:title" content="secret">`))
+				if _, err := w.Write([]byte(`<meta property="og:title" content="secret">`)); err != nil {
+					t.Error(err)
+				}
 			}))
 			defer other.Close()
 			origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +32,9 @@ func TestOGRedirectOrigin(t *testing.T) {
 					http.Redirect(w, r, "/document", http.StatusFound)
 				default:
 					w.Header().Set("Content-Type", "text/html")
-					w.Write([]byte(`<meta property="og:title" content="safe">`))
+					if _, err := w.Write([]byte(`<meta property="og:title" content="safe">`)); err != nil {
+						t.Error(err)
+					}
 				}
 			}))
 			defer origin.Close()

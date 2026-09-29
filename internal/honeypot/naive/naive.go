@@ -70,7 +70,7 @@ func New(cfg *config.Honeypot, st store.Interface, lg *slog.Logger) (*Impl, erro
 		if err == nil {
 			err = fout.Chmod(0600)
 			if err != nil {
-				fout.Close()
+				_ = fout.Close()
 			}
 		}
 		if err != nil {

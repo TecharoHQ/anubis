@@ -45,7 +45,7 @@ func TestPassChallengeRequiresIssuedPolicy(t *testing.T) {
 				t.Fatal(err)
 			}
 			resp := handleChallengeZeroDifficulty(t, ts, cli, issued)
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode < 400 || authCookie(srv, resp) != nil {
 				t.Errorf("changed %s accepted: status %d", change, resp.StatusCode)
 			}

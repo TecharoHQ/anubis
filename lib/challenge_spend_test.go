@@ -67,7 +67,7 @@ func TestChallengeSpendWriteFailureRejectsClearance(t *testing.T) {
 	c := makeChallenge(t, ts, cli)
 	srv.store = spendFailureStore{srv.store}
 	resp := handleChallengeZeroDifficulty(t, ts, cli, c)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode < 400 || authCookie(srv, resp) != nil {
 		t.Fatalf("failed spend accepted: %d", resp.StatusCode)
 	}

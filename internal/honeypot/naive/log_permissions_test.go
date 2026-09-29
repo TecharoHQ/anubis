@@ -26,7 +26,7 @@ func TestIPLogPermissions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer i.fout.Close()
+			defer func() { _ = i.fout.Close() }()
 			stat, err := os.Stat(path)
 			if err != nil {
 				t.Fatal(err)

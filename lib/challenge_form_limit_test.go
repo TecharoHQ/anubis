@@ -19,8 +19,12 @@ func TestChallengeEndpointsLimitMultipartBodies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	part.Write(bytes.Repeat([]byte("x"), 128<<10))
-	form.Close()
+	if _, err := part.Write(bytes.Repeat([]byte("x"), 128<<10)); err != nil {
+		t.Fatal(err)
+	}
+	if err := form.Close(); err != nil {
+		t.Fatal(err)
+	}
 	for _, endpoint := range []string{"make", "pass", "forward"} {
 		t.Run(endpoint, func(t *testing.T) {
 			srv := spawnAnubis(t, Options{Policy: loadPolicies(t, "testdata/zero_difficulty.yaml", 0)})

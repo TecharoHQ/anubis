@@ -16,7 +16,7 @@ func TestPassChallengeRedirectIsUncacheable(t *testing.T) {
 	cli := httpClient(t)
 	c := makeChallenge(t, ts, cli)
 	resp := handleChallengeZeroDifficulty(t, ts, cli, c)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusFound || authCookie(srv, resp) == nil {
 		t.Fatalf("challenge unsuccessful: %d", resp.StatusCode)
 	}

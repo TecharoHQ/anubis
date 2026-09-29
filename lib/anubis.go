@@ -288,16 +288,6 @@ func removeDownstreamRiskConnectionTokens(header http.Header) {
 	}
 }
 
-func clearDownstreamRiskHeaders(header http.Header) {
-	// Remove client-supplied values for headers owned by Anubis.
-	header.Del(downstreamRiskRuleHeader)
-	header.Del(downstreamRiskActionHeader)
-	header.Del(downstreamRiskStatusHeader)
-
-	// Remove Connection options that could strip those headers downstream.
-	removeDownstreamRiskConnectionTokens(header)
-}
-
 func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status string) {
 	removeDownstreamRiskConnectionTokens(header)
 	header.Set(downstreamRiskRuleHeader, cr.Name)
