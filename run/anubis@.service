@@ -18,7 +18,7 @@ RuntimeDirectoryMode=0755
 # Each instance runs as its own dynamic user, so access is granted through the
 # static anubis group. These run as root before Anubis starts so that it works
 # without a reboot after install and for manual installs of this unit.
-ExecStartPre=+/usr/bin/systemd-sysusers --inline "g anubis -"
+ExecStartPre=-+/usr/bin/systemd-sysusers --inline "g anubis -"
 ExecStartPre=+/usr/bin/install -d -m 2775 -o root -g anubis /var/lib/anubis
 SupplementaryGroups=anubis
 ReadWritePaths=/run -/var/lib/anubis
