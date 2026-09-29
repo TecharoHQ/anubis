@@ -205,13 +205,28 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 			if targetHost != "" {
 				r.Out.Host = targetHost
 			}
-			if targetSNI == "auto" {
-				transport.TLSClientConfig.ServerName = r.Out.Host
-			}
+
 		},
 	}
 
+	if targetSNI == "auto" {
+		rp.Transport = automaticSNITransport{transport}
+	}
 	return rp, nil
+}
+
+type automaticSNITransport struct{ transport *http.Transport }
+
+func (t automaticSNITransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	transport := t.transport.Clone()
+	transport.TLSClientConfig = t.transport.TLSClientConfig.Clone()
+	host := r.Host
+	if hostname, _, err := net.SplitHostPort(host); err == nil {
+		host = hostname
+	}
+	transport.TLSClientConfig.ServerName = host
+	transport.DisableKeepAlives = true
+	return transport.RoundTrip(r)
 }
 
 func main() {
