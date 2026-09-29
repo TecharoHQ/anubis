@@ -636,6 +636,13 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if cr.Rule != config.RuleChallenge || rule == nil || rule.Challenge == nil ||
+		chall.PolicyRuleHash != rule.Hash() || chall.Method != rule.Challenge.Algorithm ||
+		chall.Difficulty != rule.Challenge.Difficulty || !slices.Equal(chall.Extensions, rule.Challenge.Extensions) {
+		s.respondWithStatus(w, r, localizer.T("internal_server_error"), makeCode(challenge.ErrFailed), http.StatusForbidden)
+		return
+	}
+
 	rule = s.hydrateChallengeRule(rule, chall, lg)
 
 	impl, ok := challenge.Get(chall.Method)
