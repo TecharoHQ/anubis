@@ -461,7 +461,7 @@ func run(ctx context.Context) {
 		h = internal.JA4H(h)
 	}
 
-	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
+	srv := internal.NewHTTPServer(h)
 	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)
 	if err != nil {
 		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
