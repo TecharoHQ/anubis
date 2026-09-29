@@ -499,6 +499,10 @@ func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
 
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
+		if !prepareChallengeForm(w, r) {
+			return
+		}
+		defer cleanupChallengeForm(r)
 		localizer := localization.GetLocalizer(r)
 
 		redir := r.FormValue("redir")

@@ -499,6 +499,10 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
+	if !prepareChallengeForm(w, r) {
+		return
+	}
+	defer cleanupChallengeForm(r)
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
@@ -585,6 +589,10 @@ func (s *Server) validateExtension(name string, r *http.Request, lg *slog.Logger
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
+	if !prepareChallengeForm(w, r) {
+		return
+	}
+	defer cleanupChallengeForm(r)
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
