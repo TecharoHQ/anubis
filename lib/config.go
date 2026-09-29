@@ -204,7 +204,7 @@ func New(opts Options) (*Server, error) {
 		}), "GET")
 	}
 
-	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
+	registerWithPrefix(anubis.APIPrefix+"pass-challenge", internal.NoStoreCache(http.HandlerFunc(result.PassChallenge)), "GET")
 	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
