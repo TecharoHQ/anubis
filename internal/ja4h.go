@@ -14,7 +14,7 @@ const JA4HHeaderName = "X-Http-Fingerprint-Ja4h"
 
 func JA4H(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Add(JA4HHeaderName, ja4h.JA4H(r))
+		r.Header.Set(JA4HHeaderName, ja4h.JA4H(r))
 		next.ServeHTTP(w, r)
 	})
 }
