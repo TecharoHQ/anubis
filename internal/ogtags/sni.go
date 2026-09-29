@@ -38,6 +38,13 @@ func (c *OGTagCache) clientForSNI(serverName string) *http.Client {
 		CheckRedirect: sameOriginRedirect,
 		Transport:     tr,
 	}
+	if len(c.sniClients) >= 128 {
+		for name, old := range c.sniClients {
+			delete(c.sniClients, name)
+			old.CloseIdleConnections()
+			break
+		}
+	}
 	c.sniClients[serverName] = cli
 	return cli
 }
