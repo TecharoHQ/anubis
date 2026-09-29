@@ -517,7 +517,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		).ServeHTTP(w, r)
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())
-		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
+		requestsProxied.WithLabelValues(proxiedHostLabels.label(r.Host), asn, asnDesc).Inc()
 		r = s.stripBasePrefixFromRequest(r)
 		s.next.ServeHTTP(w, r)
 	}
