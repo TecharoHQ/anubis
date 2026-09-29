@@ -809,6 +809,9 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
+	if err := s.policy.ValidateRequestPath(r); err != nil {
+		return policy.CheckResult{}, nil, err
+	}
 	host := r.Header.Get("X-Real-IP")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-IP header is not set")
