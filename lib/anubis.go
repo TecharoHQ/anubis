@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -97,15 +99,16 @@ var (
 )
 
 type Server struct {
-	next        http.Handler
-	store       store.Interface
-	mux         *http.ServeMux
-	policy      *policy.ParsedConfig
-	OGTags      *ogtags.OGTagCache
-	logger      *slog.Logger
-	opts        Options
-	ed25519Priv ed25519.PrivateKey
-	hs512Secret []byte
+	challengeLocks [256]sync.Mutex
+	next           http.Handler
+	store          store.Interface
+	mux            *http.ServeMux
+	policy         *policy.ParsedConfig
+	OGTags         *ogtags.OGTagCache
+	logger         *slog.Logger
+	opts           Options
+	ed25519Priv    ed25519.PrivateKey
+	hs512Secret    []byte
 }
 
 func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
@@ -629,6 +632,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
+	lockIndex := sha256.Sum256([]byte(r.FormValue("id")))
+	lock := &s.challengeLocks[lockIndex[0]]
+	lock.Lock()
+	defer lock.Unlock()
+
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.ErrorContext(r.Context(), "getChallenge failed", "err", err)
@@ -707,6 +715,14 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	chall.Spent = true
+	j := store.JSON[challenge.Challenge]{Underlying: s.store}
+	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
+		lg.DebugContext(r.Context(), "can't update information about challenge", "err", err)
+		s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+		return
+	}
+
 	lg.InfoContext(r.Context(), "challenge accepted")
 
 	// generate JWT cookie
@@ -751,12 +767,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 			Value:  url.QueryEscape(origReferer),
 			Expiry: 1 * time.Minute,
 		})
-	}
-
-	chall.Spent = true
-	j := store.JSON[challenge.Challenge]{Underlying: s.store}
-	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
-		lg.DebugContext(r.Context(), "can't update information about challenge", "err", err)
 	}
 
 	{
