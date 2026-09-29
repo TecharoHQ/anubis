@@ -944,9 +944,9 @@ func TestRuleChange(t *testing.T) {
 	chall := makeChallenge(t, ts, cli)
 	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
 
-	if resp.StatusCode != http.StatusFound {
+	if resp.StatusCode != http.StatusForbidden {
 		_ = resp.Write(os.Stderr) // if stderr fails, there are bigger problems
-		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
+		t.Errorf("wanted %d, got: %d", http.StatusForbidden, resp.StatusCode)
 	}
 }
 
@@ -1571,11 +1571,8 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 
 	srv.PassChallenge(rr, req)
 
-	if rr.Code != http.StatusFound {
-		t.Fatalf("expected redirect when validating challenge, got %d", rr.Code)
-	}
-	if rr.Header().Get("Location") != target {
-		t.Fatalf("unexpected Location: %q", rr.Header().Get("Location"))
+	if rr.Code != http.StatusForbidden || rr.Header().Get("Location") != "" || authCookie(srv, rr.Result()) != nil {
+		t.Fatalf("changed policy accepted stored challenge: status %d", rr.Code)
 	}
 }
 
