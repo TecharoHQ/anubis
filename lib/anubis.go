@@ -301,14 +301,6 @@ func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
 
-	if s.opts.OpenGraph.Enabled {
-		if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
-			clearDownstreamRiskHeaders(r.Header)
-			lg.DebugContext(r.Context(), "serving opengraph tag asset")
-			s.ServeHTTPNext(w, r)
-			return
-		}
-	}
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
