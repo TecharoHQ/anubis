@@ -34,8 +34,9 @@ func (c *OGTagCache) clientForSNI(serverName string) *http.Client {
 	}
 
 	cli = &http.Client{
-		Timeout:   httpTimeout,
-		Transport: tr,
+		Timeout:       httpTimeout,
+		CheckRedirect: sameOriginRedirect,
+		Transport:     tr,
 	}
 	c.sniClients[serverName] = cli
 	return cli
