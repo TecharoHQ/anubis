@@ -83,7 +83,13 @@ func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
-	if hmc.regexp.MatchString(r.Header.Get(hmc.header)) {
+	values := r.Header.Values(hmc.header)
+	for _, value := range values {
+		if hmc.regexp.MatchString(value) {
+			return true, nil
+		}
+	}
+	if hmc.regexp.MatchString(strings.Join(values, ",")) {
 		return true, nil
 	}
 
@@ -144,8 +150,10 @@ type headerExistsChecker struct {
 }
 
 func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
-	if r.Header.Get(hec.header) != "" {
-		return true, nil
+	for _, value := range r.Header.Values(hec.header) {
+		if value != "" {
+			return true, nil
+		}
 	}
 
 	return false, nil

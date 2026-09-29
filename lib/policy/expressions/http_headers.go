@@ -46,7 +46,7 @@ func (h HTTPHeaders) Find(key ref.Val) (ref.Val, bool) {
 		return nil, false
 	}
 
-	if _, ok := h.Header[string(k)]; !ok {
+	if _, ok := h.Header[http.CanonicalHeaderKey(string(k))]; !ok {
 		return nil, false
 	}
 
