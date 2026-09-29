@@ -50,7 +50,12 @@ func TestGoodConfigs(t *testing.T) {
 			})
 
 			t.Run("without-geoip", func(t *testing.T) {
-				if _, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("config", "testdata", "good", st.Name()), anubis.DefaultDifficulty, "info", false); err != nil {
+				_, err := LoadPoliciesOrDefault(t.Context(), filepath.Join("config", "testdata", "good", st.Name()), anubis.DefaultDifficulty, "info", false)
+				if st.Name() == "geoip_us.yaml" || st.Name() == "challenge_cloudflare.yaml" {
+					if !errors.Is(err, policy.ErrMisconfiguration) {
+						t.Fatalf("wanted missing geoip error, got %v", err)
+					}
+				} else if err != nil {
 					t.Fatal(err)
 				}
 			})
