@@ -21,6 +21,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default to the simplified explanation to avoid people misinterpreting words. `USE_SIMPLIFIED_EXPLANATION` is now deprecated.
 - Add documentation for the [Headless Browser Detection](./admin/configuration/challenges/extensions/headless.mdx) extension and the [Soteria](./admin/configuration/challenges/) challenge methods exclusive to BotStopper.
 
+### Small security fixes
+
+As part of a continuous security posture, the following issues were identified and remediated:
+
+- Challenge validation for WASM based checks could fail open when users pass specifically crafted invalid input.
+- WASM challenges may only have four in-flight validations at once per process, the rest will wait in line.
+- Challenge solutions are now strictly bound to the issuing rule.
+- Path policies now prevent path traversal bypasses in some edge cases.
+- Duplicate header values are now consistently handled across edge cases.
+- Forwarded URI paths are evaluated separately from query strings.
+- Disallow clients from sending their JA4H value by using the Set header verb instead of Add.
+- Avoid a panic when parsing IPv6 answers from DNSBL hits in edge cases.
+- Avoid caching negative hits from DNSBL servers.
+- CDNs and middleware are now instructed to NOT cache Anubis challenge, completion, forward-auth, and error pages.
+- When a dynamic IP list updates to a list that has no entries, keep using the previous entry instead of deleting all IP list contents from memory.
+- Reject short HS512 secrets.
+- Restrict honeypot log permissions.
+- Handle malformed client IP addresses safely.
+- Fix concurrent TLS SNI handling in edge cases.
+- DLSBL hits are now cached correctly, even when the result is no entry found.
+
 ## v1.28.0-pre2: Wuk Lamat
 
 - Add WebAssembly-based proof of work checks to decrease client load and increase the complexity required to scrape past Anubis. See [Proof of Work (WebAssembly)](./admin/configuration/challenges/wasm.mdx) for more information.
