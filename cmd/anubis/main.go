@@ -490,6 +490,7 @@ func run(ctx context.Context) {
 		"target", *target,
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
+		"custom-real-ip-header", *customRealIPHeader,
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
