@@ -205,7 +205,7 @@ func New(opts Options) (*Server, error) {
 	}
 
 	registerWithPrefix(anubis.APIPrefix+"pass-challenge", internal.NoStoreCache(http.HandlerFunc(result.PassChallenge)), "GET")
-	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
+	registerWithPrefix(anubis.APIPrefix+"check", internal.NoStoreCache(http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly)), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
 	if opts.Policy.Honeypot != nil && opts.Policy.Honeypot.Enabled {
