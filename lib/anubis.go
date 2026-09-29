@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"slices"
 	"strconv"
@@ -36,7 +37,6 @@ import (
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
-	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
 	// challenge implementations
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
@@ -111,19 +111,17 @@ type Server struct {
 func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
 	lg := internal.GetRequestLogger(s.logger, r)
 
-	if s.policy.LogASN && s.policy.ThothClient != nil {
-		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
-		defer cancel()
-
-		ip := r.Header.Get("X-Real-IP")
-		if info, err := s.policy.ThothClient.IPToASN.Lookup(ctx, &iptoasnv1.LookupRequest{IpAddress: ip}); err == nil && info.GetAnnounced() {
-			asn := strconv.FormatUint(uint64(info.GetAsNumber()), 10)
-			lg = lg.With("asn", info.GetAsNumber(), "asn_description", info.GetDescription())
-			requestsByASN.WithLabelValues(asn, info.GetDescription()).Inc()
-			r = r.WithContext(context.WithValue(r.Context(), asnContextKey, asnInfo{
-				ASN:         asn,
-				Description: info.GetDescription(),
-			}))
+	if s.policy.LogASN && s.policy.GeoIP.HasASN() {
+		if addr, err := netip.ParseAddr(r.Header.Get("X-Real-IP")); err == nil {
+			if asNumber, description, ok := s.policy.GeoIP.LookupASN(addr); ok {
+				asn := strconv.FormatUint(uint64(asNumber), 10)
+				lg = lg.With("asn", asNumber, "asn_description", description)
+				requestsByASN.WithLabelValues(asn, description).Inc()
+				r = r.WithContext(context.WithValue(r.Context(), asnContextKey, asnInfo{
+					ASN:         asn,
+					Description: description,
+				}))
+			}
 		}
 	}
 

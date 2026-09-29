@@ -1,0 +1,9 @@
+bots:
+  - name: everything
+    action: CHALLENGE
+    path_regex: .*
+
+geoip:
+  country:
+    path: /var/lib/anubis/GeoLite2-Country.mmdb
+    country_field: continent

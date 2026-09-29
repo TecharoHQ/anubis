@@ -21,9 +21,9 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/geoip/geoiptest"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/store"
-	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
 // TLogWriter implements io.Writer by logging each line to t.Log.
@@ -50,7 +50,7 @@ func (w *TLogWriter) Write(p []byte) (n int, err error) {
 func loadPolicies(t *testing.T, fname string, difficulty int) *policy.ParsedConfig {
 	t.Helper()
 
-	ctx := thothmock.WithMockThoth(t)
+	ctx := geoiptest.WithMockGeoIP(t)
 
 	if fname == "" {
 		fname = "./testdata/test_config.yaml"
