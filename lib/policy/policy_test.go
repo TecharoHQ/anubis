@@ -1,7 +1,6 @@
 package policy
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -63,12 +62,7 @@ func TestGoodConfigs(t *testing.T) {
 				}
 				defer fin.Close() //nolint:errcheck
 
-				_, err = ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty, "info", false)
-				if st.Name() == "geoip_us.yaml" || st.Name() == "challenge_cloudflare.yaml" {
-					if !errors.Is(err, ErrMisconfiguration) {
-						t.Fatalf("wanted missing geoip error, got %v", err)
-					}
-				} else if err != nil {
+				if _, err := ParseConfig(t.Context(), fin, fin.Name(), anubis.DefaultDifficulty, "info", false); err != nil {
 					t.Fatal(err)
 				}
 			})
@@ -229,8 +223,7 @@ geoip:
 			wantBots: []string{"cloudflare", "canada", "everything"},
 		},
 		{
-			name:    "asn only rejects geoip rules",
-			wantErr: true,
+			name: "asn only skips geoip rules",
 			geoipBlock: `
 geoip:
   asn:
@@ -238,8 +231,7 @@ geoip:
 			wantBots: []string{"cloudflare", "everything"},
 		},
 		{
-			name:    "policy block wins over context",
-			wantErr: true,
+			name: "policy block wins over context",
 			geoipBlock: `
 geoip:
   country:
@@ -253,8 +245,7 @@ geoip:
 			wantBots: []string{"cloudflare", "canada", "everything"},
 		},
 		{
-			name:     "nothing configured rejects both",
-			wantErr:  true,
+			name:     "nothing configured skips both",
 			wantBots: []string{"everything"},
 		},
 		{
