@@ -204,6 +204,8 @@ gdead
 gdeadbee
 geoip
 geoipchecker
+geoiptest
+geoipupdate
 gha
 GHSA
 Ghz
@@ -276,6 +278,7 @@ installdir
 INSTALLDIR
 internets
 iocaine
+IPASN
 iplist
 IPTo
 iptoasn
@@ -329,6 +332,8 @@ Lyrenth
 MAINT
 maintnotifications
 malware
+maxmind
+maxminddb
 mba
 mcr
 memes
@@ -339,6 +344,10 @@ Minfilia
 minica
 mistralai
 mkmsi
+mmaps
+mmdb
+mmdbtype
+mmdbwriter
 mnt
 Moenbryda
 Mojeek
@@ -391,6 +400,7 @@ openai
 opendns
 opengraph
 openrc
+oschwald
 oswald
 packagecode
 pag
@@ -522,6 +532,7 @@ suminfo
 svcctl
 SVCNAME
 sysext
+sysusers
 tagline
 tarballs
 TARGETDIR
@@ -543,6 +554,7 @@ thothmock
 Tik
 Timpibot
 TLog
+tmpfiles
 toplevel
 Totolymo
 traefik
@@ -558,6 +570,7 @@ unifiedjs
 unintrusive
 unipromos
 unixhttpd
+unmaps
 unmarshal
 unmarshals
 unparseable
