@@ -48,6 +48,7 @@ var (
 )
 
 type ParsedConfig struct {
+	SubrequestMode    bool
 	Store             store.Interface
 	orig              *config.Config
 	Impressum         *config.Impressum
@@ -85,6 +86,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	var validationErrs []error
 
 	result := newParsedConfig(c)
+	result.SubrequestMode = subrequestMode
 	result.DefaultDifficulty = defaultDifficulty
 	result.LogASN = c.Logging.LogASN
 

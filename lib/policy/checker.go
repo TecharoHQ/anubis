@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"path"
 	"regexp"
 	"strings"
 
@@ -179,4 +180,27 @@ func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
 	}
 
 	return result, nil
+}
+
+func (pc *ParsedConfig) ValidateRequestPath(r *http.Request) error {
+	paths := []string{r.URL.Path}
+	if pc.SubrequestMode {
+		original := r.Header.Get("X-Original-Uri")
+		if original == "" {
+			original = r.Header.Get("X-Forwarded-Uri")
+		}
+		if original != "" {
+			u, err := url.ParseRequestURI(original)
+			if err != nil {
+				return ErrMisconfiguration
+			}
+			paths = append(paths, u.Path)
+		}
+	}
+	for _, p := range paths {
+		if p != "" && strings.TrimSuffix(p, "/") != strings.TrimSuffix(path.Clean(p), "/") {
+			return ErrMisconfiguration
+		}
+	}
+	return nil
 }
