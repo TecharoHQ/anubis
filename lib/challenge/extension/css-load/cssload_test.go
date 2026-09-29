@@ -4,7 +4,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/TecharoHQ/anubis"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
@@ -87,4 +90,19 @@ func FuzzRenderCSS(f *testing.F) {
 
 		mux.ServeHTTP(rw, req)
 	})
+}
+
+func TestHeadEscapesCSSURL(t *testing.T) {
+	previous := anubis.BasePrefix
+	t.Cleanup(func() { anubis.BasePrefix = previous })
+	anubis.BasePrefix = `/x");</style><script>bad</script>`
+	i := &Impl{st: memory.New(t.Context())}
+	r := httptest.NewRequest("GET", "http://example.com/", nil)
+	var out strings.Builder
+	if err := i.Head(r, &challenge.Challenge{ID: "test"}).Render(t.Context(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out.String(), "<script>") || strings.Contains(out.String(), `/x");`) {
+		t.Fatalf("unsafe output: %s", out.String())
+	}
 }
