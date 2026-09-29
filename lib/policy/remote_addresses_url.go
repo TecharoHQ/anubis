@@ -64,7 +64,7 @@ func NewRemoteAddressesURLChecker(ctx context.Context, rawURL string, logger *sl
 	c := &RemoteAddressesURLChecker{
 		url:             rawURL,
 		logger:          logger,
-		client:          &http.Client{Timeout: remoteAddressesURLHTTPTimeout},
+		client:          &http.Client{Timeout: remoteAddressesURLHTTPTimeout, CheckRedirect: remoteAddressesRedirect},
 		prefixTable:     new(bart.Lite),
 		hash:            internal.FastHash(""),
 		refreshInterval: remoteAddressesURLRefreshInterval,
@@ -196,6 +196,9 @@ func (c *RemoteAddressesURLChecker) applyList(pl *iplist.PrefixList) error {
 	}
 
 	cidrs := pl.CIDRs()
+	if len(cidrs) == 0 {
+		return config.ErrInvalidRemoteAddressesURL
+	}
 	table := new(bart.Lite)
 	for _, cidr := range cidrs {
 		prefix, err := netip.ParsePrefix(cidr)
@@ -237,4 +240,14 @@ func (c *RemoteAddressesURLChecker) delayUntilNextCycle() time.Duration {
 	}
 	c.cycleStart = time.Time{}
 	return remaining
+}
+
+func remoteAddressesRedirect(req *http.Request, via []*http.Request) error {
+	if len(via) == 0 || len(via) >= 10 {
+		return config.ErrInvalidRemoteAddressesURL
+	}
+	if req.URL.Scheme != via[0].URL.Scheme || req.URL.Host != via[0].URL.Host {
+		return config.ErrInvalidRemoteAddressesURL
+	}
+	return nil
 }
