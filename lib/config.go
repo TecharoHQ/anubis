@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha512"
 	"errors"
 	"fmt"
 	"io"
@@ -26,6 +27,7 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 	"github.com/a-h/templ"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Options struct {
@@ -131,6 +133,9 @@ func checkExtensions(ruleName string, cr *config.ChallengeRules) error {
 }
 
 func New(opts Options) (*Server, error) {
+	if len(opts.HS512Secret) > 0 && len(opts.HS512Secret) < sha512.Size {
+		return nil, jwt.ErrInvalidKey
+	}
 	if opts.Logger == nil {
 		opts.Logger = slog.With("subsystem", "anubis")
 	}
