@@ -215,19 +215,19 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		if b.ASNs != nil {
 			if !result.GeoIP.HasASN() {
 				lg.WarnContext(ctx, "You have specified an asns check but you have no geoip ASN database configured. Please configure geoip.asn in your policy file", "check", "asn", "settings", b.ASNs)
-				continue
+				validationErrs = append(validationErrs, fmt.Errorf("%s asns: %w", b.Name, ErrMisconfiguration))
+			} else {
+				cl = append(cl, result.GeoIP.ASNCheckerFor(b.ASNs.Match))
 			}
-
-			cl = append(cl, result.GeoIP.ASNCheckerFor(b.ASNs.Match))
 		}
 
 		if b.GeoIP != nil {
 			if !result.GeoIP.HasCountry() {
 				lg.WarnContext(ctx, "You have specified a geoip check but you have no geoip country database configured. Please configure geoip.country in your policy file", "check", "geoip", "settings", b.GeoIP)
-				continue
+				validationErrs = append(validationErrs, fmt.Errorf("%s geoip: %w", b.Name, ErrMisconfiguration))
+			} else {
+				cl = append(cl, result.GeoIP.GeoIPCheckerFor(b.GeoIP.Countries))
 			}
-
-			cl = append(cl, result.GeoIP.GeoIPCheckerFor(b.GeoIP.Countries))
 		}
 
 		if b.Challenge == nil {

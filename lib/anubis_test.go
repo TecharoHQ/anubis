@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -250,7 +251,7 @@ func TestLoadPolicies(t *testing.T) {
 			}
 			defer fin.Close() //nolint:errcheck
 
-			if _, err := policy.ParseConfig(t.Context(), fin, fname, 4, "info", false); err != nil {
+			if _, err := policy.ParseConfig(geoiptest.WithMockGeoIP(t), fin, fname, 4, "info", false); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -1615,5 +1616,16 @@ func TestXForwardedForNoDoubleComma(t *testing.T) {
 
 	if xff := resp.Header.Get("X-Forwarded-For"); strings.HasPrefix(xff, ",,") {
 		t.Errorf("X-Forwarded-For has two leading commas: %q", xff)
+	}
+}
+
+func TestDefaultPolicyRequiresGeoIP(t *testing.T) {
+	fin, err := data.BotPolicies.Open("botPolicies.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close()
+	if _, err := policy.ParseConfig(t.Context(), fin, "botPolicies.yaml", 4, "info", false); !errors.Is(err, policy.ErrMisconfiguration) {
+		t.Fatalf("wanted missing geoip error, got %v", err)
 	}
 }
