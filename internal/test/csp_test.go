@@ -12,6 +12,7 @@ import (
 
 	"github.com/TecharoHQ/anubis"
 	libanubis "github.com/TecharoHQ/anubis/lib"
+	"github.com/TecharoHQ/anubis/lib/geoip/geoiptest"
 	"github.com/mxschmitt/playwright-go"
 )
 
@@ -180,7 +181,7 @@ func spawnAnubisWithPolicy(t *testing.T, policyFname, basePrefix, csp string) st
 		fmt.Fprintf(w, "<html><body><span id=anubis-test>%d</span></body></html>", time.Now().Unix())
 	})
 
-	policy, err := libanubis.LoadPoliciesOrDefault(t.Context(), policyFname, anubis.DefaultDifficulty, "info", false)
+	policy, err := libanubis.LoadPoliciesOrDefault(geoiptest.WithMockGeoIP(t), policyFname, anubis.DefaultDifficulty, "info", false)
 	if err != nil {
 		t.Fatal(err)
 	}
