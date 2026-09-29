@@ -202,11 +202,11 @@ func New(opts Options) (*Server, error) {
 	}
 
 	if opts.Policy.Impressum != nil {
-		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		registerWithPrefix(anubis.APIPrefix+"imprint", internal.NoStoreCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
 				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, opts.Policy.Honeypot, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
-		}), "GET")
+		})), "GET")
 	}
 
 	registerWithPrefix(anubis.APIPrefix+"pass-challenge", internal.NoStoreCache(http.HandlerFunc(result.PassChallenge)), "GET")
@@ -216,7 +216,7 @@ func New(opts Options) (*Server, error) {
 	if opts.Policy.Honeypot != nil && opts.Policy.Honeypot.Enabled {
 		mazeGen, err := naive.New(opts.Policy.Honeypot, result.store, result.logger)
 		if err == nil {
-			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
+			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", internal.NoStoreCache(mazeGen), http.MethodGet)
 
 			opts.Policy.Bots = append(
 				opts.Policy.Bots,

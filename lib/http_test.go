@@ -204,7 +204,7 @@ func TestNoCacheOnError(t *testing.T) {
 	for userAgent, expectedCacheControl := range map[string]string{
 		"DENY":      "no-store",
 		"CHALLENGE": "no-store",
-		"ALLOW":     "",
+		"ALLOW":     "no-store",
 	} {
 		t.Run(userAgent, func(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
