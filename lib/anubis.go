@@ -673,6 +673,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+		return
 	}
 
 	for _, name := range chall.Extensions {
