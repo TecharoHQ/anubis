@@ -1614,3 +1614,24 @@ func TestXForwardedForNoDoubleComma(t *testing.T) {
 		t.Errorf("X-Forwarded-For has two leading commas: %q", xff)
 	}
 }
+
+func TestOpenGraphAllowCacheCannotBypassPolicy(t *testing.T) {
+	for _, ua := range []string{"DENY", "CHALLENGE"} {
+		t.Run(ua, func(t *testing.T) {
+			pol := loadPolicies(t, "testdata/aggressive_403.yaml", 0)
+			forwarded := false
+			srv := spawnAnubis(t, Options{Policy: pol, OpenGraph: config.OpenGraph{Enabled: true}, Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { forwarded = true })})
+			req := httptest.NewRequest("GET", "http://example.com/admin/secret.jpg", nil)
+			req.Header.Set("X-Real-IP", "127.0.0.1")
+			req.Header.Set("User-Agent", ua)
+			req.Header.Set("Accept-Encoding", "gzip")
+			if err := srv.store.Set(t.Context(), "ogtags:allow:"+req.Host+req.URL.String(), []byte("og:image"), time.Hour); err != nil {
+				t.Fatal(err)
+			}
+			srv.maybeReverseProxyOrPage(httptest.NewRecorder(), req)
+			if forwarded {
+				t.Fatal("OpenGraph metadata bypassed policy")
+			}
+		})
+	}
+}
