@@ -875,7 +875,13 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 				// that could mismatch the difficulty the client actually solved for.
 				challRules = &config.ChallengeRules{}
 			}
+			identity, err := json.Marshal(t.Threshold)
+			if err != nil {
+				return policy.CheckResult{}, nil, err
+			}
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
+				Name:      "threshold/" + t.Name + ":" + internal.FastHash(string(identity)),
+				Action:    t.Action,
 				Challenge: challRules,
 				Rules:     &checker.List{},
 			}, nil
@@ -883,6 +889,8 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 	}
 
 	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
+		Name:   "default/allow",
+		Action: config.RuleAllow,
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,
