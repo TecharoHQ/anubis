@@ -116,3 +116,29 @@ func TestCELChecker_PathWithForwardedUri(t *testing.T) {
 		})
 	}
 }
+
+func TestCELOriginalURIPathExcludesQuery(t *testing.T) {
+	for _, key := range []string{"X-Original-Uri", "X-Forwarded-Uri"} {
+		r, _ := http.NewRequest("GET", "http://example.com/api/check", nil)
+		r.Header.Set(key, "/admin/secret?token=abc")
+		cc, err := NewCELChecker(&config.ExpressionOrList{Expression: `path == "/admin/secret"`}, newTestDNS(t), true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, err := cc.Check(r); err != nil || !got {
+			t.Errorf("%s path match=%v err=%v", key, got, err)
+		}
+	}
+}
+
+func TestCELMalformedOriginalURI(t *testing.T) {
+	cc, err := NewCELChecker(&config.ExpressionOrList{Expression: `path == "/admin"`}, newTestDNS(t), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, _ := http.NewRequest("GET", "http://example.com/api/check", nil)
+	r.Header.Set("X-Original-Uri", "%invalid")
+	if got, err := cc.Check(r); got || err == nil {
+		t.Fatalf("malformed original URI match=%v err=%v", got, err)
+	}
+}
