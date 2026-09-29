@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/TecharoHQ/anubis/decaymap"
@@ -22,11 +23,20 @@ func init() {
 	store.Register("memory", factory{})
 }
 
+const maxEntries = 10000
+
 type impl struct {
-	store *decaymap.Impl[string, []byte]
+	lock      sync.Mutex
+	slots     [maxEntries]string
+	positions map[string]int
+	next      int
+	store     *decaymap.Impl[string, []byte]
 }
 
 func (i *impl) Delete(_ context.Context, key string) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+	delete(i.positions, key)
 	if !i.store.Delete(key) {
 		return fmt.Errorf("%w: %q", store.ErrNotFound, key)
 	}
@@ -44,6 +54,18 @@ func (i *impl) Get(_ context.Context, key string) ([]byte, error) {
 }
 
 func (i *impl) Set(_ context.Context, key string, value []byte, expiry time.Duration) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+	if _, exists := i.positions[key]; !exists {
+		old := i.slots[i.next]
+		if index, exists := i.positions[old]; exists && index == i.next {
+			i.store.Delete(old)
+			delete(i.positions, old)
+		}
+		i.slots[i.next] = key
+		i.positions[key] = i.next
+		i.next = (i.next + 1) % maxEntries
+	}
 	i.store.Set(key, value, expiry)
 	return nil
 }
@@ -69,7 +91,8 @@ func (i *impl) cleanupThread(ctx context.Context) {
 // New creates a simple in-memory store. This will not scale to multiple Anubis instances.
 func New(ctx context.Context) store.Interface {
 	result := &impl{
-		store: decaymap.New[string, []byte](),
+		store:     decaymap.New[string, []byte](),
+		positions: make(map[string]int),
 	}
 
 	go result.cleanupThread(ctx)
