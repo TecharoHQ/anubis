@@ -66,7 +66,13 @@ func New(cfg *config.Honeypot, st store.Interface, lg *slog.Logger) (*Impl, erro
 	if cfg.IPLogFile != "" {
 		lg.InfoContext(context.Background(), "logging honeypot IP addresses", "foutName", cfg.IPLogFile)
 
-		fout, err = os.Create(cfg.IPLogFile)
+		fout, err = os.OpenFile(cfg.IPLogFile, os.O_CREATE|os.O_RDWR, 0600)
+		if err == nil {
+			err = fout.Chmod(0600)
+			if err != nil {
+				fout.Close()
+			}
+		}
 		if err != nil {
 			return nil, fmt.Errorf("can't open ip log file %q: %w", cfg.IPLogFile, err)
 		}
