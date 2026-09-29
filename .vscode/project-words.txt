@@ -96,6 +96,7 @@ cloudflare
 cloudsolutions
 Codespaces
 confd
+configmap
 containerbuild
 containerregistry
 cooldown

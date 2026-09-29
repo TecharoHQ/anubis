@@ -60,8 +60,8 @@ containers:
     env:
       - name: "BIND"
         value: ":8080"
-      - name: "DIFFICULTY"
-        value: "4"
+      - name: "POLICY_FNAME"
+        value: "/data/cfg/botPolicy.yaml"
       - name: ED25519_PRIVATE_KEY_HEX
         valueFrom:
           secretKeyRef:
@@ -77,6 +77,10 @@ containers:
         value: "true"
       - name: "OG_EXPIRY_TIME"
         value: "24h"
+    volumeMounts:
+      - name: bot-policy
+        mountPath: /data/cfg
+        readOnly: true
     resources:
       limits:
         cpu: 750m
@@ -94,6 +98,21 @@ containers:
           - ALL
       seccompProfile:
         type: RuntimeDefault
+```
+
+Challenge difficulty is no longer set with a `DIFFICULTY` environment variable. It lives in the [bot policy file](../policies.mdx) (for example a per-challenge `difficulty` value), which the container above reads from `/data/cfg/botPolicy.yaml`. Create it as a ConfigMap and mount it at the pod level:
+
+```
+kubectl create configmap bot-policy \
+  --namespace default \
+  --from-file=botPolicy.yaml=./botPolicy.yaml
+```
+
+```yaml
+volumes:
+  - name: bot-policy
+    configMap:
+      name: bot-policy
 ```
 
 Then add a Service entry for Anubis:
