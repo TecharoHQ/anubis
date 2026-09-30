@@ -40,7 +40,7 @@ As part of a continuous security posture, the following issues were identified a
 - Restrict honeypot log permissions.
 - Handle malformed client IP addresses safely.
 - Fix concurrent TLS SNI handling in edge cases.
-- DLSBL hits are now cached correctly, even when the result is no entry found.
+- DNSBL hits are now cached correctly, even when the result is no entry found.
 
 ## v1.28.0-pre2: Wuk Lamat
 
