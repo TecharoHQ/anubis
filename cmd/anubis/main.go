@@ -50,6 +50,7 @@ var (
 	cookieExpiration         = flag.Duration("cookie-expiration-time", anubis.CookieDefaultExpirationTime, "The amount of time the authorization cookie is valid for")
 	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", true, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
+	dynamicCookieSuffix      = flag.Bool("dynamic-cookie-suffix", true, "if true, generates a suffix for cookie names based on cookie settings")
 	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
 	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", true, "deprecated: has no effect, the simplified explanation is always used")
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
@@ -449,6 +450,7 @@ func run(ctx context.Context) {
 		CookieDynamicDomain:       *cookieDynamicDomain,
 		CookieExpiration:          *cookieExpiration,
 		CookiePartitioned:         *cookiePartitioned,
+		DynamicCookieSuffix:       *dynamicCookieSuffix,
 		RedirectDomains:           redirectDomainsList,
 		Target:                    *target,
 		WebmasterEmail:            *webmasterEmail,
