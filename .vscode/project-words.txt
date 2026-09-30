@@ -534,6 +534,7 @@ subtest
 suminfo
 svcctl
 SVCNAME
+synthient
 sysext
 sysusers
 tagline
