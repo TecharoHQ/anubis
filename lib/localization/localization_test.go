@@ -28,6 +28,7 @@ func TestLocalizationService(t *testing.T) {
 		"nn":    "Lastar inn...",
 		"pl":    "Ładowanie...",
 		"pt-BR": "Carregando...",
+		"pt-PT": "A carregar...",
 		"tr":    "Yükleniyor...",
 		"ru":    "Загрузка...",
 		"uk":    "Завантаження...",
@@ -160,6 +161,7 @@ func TestAcceptLanguageQualityFactors(t *testing.T) {
 		{"zh_CN_regional", "zh-CN", "zh-CN"},
 		{"zh_TW_regional", "zh-TW", "zh-TW"},
 		{"pt_BR_regional", "pt-BR", "pt-BR"},
+		{"pt_PT_regional", "pt-PT", "pt-PT"},
 		{"complex_header", "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7,de;q=0.5", "fr"},
 	}
 
