@@ -521,6 +521,7 @@ subtest
 suminfo
 svcctl
 SVCNAME
+synthient
 sysext
 tagline
 tarballs
