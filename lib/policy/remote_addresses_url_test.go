@@ -7,9 +7,12 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/TecharoHQ/anubis/internal/iplist"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/lib/config"
@@ -329,5 +332,63 @@ func TestNewRemoteAddressesURLChecker_runStopsOnCancel(t *testing.T) {
 	case <-c.stopped:
 	case <-time.After(2 * time.Second):
 		t.Fatal("refresh goroutine did not stop after context cancel")
+	}
+}
+
+func TestRemoteAddressesURLRejectsEmptyReplacement(t *testing.T) {
+	c := newTestRemoteAddressesURLChecker("")
+	for _, doc := range []string{samplePrefixList, `{}`, `{"prefixes":[]}`} {
+		pl, err := iplist.Parse(strings.NewReader(doc))
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = c.applyList(pl)
+		if doc != samplePrefixList && err == nil {
+			t.Errorf("accepted empty feed %s", doc)
+		}
+		if !checkIP(t, c, "20.42.10.176") {
+			t.Fatal("loaded prefix lost")
+		}
+	}
+}
+
+func TestRemoteAddressesURLRedirectOrigin(t *testing.T) {
+	var reached atomic.Bool
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached.Store(true)
+		if _, err := io.WriteString(w, samplePrefixList); err != nil {
+			t.Error(err)
+		}
+	}))
+	defer other.Close()
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/external":
+			http.Redirect(w, r, other.URL, http.StatusFound)
+		case "/local":
+			http.Redirect(w, r, "/feed", http.StatusFound)
+		default:
+			if _, err := io.WriteString(w, samplePrefixList); err != nil {
+				t.Error(err)
+			}
+		}
+	}))
+	defer origin.Close()
+	for _, p := range []string{"/external", "/local"} {
+		ctx, cancel := context.WithCancel(t.Context())
+		impl, err := NewRemoteAddressesURLChecker(ctx, origin.URL+p, discardLogger())
+		if err != nil {
+			t.Fatal(err)
+		}
+		c := impl.(*RemoteAddressesURLChecker)
+		cancel()
+		<-c.stopped
+		c.refreshOnce(t.Context())
+		if p == "/external" && reached.Load() {
+			t.Fatal("followed external redirect")
+		}
+		if p == "/local" && !checkIP(t, c, "20.42.10.176") {
+			t.Fatal("same origin redirect failed")
+		}
 	}
 }

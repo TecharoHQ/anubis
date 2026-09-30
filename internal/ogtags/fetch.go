@@ -111,3 +111,14 @@ func (c *OGTagCache) fetchHTMLDocumentWithCache(ctx context.Context, urlStr stri
 
 	return doc, nil
 }
+
+func sameOriginRedirect(req *http.Request, via []*http.Request) error {
+	if len(via) >= 10 || len(via) == 0 {
+		return ErrOgHandled
+	}
+	origin := via[0].URL
+	if req.URL.Scheme != origin.Scheme || req.URL.Host != origin.Host {
+		return ErrOgHandled
+	}
+	return nil
+}

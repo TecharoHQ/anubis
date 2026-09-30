@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha512"
 	"errors"
 	"fmt"
 	"io"
@@ -26,6 +27,7 @@ import (
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 	"github.com/a-h/templ"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Options struct {
@@ -131,6 +133,9 @@ func checkExtensions(ruleName string, cr *config.ChallengeRules) error {
 }
 
 func New(opts Options) (*Server, error) {
+	if len(opts.HS512Secret) > 0 && len(opts.HS512Secret) < sha512.Size {
+		return nil, jwt.ErrInvalidKey
+	}
 	if opts.Logger == nil {
 		opts.Logger = slog.With("subsystem", "anubis")
 	}
@@ -197,21 +202,21 @@ func New(opts Options) (*Server, error) {
 	}
 
 	if opts.Policy.Impressum != nil {
-		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		registerWithPrefix(anubis.APIPrefix+"imprint", internal.NoStoreCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
 				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, opts.Policy.Honeypot, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
-		}), "GET")
+		})), "GET")
 	}
 
-	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
-	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
+	registerWithPrefix(anubis.APIPrefix+"pass-challenge", internal.NoStoreCache(http.HandlerFunc(result.PassChallenge)), "GET")
+	registerWithPrefix(anubis.APIPrefix+"check", internal.NoStoreCache(http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly)), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
 	if opts.Policy.Honeypot != nil && opts.Policy.Honeypot.Enabled {
 		mazeGen, err := naive.New(opts.Policy.Honeypot, result.store, result.logger)
 		if err == nil {
-			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
+			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", internal.NoStoreCache(mazeGen), http.MethodGet)
 
 			opts.Policy.Bots = append(
 				opts.Policy.Bots,

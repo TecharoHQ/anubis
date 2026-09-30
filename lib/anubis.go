@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -97,15 +99,16 @@ var (
 )
 
 type Server struct {
-	next        http.Handler
-	store       store.Interface
-	mux         *http.ServeMux
-	policy      *policy.ParsedConfig
-	OGTags      *ogtags.OGTagCache
-	logger      *slog.Logger
-	opts        Options
-	ed25519Priv ed25519.PrivateKey
-	hs512Secret []byte
+	challengeLocks [256]sync.Mutex
+	next           http.Handler
+	store          store.Interface
+	mux            *http.ServeMux
+	policy         *policy.ParsedConfig
+	OGTags         *ogtags.OGTagCache
+	logger         *slog.Logger
+	opts           Options
+	ed25519Priv    ed25519.PrivateKey
+	hs512Secret    []byte
 }
 
 func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
@@ -208,6 +211,14 @@ func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challen
 		rule = &policy.Bot{
 			Rules: &checker.List{},
 		}
+	} else {
+		copiedRule := *rule
+		if rule.Challenge != nil {
+			copiedChallenge := *rule.Challenge
+			copiedChallenge.Extensions = slices.Clone(rule.Challenge.Extensions)
+			copiedRule.Challenge = &copiedChallenge
+		}
+		rule = &copiedRule
 	}
 
 	if chall.Difficulty == 0 {
@@ -277,16 +288,6 @@ func removeDownstreamRiskConnectionTokens(header http.Header) {
 	}
 }
 
-func clearDownstreamRiskHeaders(header http.Header) {
-	// Remove client-supplied values for headers owned by Anubis.
-	header.Del(downstreamRiskRuleHeader)
-	header.Del(downstreamRiskActionHeader)
-	header.Del(downstreamRiskStatusHeader)
-
-	// Remove Connection options that could strip those headers downstream.
-	removeDownstreamRiskConnectionTokens(header)
-}
-
 func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status string) {
 	removeDownstreamRiskConnectionTokens(header)
 	header.Set(downstreamRiskRuleHeader, cr.Name)
@@ -300,15 +301,6 @@ func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status 
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
-
-	if s.opts.OpenGraph.Enabled {
-		if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
-			clearDownstreamRiskHeaders(r.Header)
-			lg.DebugContext(r.Context(), "serving opengraph tag asset")
-			s.ServeHTTPNext(w, r)
-			return
-		}
-	}
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
@@ -470,14 +462,20 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 }
 
 func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger) bool {
+	return s.handleDNSBLWithLookup(w, r, ip, lg, dnsbl.Lookup)
+}
+
+func (s *Server) handleDNSBLWithLookup(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger, lookup func(string) (dnsbl.DroneBLResponse, error)) bool {
 	db := &store.JSON[dnsbl.DroneBLResponse]{Underlying: s.store, Prefix: "dronebl:"}
 	if s.policy.DNSBL && ip != "" {
 		resp, err := db.Get(r.Context(), ip)
 		if err != nil {
 			lg.DebugContext(r.Context(), "looking up ip in dnsbl")
-			resp, err := dnsbl.Lookup(ip)
+			resp, err = lookup(ip)
 			if err != nil {
 				lg.ErrorContext(r.Context(), "can't look up ip in dnsbl", "err", err)
+				s.respondWithStatus(w, r, localization.GetLocalizer(r).T("internal_server_error"), "", http.StatusServiceUnavailable)
+				return true
 			}
 			_ = db.Set(r.Context(), ip, resp, 24*time.Hour) // worst case we do the dns lookup again
 			asn, asnDesc := asnFromContext(r.Context())
@@ -499,6 +497,10 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
+	if !prepareChallengeForm(w, r) {
+		return
+	}
+	defer cleanupChallengeForm(r)
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
@@ -585,6 +587,10 @@ func (s *Server) validateExtension(name string, r *http.Request, lg *slog.Logger
 }
 
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
+	if !prepareChallengeForm(w, r) {
+		return
+	}
+	defer cleanupChallengeForm(r)
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
@@ -623,6 +629,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
+	lockIndex := sha256.Sum256([]byte(r.FormValue("id")))
+	lock := &s.challengeLocks[lockIndex[0]]
+	lock.Lock()
+	defer lock.Unlock()
+
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.ErrorContext(r.Context(), "getChallenge failed", "err", err)
@@ -633,6 +644,13 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if chall.Spent {
 		lg.ErrorContext(r.Context(), "double spend prevented", "reason", "double_spend")
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"), "")
+		return
+	}
+
+	if cr.Rule != config.RuleChallenge || rule == nil || rule.Challenge == nil ||
+		chall.PolicyRuleHash != rule.Hash() || chall.Method != rule.Challenge.Algorithm ||
+		chall.Difficulty != rule.Challenge.Difficulty || !slices.Equal(chall.Extensions, rule.Challenge.Extensions) {
+		s.respondWithStatus(w, r, localizer.T("internal_server_error"), makeCode(challenge.ErrFailed), http.StatusForbidden)
 		return
 	}
 
@@ -673,6 +691,8 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+		return
 	}
 
 	for _, name := range chall.Extensions {
@@ -690,6 +710,14 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+	}
+
+	chall.Spent = true
+	j := store.JSON[challenge.Challenge]{Underlying: s.store}
+	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
+		lg.DebugContext(r.Context(), "can't update information about challenge", "err", err)
+		s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+		return
 	}
 
 	lg.InfoContext(r.Context(), "challenge accepted")
@@ -736,12 +764,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 			Value:  url.QueryEscape(origReferer),
 			Expiry: 1 * time.Minute,
 		})
-	}
-
-	chall.Spent = true
-	j := store.JSON[challenge.Challenge]{Underlying: s.store}
-	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
-		lg.DebugContext(r.Context(), "can't update information about challenge", "err", err)
 	}
 
 	{
@@ -809,6 +831,9 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
+	if err := s.policy.ValidateRequestPath(r); err != nil {
+		return policy.CheckResult{}, nil, err
+	}
 	host := r.Header.Get("X-Real-IP")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-IP header is not set")
@@ -866,7 +891,13 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 				// that could mismatch the difficulty the client actually solved for.
 				challRules = &config.ChallengeRules{}
 			}
+			identity, err := json.Marshal(t.Threshold)
+			if err != nil {
+				return policy.CheckResult{}, nil, err
+			}
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
+				Name:      "threshold/" + t.Name + ":" + internal.FastHash(string(identity)),
+				Action:    t.Action,
 				Challenge: challRules,
 				Rules:     &checker.List{},
 			}, nil
@@ -874,6 +905,8 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 	}
 
 	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
+		Name:   "default/allow",
+		Action: config.RuleAllow,
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,

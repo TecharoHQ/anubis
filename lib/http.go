@@ -425,6 +425,7 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
 	localizer := localization.GetLocalizer(r)
 
 	templ.Handler(
@@ -499,6 +500,11 @@ func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
 
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
+		w.Header().Set("Cache-Control", "no-store")
+		if !prepareChallengeForm(w, r) {
+			return
+		}
+		defer cleanupChallengeForm(r)
 		localizer := localization.GetLocalizer(r)
 
 		redir := r.FormValue("redir")
@@ -517,7 +523,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		).ServeHTTP(w, r)
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())
-		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
+		requestsProxied.WithLabelValues(proxiedHostLabels.label(r.Host), asn, asnDesc).Inc()
 		r = s.stripBasePrefixFromRequest(r)
 		s.next.ServeHTTP(w, r)
 	}

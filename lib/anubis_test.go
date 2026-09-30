@@ -944,9 +944,9 @@ func TestRuleChange(t *testing.T) {
 	chall := makeChallenge(t, ts, cli)
 	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
 
-	if resp.StatusCode != http.StatusFound {
+	if resp.StatusCode != http.StatusForbidden {
 		_ = resp.Write(os.Stderr) // if stderr fails, there are bigger problems
-		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
+		t.Errorf("wanted %d, got: %d", http.StatusForbidden, resp.StatusCode)
 	}
 }
 
@@ -1571,11 +1571,8 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 
 	srv.PassChallenge(rr, req)
 
-	if rr.Code != http.StatusFound {
-		t.Fatalf("expected redirect when validating challenge, got %d", rr.Code)
-	}
-	if rr.Header().Get("Location") != target {
-		t.Fatalf("unexpected Location: %q", rr.Header().Get("Location"))
+	if rr.Code != http.StatusForbidden || rr.Header().Get("Location") != "" || authCookie(srv, rr.Result()) != nil {
+		t.Fatalf("changed policy accepted stored challenge: status %d", rr.Code)
 	}
 }
 
@@ -1615,5 +1612,47 @@ func TestXForwardedForNoDoubleComma(t *testing.T) {
 
 	if xff := resp.Header.Get("X-Forwarded-For"); strings.HasPrefix(xff, ",,") {
 		t.Errorf("X-Forwarded-For has two leading commas: %q", xff)
+	}
+}
+
+func TestOpenGraphAllowCacheCannotBypassPolicy(t *testing.T) {
+	for _, ua := range []string{"DENY", "CHALLENGE"} {
+		t.Run(ua, func(t *testing.T) {
+			pol := loadPolicies(t, "testdata/aggressive_403.yaml", 0)
+			forwarded := false
+			srv := spawnAnubis(t, Options{Policy: pol, OpenGraph: config.OpenGraph{Enabled: true}, Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { forwarded = true })})
+			req := httptest.NewRequest("GET", "http://example.com/admin/secret.jpg", nil)
+			req.Header.Set("X-Real-IP", "127.0.0.1")
+			req.Header.Set("User-Agent", ua)
+			req.Header.Set("Accept-Encoding", "gzip")
+			if err := srv.store.Set(t.Context(), "ogtags:allow:"+req.Host+req.URL.String(), []byte("og:image"), time.Hour); err != nil {
+				t.Fatal(err)
+			}
+			srv.maybeReverseProxyOrPage(httptest.NewRecorder(), req)
+			if forwarded {
+				t.Fatal("OpenGraph metadata bypassed policy")
+			}
+		})
+	}
+}
+
+func TestDefaultPolicyWithoutGeoIP(t *testing.T) {
+	fin, err := data.BotPolicies.Open("botPolicies.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = fin.Close() }()
+	parsed, err := policy.ParseConfig(t.Context(), fin, "botPolicies.yaml", 4, "info", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(parsed.Bots) == 0 {
+		t.Fatal("no rules were loaded")
+	}
+	for _, bot := range parsed.Bots {
+		switch bot.Name {
+		case "countries-with-aggressive-scrapers", "aggressive-asns-without-functional-abuse-contact":
+			t.Errorf("loaded rule without its required database: %s", bot.Name)
+		}
 	}
 }

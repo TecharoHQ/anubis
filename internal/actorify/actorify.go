@@ -29,6 +29,7 @@ type Handler[Input, Output any] func(ctx context.Context, input Input) (Output, 
 type Actor[Input, Output any] struct {
 	handler Handler[Input, Output]
 	inbox   chan *message[Input, Output]
+	done    chan struct{}
 }
 
 type message[Input, Output any] struct {
@@ -48,6 +49,7 @@ func New[Input, Output any](ctx context.Context, handler Handler[Input, Output])
 	result := &Actor[Input, Output]{
 		handler: handler,
 		inbox:   make(chan *message[Input, Output], 32),
+		done:    make(chan struct{}),
 	}
 
 	go result.handle(ctx)
@@ -56,17 +58,13 @@ func New[Input, Output any](ctx context.Context, handler Handler[Input, Output])
 }
 
 func (a *Actor[Input, Output]) handle(ctx context.Context) {
+	defer close(a.done)
 	for {
 		select {
 		case <-ctx.Done():
-			close(a.inbox)
 			return
 		case msg, ok := <-a.inbox:
 			if !ok {
-				if msg.reply != nil {
-					close(msg.reply)
-				}
-
 				return
 			}
 
@@ -87,11 +85,18 @@ func (a *Actor[Input, Output]) handle(ctx context.Context) {
 // This only works with unary functions by design. If you need to have more inputs, define
 // a struct type to use as a container.
 func (a *Actor[Input, Output]) Call(ctx context.Context, input Input) (Output, error) {
-	replyCh := make(chan reply[Output])
+	replyCh := make(chan reply[Output], 1)
 
-	a.inbox <- &message[Input, Output]{
+	select {
+	case <-ctx.Done():
+		return z[Output](), context.Cause(ctx)
+	case <-a.done:
+		return z[Output](), ErrActorDied
+	case a.inbox <- &message[Input, Output]{
+		ctx:   ctx,
 		arg:   input,
 		reply: replyCh,
+	}:
 	}
 
 	select {
@@ -101,6 +106,8 @@ func (a *Actor[Input, Output]) Call(ctx context.Context, input Input) (Output, e
 		}
 
 		return reply.output, reply.err
+	case <-a.done:
+		return z[Output](), ErrActorDied
 	case <-ctx.Done():
 		return z[Output](), context.Cause(ctx)
 	}
