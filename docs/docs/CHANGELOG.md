@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix the original-referer cookie not being affected by the `COOKIE_PREFIX` setting ([#1977](https://github.com/TecharoHQ/anubis/pull/1977))
 - Default to the simplified explanation to avoid people misinterpreting words. `USE_SIMPLIFIED_EXPLANATION` is now deprecated.
 - Add documentation for the [Headless Browser Detection](./admin/configuration/challenges/extensions/headless.mdx) extension and the [Soteria](./admin/configuration/challenges/) challenge methods exclusive to BotStopper.
+- Add DYNAMIC_COOKIE_SUFFIX setting for toggling the dynamically generated cookie suffix [#1992](https://github.com/TecharoHQ/anubis/pull/1992)
 
 ### Small security fixes
 
