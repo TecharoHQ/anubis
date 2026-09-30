@@ -27,6 +27,12 @@ Anubis is brought to you by sponsors and donors like:
   <img src="./docs/static/img/sponsors/spur-logo.webp" alt="Spur Intelligence" height="64">
 </a>
 
+<p>
+  <a href="https://synthient.com/?utm_source=anubis">
+    <img src="./docs/static/img/sponsors/synthient-banner.webp" alt="Synthient" height="128" />
+  </a>
+</p>
+
 ### Gold Tier
 
 <a href="https://www.unipromos.com/?utm_campaign=github&utm_medium=referral&utm_content=anubis">
