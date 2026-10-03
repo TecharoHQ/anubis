@@ -83,6 +83,7 @@ var (
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
 	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
+	xffTrustedIPs            = flag.String("xff-trusted-ips", "", "if xff-trusted-ips is set, any IP addresses in X-Forwarded-For right of a trusted proxy will be discarded, including the trusted proxy")
 	customRealIPHeader       = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
 	thothInsecure        = flag.Bool("thoth-insecure", false, "deprecated: Thoth support was removed, use the geoip block in the policy file")
@@ -469,9 +470,9 @@ func run(ctx context.Context) {
 	var h http.Handler
 	h = s
 	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
+	h = internal.XForwardedForUpdate(*xffStripPrivate, *xffTrustedIPs, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
 	h = internal.XForwardedForToXRealIP(h)
-	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
 	if policy.NeedJA4H {
 		h = internal.JA4H(h)
 	}
