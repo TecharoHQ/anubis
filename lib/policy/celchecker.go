@@ -3,6 +3,7 @@ package policy
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
@@ -75,14 +76,19 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 		return cr.UserAgent(), true
 	case "path":
 		if cr.subRequestMode {
-			if xou := cr.Header.Get("X-Original-Uri"); xou != "" {
-				return xou, true
+			original := cr.Header.Get("X-Original-Uri")
+			if original == "" {
+				original = cr.Header.Get("X-Forwarded-Uri")
 			}
-			if xfu := cr.Header.Get("X-Forwarded-Uri"); xfu != "" {
-				return xfu, true
+			if original != "" {
+				u, err := url.ParseRequestURI(original)
+				if err != nil {
+					return nil, false
+				}
+				return pathForPolicy(u.Path), true
 			}
 		}
-		return cr.URL.Path, true
+		return pathForPolicy(cr.URL.Path), true
 	case "query":
 		return expressions.URLValues{Values: cr.URL.Query()}, true
 	case "headers":

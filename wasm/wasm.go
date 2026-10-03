@@ -31,6 +31,20 @@ var (
 	ErrTooMuchData   = errors.New("wasm: too much data being written")
 )
 
+var verificationSlots = make(chan struct{}, 4)
+
+func acquireVerification(ctx context.Context) (func(), error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	select {
+	case verificationSlots <- struct{}{}:
+		return func() { <-verificationSlots }, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
 const pageSize = 65536
 
 type Runner struct {
@@ -282,6 +296,11 @@ func (r *Runner) verify(ctx context.Context, data, verify []byte, nonce, difficu
 }
 
 func (r *Runner) Verify(ctx context.Context, data, verify []byte, nonce, difficulty uint32) (bool, error) {
+	release, err := acquireVerification(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer release()
 	t0 := time.Now()
 	ok, mod, err := r.verify(ctx, data, verify, nonce, difficulty)
 	if mod != nil {

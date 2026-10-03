@@ -48,7 +48,7 @@ var (
 		`request.userAgent.matches(".*[Bb]ot.*") || request.userAgent.matches(".*[Cc]rawler.*")`,
 	}
 
-	// Thoth ASN checker inputs
+	// geoip ASN checker inputs
 	asnInputs = []string{
 		"ASNChecker\nAS 15169\nAS 8075\nAS 32934",
 		"ASNChecker\nAS 13335\nAS 16509\nAS 14061",

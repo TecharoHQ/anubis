@@ -1,0 +1,8 @@
+bots:
+  - name: everything
+    action: CHALLENGE
+    path_regex: .*
+
+geoip:
+  asn:
+    edition_id: GeoLite2-ASN

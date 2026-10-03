@@ -66,7 +66,13 @@ func New(cfg *config.Honeypot, st store.Interface, lg *slog.Logger) (*Impl, erro
 	if cfg.IPLogFile != "" {
 		lg.InfoContext(context.Background(), "logging honeypot IP addresses", "foutName", cfg.IPLogFile)
 
-		fout, err = os.Create(cfg.IPLogFile)
+		fout, err = os.OpenFile(cfg.IPLogFile, os.O_CREATE|os.O_RDWR, 0600)
+		if err == nil {
+			err = fout.Chmod(0600)
+			if err != nil {
+				_ = fout.Close()
+			}
+		}
 		if err != nil {
 			return nil, fmt.Errorf("can't open ip log file %q: %w", cfg.IPLogFile, err)
 		}
@@ -162,7 +168,7 @@ func (i *Impl) CheckNetwork() checker.Impl {
 	return checker.Func(func(r *http.Request) (bool, error) {
 		realIP, _ := internal.RealIP(r)
 		if !realIP.IsValid() {
-			realIP = netip.MustParseAddr(r.Header.Get("X-Real-IP"))
+			realIP, _ = netip.ParseAddr(r.Header.Get("X-Real-IP"))
 		}
 
 		network, ok := internal.ClampIP(realIP)
@@ -220,7 +226,7 @@ func (i *Impl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	realIP, _ := internal.RealIP(r)
 	if !realIP.IsValid() {
-		realIP = netip.MustParseAddr(r.Header.Get("X-Real-IP"))
+		realIP, _ = netip.ParseAddr(r.Header.Get("X-Real-IP"))
 	}
 
 	if i.foutBundler != nil {

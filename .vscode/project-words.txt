@@ -96,6 +96,7 @@ cloudflare
 cloudsolutions
 Codespaces
 confd
+configmap
 containerbuild
 containerregistry
 cooldown
@@ -107,6 +108,7 @@ crt
 Cscript
 csdl
 cssload
+CSSURL
 Ctarget
 CUDA
 dacl
@@ -204,6 +206,8 @@ gdead
 gdeadbee
 geoip
 geoipchecker
+geoiptest
+geoipupdate
 gha
 GHSA
 Ghz
@@ -276,6 +280,7 @@ installdir
 INSTALLDIR
 internets
 iocaine
+IPASN
 iplist
 IPTo
 iptoasn
@@ -329,6 +334,8 @@ Lyrenth
 MAINT
 maintnotifications
 malware
+maxmind
+maxminddb
 mba
 mcr
 memes
@@ -339,6 +346,10 @@ Minfilia
 minica
 mistralai
 mkmsi
+mmaps
+mmdb
+mmdbtype
+mmdbwriter
 mnt
 Moenbryda
 Mojeek
@@ -391,6 +402,7 @@ openai
 opendns
 opengraph
 openrc
+oschwald
 oswald
 packagecode
 pag
@@ -493,6 +505,7 @@ sls
 sni
 snipster
 sortorder
+soteria
 Spambot
 spammer
 sparkline
@@ -521,7 +534,9 @@ subtest
 suminfo
 svcctl
 SVCNAME
+synthient
 sysext
+sysusers
 tagline
 tarballs
 TARGETDIR
@@ -537,12 +552,14 @@ templ
 templruntime
 tencent
 testarea
+tetratelabs
 Thancred
 thoth
 thothmock
 Tik
 Timpibot
 TLog
+tmpfiles
 toplevel
 Totolymo
 traefik
@@ -553,11 +570,13 @@ uberspace
 ubuntu
 Unbreak
 unbreakdocker
+Uncacheable
 unfeatures
 unifiedjs
 unintrusive
 unipromos
 unixhttpd
+unmaps
 unmarshal
 unmarshals
 unparseable
@@ -567,6 +586,7 @@ untee
 updown
 uppercased
 uppercases
+URLHTTP
 urlsafe
 usecase
 usecases

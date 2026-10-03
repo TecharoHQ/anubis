@@ -33,7 +33,6 @@ import (
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/metrics"
 	botPolicy "github.com/TecharoHQ/anubis/lib/policy"
-	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/facebookgo/flagenv"
 	"github.com/google/uuid"
@@ -52,7 +51,7 @@ var (
 	cookiePrefix             = flag.String("cookie-prefix", anubis.CookieName, "prefix for browser cookies created by Anubis")
 	cookiePartitioned        = flag.Bool("cookie-partitioned", true, "if true, sets the partitioned flag on Anubis cookies, enabling CHIPS support")
 	difficultyInJWT          = flag.Bool("difficulty-in-jwt", false, "if true, adds a difficulty field in the JWT claims")
-	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", false, "if true, replaces the text when clicking \"Why am I seeing this?\" with a more simplified text for a non-tech-savvy audience.")
+	useSimplifiedExplanation = flag.Bool("use-simplified-explanation", true, "deprecated: has no effect, the simplified explanation is always used")
 	forcedLanguage           = flag.String("forced-language", "", "if set, this language is being used instead of the one from the request's Accept-Language header")
 	hs512Secret              = flag.String("hs512-secret", "", "secret used to sign JWTs, uses ed25519 if not set")
 	cookieSecure             = flag.Bool("cookie-secure", true, "if true, sets the secure flag on Anubis cookies")
@@ -87,9 +86,9 @@ var (
 	xffTrustedIPs            = flag.String("xff-trusted-ips", "", "if xff-trusted-ips is set, any IP addresses in X-Forwarded-For right of a trusted proxy will be discarded, including the trusted proxy")
 	customRealIPHeader       = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
-	thothInsecure        = flag.Bool("thoth-insecure", false, "if set, connect to Thoth over plain HTTP/2, don't enable this unless support told you to")
-	thothURL             = flag.String("thoth-url", "", "if set, URL for Thoth, the IP reputation database for Anubis")
-	thothToken           = flag.String("thoth-token", "", "if set, API token for Thoth, the IP reputation database for Anubis")
+	thothInsecure        = flag.Bool("thoth-insecure", false, "deprecated: Thoth support was removed, use the geoip block in the policy file")
+	thothURL             = flag.String("thoth-url", "", "deprecated: Thoth support was removed, use the geoip block in the policy file")
+	thothToken           = flag.String("thoth-token", "", "deprecated: Thoth support was removed, use the geoip block in the policy file")
 	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
 
 	preserveRefererQueryParam = flag.Bool("preserve-referer-query-param", false, "if true, appends the original external Referer host as utm_source/utm_medium query parameters to the post-challenge redirect URL, for analytics tools that rely on document.referrer or UTM tags instead of the HTTP Referer header. See https://github.com/TecharoHQ/anubis/issues/1596")
@@ -207,13 +206,28 @@ func makeReverseProxy(target string, targetSNI string, targetHost string, insecu
 			if targetHost != "" {
 				r.Out.Host = targetHost
 			}
-			if targetSNI == "auto" {
-				transport.TLSClientConfig.ServerName = r.Out.Host
-			}
+
 		},
 	}
 
+	if targetSNI == "auto" {
+		rp.Transport = automaticSNITransport{transport}
+	}
 	return rp, nil
+}
+
+type automaticSNITransport struct{ transport *http.Transport }
+
+func (t automaticSNITransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	transport := t.transport.Clone()
+	transport.TLSClientConfig = t.transport.TLSClientConfig.Clone()
+	host := r.Host
+	if hostname, _, err := net.SplitHostPort(host); err == nil {
+		host = hostname
+	}
+	transport.TLSClientConfig.ServerName = host
+	transport.DisableKeepAlives = true
+	return transport.RoundTrip(r)
 }
 
 func main() {
@@ -287,20 +301,8 @@ func run(ctx context.Context) {
 		log.Fatalf("you can't set COOKIE_DOMAIN and COOKIE_DYNAMIC_DOMAIN at the same time")
 	}
 
-	// Thoth configuration
-	switch {
-	case *thothURL != "" && *thothToken == "":
-		lg.WarnContext(ctx, "THOTH_URL is set but no THOTH_TOKEN is set")
-	case *thothURL == "" && *thothToken != "":
-		lg.WarnContext(ctx, "THOTH_TOKEN is set but no THOTH_URL is set")
-	case *thothURL != "" && *thothToken != "":
-		lg.DebugContext(ctx, "connecting to Thoth")
-		thothClient, err := thoth.New(ctx, *thothURL, *thothToken, *thothInsecure)
-		if err != nil {
-			log.Fatalf("can't dial thoth at %s: %v", *thothURL, err)
-		}
-
-		ctx = thoth.With(ctx, thothClient)
+	if *thothURL != "" || *thothToken != "" || *thothInsecure {
+		lg.WarnContext(ctx, "Thoth support was removed and THOTH_URL, THOTH_TOKEN, and THOTH_INSECURE are ignored. Use the geoip block in your policy file for asns and geoip rules instead")
 	}
 
 	lg.InfoContext(ctx, "loading policy file", "fname", *policyFname)
@@ -417,8 +419,12 @@ func run(ctx context.Context) {
 
 	anubis.CookieName = *cookiePrefix + "-auth"
 	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
+	anubis.OriginalRefererCookieName = *cookiePrefix + "-original-referer"
 	anubis.ForcedLanguage = *forcedLanguage
-	anubis.UseSimplifiedExplanation = *useSimplifiedExplanation
+
+	if *useSimplifiedExplanation {
+		lg.WarnContext(ctx, "USE_SIMPLIFIED_EXPLANATION is deprecated and has no effect, the simplified explanation is always used")
+	}
 
 	// If OpenGraph configuration values are not set in the config file, use the
 	// values from flags / envvars.
@@ -471,7 +477,7 @@ func run(ctx context.Context) {
 		h = internal.JA4H(h)
 	}
 
-	srv := http.Server{Handler: h, ErrorLog: internal.GetFilteredHTTPLogger()}
+	srv := internal.NewHTTPServer(h)
 	listener, listenerUrl, err := internal.SetupListener(*bindNetwork, *bind, *socketMode)
 	if err != nil {
 		log.Fatalf("SetupListener(%q, %q, %q): %v", *bindNetwork, *bind, *socketMode, err)
@@ -485,6 +491,7 @@ func run(ctx context.Context) {
 		"target", *target,
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
+		"custom-real-ip-header", *customRealIPHeader,
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,

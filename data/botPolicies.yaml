@@ -58,8 +58,8 @@ bots:
   #     difficulty: 16 # impossible
   #     algorithm: slow # intentionally waste CPU cycles and time
 
-  # Requires a subscription to Thoth to use, see
-  # https://anubis.techaro.lol/docs/admin/thoth#geoip-based-filtering
+  # Requires GeoIP configuration, see:
+  # https://anubis.techaro.lol/docs/admin/geoip
   - name: countries-with-aggressive-scrapers
     action: WEIGH
     geoip:
@@ -69,8 +69,8 @@ bots:
     weight:
       adjust: 10
 
-  # Requires a subscription to Thoth to use, see
-  # https://anubis.techaro.lol/docs/admin/thoth#asn-based-filtering
+  # Requires GeoIP configuration, see:
+  # https://anubis.techaro.lol/docs/admin/geoip
   - name: aggressive-asns-without-functional-abuse-contact
     action: WEIGH
     asns:
@@ -109,6 +109,18 @@ bots:
       adjust: 10
 
 dnsbl: false
+
+## GeoIP configuration
+## See: https://anubis.techaro.lol/docs/admin/geoip
+# geoip:
+#   asn:
+#     path: /var/lib/anubis/GeoLite2-ASN.mmdb # ensure /var/lib/anubis is writable
+#   country:
+#     path: /var/lib/anubis/GeoLite2-Country.mmdb
+#   auto_update:
+#     account_id: 123456
+#     license_key_env: MAXMIND_LICENSE_KEY
+#     interval: 24h # if not set, this is the default
 
 ## Honeypot configuration
 honeypot:

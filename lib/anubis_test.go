@@ -21,9 +21,9 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/geoip/geoiptest"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/store"
-	"github.com/TecharoHQ/anubis/lib/thoth/thothmock"
 )
 
 // TLogWriter implements io.Writer by logging each line to t.Log.
@@ -50,7 +50,7 @@ func (w *TLogWriter) Write(p []byte) (n int, err error) {
 func loadPolicies(t *testing.T, fname string, difficulty int) *policy.ParsedConfig {
 	t.Helper()
 
-	ctx := thothmock.WithMockThoth(t)
+	ctx := geoiptest.WithMockGeoIP(t)
 
 	if fname == "" {
 		fname = "./testdata/test_config.yaml"
@@ -944,9 +944,9 @@ func TestRuleChange(t *testing.T) {
 	chall := makeChallenge(t, ts, cli)
 	resp := handleChallengeZeroDifficulty(t, ts, cli, chall)
 
-	if resp.StatusCode != http.StatusFound {
+	if resp.StatusCode != http.StatusForbidden {
 		_ = resp.Write(os.Stderr) // if stderr fails, there are bigger problems
-		t.Errorf("wanted %d, got: %d", http.StatusFound, resp.StatusCode)
+		t.Errorf("wanted %d, got: %d", http.StatusForbidden, resp.StatusCode)
 	}
 }
 
@@ -1333,7 +1333,7 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 		switch c.Name {
 		case srv.cookieName(anubis.CookieName):
 			authCookie = c
-		case srv.cookieName(originalRefererCookieName):
+		case srv.cookieName(anubis.OriginalRefererCookieName):
 			relayCookie = c
 		}
 	}
@@ -1355,7 +1355,7 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 	// This simulates the browser's follow-up navigation to the real page. A real
 	// browser sends the challenge page itself as Referer here (same-site redirect);
 	// use that misleading value to prove Anubis overrides it with the true original
-	// referrer rather than just forwarding whatever the browser happened to send.
+	// referer rather than just forwarding whatever the browser happened to send.
 	followReq, err := http.NewRequest(http.MethodGet, ts.URL+location, nil)
 	if err != nil {
 		t.Fatalf("can't make request: %v", err)
@@ -1380,7 +1380,7 @@ func TestPassChallengeRestoresOriginalReferer(t *testing.T) {
 
 	var relayCleared bool
 	for _, c := range followResp.Cookies() {
-		if c.Name == srv.cookieName(originalRefererCookieName) && c.MaxAge < 0 {
+		if c.Name == srv.cookieName(anubis.OriginalRefererCookieName) && c.MaxAge < 0 {
 			relayCleared = true
 		}
 	}
@@ -1571,11 +1571,8 @@ func TestPassChallengeNilRuleChallengeFallback(t *testing.T) {
 
 	srv.PassChallenge(rr, req)
 
-	if rr.Code != http.StatusFound {
-		t.Fatalf("expected redirect when validating challenge, got %d", rr.Code)
-	}
-	if rr.Header().Get("Location") != target {
-		t.Fatalf("unexpected Location: %q", rr.Header().Get("Location"))
+	if rr.Code != http.StatusForbidden || rr.Header().Get("Location") != "" || authCookie(srv, rr.Result()) != nil {
+		t.Fatalf("changed policy accepted stored challenge: status %d", rr.Code)
 	}
 }
 
@@ -1615,5 +1612,47 @@ func TestXForwardedForNoDoubleComma(t *testing.T) {
 
 	if xff := resp.Header.Get("X-Forwarded-For"); strings.HasPrefix(xff, ",,") {
 		t.Errorf("X-Forwarded-For has two leading commas: %q", xff)
+	}
+}
+
+func TestOpenGraphAllowCacheCannotBypassPolicy(t *testing.T) {
+	for _, ua := range []string{"DENY", "CHALLENGE"} {
+		t.Run(ua, func(t *testing.T) {
+			pol := loadPolicies(t, "testdata/aggressive_403.yaml", 0)
+			forwarded := false
+			srv := spawnAnubis(t, Options{Policy: pol, OpenGraph: config.OpenGraph{Enabled: true}, Next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { forwarded = true })})
+			req := httptest.NewRequest("GET", "http://example.com/admin/secret.jpg", nil)
+			req.Header.Set("X-Real-IP", "127.0.0.1")
+			req.Header.Set("User-Agent", ua)
+			req.Header.Set("Accept-Encoding", "gzip")
+			if err := srv.store.Set(t.Context(), "ogtags:allow:"+req.Host+req.URL.String(), []byte("og:image"), time.Hour); err != nil {
+				t.Fatal(err)
+			}
+			srv.maybeReverseProxyOrPage(httptest.NewRecorder(), req)
+			if forwarded {
+				t.Fatal("OpenGraph metadata bypassed policy")
+			}
+		})
+	}
+}
+
+func TestDefaultPolicyWithoutGeoIP(t *testing.T) {
+	fin, err := data.BotPolicies.Open("botPolicies.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = fin.Close() }()
+	parsed, err := policy.ParseConfig(t.Context(), fin, "botPolicies.yaml", 4, "info", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(parsed.Bots) == 0 {
+		t.Fatal("no rules were loaded")
+	}
+	for _, bot := range parsed.Bots {
+		switch bot.Name {
+		case "countries-with-aggressive-scrapers", "aggressive-asns-without-functional-abuse-contact":
+			t.Errorf("loaded rule without its required database: %s", bot.Name)
+		}
 	}
 }

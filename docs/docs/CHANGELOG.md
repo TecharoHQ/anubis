@@ -13,6 +13,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Replace Thoth with [GeoIP databases](./admin/geoip.mdx). GeoIP databases are configured in the `geoip` block.
+- Thoth functionality has been removed. `THOTH_URL`, `THOTH_TOKEN`, and `THOTH_INSECURE` are now deprecated environment variables that will log a warning upon startup.
+- ASN description values now use the Maxmind values instead of the values that Thoth returned. This may impact your fail2ban rules.
+- Native packages now create an `anubis` group and assign all Anubis instances permissions to `/var/lib/anubis`.
+- Fix the original-referer cookie not being affected by the `COOKIE_PREFIX` setting ([#1977](https://github.com/TecharoHQ/anubis/pull/1977))
+- Default to the simplified explanation to avoid people misinterpreting words. `USE_SIMPLIFIED_EXPLANATION` is now deprecated.
+- Add documentation for the [Headless Browser Detection](./admin/configuration/challenges/extensions/headless.mdx) extension and the [Soteria](./admin/configuration/challenges/) challenge methods exclusive to BotStopper.
+
+### Small security fixes
+
+As part of a continuous security posture, the following issues were identified and remediated:
+
+- Challenge validation for WASM based checks could fail open when users pass specifically crafted invalid input.
+- WASM challenges may only have four in-flight validations at once per process, the rest will wait in line.
+- Challenge solutions are now strictly bound to the issuing rule.
+- Path policies now prevent path traversal bypasses in some edge cases.
+- Duplicate header values are now consistently handled across edge cases.
+- Forwarded URI paths are evaluated separately from query strings.
+- Disallow clients from sending their JA4H value by using the Set header verb instead of Add.
+- Avoid a panic when parsing IPv6 answers from DNSBL hits in edge cases.
+- Avoid caching negative hits from DNSBL servers.
+- CDNs and middleware are now instructed to NOT cache Anubis challenge, completion, forward-auth, and error pages.
+- When a dynamic IP list updates to a list that has no entries, keep using the previous entry instead of deleting all IP list contents from memory.
+- Reject short HS512 secrets.
+- Restrict honeypot log permissions.
+- Handle malformed client IP addresses safely.
+- Fix concurrent TLS SNI handling in edge cases.
+- DNSBL hits are now cached correctly, even when the result is no entry found.
+
 ## v1.28.0-pre2: Wuk Lamat
 
 - Add WebAssembly-based proof of work checks to decrease client load and increase the complexity required to scrape past Anubis. See [Proof of Work (WebAssembly)](./admin/configuration/challenges/wasm.mdx) for more information.
@@ -42,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clarify getChallenge failure response and cite related log entry.
 - Share redirect validation between challenge completion and subrequest authentication. Reject ambiguous URL forms before checking allowed domains.
 - Respond with the configured `DENY` status code instead of HTTP 500 when a challenged client is rejected for not advertising gzip support, and log that rejection at `INFO` instead of `ERROR`. The rejection is deliberate, so it no longer shows up in 5xx rates or as a server fault. The log message text is unchanged, but fail2ban filters that match on the `ERROR` level need updating ([#1009](https://github.com/TecharoHQ/anubis/issues/1009)).
+- Anubis now can use dynamic IP lists from providers like OpenAI or Google instead of static IP lists.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 

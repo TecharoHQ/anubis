@@ -13,9 +13,9 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/geoip"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
-	"github.com/TecharoHQ/anubis/lib/thoth"
 	"github.com/fahedouch/go-logrotate"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -48,6 +48,7 @@ var (
 )
 
 type ParsedConfig struct {
+	SubrequestMode    bool
 	Store             store.Interface
 	orig              *config.Config
 	Impressum         *config.Impressum
@@ -62,7 +63,7 @@ type ParsedConfig struct {
 	Dns               *dns.Dns
 	Logger            *slog.Logger
 	Metrics           *config.Metrics
-	ThothClient       *thoth.Client
+	GeoIP             *geoip.DB
 	LogASN            bool
 	NeedJA4H          bool
 }
@@ -84,14 +85,10 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 	var validationErrs []error
 
-	tc, hasThothClient := thoth.FromContext(ctx)
-
 	result := newParsedConfig(c)
+	result.SubrequestMode = subrequestMode
 	result.DefaultDifficulty = defaultDifficulty
 	result.LogASN = c.Logging.LogASN
-	if hasThothClient {
-		result.ThothClient = tc
-	}
 
 	if c.Logging.Level != nil {
 		logLevel = c.Logging.Level.String()
@@ -116,8 +113,22 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 
 	lg := result.Logger.With("at", "config-validate")
 
-	if result.LogASN && !hasThothClient {
-		lg.WarnContext(ctx, "logging.asn is enabled but no Thoth client is configured; ASN logging and metrics will be skipped. Please read https://anubis.techaro.lol/docs/admin/thoth for more information")
+	switch {
+	case c.GeoIP != nil:
+		db, err := geoip.New(ctx, result.Logger, c.GeoIP)
+		if err != nil {
+			validationErrs = append(validationErrs, fmt.Errorf("can't load geoip databases: %w", err))
+		} else {
+			result.GeoIP = db
+		}
+	default:
+		if db, ok := geoip.FromContext(ctx); ok {
+			result.GeoIP = db
+		}
+	}
+
+	if result.LogASN && !result.GeoIP.HasASN() {
+		lg.WarnContext(ctx, "logging.asn is enabled but no geoip ASN database is configured; ASN logging and metrics will be skipped. Please configure geoip.asn in your policy file")
 	}
 
 	stFac, ok := store.Get(c.Store.Backend)
@@ -153,6 +164,15 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 			c, err := NewRemoteAddrChecker(b.RemoteAddr)
 			if err != nil {
 				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s remote addr set: %w", b.Name, err))
+			} else {
+				cl = append(cl, c)
+			}
+		}
+
+		if b.RemoteAddressesURL != nil {
+			c, err := NewRemoteAddressesURLChecker(ctx, *b.RemoteAddressesURL, result.Logger.With("rule", b.Name))
+			if err != nil {
+				validationErrs = append(validationErrs, fmt.Errorf("while processing rule %s remote addresses url: %w", b.Name, err))
 			} else {
 				cl = append(cl, c)
 			}
@@ -195,21 +215,21 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 		}
 
 		if b.ASNs != nil {
-			if !hasThothClient {
-				lg.WarnContext(ctx, "You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "asn", "settings", b.ASNs)
+			if !result.GeoIP.HasASN() {
+				lg.WarnContext(ctx, "You have specified an asns check but you have no geoip ASN database configured. Please configure geoip.asn in your policy file", "check", "asn", "settings", b.ASNs)
 				continue
 			}
 
-			cl = append(cl, tc.ASNCheckerFor(b.ASNs.Match))
+			cl = append(cl, result.GeoIP.ASNCheckerFor(b.ASNs.Match))
 		}
 
 		if b.GeoIP != nil {
-			if !hasThothClient {
-				lg.WarnContext(ctx, "You have specified a Thoth specific check but you have no Thoth client configured. Please read https://anubis.techaro.lol/docs/admin/thoth for more information", "check", "geoip", "settings", b.GeoIP)
+			if !result.GeoIP.HasCountry() {
+				lg.WarnContext(ctx, "You have specified a geoip check but you have no geoip country database configured. Please configure geoip.country in your policy file", "check", "geoip", "settings", b.GeoIP)
 				continue
 			}
 
-			cl = append(cl, tc.GeoIPCheckerFor(b.GeoIP.Countries))
+			cl = append(cl, result.GeoIP.GeoIPCheckerFor(b.GeoIP.Countries))
 		}
 
 		if b.Challenge == nil {
