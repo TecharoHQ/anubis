@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"cel.dev/cel-go/cel"
+	"cel.dev/cel-go/common/types"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/expressions"
-	"github.com/google/cel-go/cel"
-	"github.com/google/cel-go/common/types"
 )
 
 type CELChecker struct {
