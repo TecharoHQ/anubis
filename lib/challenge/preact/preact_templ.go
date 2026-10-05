@@ -5,11 +5,12 @@ package preact
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
+
 import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/lib/localization"
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
 )
 
 func page(redir, challenge string, difficulty int, loc *localization.SimpleLocalizer) templ.Component {
