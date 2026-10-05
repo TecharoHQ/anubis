@@ -20,8 +20,8 @@ import (
 	"sync"
 	"time"
 
+	"cel.dev/cel-go/common/types"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/cel-go/common/types"
 	"github.com/google/uuid"
 
 	"github.com/prometheus/client_golang/prometheus"
