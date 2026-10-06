@@ -267,6 +267,16 @@ func main() {
 		return
 	}
 
+	// `anubis check -policy-fname ...` validates the policy file and exits
+	// without binding any ports, like `nginx -t`. Flags after the subcommand
+	// are parsed again so they take effect for the check.
+	if flag.NArg() > 0 && flag.Arg(0) == "check" {
+		if err := flag.CommandLine.Parse(flag.Args()[1:]); err != nil {
+			os.Exit(2)
+		}
+		os.Exit(checkPolicy(context.Background()))
+	}
+
 	if runPlatformService(run) {
 		return
 	}
@@ -276,6 +286,23 @@ func main() {
 	defer stop()
 
 	run(ctx)
+}
+
+// checkPolicy loads and validates the policy file without starting the
+// server or binding any ports. It returns the process exit code: 0 when
+// the policy is valid, 1 otherwise.
+func checkPolicy(ctx context.Context) int {
+	if _, err := libanubis.LoadPoliciesOrDefault(ctx, *policyFname, *challengeDifficulty, *slogLevel, strings.TrimSpace(*target) == ""); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		return 1
+	}
+
+	fname := *policyFname
+	if fname == "" {
+		fname = "(data)/botPolicies.yaml"
+	}
+	fmt.Printf("policy file %s is valid\n", fname)
+	return 0
 }
 
 // run starts Anubis and blocks until ctx is cancelled or the server stops.

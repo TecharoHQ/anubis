@@ -1,11 +1,34 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 )
+
+func TestCheckPolicy(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		fname string
+		want  int
+	}{
+		{"valid policy passes", "testdata/check-valid.yaml", 0},
+		{"invalid regex fails", "testdata/check-invalid.yaml", 1},
+		{"missing file fails", "testdata/does-not-exist.yaml", 1},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			oldFname := *policyFname
+			t.Cleanup(func() { *policyFname = oldFname })
+			*policyFname = tt.fname
+
+			if got := checkPolicy(context.Background()); got != tt.want {
+				t.Errorf("checkPolicy(%q) = %d, want %d", tt.fname, got, tt.want)
+			}
+		})
+	}
+}
 
 func TestMakeReverseProxy(t *testing.T) {
 	type received struct {
