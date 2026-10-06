@@ -34,7 +34,7 @@ func TestRegisterBotVariable(t *testing.T) {
 		return result, true
 	})
 
-	env, err := BotEnvironment(newTestDNS(300, 300))
+	env, err := BotEnvironment(newTestDNS(t, 300, 300))
 	if err != nil {
 		t.Fatalf("can't create bot environment: %v", err)
 	}

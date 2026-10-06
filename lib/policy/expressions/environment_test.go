@@ -12,18 +12,19 @@ import (
 	"cel.dev/cel-go/common/types/ref"
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
+	"github.com/neilotoole/slogt/v2"
 )
 
 // newTestDNS is a helper function to create a new Dns object with an in-memory cache for testing.
-func newTestDNS(forwardTTL int, reverseTTL int) *dns.Dns {
+func newTestDNS(t *testing.T, forwardTTL int, reverseTTL int) *dns.Dns {
 	ctx := context.Background()
 	memStore := memory.New(ctx)
 	cache := dns.NewDNSCache(forwardTTL, reverseTTL, memStore)
-	return dns.New(ctx, cache)
+	return dns.New(ctx, cache, slogt.New(t))
 }
 
 func TestBotEnvironment(t *testing.T) {
-	dnsObj := newTestDNS(300, 300)
+	dnsObj := newTestDNS(t, 300, 300)
 	env, err := BotEnvironment(dnsObj)
 	if err != nil {
 		t.Fatalf("failed to create bot environment: %v", err)

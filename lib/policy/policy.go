@@ -145,7 +145,7 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	}
 
 	result.DnsCache = dns.NewDNSCache(result.orig.DNSTTL.Forward, result.orig.DNSTTL.Reverse, result.Store)
-	result.Dns = dns.New(ctx, result.DnsCache)
+	result.Dns = dns.New(ctx, result.DnsCache, lg.With("component", "dns"))
 
 	for _, b := range c.Bots {
 		if berr := b.Valid(); berr != nil {
