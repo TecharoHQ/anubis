@@ -31,10 +31,10 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.0.2",
-    "baseline-browser-mapping": "^2.11.25",
-    "cspell": "^10.3.3",
-    "cssnano": "^9.0.5",
-    "cssnano-preset-advanced": "^9.0.5",
+    "baseline-browser-mapping": "^2.11.26",
+    "cspell": "^10.3.5",
+    "cssnano": "^9.1.0",
+    "cssnano-preset-advanced": "^9.1.0",
     "esbuild": "^0.28.2",
     "husky": "^9.1.7",
     "playwright": "^1.61.1",
@@ -42,7 +42,7 @@
     "postcss-import": "^17.0.0",
     "postcss-import-url": "^7.2.0",
     "postcss-url": "^10.1.4",
-    "prettier": "^3.9.8"
+    "prettier": "^3.9.9"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",

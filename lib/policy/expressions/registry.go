@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/cel-go/cel"
+	"cel.dev/cel-go/cel"
 )
 
 // BotVariableResolver returns the value of a registered bot variable for

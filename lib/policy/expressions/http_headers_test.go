@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/google/cel-go/common/types"
+	"cel.dev/cel-go/common/types"
 )
 
 func TestHTTPHeaders(t *testing.T) {
