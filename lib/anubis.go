@@ -153,6 +153,32 @@ func (s *Server) getChallenge(r *http.Request) (*challenge.Challenge, error) {
 	return &chall, err
 }
 
+// shouldRetryMissingTestCookie reports whether a client that reached
+// PassChallenge without the verification cookie should be sent through a fresh
+// challenge instead of being shown the cookies disabled error. Some browsers
+// drop the verification cookie in edge cases such as an HTTP to HTTPS upgrade
+// on the first navigation, and a fresh challenge then succeeds. See
+// https://github.com/TecharoHQ/anubis/issues/1916
+//
+// A retry is only granted for a live, unspent challenge and at most once per
+// client (IP address and User-Agent) per challenge lifetime, so clients that
+// never send cookies get the error after one extra challenge instead of
+// looping.
+func (s *Server) shouldRetryMissingTestCookie(r *http.Request) bool {
+	chall, err := s.getChallenge(r)
+	if err != nil || chall.Spent {
+		return false
+	}
+
+	key := "cookie-retry:" + internal.SHA256sum(r.Header.Get("X-Real-IP")+":"+r.Header.Get("User-Agent"))
+	if _, err := s.store.Get(r.Context(), key); err == nil {
+		return false
+	}
+
+	// Same lifetime as an issued challenge.
+	return s.store.Set(r.Context(), key, []byte("1"), 30*time.Minute) == nil
+}
+
 func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.Logger, cr policy.CheckResult, rule *policy.Bot) (*challenge.Challenge, error) {
 	if cr.Rule != config.RuleChallenge {
 		slog.ErrorContext(ctx, "this should be impossible, asked to issue a challenge but the rule is not a challenge rule", "cr", cr, "rule", rule)
@@ -613,6 +639,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.getCookie(r, anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
+		if s.shouldRetryMissingTestCookie(r) {
+			lg.DebugContext(r.Context(), "verification cookie missing, retrying with a fresh challenge")
+			http.Redirect(w, r, redir, http.StatusFound)
+			return
+		}
 		lg.WarnContext(r.Context(), "user has cookies disabled, this is not an anubis bug")
 		s.respondWithError(w, r, localizer.T("cookies_disabled"), "")
 		return
