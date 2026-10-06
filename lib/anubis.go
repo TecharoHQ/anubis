@@ -170,7 +170,7 @@ func (s *Server) shouldRetryMissingTestCookie(r *http.Request) bool {
 		return false
 	}
 
-	key := "cookie-retry:" + internal.SHA256sum(r.Header.Get("X-Real-IP")+"\x00"+r.Header.Get("User-Agent"))
+	key := "cookie-retry:" + internal.SHA256sum(r.Header.Get("X-Real-IP")+":"+r.Header.Get("User-Agent"))
 	if _, err := s.store.Get(r.Context(), key); err == nil {
 		return false
 	}
