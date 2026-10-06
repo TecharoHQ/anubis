@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha512"
 	"errors"
 	"fmt"
 	"io"
@@ -19,41 +20,44 @@ import (
 	"github.com/TecharoHQ/anubis/internal/honeypot/naive"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
 	"github.com/TecharoHQ/anubis/xess"
 	"github.com/a-h/templ"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Options struct {
-	Next                     http.Handler
-	Policy                   *policy.ParsedConfig
-	Target                   string
-	TargetHost               string
-	TargetSNI                string
-	TargetInsecureSkipVerify bool
-	CookieDynamicDomain      bool
-	CookieDomain             string
-	CookieExpiration         time.Duration
-	CookiePartitioned        bool
-	BasePrefix               string
-	WebmasterEmail           string
-	RedirectDomains          []string
-	ED25519PrivateKey        ed25519.PrivateKey
-	HS512Secret              []byte
-	StripBasePrefix          bool
-	OpenGraph                config.OpenGraph
-	ServeRobotsTXT           bool
-	CookieSecure             bool
-	CookieHttpOnly           bool
-	CookieSameSite           http.SameSite
-	Logger                   *slog.Logger
-	LogLevel                 string
-	PublicUrl                string
-	JWTRestrictionHeader     string
-	DifficultyInJWT          bool
+	Next                      http.Handler
+	Policy                    *policy.ParsedConfig
+	Target                    string
+	TargetHost                string
+	TargetSNI                 string
+	TargetInsecureSkipVerify  bool
+	CookieDynamicDomain       bool
+	CookieDomain              string
+	CookieExpiration          time.Duration
+	CookiePartitioned         bool
+	BasePrefix                string
+	WebmasterEmail            string
+	RedirectDomains           []string
+	ED25519PrivateKey         ed25519.PrivateKey
+	HS512Secret               []byte
+	StripBasePrefix           bool
+	OpenGraph                 config.OpenGraph
+	ServeRobotsTXT            bool
+	CookieSecure              bool
+	CookieHttpOnly            bool
+	CookieSameSite            http.SameSite
+	Logger                    *slog.Logger
+	LogLevel                  string
+	PublicUrl                 string
+	JWTRestrictionHeader      string
+	DifficultyInJWT           bool
+	PreserveRefererQueryParam bool
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int, logLevel string, subrequestMode bool) (*policy.ParsedConfig, error) {
@@ -90,6 +94,15 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 		if _, ok := challenge.Get(b.Challenge.Algorithm); !ok {
 			validationErrs = append(validationErrs, fmt.Errorf("%w %s", policy.ErrChallengeRuleHasWrongAlgorithm, b.Challenge.Algorithm))
 		}
+		if err := checkExtensions(b.Name, b.Challenge); err != nil {
+			validationErrs = append(validationErrs, err)
+		}
+	}
+
+	for _, t := range anubisPolicy.Thresholds {
+		if err := checkExtensions(t.Name, t.Challenge); err != nil {
+			validationErrs = append(validationErrs, err)
+		}
 	}
 
 	if len(validationErrs) != 0 {
@@ -99,7 +112,30 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 	return anubisPolicy, err
 }
 
+func checkExtensions(ruleName string, cr *config.ChallengeRules) error {
+	if cr == nil {
+		return nil
+	}
+
+	var errs []error
+
+	for _, name := range cr.Extensions {
+		if _, ok := extension.Get(name); !ok {
+			errs = append(errs, fmt.Errorf("%w %q in rule %q, known extensions: %v", ErrUnknownChallengeExtension, name, ruleName, extension.Names()))
+		}
+	}
+
+	if len(errs) != 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
+}
+
 func New(opts Options) (*Server, error) {
+	if len(opts.HS512Secret) > 0 && len(opts.HS512Secret) < sha512.Size {
+		return nil, jwt.ErrInvalidKey
+	}
 	if opts.Logger == nil {
 		opts.Logger = slog.With("subsystem", "anubis")
 	}
@@ -166,21 +202,21 @@ func New(opts Options) (*Server, error) {
 	}
 
 	if opts.Policy.Impressum != nil {
-		registerWithPrefix(anubis.APIPrefix+"imprint", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		registerWithPrefix(anubis.APIPrefix+"imprint", internal.NoStoreCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(
 				web.Base(opts.Policy.Impressum.Page.Title, opts.Policy.Impressum.Page, opts.Policy.Impressum, opts.Policy.Honeypot, localization.GetLocalizer(r)),
 			).ServeHTTP(w, r)
-		}), "GET")
+		})), "GET")
 	}
 
-	registerWithPrefix(anubis.APIPrefix+"pass-challenge", http.HandlerFunc(result.PassChallenge), "GET")
-	registerWithPrefix(anubis.APIPrefix+"check", http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly), "")
+	registerWithPrefix(anubis.APIPrefix+"pass-challenge", internal.NoStoreCache(http.HandlerFunc(result.PassChallenge)), "GET")
+	registerWithPrefix(anubis.APIPrefix+"check", internal.NoStoreCache(http.HandlerFunc(result.maybeReverseProxyHttpStatusOnly)), "")
 	registerWithPrefix("/", http.HandlerFunc(result.maybeReverseProxyOrPage), "")
 
 	if opts.Policy.Honeypot != nil && opts.Policy.Honeypot.Enabled {
 		mazeGen, err := naive.New(opts.Policy.Honeypot, result.store, result.logger)
 		if err == nil {
-			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", mazeGen, http.MethodGet)
+			registerWithPrefix(anubis.APIPrefix+"honeypot/{id}/{stage}", internal.NoStoreCache(mazeGen), http.MethodGet)
 
 			opts.Policy.Bots = append(
 				opts.Policy.Bots,
@@ -209,6 +245,13 @@ func New(opts Options) (*Server, error) {
 	for _, implKind := range challenge.Methods() {
 		impl, _ := challenge.Get(implKind)
 		if err := impl.Setup(mux); err != nil {
+			challSetupErrs = append(challSetupErrs, fmt.Errorf("error setting up challenge method %s: %w", implKind, err))
+		}
+	}
+
+	for _, implKind := range extension.Names() {
+		impl, _ := extension.Get(implKind)
+		if err := impl.Setup(mux, result.store); err != nil {
 			challSetupErrs = append(challSetupErrs, fmt.Errorf("error setting up challenge method %s: %w", implKind, err))
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -11,13 +12,16 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	"cel.dev/cel-go/common/types"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/cel-go/common/types"
 	"github.com/google/uuid"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,18 +33,21 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dnsbl"
 	"github.com/TecharoHQ/anubis/internal/ogtags"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/TecharoHQ/anubis/lib/store"
-	iptoasnv1 "github.com/TecharoHQ/thoth-proto/gen/techaro/thoth/iptoasn/v1"
 
 	// challenge implementations
 	_ "github.com/TecharoHQ/anubis/lib/challenge/metarefresh"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/preact"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/proofofwork"
 	_ "github.com/TecharoHQ/anubis/lib/challenge/wasm"
+
+	// extension implementations
+	_ "github.com/TecharoHQ/anubis/lib/challenge/extension/css-load"
 )
 
 type contextKey int
@@ -92,33 +99,32 @@ var (
 )
 
 type Server struct {
-	next        http.Handler
-	store       store.Interface
-	mux         *http.ServeMux
-	policy      *policy.ParsedConfig
-	OGTags      *ogtags.OGTagCache
-	logger      *slog.Logger
-	opts        Options
-	ed25519Priv ed25519.PrivateKey
-	hs512Secret []byte
+	challengeLocks [256]sync.Mutex
+	next           http.Handler
+	store          store.Interface
+	mux            *http.ServeMux
+	policy         *policy.ParsedConfig
+	OGTags         *ogtags.OGTagCache
+	logger         *slog.Logger
+	opts           Options
+	ed25519Priv    ed25519.PrivateKey
+	hs512Secret    []byte
 }
 
 func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
 	lg := internal.GetRequestLogger(s.logger, r)
 
-	if s.policy.LogASN && s.policy.ThothClient != nil {
-		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
-		defer cancel()
-
-		ip := r.Header.Get("X-Real-IP")
-		if info, err := s.policy.ThothClient.IPToASN.Lookup(ctx, &iptoasnv1.LookupRequest{IpAddress: ip}); err == nil && info.GetAnnounced() {
-			asn := strconv.FormatUint(uint64(info.GetAsNumber()), 10)
-			lg = lg.With("asn", info.GetAsNumber(), "asn_description", info.GetDescription())
-			requestsByASN.WithLabelValues(asn, info.GetDescription()).Inc()
-			r = r.WithContext(context.WithValue(r.Context(), asnContextKey, asnInfo{
-				ASN:         asn,
-				Description: info.GetDescription(),
-			}))
+	if s.policy.LogASN && s.policy.GeoIP.HasASN() {
+		if addr, err := netip.ParseAddr(r.Header.Get("X-Real-IP")); err == nil {
+			if asNumber, description, ok := s.policy.GeoIP.LookupASN(addr); ok {
+				asn := strconv.FormatUint(uint64(asNumber), 10)
+				lg = lg.With("asn", asNumber, "asn_description", description)
+				requestsByASN.WithLabelValues(asn, description).Inc()
+				r = r.WithContext(context.WithValue(r.Context(), asnContextKey, asnInfo{
+					ASN:         asn,
+					Description: description,
+				}))
+			}
 		}
 	}
 
@@ -145,6 +151,32 @@ func (s *Server) getChallenge(r *http.Request) (*challenge.Challenge, error) {
 	chall, err := j.Get(r.Context(), "challenge:"+id)
 
 	return &chall, err
+}
+
+// shouldRetryMissingTestCookie reports whether a client that reached
+// PassChallenge without the verification cookie should be sent through a fresh
+// challenge instead of being shown the cookies disabled error. Some browsers
+// drop the verification cookie in edge cases such as an HTTP to HTTPS upgrade
+// on the first navigation, and a fresh challenge then succeeds. See
+// https://github.com/TecharoHQ/anubis/issues/1916
+//
+// A retry is only granted for a live, unspent challenge and at most once per
+// client (IP address and User-Agent) per challenge lifetime, so clients that
+// never send cookies get the error after one extra challenge instead of
+// looping.
+func (s *Server) shouldRetryMissingTestCookie(r *http.Request) bool {
+	chall, err := s.getChallenge(r)
+	if err != nil || chall.Spent {
+		return false
+	}
+
+	key := "cookie-retry:" + internal.SHA256sum(r.Header.Get("X-Real-IP")+":"+r.Header.Get("User-Agent"))
+	if _, err := s.store.Get(r.Context(), key); err == nil {
+		return false
+	}
+
+	// Same lifetime as an issued challenge.
+	return s.store.Set(r.Context(), key, []byte("1"), 30*time.Minute) == nil
 }
 
 func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.Logger, cr policy.CheckResult, rule *policy.Bot) (*challenge.Challenge, error) {
@@ -178,9 +210,11 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		IssuedAt:       time.Now(),
 		Difficulty:     rule.Challenge.Difficulty,
 		PolicyRuleHash: rule.Hash(),
+		Extensions:     slices.Clone(rule.Challenge.Extensions),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
 			"X-Real-IP":  r.Header.Get("X-Real-IP"),
+			"Referer":    r.Header.Get("Referer"),
 		},
 	}
 
@@ -203,6 +237,14 @@ func (s *Server) hydrateChallengeRule(rule *policy.Bot, chall *challenge.Challen
 		rule = &policy.Bot{
 			Rules: &checker.List{},
 		}
+	} else {
+		copiedRule := *rule
+		if rule.Challenge != nil {
+			copiedChallenge := *rule.Challenge
+			copiedChallenge.Extensions = slices.Clone(rule.Challenge.Extensions)
+			copiedRule.Challenge = &copiedChallenge
+		}
+		rule = &copiedRule
 	}
 
 	if chall.Difficulty == 0 {
@@ -272,16 +314,6 @@ func removeDownstreamRiskConnectionTokens(header http.Header) {
 	}
 }
 
-func clearDownstreamRiskHeaders(header http.Header) {
-	// Remove client-supplied values for headers owned by Anubis.
-	header.Del(downstreamRiskRuleHeader)
-	header.Del(downstreamRiskActionHeader)
-	header.Del(downstreamRiskStatusHeader)
-
-	// Remove Connection options that could strip those headers downstream.
-	removeDownstreamRiskConnectionTokens(header)
-}
-
 func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status string) {
 	removeDownstreamRiskConnectionTokens(header)
 	header.Set(downstreamRiskRuleHeader, cr.Name)
@@ -295,15 +327,6 @@ func setDownstreamRiskHeaders(header http.Header, cr policy.CheckResult, status 
 
 func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpStatusOnly bool) {
 	lg, r := s.getRequestLogger(r)
-
-	if s.opts.OpenGraph.Enabled {
-		if val, _ := s.store.Get(r.Context(), "ogtags:allow:"+r.Host+r.URL.String()); val != nil {
-			clearDownstreamRiskHeaders(r.Header)
-			lg.DebugContext(r.Context(), "serving opengraph tag asset")
-			s.ServeHTTPNext(w, r)
-			return
-		}
-	}
 
 	// Adjust cookie path if base prefix is not empty
 	cookiePath := "/"
@@ -398,8 +421,27 @@ func (s *Server) maybeReverseProxy(w http.ResponseWriter, r *http.Request, httpS
 		return
 	}
 
+	s.restoreOriginalReferer(w, r, cookiePath)
+
 	setDownstreamRiskHeaders(r.Header, cr, "PASS")
 	s.ServeHTTPNext(w, r)
+}
+
+// restoreOriginalReferer looks for the one-shot cookie set by PassChallenge and, if
+// present, overwrites the request's Referer header with the value it carries before
+// the request is proxied upstream. The cookie only survives the single redirect from
+// PassChallenge back to the original URL, so this only ever fires for that one request.
+func (s *Server) restoreOriginalReferer(w http.ResponseWriter, r *http.Request, cookiePath string) {
+	ckie, err := s.getCookie(r, anubis.OriginalRefererCookieName)
+	if err != nil || ckie.Value == "" {
+		return
+	}
+
+	s.ClearCookie(w, CookieOpts{Name: anubis.OriginalRefererCookieName, Path: cookiePath, Host: r.Host})
+
+	if referer, err := url.QueryUnescape(ckie.Value); err == nil {
+		r.Header.Set("Referer", referer)
+	}
 }
 
 func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, lg *slog.Logger, rule *policy.Bot) bool {
@@ -446,14 +488,20 @@ func (s *Server) checkRules(w http.ResponseWriter, r *http.Request, cr policy.Ch
 }
 
 func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger) bool {
+	return s.handleDNSBLWithLookup(w, r, ip, lg, dnsbl.Lookup)
+}
+
+func (s *Server) handleDNSBLWithLookup(w http.ResponseWriter, r *http.Request, ip string, lg *slog.Logger, lookup func(string) (dnsbl.DroneBLResponse, error)) bool {
 	db := &store.JSON[dnsbl.DroneBLResponse]{Underlying: s.store, Prefix: "dronebl:"}
 	if s.policy.DNSBL && ip != "" {
 		resp, err := db.Get(r.Context(), ip)
 		if err != nil {
 			lg.DebugContext(r.Context(), "looking up ip in dnsbl")
-			resp, err := dnsbl.Lookup(ip)
+			resp, err = lookup(ip)
 			if err != nil {
 				lg.ErrorContext(r.Context(), "can't look up ip in dnsbl", "err", err)
+				s.respondWithStatus(w, r, localization.GetLocalizer(r).T("internal_server_error"), "", http.StatusServiceUnavailable)
+				return true
 			}
 			_ = db.Set(r.Context(), ip, resp, 24*time.Hour) // worst case we do the dns lookup again
 			asn, asnDesc := asnFromContext(r.Context())
@@ -475,6 +523,10 @@ func (s *Server) handleDNSBL(w http.ResponseWriter, r *http.Request, ip string, 
 }
 
 func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
+	if !prepareChallengeForm(w, r) {
+		return
+	}
+	defer cleanupChallengeForm(r)
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
@@ -552,24 +604,29 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) validateExtension(name string, r *http.Request, lg *slog.Logger, in *challenge.ValidateInput) error {
+	ext, ok := extension.Get(name)
+	if !ok {
+		return fmt.Errorf("%w: %q", ErrUnknownChallengeExtension, name)
+	}
+	return ext.Validate(r, lg, in)
+}
+
 func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
+	if !prepareChallengeForm(w, r) {
+		return
+	}
+	defer cleanupChallengeForm(r)
 	lg, r := s.getRequestLogger(r)
 	localizer := localization.GetLocalizer(r)
 
 	redir := r.FormValue("redir")
-	redirURL, err := url.ParseRequestURI(redir)
-	if err != nil {
-		lg.ErrorContext(r.Context(), "invalid redirect", "err", err)
-		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), makeCode(err), http.StatusBadRequest)
-		return
+	redirURL, err := s.validateRedirect(redir)
+	if err == nil && (redir == "" || (redirURL.Scheme == "" && !strings.HasPrefix(redir, "/"))) {
+		err = ErrInvalidRedirect
 	}
-
-	switch redirURL.Scheme {
-	case "", "http", "https":
-		// allowed
-	default:
-		lg.ErrorContext(r.Context(), "XSS attempt blocked, invalid redirect scheme", "scheme", redirURL.Scheme)
-		s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
+	if err != nil {
+		s.rejectRedirect(w, r, err)
 		return
 	}
 
@@ -582,6 +639,11 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.getCookie(r, anubis.TestCookieName); errors.Is(err, http.ErrNoCookie) {
 		s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
 		s.ClearCookie(w, CookieOpts{Name: anubis.TestCookieName, Host: r.Host})
+		if s.shouldRetryMissingTestCookie(r) {
+			lg.DebugContext(r.Context(), "verification cookie missing, retrying with a fresh challenge")
+			http.Redirect(w, r, redir, http.StatusFound)
+			return
+		}
 		lg.WarnContext(r.Context(), "user has cookies disabled, this is not an anubis bug")
 		s.respondWithError(w, r, localizer.T("cookies_disabled"), "")
 		return
@@ -589,17 +651,6 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	// used by the path checker rule
 	r.URL = redirURL
-
-	urlParsed, err := r.URL.Parse(redir)
-	if err != nil {
-		s.respondWithError(w, r, localizer.T("redirect_not_parseable"), makeCode(err))
-		return
-	}
-	if (len(urlParsed.Host) > 0 && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)) || urlParsed.Host != r.URL.Host {
-		lg.DebugContext(r.Context(), "domain not allowed", "domain", urlParsed.Host)
-		s.respondWithError(w, r, localizer.T("redirect_domain_not_allowed"), "")
-		return
-	}
 
 	cr, rule, err := s.check(r, lg)
 	if err != nil {
@@ -609,20 +660,28 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
+	lockIndex := sha256.Sum256([]byte(r.FormValue("id")))
+	lock := &s.challengeLocks[lockIndex[0]]
+	lock.Lock()
+	defer lock.Unlock()
+
 	chall, err := s.getChallenge(r)
 	if err != nil {
 		lg.ErrorContext(r.Context(), "getChallenge failed", "err", err)
-		algorithm := "unknown"
-		if rule.Challenge != nil {
-			algorithm = rule.Challenge.Algorithm
-		}
-		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), algorithm), makeCode(err))
+		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "getChallenge failed"), makeCode(err))
 		return
 	}
 
 	if chall.Spent {
 		lg.ErrorContext(r.Context(), "double spend prevented", "reason", "double_spend")
 		s.respondWithError(w, r, fmt.Sprintf("%s: %s", localizer.T("internal_server_error"), "double_spend"), "")
+		return
+	}
+
+	if cr.Rule != config.RuleChallenge || rule == nil || rule.Challenge == nil ||
+		chall.PolicyRuleHash != rule.Hash() || chall.Method != rule.Challenge.Algorithm ||
+		chall.Difficulty != rule.Challenge.Difficulty || !slices.Equal(chall.Extensions, rule.Challenge.Extensions) {
+		s.respondWithStatus(w, r, localizer.T("internal_server_error"), makeCode(challenge.ErrFailed), http.StatusForbidden)
 		return
 	}
 
@@ -663,6 +722,33 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+		return
+	}
+
+	for _, name := range chall.Extensions {
+		if err := s.validateExtension(name, r, lg, in); err != nil {
+			asn, asnDesc := asnFromContext(r.Context())
+			failedValidations.WithLabelValues("extension/"+name, asn, asnDesc).Inc()
+			s.ClearCookie(w, CookieOpts{Path: cookiePath, Host: r.Host})
+			lg.ErrorContext(r.Context(), "challenge extension failed", "extension", name, "err", err)
+
+			var cerr *challenge.Error
+			if errors.As(err, &cerr) {
+				s.respondWithStatus(w, r, cerr.PublicReason, makeCode(err), cerr.StatusCode)
+			} else {
+				s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+			}
+			return
+		}
+	}
+
+	chall.Spent = true
+	j := store.JSON[challenge.Challenge]{Underlying: s.store}
+	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
+		lg.DebugContext(r.Context(), "can't update information about challenge", "err", err)
+		s.respondWithError(w, r, localizer.T("internal_server_error"), makeCode(err))
+		return
 	}
 
 	lg.InfoContext(r.Context(), "challenge accepted")
@@ -701,10 +787,14 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 
 	s.SetCookie(w, CookieOpts{Path: cookiePath, Host: r.Host, Value: tokenString})
 
-	chall.Spent = true
-	j := store.JSON[challenge.Challenge]{Underlying: s.store}
-	if err := j.Set(r.Context(), "challenge:"+chall.ID, *chall, 30*time.Minute); err != nil {
-		lg.DebugContext(r.Context(), "can't update information about challenge", "err", err)
+	if origReferer := chall.Metadata["Referer"]; origReferer != "" {
+		s.SetCookie(w, CookieOpts{
+			Path:   cookiePath,
+			Host:   r.Host,
+			Name:   anubis.OriginalRefererCookieName,
+			Value:  url.QueryEscape(origReferer),
+			Expiry: 1 * time.Minute,
+		})
 	}
 
 	{
@@ -712,7 +802,54 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 		challengesValidated.WithLabelValues(rule.Challenge.Algorithm, asn, asnDesc).Inc()
 	}
 	lg.DebugContext(r.Context(), "challenge passed, redirecting to app")
-	http.Redirect(w, r, redir, http.StatusFound)
+	http.Redirect(w, r, s.withRefererAttributionQuery(redir, chall.Metadata["Referer"], r.Host), http.StatusFound)
+}
+
+// refererAttributionQueryParams lists query parameters that already carry
+// campaign or referrer attribution. When the redirect target has any of these,
+// withRefererAttributionQuery leaves it alone rather than overwrite genuine
+// campaign data.
+var refererAttributionQueryParams = []string{
+	"ref", "source",
+	"utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+	"gclid", "msclkid",
+}
+
+// withRefererAttributionQuery appends utm_source/utm_medium query parameters
+// derived from the original external Referer to redir, so client-side analytics
+// tools that fall back to query parameters when document.referrer is unusable
+// (e.g. Plausible, GA4) can still attribute the visit. This exists because
+// document.referrer itself cannot be fixed here: it reflects the browser's
+// actual navigation history -- the challenge page -- and neither Anubis nor any
+// page script can override it. Opt-in via PreserveRefererQueryParam since it
+// changes the URL the visitor lands on. See
+// https://github.com/TecharoHQ/anubis/issues/1596
+func (s *Server) withRefererAttributionQuery(redir, origReferer, host string) string {
+	if !s.opts.PreserveRefererQueryParam || origReferer == "" {
+		return redir
+	}
+
+	refURL, err := url.Parse(origReferer)
+	if err != nil || refURL.Host == "" || refURL.Host == host {
+		return redir
+	}
+
+	u, err := url.Parse(redir)
+	if err != nil {
+		return redir
+	}
+
+	q := u.Query()
+	for _, name := range refererAttributionQueryParams {
+		if q.Has(name) {
+			return redir
+		}
+	}
+
+	q.Set("utm_source", refURL.Host)
+	q.Set("utm_medium", "referral")
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 func cr(name string, rule config.Rule, weight int) policy.CheckResult {
@@ -725,6 +862,9 @@ func cr(name string, rule config.Rule, weight int) policy.CheckResult {
 
 // Check evaluates the list of rules, and returns the result
 func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *policy.Bot, error) {
+	if err := s.policy.ValidateRequestPath(r); err != nil {
+		return policy.CheckResult{}, nil, err
+	}
 	host := r.Header.Get("X-Real-IP")
 	if host == "" {
 		return decaymap.Zilch[policy.CheckResult](), nil, fmt.Errorf("[misconfiguration] X-Real-IP header is not set")
@@ -782,7 +922,13 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 				// that could mismatch the difficulty the client actually solved for.
 				challRules = &config.ChallengeRules{}
 			}
+			identity, err := json.Marshal(t.Threshold)
+			if err != nil {
+				return policy.CheckResult{}, nil, err
+			}
 			return cr("threshold/"+t.Name, t.Action, weight), &policy.Bot{
+				Name:      "threshold/" + t.Name + ":" + internal.FastHash(string(identity)),
+				Action:    t.Action,
 				Challenge: challRules,
 				Rules:     &checker.List{},
 			}, nil
@@ -790,6 +936,8 @@ func (s *Server) check(r *http.Request, lg *slog.Logger) (policy.CheckResult, *p
 	}
 
 	return cr("default/allow", config.RuleAllow, weight), &policy.Bot{
+		Name:   "default/allow",
+		Action: config.RuleAllow,
 		Challenge: &config.ChallengeRules{
 			Difficulty: s.policy.DefaultDifficulty,
 			Algorithm:  config.DefaultAlgorithm,

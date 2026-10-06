@@ -33,13 +33,23 @@ const packages = methods.map(([goos, goarch, methods]) => {
         "./data/botPolicies.yaml": "botPolicies.yaml",
       },
 
-      build: ({ bin, etc, systemd, doc }) => {
+      build: ({ out, bin, etc, systemd, doc }) => {
         $`go build -trimpath -o ${bin}/anubis${exe} -ldflags '-s -w -extldflags "-static"' ./cmd/anubis`;
         $`go build -trimpath -o ${bin}/anubis-robots2policy${exe} -ldflags '-s -w -extldflags "-static"' ./cmd/robots2policy`;
 
         if (goos == "linux") {
           file.install("./run/anubis@.service", `${systemd}/anubis@.service`);
           file.install("./run/default.env", `${etc}/default.env`);
+        }
+
+        if (goos == "linux" && method.name != "tarball") {
+          file.install("./run/anubis.sysusers.conf", `${out}/usr/lib/sysusers.d/anubis.conf`);
+          file.install("./run/anubis.tmpfiles.conf", `${out}/usr/lib/tmpfiles.d/anubis.conf`);
+        }
+
+        if (goos == "linux" && method.name == "tarball") {
+          file.install("./run/anubis.sysusers.conf", `${systemd}/anubis.sysusers.conf`);
+          file.install("./run/anubis.tmpfiles.conf", `${systemd}/anubis.tmpfiles.conf`);
         }
 
         if (goos == "linux" && method.name == "tarball") {

@@ -1,0 +1,106 @@
+# GeoIP lookups
+
+As of version 1.28.0, Anubis supports looking up client geographic information using [Maxmind GeoLite databases](https://www.maxmind.com/en/geolite-free-ip-geolocation-data). This can help you easily filter unwanted traffic and apply service quality tiers based on the geographic location of the client.
+
+## Configuration
+
+GeoIP databases are configured in the `geoip` block of policy files. If you have them already downloaded to `/var/lib/GeoIP`, you can load them into Anubis with this `geoip` block:
+
+```yaml
+geoip:
+  asn:
+    path: /var/lib/GeoIP/GeoLite2-ASN.mmdb
+  country:
+    path: /var/lib/GeoIP/GeoLite2-Country.mmdb
+```
+
+:::note
+
+Anubis memory-maps these files when opening them. Please ensure that any automatic update (eg via a `geoipupdate` cronjob) does an atomic replace by renaming the new file over the existing one instead of overwriting the file. Overwriting a memory-mapped GeoIP database can and will cause runtime corruption which may result in spectacular issues, none of which are bugs in Anubis.
+
+:::
+
+### ASN log association
+
+If you want to log the [ASN of clients](<https://en.wikipedia.org/wiki/Autonomous_system_(Internet)>), make sure you at least load the `ASN` database and configure the `logging` block:
+
+```yaml
+logging:
+  sink: stdio
+  asn: true
+
+geoip:
+  asn:
+    path: /var/lib/GeoIP/GeoLite2-ASN.mmdb
+```
+
+### Automatic updates
+
+If you have a subscription to Maxmind, Anubis can automatically update GeoIP data based on a set interval:
+
+```yaml
+geoip:
+  asn:
+    path: /var/lib/anubis/GeoLite2-ASN.mmdb
+  country:
+    path: /var/lib/anubis/GeoLite2-Country.mmdb
+  auto_update:
+    account_id: 123456
+    license_key_env: MAXMIND_LICENSE_KEY
+    interval: 24h # if not set, this is the default
+```
+
+Please ensure that your Maxmind API key is set in the `MAXMIND_LICENSE_KEY` environment variable. Please also ensure that Anubis has write permissions to the place you want to store GeoIP databases. If you aren't sure how big you should make the storage folder, please default to 4 gigabytes until your testing lets you come up with a better size.
+
+If you have an internal Maxmind mirror, you can set that URL with the `endpoint` key:
+
+```yaml
+geoip:
+  asn:
+    path: /data/geoip/GeoLite2-ASN.mmdb
+  country:
+    path: /data/geoip/GeoLite2-Country.mmdb
+  auto_update:
+    account_id: 123456
+    license_key_env: MAXMIND_LICENSE_KEY
+    interval: 72h
+    endpoint: https://geoip-mirror.internal.example.com
+```
+
+## `asn` and `geoip` filtering
+
+When companies link their backbone infrastructure to the Internet, they do so via a [BGP Autonomous System](<https://en.wikipedia.org/wiki/Autonomous_system_(Internet)>), denoted by a number (the Autonomous System Number or ASN). Every IP address on the Internet is owned by an ASN with a 1:1 lookup that does not change very frequently.
+
+Anubis uses GeoIP databases to automatically tag requests via their ASN or country of origin. For example, here's how you add 10 weight points to requests from Cloudflare, Huawei Cloud, and Alibaba Cloud:
+
+```yaml
+- name: aggressive-asns-without-functional-abuse-contact
+  action: WEIGH
+  asns:
+    match:
+      - 13335 # Cloudflare
+      - 136907 # Huawei Cloud
+      - 45102 # Alibaba Cloud
+  weight:
+    adjust: 10
+```
+
+You can look up details for [AS13335](https://bgp.tools/as/13335) or any of these other top offenders on [bgp.tools](https://bgp.tools).
+
+In extreme cases, an administrator may have to take action against an entire country. This is not an ideal circumstance, but sometimes reality forces their hands and the administrators just want to sleep at night.
+
+For example, to add 10 weight points to requests from Brazil and China:
+
+```yaml
+- name: countries-with-aggressive-scrapers
+  action: WEIGH
+  geoip:
+    countries:
+      - BR
+      - CN
+      - VN
+  weight:
+    adjust: 10
+```
+
+Use this with care.

@@ -1,0 +1,23 @@
+# CSS Loading
+
+This extension asserts that a client is able to load CSS from the server. It works by sending instructions to import a test route and then ensures that the client actually hits that route.
+
+## Configuration
+
+Add it to an `extensions` block in an existing `challenge` definition:
+
+```yaml
+thresholds:
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight > 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      algorithm: sha256
+      difficulty: 8
+      report_as: 8
+      extensions:
+        - css-load
+```

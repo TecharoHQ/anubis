@@ -3,13 +3,14 @@ package policy
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
+	"cel.dev/cel-go/cel"
+	"cel.dev/cel-go/common/types"
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/expressions"
-	"github.com/google/cel-go/cel"
-	"github.com/google/cel-go/common/types"
 )
 
 type CELChecker struct {
@@ -75,14 +76,19 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 		return cr.UserAgent(), true
 	case "path":
 		if cr.subRequestMode {
-			if xou := cr.Header.Get("X-Original-Uri"); xou != "" {
-				return xou, true
+			original := cr.Header.Get("X-Original-Uri")
+			if original == "" {
+				original = cr.Header.Get("X-Forwarded-Uri")
 			}
-			if xfu := cr.Header.Get("X-Forwarded-Uri"); xfu != "" {
-				return xfu, true
+			if original != "" {
+				u, err := url.ParseRequestURI(original)
+				if err != nil {
+					return nil, false
+				}
+				return pathForPolicy(u.Path), true
 			}
 		}
-		return cr.URL.Path, true
+		return pathForPolicy(cr.URL.Path), true
 	case "query":
 		return expressions.URLValues{Values: cr.URL.Query()}, true
 	case "headers":
@@ -94,6 +100,6 @@ func (cr *CELRequest) ResolveName(name string) (any, bool) {
 	case "load_15m":
 		return expressions.Load15(), true
 	default:
-		return nil, false
+		return expressions.ResolveBotVariable(name, cr.Request)
 	}
 }

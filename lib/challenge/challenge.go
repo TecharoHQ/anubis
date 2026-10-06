@@ -12,4 +12,5 @@ type Challenge struct {
 	PolicyRuleHash string            `json:"policyRuleHash,omitempty"` // Hash of the policy rule that issued this challenge
 	Difficulty     int               `json:"difficulty,omitempty"`     // Difficulty that was in effect when issued
 	Spent          bool              `json:"spent"`                    // Has the challenge already been solved?
+	Extensions     []string          `json:"extensions"`               // Challenge extensions that must validate before a JWT is issued
 }

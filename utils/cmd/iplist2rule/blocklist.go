@@ -2,12 +2,13 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/netip"
 	"strings"
+
+	"github.com/TecharoHQ/anubis/internal/iplist"
 )
 
 // ParseBlocklist reads a plain-text blocklist and returns every non-commented
@@ -78,33 +79,12 @@ func isJSONBlocklist(url, contentType string) bool {
 	return strings.HasSuffix(strings.ToLower(url), ".json")
 }
 
-type Prefix struct {
-	IPv4Prefix string `json:"ipv4Prefix"`
-	IPv6Prefix string `json:"ipv6Prefix"`
-}
-
-type PrefixList struct {
-	CreationTime string   `json:"creationTime"`
-	Prefixes     []Prefix `json:"prefixes"`
-}
-
 // ParsePrefixList decodes a JSON document read from list in the Google/OpenAI
 // bot IP range format and returns every IPv4 and IPv6 prefix it contains.
 func ParsePrefixList(list io.Reader) ([]string, error) {
-	var pl PrefixList
-	if err := json.NewDecoder(list).Decode(&pl); err != nil {
-		return nil, fmt.Errorf("can't decode prefix list: %w", err)
+	pl, err := iplist.Parse(list)
+	if err != nil {
+		return nil, err
 	}
-
-	var prefixes []string
-	for _, p := range pl.Prefixes {
-		switch {
-		case p.IPv4Prefix != "":
-			prefixes = append(prefixes, p.IPv4Prefix)
-		case p.IPv6Prefix != "":
-			prefixes = append(prefixes, p.IPv6Prefix)
-		}
-	}
-
-	return prefixes, nil
+	return pl.CIDRs(), nil
 }

@@ -219,6 +219,7 @@ Anubis offers the following storage backends:
 
 - [`memory`](#memory) -- A simple in-memory hashmap
 - [`bbolt`](#bbolt) -- An on-disk key/value store backed by [bbolt](https://github.com/etcd-io/bbolt), an embedded key/value database for Go programs
+- [`s3api`](#s3api) -- A network-backed storage layer backed by [object storage](https://en.wikipedia.org/wiki/Object_storage), specifically using the [S3 API](https://docs.aws.amazon.com/AmazonS3/latest/API/Type_API_Reference.html).
 - [`valkey`](#valkey) -- A remote in-memory key/value database backed by [Valkey](https://valkey.io/) (or another database compatible with the [RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) protocol)
 
 If no storage backend is set in the policy file, Anubis will use the [`memory`](#memory) backend by default. This is equivalent to the following in the policy file:
@@ -429,7 +430,7 @@ Anubis exposes the following logging settings in the policy file:
 | `level`      | [log level](#log-levels) | `info`          | The logging level threshold. Any logs that are at or above this threshold will be drained to the sink. Any other logs will be discarded. |
 | `sink`       | string                   | `stdio`, `file` | The sink where the logs drain to as they are being recorded in Anubis.                                                                   |
 | `parameters` | object                   |                 | Parameters for the given logging sink. This will vary based on the logging sink of choice. See below for more information.               |
-| `asn`        | bool                     | `true`, `false` | Add ASN information to logs/metrics. (Requires a Thoth client configured)                                                                |
+| `asn`        | bool                     | `true`, `false` | Add ASN information to logs/metrics. (Requires [GeoIP](./geoip.mdx) configuration)                                                       |
 
 Anubis supports the following logging sinks:
 

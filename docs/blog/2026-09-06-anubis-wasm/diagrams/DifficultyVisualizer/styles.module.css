@@ -1,0 +1,370 @@
+/* Theme tokens. Light values are the default, dark values override below. */
+.container {
+  --dv-surface: var(--ifm-background-surface-color);
+  --dv-raised: var(--ifm-color-emphasis-100);
+  --dv-sunken: var(--ifm-color-emphasis-200);
+  --dv-border: var(--ifm-color-emphasis-300);
+  --dv-muted: var(--ifm-color-emphasis-700);
+
+  --dv-hit-text: var(--ifm-color-primary-dark);
+  --dv-hit-border: var(--ifm-color-primary);
+  --dv-hit-bg: rgb(255 86 48 / 0.12);
+
+  --dv-ok-text: rgb(21 128 61);
+  --dv-ok-border: rgb(34 197 94);
+  --dv-ok-bg: rgb(34 197 94 / 0.12);
+
+  --dv-bad-text: rgb(185 28 28);
+  --dv-bad-border: rgb(239 68 68);
+  --dv-bad-bg: rgb(239 68 68 / 0.12);
+}
+
+[data-theme="dark"] .container {
+  --dv-hit-text: var(--ifm-color-primary-lighter);
+  --dv-hit-bg: rgb(255 86 48 / 0.18);
+
+  --dv-ok-text: rgb(74 222 128);
+  --dv-ok-bg: rgb(34 197 94 / 0.18);
+
+  --dv-bad-text: rgb(248 113 113);
+  --dv-bad-bg: rgb(239 68 68 / 0.18);
+}
+
+/* Main container styles */
+.container {
+  width: 100%;
+  max-width: 40rem;
+  margin: 1.5rem auto;
+  overflow: hidden;
+  color: var(--ifm-font-color-base);
+  background-color: var(--dv-raised);
+  border: 1px solid var(--dv-border);
+  border-radius: var(--ifm-global-radius);
+}
+
+/* Control panel styles */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--dv-border);
+}
+
+.controlGroup {
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.difficultyValue {
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 400;
+  padding: 0.125rem 0.375rem;
+  background-color: var(--dv-sunken);
+  border-radius: var(--ifm-global-radius);
+}
+
+/* Mode switch styles */
+.modeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.modeButton {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  color: var(--ifm-font-color-base);
+  background-color: var(--dv-sunken);
+  border: 1px solid transparent;
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+  transition:
+    background-color 200ms,
+    color 200ms;
+}
+
+.modeButton:hover {
+  background-color: var(--dv-border);
+}
+
+.modeButtonActiveHit,
+.modeButtonActiveHit:hover {
+  color: var(--ifm-button-color);
+  background-color: var(--ifm-color-primary);
+}
+
+.modeButtonActiveOk,
+.modeButtonActiveOk:hover {
+  color: var(--ifm-button-color);
+  background-color: rgb(21 128 61);
+}
+
+/* Difficulty slider styles */
+.slider {
+  display: block;
+  width: 100%;
+  accent-color: var(--ifm-color-primary);
+  cursor: pointer;
+}
+
+.hintRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.hint {
+  font-size: 0.75rem;
+  font-family: var(--ifm-font-family-monospace);
+  color: var(--dv-muted);
+  margin-bottom: 0;
+}
+
+.warning {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ifm-color-warning-darkest);
+  margin-bottom: 0;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+[data-theme="dark"] .warning {
+  color: var(--ifm-color-warning);
+}
+
+/* Mining dashboard styles */
+.dashboard {
+  position: relative;
+  overflow: hidden;
+  padding: 0.75rem;
+}
+
+.successGlow {
+  position: absolute;
+  inset: 0;
+  background-color: var(--dv-ok-bg);
+  pointer-events: none;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.statusRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.nonce {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8125rem;
+  color: var(--dv-muted);
+  padding: 0.375rem 0.625rem;
+  background-color: var(--dv-surface);
+  border: 1px solid var(--dv-border);
+  border-radius: var(--ifm-global-radius);
+}
+
+.nonceValue {
+  color: var(--ifm-font-color-base);
+  margin-left: 0.375rem;
+}
+
+.mineButton {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  color: var(--ifm-button-color);
+  background-color: var(--ifm-color-primary);
+  border: 1px solid transparent;
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+  transition: background-color 200ms;
+}
+
+.mineButton:hover {
+  background-color: var(--ifm-color-primary-dark);
+}
+
+.mineButtonMining,
+.mineButtonMining:hover {
+  color: var(--dv-bad-text);
+  background-color: var(--dv-bad-bg);
+  border-color: var(--dv-bad-border);
+}
+
+/* Hash display styles */
+.hashGrid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.chunk {
+  padding: 0.5rem;
+  background-color: var(--dv-surface);
+  border: 1px solid var(--dv-border);
+  border-radius: var(--ifm-global-radius);
+}
+
+.sectionLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dv-muted);
+  margin-bottom: 0.25rem;
+}
+
+/* Both rows share one 16 column grid, and each hex cell spans four columns.
+   That puts every hex character directly above the four bits it encodes
+   without needing spacer elements. */
+.hexRow,
+.binRow {
+  display: grid;
+  grid-template-columns: repeat(16, minmax(0, 1fr));
+  gap: 2px;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.hexRow {
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+}
+
+.hexCell {
+  grid-column: span 4;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dv-muted);
+  background-color: var(--dv-sunken);
+  border: 1px solid var(--dv-border);
+  border-radius: var(--ifm-global-radius);
+  transition: all 200ms;
+}
+
+.binRow {
+  font-size: 0.75rem;
+}
+
+.binCell {
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dv-muted);
+  background-color: var(--dv-sunken);
+  border-bottom: 2px solid var(--dv-border);
+  transition: all 200ms;
+}
+
+/* Cell highlight states */
+.cellHit {
+  color: var(--dv-hit-text);
+  background-color: var(--dv-hit-bg);
+  border-color: var(--dv-hit-border);
+}
+
+.cellOk {
+  color: var(--dv-ok-text);
+  background-color: var(--dv-ok-bg);
+  border-color: var(--dv-ok-border);
+}
+
+.cellBad {
+  color: var(--dv-bad-text);
+  background-color: var(--dv-bad-bg);
+  border-color: var(--dv-bad-border);
+}
+
+/* Glow animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive styles */
+@media (min-width: 768px) {
+  .controls {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+/* Every nested padding costs the bit grid 16 columns worth of width, so trim
+   the padding and the type together on small screens. */
+@media (max-width: 480px) {
+  .controls,
+  .dashboard {
+    padding: 0.5rem;
+  }
+
+  .chunk {
+    padding: 0.375rem;
+  }
+
+  .hexRow {
+    font-size: 1rem;
+  }
+
+  .hexCell {
+    height: 2rem;
+  }
+
+  .binRow {
+    font-size: 0.625rem;
+  }
+
+  .binCell {
+    height: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warning,
+  .successGlow {
+    animation: none;
+  }
+
+  .modeButton,
+  .mineButton,
+  .hexCell,
+  .binCell {
+    transition: none;
+  }
+}

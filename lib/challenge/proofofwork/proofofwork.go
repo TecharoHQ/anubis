@@ -80,7 +80,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 	hex.Encode(hexBuf[:], sum)
 
 	if subtle.ConstantTimeCompare([]byte(response), hexBuf[:]) != 1 {
-		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted response %s but got %s", chall.ErrFailed, string(hexBuf[:]), response))
+		return chall.NewError("validate", "invalid response", chall.ErrFailed)
 	}
 
 	// compare the leading zeroes

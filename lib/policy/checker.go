@@ -83,7 +83,13 @@ func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
-	if hmc.regexp.MatchString(r.Header.Get(hmc.header)) {
+	values := r.Header.Values(hmc.header)
+	for _, value := range values {
+		if hmc.regexp.MatchString(value) {
+			return true, nil
+		}
+	}
+	if hmc.regexp.MatchString(strings.Join(values, ",")) {
 		return true, nil
 	}
 
@@ -118,13 +124,13 @@ func (pc *PathChecker) Check(r *http.Request) (bool, error) {
 			if parsed, err := url.ParseRequestURI(originalUrl); err == nil {
 				originalUrl = parsed.Path
 			}
-			if pc.regexp.MatchString(originalUrl) {
+			if pc.regexp.MatchString(pathForPolicy(originalUrl)) {
 				return true, nil
 			}
 		}
 	}
 
-	if pc.regexp.MatchString(r.URL.Path) {
+	if pc.regexp.MatchString(pathForPolicy(r.URL.Path)) {
 		return true, nil
 	}
 
@@ -144,8 +150,10 @@ type headerExistsChecker struct {
 }
 
 func (hec headerExistsChecker) Check(r *http.Request) (bool, error) {
-	if r.Header.Get(hec.header) != "" {
-		return true, nil
+	for _, value := range r.Header.Values(hec.header) {
+		if value != "" {
+			return true, nil
+		}
 	}
 
 	return false, nil
@@ -179,4 +187,46 @@ func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
 	}
 
 	return result, nil
+}
+
+func (pc *ParsedConfig) ValidateRequestPath(r *http.Request) error {
+	paths := []string{r.URL.Path}
+	if pc.SubrequestMode {
+		original := r.Header.Get("X-Original-Uri")
+		if original == "" {
+			original = r.Header.Get("X-Forwarded-Uri")
+		}
+		if original != "" {
+			u, err := url.ParseRequestURI(original)
+			if err != nil {
+				return ErrMisconfiguration
+			}
+			paths = append(paths, u.Path)
+		}
+	}
+	for _, p := range paths {
+		for segment := range strings.SplitSeq(p, "/") {
+			if segment == "." || segment == ".." {
+				return ErrMisconfiguration
+			}
+		}
+	}
+	return nil
+}
+
+// pathForPolicy collapses repeated slashes for rule evaluation without changing
+// the path forwarded to the origin. Dot segments are rejected separately.
+func pathForPolicy(p string) string {
+	if !strings.Contains(p, "//") {
+		return p
+	}
+	var result strings.Builder
+	result.Grow(len(p))
+	for i := range len(p) {
+		if p[i] == '/' && i > 0 && p[i-1] == '/' {
+			continue
+		}
+		result.WriteByte(p[i])
+	}
+	return result.String()
 }

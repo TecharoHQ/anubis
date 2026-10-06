@@ -1,0 +1,23 @@
+bots:
+  - name: countries-with-aggressive-scrapers
+    action: WEIGH
+    geoip:
+      countries:
+        - BR
+        - CN
+    weight:
+      adjust: 10
+  - name: aggressive-asns-without-functional-abuse-contact
+    action: WEIGH
+    asns:
+      match:
+        - 13335
+    weight:
+      adjust: 10
+
+geoip:
+  asn:
+    path: /var/lib/anubis/GeoLite2-ASN.mmdb
+  country:
+    path: /var/lib/anubis/GeoLite2-Country.mmdb
+    country_field: registered_country

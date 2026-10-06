@@ -1,23 +1,19 @@
+import { waitForExtensions } from "@lib/extensions";
 import algorithms from "./algorithms";
 import { fetchWithBackoff } from "./lib/backoff";
 import { g, u, j } from "@lib/xeact.mjs";
 
 // Tell the inline bootstrap in the challenge page that this script made it off
-// the wire and started running, so it stops trying to re-inject us. This must
-// stay at the top: everything below can fail, but none of those failures are
-// fixed by loading this file again.
-//
-// The bootstrap's watchdog can fire while a slow-but-healthy request is still
-// in flight, which leaves two copies of this module racing. They are injected
-// under different URLs, so the module map treats them as distinct and both
-// evaluate. Only the first one may actually solve the challenge; a second run
-// would spawn a duplicate set of workers and race to submit.
-const alreadyBooted =
-  // @ts-ignore: this variable is checked for in the watchdog script
-  (window as any).__anubisBooted === true;
+// the wire and started running.
 
-// @ts-ignore: tell the watchdog script it's done its job
-(window as any).__anubisBooted = true;
+declare global {
+  interface Window {
+    __anubisBooted?: boolean;
+  }
+}
+
+const alreadyBooted = window.__anubisBooted === true;
+window.__anubisBooted = true;
 
 const imageURL = (
   mood: string,
@@ -215,6 +211,8 @@ interface OhNoesParams {
     );
     const t1 = Date.now();
     console.log({ hash, nonce });
+
+    await waitForExtensions();
 
     if (userReadDetails) {
       const container: HTMLDivElement = document.getElementById(

@@ -19,6 +19,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/internal/glob"
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/web"
@@ -52,6 +53,58 @@ func matchRedirectDomain(allowed []string, host string) bool {
 		}
 	}
 	return false
+}
+
+var (
+	ErrInvalidRedirect           = errors.New("invalid redirect")
+	ErrRedirectDomainNotAllowed  = errors.New("redirect domain not allowed")
+	ErrUnknownChallengeExtension = errors.New("unknown challenge extension")
+)
+
+// validateRedirect validates the form-decoded target without changing its escaping.
+func (s *Server) validateRedirect(redir string) (*url.URL, error) {
+	if strings.HasPrefix(redir, " ") || strings.ContainsAny(redir, "\\") {
+		return nil, ErrInvalidRedirect
+	}
+	for _, c := range redir {
+		if c < 0x20 || c == 0x7f {
+			return nil, ErrInvalidRedirect
+		}
+	}
+	u, err := url.Parse(redir)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrInvalidRedirect, err)
+	}
+	if u.Opaque != "" {
+		return nil, ErrInvalidRedirect
+	}
+	switch u.Scheme {
+	case "":
+		if u.Host != "" || strings.HasPrefix(u.Path, "//") || strings.ContainsAny(u.Path, "\\") {
+			return nil, ErrInvalidRedirect
+		}
+	case "http", "https":
+		if u.Hostname() == "" {
+			return nil, ErrInvalidRedirect
+		}
+	default:
+		return nil, ErrInvalidRedirect
+	}
+	if u.Host != "" && len(s.opts.RedirectDomains) != 0 && !matchRedirectDomain(s.opts.RedirectDomains, u.Host) {
+		return nil, ErrRedirectDomainNotAllowed
+	}
+	return u, nil
+}
+
+func (s *Server) rejectRedirect(w http.ResponseWriter, r *http.Request, err error) {
+	lg, _ := s.getRequestLogger(r)
+	localizer := localization.GetLocalizer(r)
+	message := "invalid_redirect"
+	if errors.Is(err, ErrRedirectDomainNotAllowed) {
+		message = "redirect_domain_not_allowed"
+	}
+	lg.DebugContext(r.Context(), "invalid redirect", "err", err)
+	s.respondWithStatus(w, r, localizer.T(message), "", http.StatusBadRequest)
 }
 
 type CookieOpts struct {
@@ -208,6 +261,24 @@ func makeCode(err error) string {
 	return builder.String()
 }
 
+func mergeExtensions(r *http.Request, chall *challenge.Challenge, component templ.Component) (templ.Component, error) {
+	if len(chall.Extensions) == 0 {
+		return component, nil
+	}
+
+	result := make([]templ.Component, 0, len(chall.Extensions)+1) // add a part for the base <head> template
+	for _, name := range chall.Extensions {
+		ext, ok := extension.Get(name)
+		if !ok {
+			return nil, fmt.Errorf("%w: %q", ErrUnknownChallengeExtension, name)
+		}
+		result = append(result, ext.Head(r, chall))
+	}
+	result = append(result, component)
+
+	return templ.Join(result...), nil
+}
+
 func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.CheckResult, rule *policy.Bot, returnHTTPStatusOnly bool) {
 	localizer := localization.GetLocalizer(r)
 
@@ -229,8 +300,8 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 	lg, r := s.getRequestLogger(r)
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") && randomChance(64) {
-		lg.ErrorContext(r.Context(), "client was given a challenge but does not in fact support gzip compression")
-		s.respondWithError(w, r, localizer.T("client_error_browser"), "")
+		lg.InfoContext(r.Context(), "client was given a challenge but does not in fact support gzip compression")
+		s.respondWithStatus(w, r, localizer.T("client_error_browser"), "", s.policy.StatusCodes.Deny)
 		return
 	}
 
@@ -296,6 +367,13 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		return
 	}
 
+	component, err = mergeExtensions(r, chall, component)
+	if err != nil {
+		lg.ErrorContext(r.Context(), "can't render challenge extensions", "err", err, "note", ErrActualAnubisBug)
+		s.respondWithError(w, r, fmt.Sprintf(`%s "RenderIndex"`, localizer.T("internal_server_error")), makeCode(err))
+		return
+	}
+
 	page := web.BaseWithChallengeAndOGTags(
 		localizer.T("making_sure_not_bot"),
 		component,
@@ -347,6 +425,7 @@ func (s *Server) constructRedirectURL(r *http.Request) (string, error) {
 }
 
 func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
 	localizer := localization.GetLocalizer(r)
 
 	templ.Handler(
@@ -421,40 +500,16 @@ func (s *Server) stripBasePrefixFromRequest(r *http.Request) *http.Request {
 
 func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 	if s.next == nil {
+		w.Header().Set("Cache-Control", "no-store")
+		if !prepareChallengeForm(w, r) {
+			return
+		}
+		defer cleanupChallengeForm(r)
 		localizer := localization.GetLocalizer(r)
 
 		redir := r.FormValue("redir")
-		urlParsed, err := url.Parse(redir)
-		if err != nil {
-			s.respondWithStatus(w, r, localizer.T("redirect_not_parseable"), makeCode(err), http.StatusBadRequest)
-			return
-		}
-
-		if urlParsed.Opaque != "" || (urlParsed.Scheme == "" && strings.HasPrefix(redir, "//")) {
-			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
-			return
-		}
-
-		// validate URL scheme to prevent javascript:, data:, file:, tel:, etc.
-		switch urlParsed.Scheme {
-		case "", "http", "https":
-			// allowed: empty scheme means relative URL
-		default:
-			lg, _ := s.getRequestLogger(r)
-			lg.WarnContext(r.Context(), "XSS attempt blocked, invalid redirect scheme", "scheme", urlParsed.Scheme, "redir", redir)
-			s.respondWithStatus(w, r, localizer.T("invalid_redirect"), "", http.StatusBadRequest)
-			return
-		}
-
-		hostNotAllowed := len(urlParsed.Host) > 0 &&
-			len(s.opts.RedirectDomains) != 0 &&
-			!matchRedirectDomain(s.opts.RedirectDomains, urlParsed.Host)
-		hostMismatch := r.URL.Host != "" && urlParsed.Host != "" && urlParsed.Host != r.URL.Host
-
-		if hostNotAllowed || hostMismatch {
-			lg, _ := s.getRequestLogger(r)
-			lg.DebugContext(r.Context(), "domain not allowed", "domain", urlParsed.Host)
-			s.respondWithStatus(w, r, localizer.T("redirect_domain_not_allowed"), makeCode(err), http.StatusBadRequest)
+		if _, err := s.validateRedirect(redir); err != nil {
+			s.rejectRedirect(w, r, err)
 			return
 		}
 
@@ -468,7 +523,7 @@ func (s *Server) ServeHTTPNext(w http.ResponseWriter, r *http.Request) {
 		).ServeHTTP(w, r)
 	} else {
 		asn, asnDesc := asnFromContext(r.Context())
-		requestsProxied.WithLabelValues(r.Host, asn, asnDesc).Inc()
+		requestsProxied.WithLabelValues(proxiedHostLabels.label(r.Host), asn, asnDesc).Inc()
 		r = s.stripBasePrefixFromRequest(r)
 		s.next.ServeHTTP(w, r)
 	}
