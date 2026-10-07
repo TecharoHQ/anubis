@@ -29,6 +29,9 @@ run_wasm2js() {
 	elif command -v wasmtime 2>&1 >/dev/null; then
 		echo ">> wasm2js (wasmtime) ${*}"
 		wasmtime run -W exceptions=y --dir . ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
+	elif command -v node 2>&1 >/dev/null; then
+		echo ">> node execer.mjs ${*}"
+		node --no-warnings ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
 	else
 		echo ">> wasm2js (wazero-exec, slow) ${*}"
 		go run ./utils/cmd/wazero-exec ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
