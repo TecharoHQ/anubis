@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Use node.js for running wasm in CI.
 - Fix [GHSA-5gwm-367w-7fgj](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-5gwm-367w-7fgj), which allowed attackers that control the PTR records for their IP addresses to bypass Anubis via setting multiple PTR records pointing to various search engines.
 - Replace Thoth with [GeoIP databases](./admin/geoip.mdx). GeoIP databases are configured in the `geoip` block.
 - Thoth functionality has been removed. `THOTH_URL`, `THOTH_TOKEN`, and `THOTH_INSECURE` are now deprecated environment variables that will log a warning upon startup.
