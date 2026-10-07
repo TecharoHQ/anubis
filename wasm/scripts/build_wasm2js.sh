@@ -34,10 +34,10 @@ run_wasm2js() {
 		wasm2js_via="wasm2js_${WASM2JS_VERSION}.wasm under wasmtime"
 		echo ">> wasm2js (wasmtime) ${*}"
 		wasmtime run -W exceptions=y --dir . ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
-	elif command -v node 2>&1 >/dev/null; then
+	elif node_runs_wasm; then
 		wasm2js_via="wasm2js_${WASM2JS_VERSION}.wasm under node"
 		echo ">> node execer.mjs ${*}"
-		node "${node_wasm_flags[@]}" ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
+		node --no-warnings ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
 	else
 		wasm2js_via="wasm2js_${WASM2JS_VERSION}.wasm under wazero-exec"
 		echo ">> wasm2js (wazero-exec, slow) ${*}"

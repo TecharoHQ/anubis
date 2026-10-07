@@ -30,12 +30,8 @@ all_populated() {
 	done
 }
 
-# Flags for running the wasm builds of wasm-opt and wasm2js under node.
-#
-# Liftoff, V8's baseline wasm compiler, emits instructions that a plain
-# rv64imafdc CPU does not have, and node dies with SIGILL on roughly half of all
-# runs. TurboFan alone is slower to start but does not crash.
-node_wasm_flags=(--no-warnings)
-if [ "$(uname -m)" = "riscv64" ]; then
-	node_wasm_flags+=(--no-liftoff)
-fi
+# Node can crash with SIGILL on riscv64 even with Liftoff disabled.
+# Skip it when choosing a runtime for wasm-opt and wasm2js.
+node_runs_wasm() {
+	command -v node >/dev/null 2>&1 && [ "$(uname -m)" != "riscv64" ]
+}
