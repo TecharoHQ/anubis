@@ -1101,6 +1101,9 @@ func TestChallengeFor_ErrNotFound(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/", nil)
 	req.Header.Set("X-Real-IP", "127.0.0.1")
 	req.Header.Set("User-Agent", "CHALLENGE")
+	// RenderIndex denies one in 64 clients that do not accept gzip, so accept it
+	// and decompress the page below.
+	req.Header.Set("Accept-Encoding", "gzip")
 	req.AddCookie(&http.Cookie{Name: anubis.TestCookieName, Value: wrongCookie})
 
 	w := httptest.NewRecorder()
@@ -1113,14 +1116,10 @@ func TestChallengeFor_ErrNotFound(t *testing.T) {
 		}
 	}()
 
-	body := new(strings.Builder)
-	_, err := io.Copy(body, resp.Body)
-	if err != nil {
-		t.Fatalf("reading body should not fail: %v", err)
-	}
+	body := readChallengePageBody(t, resp)
 
 	t.Run("make sure challenge page is issued", func(t *testing.T) {
-		if !strings.Contains(body.String(), "anubis_challenge") {
+		if !strings.Contains(body, "anubis_challenge") {
 			t.Error("should get a challenge page")
 		}
 
@@ -1130,7 +1129,7 @@ func TestChallengeFor_ErrNotFound(t *testing.T) {
 	})
 
 	t.Run("make sure that the body is not an error page", func(t *testing.T) {
-		if strings.Contains(body.String(), "reject.webp") {
+		if strings.Contains(body, "reject.webp") {
 			t.Error("should not get an internal server error")
 		}
 	})

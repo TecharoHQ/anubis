@@ -29,3 +29,9 @@ all_populated() {
 		compgen -G "${dir}/${pattern}" >/dev/null || return 1
 	done
 }
+
+# Node can crash with SIGILL on riscv64 even with Liftoff disabled.
+# Skip it when choosing a runtime for wasm-opt and wasm2js.
+node_runs_wasm() {
+	command -v node >/dev/null 2>&1 && [ "$(uname -m)" != "riscv64" ]
+}
