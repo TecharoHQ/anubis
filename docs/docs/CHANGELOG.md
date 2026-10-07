@@ -46,6 +46,7 @@ As part of a continuous security posture, the following issues were identified a
 - Handle malformed client IP addresses safely.
 - Fix concurrent TLS SNI handling in edge cases.
 - DNSBL hits are now cached correctly, even when the result is no entry found.
+- Add `utils/cmd/botgenerate` for automatically updating crawler IP ranges. Also apply the updates.
 
 ## v1.28.0-pre2: Wuk Lamat
 
