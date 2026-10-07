@@ -1,0 +1,4 @@
+bots:
+  - name: path-bad
+    path_regex: "a(b"
+    action: DENY
