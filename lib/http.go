@@ -116,11 +116,14 @@ type CookieOpts struct {
 }
 
 func (s *Server) cookieName(base string) string {
-	h := sha256.Sum256(fmt.Appendf(nil, "%t|%t|%t|%d|%s|%t|%s",
-		s.opts.CookieHttpOnly, s.opts.CookieSecure, s.opts.CookiePartitioned,
-		s.opts.CookieSameSite, s.opts.CookieDomain, s.opts.CookieDynamicDomain,
-		anubis.BasePrefix))
-	return base + "-" + hex.EncodeToString(h[:4])
+	if s.opts.DynamicCookieSuffix {
+		h := sha256.Sum256(fmt.Appendf(nil, "%t|%t|%t|%d|%s|%t|%s",
+			s.opts.CookieHttpOnly, s.opts.CookieSecure, s.opts.CookiePartitioned,
+			s.opts.CookieSameSite, s.opts.CookieDomain, s.opts.CookieDynamicDomain,
+			anubis.BasePrefix))
+		return base + "-" + hex.EncodeToString(h[:4])
+	}
+	return base
 }
 
 // getCookie reads the cookie named base from the request. It applies the same
