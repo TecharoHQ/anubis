@@ -7,6 +7,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal/dns"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/store/memory"
+	"github.com/neilotoole/slogt/v2"
 )
 
 func newTestDNS(t *testing.T) *dns.Dns {
@@ -15,7 +16,7 @@ func newTestDNS(t *testing.T) *dns.Dns {
 	ctx := t.Context()
 	memStore := memory.New(ctx)
 	cache := dns.NewDNSCache(300, 300, memStore)
-	return dns.New(ctx, cache)
+	return dns.New(ctx, cache, slogt.New(t))
 }
 
 func TestCELChecker_MapIterationWrappers(t *testing.T) {

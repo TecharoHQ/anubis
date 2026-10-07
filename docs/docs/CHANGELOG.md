@@ -13,13 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Use node.js for running wasm in CI.
+- Fix [GHSA-5gwm-367w-7fgj](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-5gwm-367w-7fgj), which allowed attackers that control the PTR records for their IP addresses to bypass Anubis via setting multiple PTR records pointing to various search engines.
 - Replace Thoth with [GeoIP databases](./admin/geoip.mdx). GeoIP databases are configured in the `geoip` block.
 - Thoth functionality has been removed. `THOTH_URL`, `THOTH_TOKEN`, and `THOTH_INSECURE` are now deprecated environment variables that will log a warning upon startup.
 - ASN description values now use the Maxmind values instead of the values that Thoth returned. This may impact your fail2ban rules.
 - Native packages now create an `anubis` group and assign all Anubis instances permissions to `/var/lib/anubis`.
 - Fix the original-referer cookie not being affected by the `COOKIE_PREFIX` setting ([#1977](https://github.com/TecharoHQ/anubis/pull/1977))
 - Default to the simplified explanation to avoid people misinterpreting words. `USE_SIMPLIFIED_EXPLANATION` is now deprecated.
+- Add Portuguese (Portugal) (`pt-PT`) localization.
 - Add documentation for the [Headless Browser Detection](./admin/configuration/challenges/extensions/headless.mdx) extension and the [Soteria](./admin/configuration/challenges/) challenge methods exclusive to BotStopper.
+- Add DYNAMIC_COOKIE_SUFFIX setting for toggling the dynamically generated cookie suffix [#1992](https://github.com/TecharoHQ/anubis/pull/1992)
+- Retry a missing challenge verification cookie once per client before reporting that cookies are disabled, allowing browsers affected by transient cookie loss during navigation to recover without creating an infinite challenge loop ([#1916](https://github.com/TecharoHQ/anubis/issues/1916)).
 
 ### Small security fixes
 

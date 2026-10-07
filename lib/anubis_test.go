@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -1047,6 +1048,39 @@ func TestStripBasePrefixFromRequest(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestCookieSuffixNotSet makes sure that setting DYNAMIC_COOKIE_SUFFIX=false
+// won't create cookie names with suffixes.
+func TestCookieSuffixNotSet(t *testing.T) {
+	srv := spawnAnubis(t, Options{
+		Next:                http.NewServeMux(),
+		CookieDomain:        "127.0.0.1",
+		DynamicCookieSuffix: false,
+	})
+
+	t.Run("make sure cookie has no suffix", func(t *testing.T) {
+		if srv.cookieName(anubis.TestCookieName) != anubis.TestCookieName {
+			t.Error("output and input of the cookieName method must be the same")
+		}
+	})
+}
+
+// TestCookieSuffixIsSet makes sure that leaving DYNAMIC_COOKIE_SUFFIX=true
+// creates cookie names with suffixes.
+func TestCookieSuffixIsSet(t *testing.T) {
+	srv := spawnAnubis(t, Options{
+		Next:                http.NewServeMux(),
+		CookieDomain:        "127.0.0.1",
+		DynamicCookieSuffix: true,
+	})
+
+	t.Run("make sure cookie has suffix", func(t *testing.T) {
+		var testCookieWithSuffix = regexp.MustCompile("^" + anubis.TestCookieName + `-[a-z0-9]{8}$`)
+		if !testCookieWithSuffix.MatchString(srv.cookieName(anubis.TestCookieName)) {
+			t.Error("Test cookie does not have suffix")
+		}
+	})
 }
 
 // TestChallengeFor_ErrNotFound makes sure that users with invalid challenge IDs

@@ -41,6 +41,7 @@ type Options struct {
 	CookieDomain              string
 	CookieExpiration          time.Duration
 	CookiePartitioned         bool
+	DynamicCookieSuffix       bool
 	BasePrefix                string
 	WebmasterEmail            string
 	RedirectDomains           []string
