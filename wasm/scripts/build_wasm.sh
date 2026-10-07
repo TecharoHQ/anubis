@@ -45,7 +45,7 @@ run_wasm_opt() {
 		wasmtime run -W exceptions=y --dir . ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
 	elif command -v node 2>&1 >/dev/null; then
 		wasm_opt_via="wasm-opt_130.wasm under node"
-		node --no-warnings ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
+		node "${node_wasm_flags[@]}" ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
 	else
 		wasm_opt_via="wasm-opt_130.wasm under wazero-exec"
 		go run ./utils/cmd/wazero-exec ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
