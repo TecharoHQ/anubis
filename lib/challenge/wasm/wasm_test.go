@@ -41,6 +41,23 @@ func mkRequest(t *testing.T, values map[string]string) *http.Request {
 	return req
 }
 
+// skipSlowArgon2id skips argon2id anywhere it is too slow to finish inside the
+// go test timeout. wazero only ships a compiler for amd64 and arm64, every other
+// architecture falls back to its interpreter.
+func skipSlowArgon2id(t *testing.T, algorithm string) {
+	t.Helper()
+
+	if algorithm != "argon2id" {
+		return
+	}
+
+	switch runtime.GOARCH {
+	case "amd64", "arm64":
+	default:
+		t.Skipf("skipping argon2id on %s because wazero has no compiler for it and the interpreter is too slow", runtime.GOARCH)
+	}
+}
+
 // solve runs the same WASM module the server uses to compute a genuinely valid
 // (nonce, response) pair for the given challenge data, so the happy-path case
 // exercises the full verification flow rather than a hand-rolled constant.
@@ -82,9 +99,7 @@ func solve(t *testing.T, algorithm string, data []byte) (nonce string, response 
 func TestValidateAdversarial(t *testing.T) {
 	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
 		t.Run(algorithm, func(t *testing.T) {
-			if runtime.GOARCH == "arm64" && algorithm == "argon2id" {
-				t.Skip("skipping argon2id on aarch64 because validation is slow in the interpreter")
-			}
+			skipSlowArgon2id(t, algorithm)
 			testValidateAdversarial(t, algorithm)
 		})
 	}
@@ -303,9 +318,7 @@ func TestSolveVerifyManyChallenges(t *testing.T) {
 
 	for _, algorithm := range []string{"sha256", "hashx", "argon2id"} {
 		t.Run(algorithm, func(t *testing.T) {
-			if runtime.GOARCH == "arm64" && algorithm == "argon2id" {
-				t.Skip("skipping argon2id on aarch64 because validation is slow in the interpreter")
-			}
+			skipSlowArgon2id(t, algorithm)
 			n := counts[algorithm]
 			if testing.Short() {
 				n = 5

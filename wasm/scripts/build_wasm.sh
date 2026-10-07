@@ -33,17 +33,50 @@ dst_dirs=(./web/static/wasm/simd128 ./web/static/wasm/baseline)
 baseline_features="-mvp --enable-sign-ext --enable-mutable-globals --enable-bulk-memory --enable-nontrapping-float-to-int"
 simd128_features="${baseline_features} --enable-multivalue --enable-simd"
 
+# Which wasm-opt run_wasm_opt picked, for error messages.
+wasm_opt_via=""
+
 run_wasm_opt() {
 	if command -v wasm-opt 2>&1 >/dev/null; then
+		wasm_opt_via="wasm-opt from PATH"
 		wasm-opt "$@"
 	elif command -v wasmtime 2>&1 >/dev/null; then
+		wasm_opt_via="wasm-opt_130.wasm under wasmtime"
 		wasmtime run -W exceptions=y --dir . ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
 	elif command -v node 2>&1 >/dev/null; then
+		wasm_opt_via="wasm-opt_130.wasm under node"
 		node --no-warnings ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
 	else
+		wasm_opt_via="wasm-opt_130.wasm under wazero-exec"
 		go run ./utils/cmd/wazero-exec ./utils/wasm/wasm2js/wasm-opt_130.wasm "$@"
 	fi
 }
+
+# The stderr file and the output file of the wasm-opt run in flight, empty when
+# there is none.
+held_stderr=""
+held_out=""
+
+# reencode holds wasm-opt's stderr back, so anything that kills this script in the
+# middle of a run (set -u, set -e, a signal) would otherwise take the only
+# explanation down with it. The trap runs with stderr still pointing at the held
+# file, hence the copy of the real one on fd 3.
+exec 3>&2
+report_held_stderr() {
+	local rc="$?"
+	if [ -z "${held_stderr}" ]; then
+		return
+	fi
+	if [ "${rc}" -ne 0 ]; then
+		echo "build_wasm.sh exited with status ${rc} while running ${wasm_opt_via:-wasm-opt}, which points at a bug in this script rather than at the module" >&3
+		if [ -s "${held_stderr}" ]; then
+			echo "stderr up to that point:" >&3
+			sed 's/^/    /' "${held_stderr}" >&3
+		fi
+	fi
+	rm -f "${held_stderr}" "${held_out}"
+}
+trap report_held_stderr EXIT
 
 copy_modules() {
 	local src="${1}" dst="${2}"
@@ -68,20 +101,25 @@ reencode() {
 		exit 1
 	fi
 
-	local out err
 	for fname in "${files[@]}"; do
-		out="$(mktemp "${fname}.XXXXXX")"
-		err="$(mktemp)"
+		held_out="$(mktemp "${fname}.XXXXXX")"
+		held_stderr="$(mktemp)"
 		# stderr is held back because wasm-opt warns on every module that no passes
 		# were specified.
-		if ! run_wasm_opt "$@" "${fname}" -o "${out}" 2>"${err}"; then
-			cat "${err}" >&2
-			rm -f "${out}" "${err}"
+		if ! run_wasm_opt "$@" "${fname}" -o "${held_out}" 2>"${held_stderr}"; then
 			echo "wasm-opt rejected ${fname}" >&2
+			echo "  ran as: ${wasm_opt_via}" >&2
+			echo "  flags:  $*" >&2
+			echo "  stderr:" >&2
+			sed 's/^/    /' "${held_stderr}" >&2
+			echo "If it names a feature that is not enabled, the Rust toolchain now emits something outside that feature list. Read the comment above baseline_features in ${BASH_SOURCE[0]} before adding the flag, the list is what the oldest supported browsers implement." >&2
+			rm -f "${held_out}" "${held_stderr}"
+			held_stderr=""
 			exit 1
 		fi
-		rm -f "${err}"
-		mv -f "${out}" "${fname}"
+		rm -f "${held_stderr}"
+		held_stderr=""
+		mv -f "${held_out}" "${fname}"
 	done
 }
 

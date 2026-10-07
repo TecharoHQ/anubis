@@ -22,17 +22,24 @@ if all_populated '*.wasm.js' "${dst_dirs[@]}" && [ -n "$oldest_dst" ] && awk "BE
 	exit 0
 fi
 
+# Which wasm2js run_wasm2js picked, for error messages.
+wasm2js_via=""
+
 run_wasm2js() {
 	if command -v wasm2js 2>&1 >/dev/null; then
+		wasm2js_via="wasm2js from PATH"
 		echo ">> wasm2js (sys) ${*}"
 		wasm2js $WASM2JS_FLAGS $*
 	elif command -v wasmtime 2>&1 >/dev/null; then
+		wasm2js_via="wasm2js_${WASM2JS_VERSION}.wasm under wasmtime"
 		echo ">> wasm2js (wasmtime) ${*}"
 		wasmtime run -W exceptions=y --dir . ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
 	elif command -v node 2>&1 >/dev/null; then
+		wasm2js_via="wasm2js_${WASM2JS_VERSION}.wasm under node"
 		echo ">> node execer.mjs ${*}"
 		node --no-warnings ./wasm/scripts/execer.mjs ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
 	else
+		wasm2js_via="wasm2js_${WASM2JS_VERSION}.wasm under wazero-exec"
 		echo ">> wasm2js (wazero-exec, slow) ${*}"
 		go run ./utils/cmd/wazero-exec ./utils/wasm/wasm2js/wasm2js_130.wasm $WASM2JS_FLAGS $*
 	fi
@@ -48,7 +55,15 @@ fi
 
 for fname in "${srcs[@]}"; do
 	output="./web/js/gen/wasm2js/$(basename "${fname}").js"
-	run_wasm2js "${fname}" -o "${output}"
+	if ! run_wasm2js "${fname}" -o "${output}"; then
+		echo "wasm2js failed on ${fname}, its own output is above" >&2
+		echo "  ran as: ${wasm2js_via}" >&2
+		echo "  flags:  ${WASM2JS_FLAGS}" >&2
+		echo "The input is written by wasm/scripts/build_wasm.sh. If it is stale or damaged, delete ./web/static/wasm and run 'npm run assets:wasm' to rebuild it, then run 'npm run assets:wasm2js' again." >&2
+		# A partial output would make the next run believe everything is up to date.
+		rm -f "${output}"
+		exit 1
+	fi
 	# wasm2js emits an import of the anubis host module on line 1; replace it with
 	# a stub. Rewriting through a temp file rather than sed -i because BSD sed
 	# reads the next argument as a mandatory backup suffix and GNU sed does not.
