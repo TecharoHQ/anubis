@@ -13,6 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+## v1.28.0: Wuk Lamat
+
+This release adds WebAssembly based proof of work checks to Anubis. They are documented in the [Proof of Work (WebAssembly)](https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm) page. This uses Rust code compiled to WebAssembly to run proof of work code. When browsers support SIMD, the WASM will use hardware acceleration.
+
+When clients are configured to disable WebAssembly, Anubis falls back to a pure JavaScript implementation of the WebAssembly-based check logic. As clients that disable WebAssembly usually disable the JavaScript JIT (the thing that makes JavaScript fast), this makes checks slower.
+
+Additionally due to complicated facts and circumstances involving it being complicated to pass the messages from the wasm2js world back to JavaScript, the progress bar will not update while a wasm2js check is running. This is a known issue and will be fixed in a later release.
+
+The difficulty values for the WebAssembly based checks are going to be much greater than the equivalent difficulty values for the JavaScript based checks. Generally these count the number of leading _bits_ that much match instead of the number of leading _nibbles_ that must match. Here's a rough translation table:
+
+| `fast` difficulty | `argon2id` difficulty | `sha256` difficulty | `hashx` difficulty |
+| :---------------- | :-------------------- | :------------------ | :----------------- |
+| `4`               | `4`                   | `16`                | `15`               |
+| `2`               | `2`                   | `8`                 | `7`                |
+| `6`               | `6`                   | `24`                | `20`               |
+
+As I'm not certain this will work fine out of the box for a few edge cases, I have disabled these new challenge methods by default. I will enable the new methods by default in a future version after they have been sufficiently tested.
+
 - Use node.js for running wasm in CI.
 - Fix [GHSA-5gwm-367w-7fgj](https://github.com/TecharoHQ/anubis/security/advisories/GHSA-5gwm-367w-7fgj), which allowed attackers that control the PTR records for their IP addresses to bypass Anubis via setting multiple PTR records pointing to various search engines.
 - Replace Thoth with [GeoIP databases](./admin/geoip.mdx). GeoIP databases are configured in the `geoip` block.
@@ -25,31 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add documentation for the [Headless Browser Detection](./admin/configuration/challenges/extensions/headless.mdx) extension and the [Soteria](./admin/configuration/challenges/) challenge methods exclusive to BotStopper.
 - Add DYNAMIC_COOKIE_SUFFIX setting for toggling the dynamically generated cookie suffix [#1992](https://github.com/TecharoHQ/anubis/pull/1992)
 - Retry a missing challenge verification cookie once per client before reporting that cookies are disabled, allowing browsers affected by transient cookie loss during navigation to recover without creating an infinite challenge loop ([#1916](https://github.com/TecharoHQ/anubis/issues/1916)).
-
-### Small security fixes
-
-As part of a continuous security posture, the following issues were identified and remediated:
-
-- Challenge validation for WASM based checks could fail open when users pass specifically crafted invalid input.
-- WASM challenges may only have four in-flight validations at once per process, the rest will wait in line.
-- Challenge solutions are now strictly bound to the issuing rule.
-- Path policies now prevent path traversal bypasses in some edge cases.
-- Duplicate header values are now consistently handled across edge cases.
-- Forwarded URI paths are evaluated separately from query strings.
-- Disallow clients from sending their JA4H value by using the Set header verb instead of Add.
-- Avoid a panic when parsing IPv6 answers from DNSBL hits in edge cases.
-- Avoid caching negative hits from DNSBL servers.
-- CDNs and middleware are now instructed to NOT cache Anubis challenge, completion, forward-auth, and error pages.
-- When a dynamic IP list updates to a list that has no entries, keep using the previous entry instead of deleting all IP list contents from memory.
-- Reject short HS512 secrets.
-- Restrict honeypot log permissions.
-- Handle malformed client IP addresses safely.
-- Fix concurrent TLS SNI handling in edge cases.
-- DNSBL hits are now cached correctly, even when the result is no entry found.
-
-## v1.28.0-pre2: Wuk Lamat
-
-- Add WebAssembly-based proof of work checks to decrease client load and increase the complexity required to scrape past Anubis. See [Proof of Work (WebAssembly)](./admin/configuration/challenges/wasm.mdx) for more information.
 - Use a bundled version of `wasm2js` in order to make the WebAssembly proof of work checks run in non-wasm environments.
 - Make the bundled `wasm2js`/`wasm-opt` WebAssembly modules build reproducibly and fix the build on arm64.
 - Add the concept of [Challenge Extensions](./admin/configuration/challenges/extensions/index.mdx) and add the sample [css-load](./admin/configuration/challenges/extensions/css-load.mdx) extension.
@@ -77,6 +70,27 @@ As part of a continuous security posture, the following issues were identified a
 - Share redirect validation between challenge completion and subrequest authentication. Reject ambiguous URL forms before checking allowed domains.
 - Respond with the configured `DENY` status code instead of HTTP 500 when a challenged client is rejected for not advertising gzip support, and log that rejection at `INFO` instead of `ERROR`. The rejection is deliberate, so it no longer shows up in 5xx rates or as a server fault. The log message text is unchanged, but fail2ban filters that match on the `ERROR` level need updating ([#1009](https://github.com/TecharoHQ/anubis/issues/1009)).
 - Anubis now can use dynamic IP lists from providers like OpenAI or Google instead of static IP lists.
+
+### Small security fixes
+
+As part of a continuous security posture, the following issues were identified and remediated:
+
+- Challenge validation for WASM based checks could fail open when users pass specifically crafted invalid input.
+- WASM challenges may only have four in-flight validations at once per process, the rest will wait in line.
+- Challenge solutions are now strictly bound to the issuing rule.
+- Path policies now prevent path traversal bypasses in some edge cases.
+- Duplicate header values are now consistently handled across edge cases.
+- Forwarded URI paths are evaluated separately from query strings.
+- Disallow clients from sending their JA4H value by using the Set header verb instead of Add.
+- Avoid a panic when parsing IPv6 answers from DNSBL hits in edge cases.
+- Avoid caching negative hits from DNSBL servers.
+- CDNs and middleware are now instructed to NOT cache Anubis challenge, completion, forward-auth, and error pages.
+- When a dynamic IP list updates to a list that has no entries, keep using the previous entry instead of deleting all IP list contents from memory.
+- Reject short HS512 secrets.
+- Restrict honeypot log permissions.
+- Handle malformed client IP addresses safely.
+- Fix concurrent TLS SNI handling in edge cases.
+- DNSBL hits are now cached correctly, even when the result is no entry found.
 
 ## v1.27.0: Moenbryda Wilfsunnwyn
 
