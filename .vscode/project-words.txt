@@ -195,6 +195,7 @@ forwardauth
 fout
 fpcast
 fptoint
+freelist
 fsys
 fucky
 fullchain

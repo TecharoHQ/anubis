@@ -216,6 +216,7 @@ This has been fixed in a few ways:
 - Improve the performances of rules validation
 - Only compute the JA4H fingerprint when a policy references the `X-Http-Fingerprint-JA4H` header, taking it off the hot path for configurations that don't use it ([#834](https://github.com/TecharoHQ/anubis/pull/834)).
 - Migrate the target reverse proxy off the deprecated `httputil.ReverseProxy.Director` to `Rewrite` for Go 1.26 compatibility, preserving the inbound `Host` and `X-Forwarded-*`/`Forwarded` headers.
+- The bbolt storage backend no longer writes its freelist to disk on every commit and now uses the faster hashmap freelist. This can significantly reduce write overhead with the tradeoff that the freelist needs to be rebuilt in memory on a database open. Change works with existing databases.
 
 ## v1.25.0: Necron
 
