@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+## v1.28.1: Wuk Lamat Echo 1
+
+- Revert systemd isolation change that worked fine in testing but failed in prod.
+
 ## v1.28.0: Wuk Lamat
 
 This release adds WebAssembly based proof of work checks to Anubis. They are documented in the [Proof of Work (WebAssembly)](https://anubis.techaro.lol/docs/admin/configuration/challenges/wasm) page. This uses Rust code compiled to WebAssembly to run proof of work code. When browsers support SIMD, the WASM will use hardware acceleration.
