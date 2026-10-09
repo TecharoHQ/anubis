@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Accept GeoIP2 ISP databases for ASN lookups and GeoLite2 City databases for country lookups.
+
 ## v1.28.1: Wuk Lamat Echo 1
 
 - Revert systemd isolation change that worked fine in testing but failed in prod.
