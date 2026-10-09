@@ -270,7 +270,9 @@ func (r *Runner) Run(ctx context.Context, data []byte, difficulty, initialNonce,
 }
 
 func (r *Runner) verify(ctx context.Context, data, verify []byte, nonce, difficulty uint32) (bool, api.Module, error) {
-	mod, err := r.r.InstantiateModule(ctx, r.code, wazero.NewModuleConfig().WithName(r.fname))
+	// Verify permits multiple in-flight calls, so each transient module must be anonymous.
+	// wazero rejects a second live module registered under the same non-empty name.
+	mod, err := r.r.InstantiateModule(ctx, r.code, wazero.NewModuleConfig().WithName(""))
 	if err != nil {
 		return false, nil, fmt.Errorf("can't instantiate module: %w", err)
 	}

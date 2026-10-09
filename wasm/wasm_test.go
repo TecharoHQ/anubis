@@ -129,6 +129,47 @@ func BenchmarkSHA256(b *testing.B) {
 	}
 }
 
+func TestRunnerConcurrentVerify(t *testing.T) {
+	fin, err := web.Static.Open("static/wasm/simd128/hashx.wasm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close() //nolint:errcheck
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	t.Cleanup(cancel)
+	runner, err := NewRunner(ctx, "hashx.wasm", fin)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sum := sha256.Sum256([]byte("concurrent HashX verification regression"))
+	nonce, hash, err := runner.Run(ctx, sum[:], 1, 0, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const workers = 16
+	start := make(chan struct{})
+	errs := make(chan error, workers)
+	for range workers {
+		go func() {
+			<-start
+			ok, err := runner.Verify(ctx, sum[:], hash, nonce, 1)
+			if err == nil && !ok {
+				err = errors.New("valid HashX proof was rejected")
+			}
+			errs <- err
+		}()
+	}
+	close(start)
+	for range workers {
+		if err := <-errs; err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 func BenchmarkValidate(b *testing.B) {
 	fnames, err := fs.ReadDir(web.Static, "static/wasm/simd128")
 	if err != nil {
