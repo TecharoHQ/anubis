@@ -44,6 +44,7 @@ As I'm not certain this will work fine out of the box for a few edge cases, I ha
 - Fix the original-referer cookie not being affected by the `COOKIE_PREFIX` setting ([#1977](https://github.com/TecharoHQ/anubis/pull/1977))
 - Default to the simplified explanation to avoid people misinterpreting words. `USE_SIMPLIFIED_EXPLANATION` is now deprecated.
 - Add Portuguese (Portugal) (`pt-PT`) localization.
+- Localize remaining user-facing benchmark and challenge-page strings.
 - Add documentation for the [Headless Browser Detection](./admin/configuration/challenges/extensions/headless.mdx) extension and the [Soteria](./admin/configuration/challenges/) challenge methods exclusive to BotStopper.
 - Add DYNAMIC_COOKIE_SUFFIX setting for toggling the dynamically generated cookie suffix [#1992](https://github.com/TecharoHQ/anubis/pull/1992)
 - Retry a missing challenge verification cookie once per client before reporting that cookies are disabled, allowing browsers affected by transient cookie loss during navigation to recover without creating an infinite challenge loop ([#1916](https://github.com/TecharoHQ/anubis/issues/1916)).

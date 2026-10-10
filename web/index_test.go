@@ -89,3 +89,36 @@ func TestHoneypotLinkEscapesHref(t *testing.T) {
 		t.Fatalf("unsafe output: %s", out.String())
 	}
 }
+
+func TestLocalizedTemplateStrings(t *testing.T) {
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Set("Accept-Language", "pt-PT")
+	localizer := &localization.SimpleLocalizer{
+		Localizer: localization.NewLocalizationService().GetLocalizerFromRequest(req),
+	}
+
+	impressum := &config.Impressum{
+		Footer: "<p>Test footer</p>",
+		Page: config.ImpressumPage{
+			Title: "Test Imprint",
+			Body:  "<p>Test imprint body</p>",
+		},
+	}
+
+	var baseOut strings.Builder
+	if err := base("test", templ.NopComponent, impressum, nil, nil, nil, localizer).Render(t.Context(), &baseOut); err != nil {
+		t.Fatal(err)
+	}
+	// cspell:ignore Informação
+	if !strings.Contains(baseOut.String(), ">Informação legal</a>") {
+		t.Fatalf("localized imprint label missing: %s", baseOut.String())
+	}
+
+	var errorOut strings.Builder
+	if err := errorPage("test", "", "", localizer).Render(t.Context(), &errorOut); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(errorOut.String(), `alt="Anubis triste"`) {
+		t.Fatalf("localized error image alt text missing: %s", errorOut.String())
+	}
+}
