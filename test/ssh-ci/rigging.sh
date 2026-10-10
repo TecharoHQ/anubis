@@ -19,10 +19,39 @@ RunID=${GITHUB_RUN_ID:-$(uuidgen)}
 RunFolder="anubis/runs/${RunID:?}"
 Target="${Hosts["$1"]}"
 
+# A build step that prints nothing for a few minutes leaves the connection idle
+# for long enough that something between the runner and the host drops it, which
+# kills the run with "client_loop: send disconnect: Broken pipe". Keepalives stop
+# the connection from ever looking idle.
+ssh() {
+	command ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=6 "$@"
+}
+
 ssh "${Target}" uname -av >/dev/null
 ssh "${Target}" rm -rf "${RunFolder}"
 ssh "${Target}" mkdir -p "${RunFolder}"
 git archive HEAD | ssh "${Target}" tar xC "${RunFolder}"
+
+# The WebAssembly artifacts are identical on every architecture and the target
+# hosts are bad at building them: there is no fast WebAssembly runtime for
+# wasm-opt and wasm2js on ppc64le or riscv64, and node dies with SIGILL on the
+# riscv64 host. Ship whatever is already built here. tar keeps the timestamps,
+# which are newer than the ones git archive gives the sources, so the build
+# scripts on the target see them as up to date and skip the work.
+PrebuiltGlobs=(
+	web/static/wasm/simd128/*.wasm
+	web/static/wasm/baseline/*.wasm
+	web/js/gen/wasm2js/*.wasm.js
+)
+shopt -s nullglob
+# shellcheck disable=SC2206 # the globs are meant to expand
+Prebuilt=(${PrebuiltGlobs[@]})
+shopt -u nullglob
+if [ "${#Prebuilt[@]}" -ne 0 ]; then
+	tar c "${Prebuilt[@]}" | ssh "${Target}" tar xC "${RunFolder}"
+else
+	echo "no prebuilt WebAssembly artifacts found, ${1} will build its own" >&2
+fi
 
 ssh "${Target}" <<EOF
   set -euo pipefail
