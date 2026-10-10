@@ -29,3 +29,10 @@ all_populated() {
 		compgen -G "${dir}/${pattern}" >/dev/null || return 1
 	done
 }
+
+# node_runs_wasm succeeds when node is installed and can be trusted to run the
+# binaryen modules. On the riscv64 CI host (isa rv64imafdcsu) it cannot: node
+# dies with SIGILL partway through wasm-opt, every time.
+node_runs_wasm() {
+	command -v node >/dev/null 2>&1 && [ "$(uname -m)" != "riscv64" ]
+}

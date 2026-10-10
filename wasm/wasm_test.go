@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"runtime"
 	"testing"
 	"time"
 
@@ -61,6 +62,9 @@ func TestAlgos(t *testing.T) {
 	for _, kind := range []string{"baseline", "simd128"} {
 		for _, fname := range fnames {
 			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
+				if testing.Short() && fname.Name() == "argon2id.wasm" && runtime.GOARCH != "amd64" && runtime.GOARCH != "arm64" {
+					t.Skipf("skipping argon2id on %s in short mode because wazero has no compiler for it and the interpreter is too slow", runtime.GOARCH)
+				}
 				abiTest(t, kind, fname.Name(), 4)
 			})
 		}
