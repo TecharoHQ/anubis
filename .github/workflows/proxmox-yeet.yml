@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  package_builds:
+  proxmox-yeet:
     runs-on: saga-techaro
     #runs-on: ubuntu-24.04
     steps:
@@ -23,7 +23,7 @@ jobs:
       - name: build essential
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential brotli zstd
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
