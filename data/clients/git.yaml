@@ -19,3 +19,10 @@
       - headers["Pragma"] == "no-cache"
       - '"Accept-Encoding" in headers'
       - headers["Accept-Encoding"].contains("gzip")
+
+- name: allow-renovate
+  action: ALLOW
+  expression:
+    all:
+      - path.startsWith("/api/v4/")
+      - userAgent.contains("Renovate/")
