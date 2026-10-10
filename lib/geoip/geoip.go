@@ -272,7 +272,13 @@ func (src *source) open(path string) (*maxminddb.Reader, error) {
 		return nil, err
 	}
 
-	if !strings.Contains(rdr.Metadata.DatabaseType, string(src.kind)) {
+	dbType := rdr.Metadata.DatabaseType
+
+	validType := strings.Contains(dbType, string(src.kind)) ||
+		(src.kind == "ASN" && dbType == "GeoIP2-ISP") ||
+		(src.kind == "Country" && dbType == "GeoLite2-City")
+
+	if !validType {
 		rdr.Close() //nolint:errcheck
 		return nil, fmt.Errorf("%w: wanted a %s database, got %q", ErrWrongDatabaseType, src.kind, rdr.Metadata.DatabaseType)
 	}
