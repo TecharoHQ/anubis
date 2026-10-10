@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Fix concurrent WASM challenge validation failures by instantiating transient modules anonymously, allowing the existing four-slot verifier concurrency limit to work as intended.
+
 ## v1.28.1: Wuk Lamat Echo 1
 
 - Revert systemd isolation change that worked fine in testing but failed in prod.
