@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Do not reject with `400 Bad Request` a request whose `Content-Type` is `multipart/form-data` but whose body is empty, including when the content length is unknown (`-1`, for example a chunked request). Reverse proxies that strip the body for auth subrequests (for example nginx' `auth_request`) still forward the original `Content-Type`, which made `prepareChallengeForm` fail and answer with a spurious 400.
+
 <!-- This changes the project to: -->
 
 ## v1.28.1: Wuk Lamat Echo 1
