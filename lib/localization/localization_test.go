@@ -214,3 +214,17 @@ func TestAcceptLanguageUndetermined(t *testing.T) {
 		})
 	}
 }
+
+func TestLocalizedDefaultFallback(t *testing.T) {
+	service := NewLocalizationService()
+
+	pt := &SimpleLocalizer{Localizer: service.GetLocalizer("pt-PT")}
+	if got := pt.TDefault("imprint", "Imprint"); got != "Informação legal" {
+		t.Fatalf("pt-PT translation: got %q", got)
+	}
+
+	cs := &SimpleLocalizer{Localizer: service.GetLocalizer("cs")}
+	if got := cs.TDefault("imprint", "Imprint"); got != "Imprint" {
+		t.Fatalf("fallback translation: got %q", got)
+	}
+}
