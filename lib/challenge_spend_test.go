@@ -44,6 +44,7 @@ func TestChallengeSpendIsExclusive(t *testing.T) {
 			<-gate
 			req := httptest.NewRequest("GET", "/?redir=/&id="+c.ID+"&nonce=0&elapsedTime=1&response="+internal.SHA256sum(stored.RandomData+"0"), nil)
 			req.Header.Set("X-Real-IP", "192.0.2.1")
+			req.Header.Set("User-Agent", "Mozilla/5.0")
 			req.AddCookie(&http.Cookie{Name: srv.cookieName(anubis.TestCookieName), Value: c.ID})
 			rec := httptest.NewRecorder()
 			srv.PassChallenge(rec, req)
