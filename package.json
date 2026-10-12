@@ -31,10 +31,10 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.0.2",
-    "baseline-browser-mapping": "^2.11.26",
-    "cspell": "^10.3.5",
-    "cssnano": "^9.1.0",
-    "cssnano-preset-advanced": "^9.1.0",
+    "baseline-browser-mapping": "^2.11.27",
+    "cspell": "^10.3.6",
+    "cssnano": "^9.2.2",
+    "cssnano-preset-advanced": "^9.1.4",
     "esbuild": "^0.28.2",
     "husky": "^9.1.7",
     "playwright": "^1.61.1",
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.29.8",
+    "preact": "^11.0.0",
     "wasm-feature-detect": "^1.9.0"
   },
   "commitlint": {
