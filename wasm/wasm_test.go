@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"runtime"
 	"testing"
 	"time"
 
@@ -61,6 +62,9 @@ func TestAlgos(t *testing.T) {
 	for _, kind := range []string{"baseline", "simd128"} {
 		for _, fname := range fnames {
 			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
+				if testing.Short() && fname.Name() == "argon2id.wasm" && runtime.GOARCH != "amd64" && runtime.GOARCH != "arm64" {
+					t.Skipf("skipping argon2id on %s in short mode because wazero has no compiler for it and the interpreter is too slow", runtime.GOARCH)
+				}
 				abiTest(t, kind, fname.Name(), 4)
 			})
 		}
@@ -126,6 +130,47 @@ func BenchmarkSHA256(b *testing.B) {
 		b.Run(kind, func(b *testing.B) {
 			bench(b, kind, "sha256.wasm", []uint32{4, 6, 8, 10, 12, 14, 16})
 		})
+	}
+}
+
+func TestRunnerConcurrentVerify(t *testing.T) {
+	fin, err := web.Static.Open("static/wasm/simd128/hashx.wasm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close() //nolint:errcheck
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	t.Cleanup(cancel)
+	runner, err := NewRunner(ctx, "hashx.wasm", fin)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sum := sha256.Sum256([]byte("concurrent HashX verification regression"))
+	nonce, hash, err := runner.Run(ctx, sum[:], 1, 0, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const workers = 16
+	start := make(chan struct{})
+	errs := make(chan error, workers)
+	for range workers {
+		go func() {
+			<-start
+			ok, err := runner.Verify(ctx, sum[:], hash, nonce, 1)
+			if err == nil && !ok {
+				err = errors.New("valid HashX proof was rejected")
+			}
+			errs <- err
+		}()
+	}
+	close(start)
+	for range workers {
+		if err := <-errs; err != nil {
+			t.Error(err)
+		}
 	}
 }
 
