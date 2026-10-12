@@ -33,7 +33,7 @@ require (
 	github.com/tetratelabs/wazero v1.12.1-0.20260714071631-236c2458ed22
 	go.etcd.io/bbolt v1.5.0
 	golang.org/x/net v0.59.0
-	golang.org/x/sync v0.23.0
+	golang.org/x/sync v0.24.0
 	golang.org/x/sys v0.48.0
 	golang.org/x/text v0.42.0
 	google.golang.org/grpc v1.84.0
