@@ -1,0 +1,4 @@
+- name: no-user-agent
+  action: DENY
+  expression: >-
+    userAgent == ""
