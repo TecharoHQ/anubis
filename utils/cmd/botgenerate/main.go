@@ -120,7 +120,7 @@ var sources = []Source{
 
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), `Usage of %[1]s:
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(), `Usage of %[1]s:
 
 	%[1]s [flags] [crawler...]
 
