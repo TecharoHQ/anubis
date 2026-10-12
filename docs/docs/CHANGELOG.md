@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Add `utils/cmd/botgenerate` for automatically updating crawler IP ranges. Also apply the updates.
 - Do not reject with `400 Bad Request` a request whose `Content-Type` is `multipart/form-data` but whose body is empty, including when the content length is unknown (`-1`, for example a chunked request). Reverse proxies that strip the body for auth subrequests (for example nginx' `auth_request`) still forward the original `Content-Type`, which made `prepareChallengeForm` fail and answer with a spurious 400.
 - Reject requests with no `User-Agent` header or an empty `User-Agent` header via `(data)/bots/spec-violations.yaml`.
 - Accept GeoIP2 ISP databases for ASN lookups and GeoLite2 City databases for country lookups.
