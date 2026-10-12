@@ -82,3 +82,57 @@ func TestOriginUploadIsUnmodified(t *testing.T) {
 	req := httptest.NewRequest("POST", "/upload", strings.NewReader(body))
 	srv.ServeHTTPNext(httptest.NewRecorder(), req)
 }
+
+// A reverse proxy that strips the request body for auth subrequests (for
+// example nginx' auth_request) still forwards the original Content-Type. When
+// that Content-Type is multipart/form-data and the body is empty,
+// prepareChallengeForm must not treat the request as malformed.
+func TestPrepareChallengeFormEmptyMultipartBody(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		mutate  func(*http.Request)
+	}{
+		{"empty body", func(*http.Request) {}},
+		// A chunked request (unknown length) whose body is empty must be
+		// tolerated just like one that advertises a length of zero.
+		{"empty body with unknown length", func(r *http.Request) { r.ContentLength = -1 }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/", nil)
+			req.Header.Set("Content-Type", "multipart/form-data; boundary=X")
+			req.Header.Set("X-Real-IP", "192.0.2.1")
+			tc.mutate(req)
+			rec := httptest.NewRecorder()
+
+			if !prepareChallengeForm(rec, req) {
+				t.Fatalf("prepareChallengeForm rejected an empty multipart body: status %d", rec.Code)
+			}
+		})
+	}
+}
+
+// The tolerance for empty bodies must not disable multipart parsing for
+// requests that carry an unknown length (chunked) but do have a body.
+func TestPrepareChallengeFormNonEmptyMultipartBodyUnknownLength(t *testing.T) {
+	var body bytes.Buffer
+	form := multipart.NewWriter(&body)
+	if err := form.WriteField("redir", "/somewhere"); err != nil {
+		t.Fatal(err)
+	}
+	if err := form.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body.Bytes()))
+	req.Header.Set("Content-Type", form.FormDataContentType())
+	req.Header.Set("X-Real-IP", "192.0.2.1")
+	req.ContentLength = -1 // simulate a chunked request
+	rec := httptest.NewRecorder()
+
+	if !prepareChallengeForm(rec, req) {
+		t.Fatalf("prepareChallengeForm rejected a non-empty multipart body: status %d", rec.Code)
+	}
+	if got := req.FormValue("redir"); got != "/somewhere" {
+		t.Fatalf("multipart body was not parsed: redir = %q", got)
+	}
+}
