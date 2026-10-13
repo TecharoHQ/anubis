@@ -3,10 +3,12 @@ package valkey
 import (
 	"encoding/json"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -150,8 +152,9 @@ func TestFactoryAuthenticatedValkey(t *testing.T) {
 
 			_, err = (Factory{}).Build(t.Context(), config)
 
-			if tt.wantError && err == nil {
-				t.Fatal("expected authentication failure, got nil")
+			// cspell:ignore WRONGPASS
+			if tt.wantError && !redis.HasErrorPrefix(err, "WRONGPASS") {
+				t.Fatalf("expected WRONGPASS authentication error, got %v", err)
 			}
 			if !tt.wantError && err != nil {
 				t.Fatalf("expected successful connection, got %v", err)
@@ -176,7 +179,7 @@ func TestFactoryNamedUserAuthentication(t *testing.T) {
 		t.Context(),
 		"valkey/valkey:8",
 		// cspell:ignore requirepass
-		testcontainers.WithCmd("--requirepass", defaultPassword),
+		testcontainers.WithCmd("--requirepass", defaultPassword, "--cluster-enabled", "yes"),
 		testcontainers.WithExposedPorts("6379/tcp"),
 		testcontainers.WithWaitStrategy(
 			wait.ForListeningPort("6379/tcp"),
@@ -187,39 +190,42 @@ func TestFactoryNamedUserAuthentication(t *testing.T) {
 		t.Fatal(err)
 	}
 	testcontainers.CleanupContainer(t, valkeyC)
-	// cspell:ignore SETUSER
-	exitCode, output, err := valkeyC.Exec(t.Context(), []string{
-		"valkey-cli", "-a", defaultPassword,
-		"ACL", "SETUSER", username,
-		"on", ">" + password, "~*", "+@all",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	result, err := io.ReadAll(output)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if exitCode != 0 || !strings.Contains(string(result), "OK") {
-		t.Fatalf("failed to create ACL user: exit=%d, output=%s", exitCode, result)
-	}
-
 	endpoint, err := valkeyC.PortEndpoint(t.Context(), "6379/tcp", "redis")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	config, err := json.Marshal(Config{URL: endpoint})
+	endpointURL, err := url.Parse(endpoint)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// A single node is enough to check cluster authentication. Advertise the
+	// mapped address so the cluster client can reach the node from the host.
+	// cspell:ignore SETUSER ADDSLOTSRANGE
+	for _, command := range [][]string{
+		{"ACL", "SETUSER", username, "on", ">" + password, "~*", "+@all"},
+		{"CONFIG", "SET", "cluster-announce-ip", endpointURL.Hostname(), "cluster-announce-port", endpointURL.Port()},
+		{"CLUSTER", "ADDSLOTSRANGE", "0", "16383"},
+	} {
+		exitCode, output, err := valkeyC.Exec(t.Context(), append([]string{"valkey-cli", "-a", defaultPassword}, command...))
+		if err != nil {
+			t.Fatal(err)
+		}
+		result, err := io.ReadAll(output)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if exitCode != 0 || !strings.Contains(string(result), "OK") {
+			t.Fatalf("failed to configure Valkey: exit=%d, output=%s", exitCode, result)
+		}
+	}
+
 	tests := []struct {
 		name      string
+		url       string
 		username  string
 		password  string
+		cluster   bool
 		wantError bool
 	}{
 		{
@@ -239,6 +245,18 @@ func TestFactoryNamedUserAuthentication(t *testing.T) {
 			password:  "incorrect-password",
 			wantError: true,
 		},
+		{
+			name:     "cluster environment credentials override URL credentials",
+			url:      strings.Replace(endpoint, "redis://", "redis://wrong-user:wrong-password@", 1),
+			username: username,
+			password: password,
+			cluster:  true,
+		},
+		{
+			name:    "cluster URL credentials authenticate",
+			url:     strings.Replace(endpoint, "redis://", "redis://"+username+":"+password+"@", 1),
+			cluster: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -246,13 +264,24 @@ func TestFactoryNamedUserAuthentication(t *testing.T) {
 			unsetEnvForTest(t, "ANUBIS_VALKEY_USERNAME")
 			unsetEnvForTest(t, "ANUBIS_VALKEY_PASSWORD")
 
-			t.Setenv("ANUBIS_VALKEY_USERNAME", tt.username)
-			t.Setenv("ANUBIS_VALKEY_PASSWORD", tt.password)
+			if tt.username != "" {
+				t.Setenv("ANUBIS_VALKEY_USERNAME", tt.username)
+			}
+			if tt.password != "" {
+				t.Setenv("ANUBIS_VALKEY_PASSWORD", tt.password)
+			}
+			if tt.url == "" {
+				tt.url = endpoint
+			}
+			config, err := json.Marshal(Config{URL: tt.url, Cluster: tt.cluster})
+			if err != nil {
+				t.Fatal(err)
+			}
 
-			_, err := (Factory{}).Build(t.Context(), config)
+			_, err = (Factory{}).Build(t.Context(), config)
 
-			if tt.wantError && err == nil {
-				t.Fatal("expected authentication failure, got nil")
+			if tt.wantError && !redis.HasErrorPrefix(err, "WRONGPASS") {
+				t.Fatalf("expected WRONGPASS authentication error, got %v", err)
 			}
 			if !tt.wantError && err != nil {
 				t.Fatalf("expected successful connection, got %v", err)
