@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
+	"io"
 	"testing"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -92,6 +93,7 @@ func TestFactoryAuthenticatedValkey(t *testing.T) {
 	valkeyC, err := testcontainers.Run(
 		t.Context(),
 		"valkey/valkey:8",
+		// cspell:ignore requirepass
 		testcontainers.WithCmd("--requirepass", password),
 		testcontainers.WithExposedPorts("6379/tcp"),
 		testcontainers.WithWaitStrategy(
@@ -157,7 +159,107 @@ func TestFactoryAuthenticatedValkey(t *testing.T) {
 		})
 	}
 }
+func TestFactoryNamedUserAuthentication(t *testing.T) {
+	if os.Getenv("DONT_USE_NETWORK") != "" {
+		t.Skip("test requires network egress")
+	}
 
+	testcontainers.SkipIfProviderIsNotHealthy(t)
+
+	const (
+		defaultPassword = "default-test-password"
+		username        = "anubis"
+		password        = "named-user-password"
+	)
+
+	valkeyC, err := testcontainers.Run(
+		t.Context(),
+		"valkey/valkey:8",
+		// cspell:ignore requirepass
+		testcontainers.WithCmd("--requirepass", defaultPassword),
+		testcontainers.WithExposedPorts("6379/tcp"),
+		testcontainers.WithWaitStrategy(
+			wait.ForListeningPort("6379/tcp"),
+			wait.ForLog("Ready to accept connections"),
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testcontainers.CleanupContainer(t, valkeyC)
+	// cspell:ignore SETUSER
+	exitCode, output, err := valkeyC.Exec(t.Context(), []string{
+		"valkey-cli", "-a", defaultPassword,
+		"ACL", "SETUSER", username,
+		"on", ">" + password, "~*", "+@all",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := io.ReadAll(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exitCode != 0 || !strings.Contains(string(result), "OK") {
+		t.Fatalf("failed to create ACL user: exit=%d, output=%s", exitCode, result)
+	}
+
+	endpoint, err := valkeyC.PortEndpoint(t.Context(), "6379/tcp", "redis")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	config, err := json.Marshal(Config{URL: endpoint})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name      string
+		username  string
+		password  string
+		wantError bool
+	}{
+		{
+			name:     "named user authenticates",
+			username: username,
+			password: password,
+		},
+		{
+			name:      "incorrect username fails",
+			username:  "unknown-user",
+			password:  password,
+			wantError: true,
+		},
+		{
+			name:      "incorrect password fails",
+			username:  username,
+			password:  "incorrect-password",
+			wantError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			unsetEnvForTest(t, "ANUBIS_VALKEY_USERNAME")
+			unsetEnvForTest(t, "ANUBIS_VALKEY_PASSWORD")
+
+			t.Setenv("ANUBIS_VALKEY_USERNAME", tt.username)
+			t.Setenv("ANUBIS_VALKEY_PASSWORD", tt.password)
+
+			_, err := (Factory{}).Build(t.Context(), config)
+
+			if tt.wantError && err == nil {
+				t.Fatal("expected authentication failure, got nil")
+			}
+			if !tt.wantError && err != nil {
+				t.Fatalf("expected successful connection, got %v", err)
+			}
+		})
+	}
+}
 func strPtr(value string) *string {
 	return &value
 }
