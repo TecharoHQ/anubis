@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/TecharoHQ/anubis/internal"
@@ -110,6 +111,18 @@ type redisClient interface {
 
 type Factory struct{}
 
+func resolveCredentials(username, password string) (string, string) {
+	if value, ok := os.LookupEnv("ANUBIS_VALKEY_USERNAME"); ok {
+		username = value
+	}
+
+	if value, ok := os.LookupEnv("ANUBIS_VALKEY_PASSWORD"); ok {
+		password = value
+	}
+
+	return username, password
+}
+
 func (Factory) Valid(data json.RawMessage) error {
 	var cfg Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
@@ -136,16 +149,26 @@ func (Factory) Build(ctx context.Context, data json.RawMessage) (store.Interface
 			return nil, fmt.Errorf("valkey.Factory: %w", err)
 		}
 
+		username, password := resolveCredentials(
+			opts.Username,
+			opts.Password,
+		)
+
 		// Cluster mode: use the parsed Addr as the seed node.
 		clusterOpts := &valkey.ClusterOptions{
-			Addrs: []string{opts.Addr},
+			Addrs:    []string{opts.Addr},
+			Username: username,
+			Password: password,
+
 			// Explicitly disable maintenance notifications
 			// This prevents the client from sending CLIENT MAINT_NOTIFICATIONS ON
 			MaintNotificationsConfig: &maintnotifications.Config{
 				Mode: maintnotifications.ModeDisabled,
 			},
 		}
+
 		client = valkey.NewClusterClient(clusterOpts)
+
 	case cfg.Sentinel != nil:
 		opts := &valkey.FailoverOptions{
 			MasterName:       cfg.Sentinel.MasterName,
@@ -162,7 +185,10 @@ func (Factory) Build(ctx context.Context, data json.RawMessage) (store.Interface
 		if err != nil {
 			return nil, fmt.Errorf("valkey.Factory: %w", err)
 		}
-
+		opts.Username, opts.Password = resolveCredentials(
+			opts.Username,
+			opts.Password,
+		)
 		opts.MaintNotificationsConfig = &maintnotifications.Config{
 			Mode: maintnotifications.ModeDisabled,
 		}
