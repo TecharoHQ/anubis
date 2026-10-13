@@ -5,7 +5,7 @@ export const getHardwareConcurrency = () =>
     ? navigator.hardwareConcurrency
     : 1;
 
-export type ProgressCallback = (nonce: number | string) => void;
+export type ProgressCallback = (nonce: number | string, scale: number) => void;
 
 export interface ProcessOptions {
   basePrefix: string;
@@ -155,6 +155,7 @@ export interface RunWorkersOptions {
   message: Record<string, unknown>;
   threads: number;
   signal: AbortSignal | null;
+  scale: number;
   progressCallback?: ProgressCallback;
 }
 
@@ -182,7 +183,7 @@ export const runWorkers = async (
 
 const raceWorkers = (
   spawner: WorkerSpawner,
-  { message, threads, signal, progressCallback }: RunWorkersOptions,
+  { message, threads, signal, scale, progressCallback }: RunWorkersOptions,
 ): Promise<ProcessResult> => {
   return new Promise((resolve, reject) => {
     let workers: Worker[] = [];
@@ -252,7 +253,7 @@ const raceWorkers = (
           anyOutput = true;
 
           if (typeof event.data === "number") {
-            progressCallback?.(event.data);
+            progressCallback?.(event.data, scale);
             return;
           }
 
