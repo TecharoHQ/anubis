@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow Renovate in git clients for github/gitlab api endpoint
 
+### Added
+
+- Support Valkey/Redis authentication through `ANUBIS_VALKEY_USERNAME` and `ANUBIS_VALKEY_PASSWORD` environment variables.
+
+
 ### Fixed
 
 - Add `utils/cmd/botgenerate` for automatically updating crawler IP ranges. Also apply the updates.
