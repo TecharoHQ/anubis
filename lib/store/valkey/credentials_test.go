@@ -2,9 +2,9 @@ package valkey
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"strings"
-	"io"
 	"testing"
 
 	"github.com/testcontainers/testcontainers-go"
