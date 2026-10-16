@@ -33,6 +33,11 @@ func TestParsePrefixes(t *testing.T) {
 			want:  []string{"192.0.2.0/24"},
 		},
 		{
+			name:  "discord egress services",
+			input: `{"creationTime":"2026-08-04T18:01:19Z","syncToken":"4ce19406","notes":"discord egress","prefixes":[{"ipv4Prefix":"104.196.222.45/32","services":["media"]},{"ipv4Prefix":"34.138.218.50/32","services":["api"]}]}`,
+			want:  []string{"104.196.222.45/32", "34.138.218.50/32"},
+		},
+		{
 			name:  "no prefixes",
 			input: `{"prefixes":[]}`,
 			err:   ErrNoPrefixes,
@@ -307,6 +312,11 @@ func TestSelectSources(t *testing.T) {
 			name:  "by name",
 			input: []string{"googlebot", "bingbot"},
 			want:  []string{"googlebot", "bingbot"},
+		},
+		{
+			name:  "discord",
+			input: []string{"discord"},
+			want:  []string{"discord"},
 		},
 		{
 			name:  "unknown crawler",

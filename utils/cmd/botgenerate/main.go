@@ -80,6 +80,11 @@ var sources = []Source{
 		URL:  "https://index.commoncrawl.org/ccbot.json",
 	},
 	{
+		File: "discord.yaml",
+		Rule: "discord",
+		URL:  "https://cdn.discordapp.com/ipranges/discord.json",
+	},
+	{
 		File: "duckduckbot.yaml",
 		Rule: "duckduckbot",
 		URL:  "https://duckduckgo.com/duckduckbot.json",
