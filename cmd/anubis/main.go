@@ -84,6 +84,7 @@ var (
 	versionFlag              = flag.Bool("version", false, "print Anubis version")
 	publicUrl                = flag.String("public-url", "", "the externally accessible URL for this Anubis instance, used for constructing redirect URLs (e.g., for forwardAuth).")
 	xffStripPrivate          = flag.Bool("xff-strip-private", true, "if set, strip private addresses from X-Forwarded-For")
+	xffTrustedProxies        = flag.String("xff-trusted-proxies", "", "if set, comma-separated IP addresses or CIDR ranges your reverse proxies connect from; the client address in X-Forwarded-For is found by skipping them, and is kept even if it is private (xff-strip-private is then ignored)")
 	customRealIPHeader       = flag.String("custom-real-ip-header", "", "if set, read remote IP from header of this name (in case your environment doesn't set X-Real-IP header)")
 
 	thothInsecure        = flag.Bool("thoth-insecure", false, "deprecated: Thoth support was removed, use the geoip block in the policy file")
@@ -417,6 +418,11 @@ func run(ctx context.Context) {
 		lg.WarnContext(ctx, "REDIRECT_DOMAINS is not set, Anubis will redirect to any domain, see https://anubis.techaro.lol/docs/admin/configuration/redirect-domains")
 	}
 
+	trustedProxies, err := internal.ParseTrustedProxies(*xffTrustedProxies)
+	if err != nil {
+		log.Fatalf("can't parse xff-trusted-proxies: %v", err)
+	}
+
 	anubis.CookieName = *cookiePrefix + "-auth"
 	anubis.TestCookieName = *cookiePrefix + "-cookie-verification"
 	anubis.OriginalRefererCookieName = *cookiePrefix + "-original-referer"
@@ -472,8 +478,12 @@ func run(ctx context.Context) {
 	h = s
 	h = internal.CustomRealIPHeader(*customRealIPHeader, h)
 	h = internal.RemoteXRealIP(*useRemoteAddress, *bindNetwork, h)
-	h = internal.XForwardedForToXRealIP(h)
-	h = internal.XForwardedForUpdate(*xffStripPrivate, h)
+	if len(trustedProxies) != 0 {
+		h = internal.XForwardedForTrustedProxies(trustedProxies, h)
+	} else {
+		h = internal.XForwardedForToXRealIP(h)
+		h = internal.XForwardedForUpdate(*xffStripPrivate, h)
+	}
 	if policy.NeedJA4H {
 		h = internal.JA4H(h)
 	}
@@ -493,6 +503,7 @@ func run(ctx context.Context) {
 		"version", anubis.Version,
 		"use-remote-address", *useRemoteAddress,
 		"custom-real-ip-header", *customRealIPHeader,
+		"xff-trusted-proxies", *xffTrustedProxies,
 		"debug-benchmark-js", *debugBenchmarkJS,
 		"og-passthrough", *ogPassthrough,
 		"og-expiry-time", *ogTimeToLive,
