@@ -33,6 +33,49 @@ func TestDefaultPolicyMustParse(t *testing.T) {
 	}
 }
 
+func TestDefaultPolicyAllowsDiscord(t *testing.T) {
+	fin, err := data.BotPolicies.Open("botPolicies.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fin.Close() //nolint:errcheck
+
+	pc, err := ParseConfig(geoiptest.WithMockGeoIP(t), fin, "botPolicies.yaml", anubis.DefaultDifficulty, "info", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	idx := slices.IndexFunc(pc.Bots, func(b Bot) bool { return b.Name == "discord" })
+	if idx < 0 {
+		t.Fatal("default policy has no discord rule")
+	}
+	bot := pc.Bots[idx]
+	if bot.Action != config.RuleAllow {
+		t.Fatalf("discord action = %s, want ALLOW", bot.Action)
+	}
+	for _, tt := range []struct {
+		ip   string
+		want bool
+	}{
+		{"104.196.222.45", true},
+		{"34.138.218.50", true},
+		{"104.196.222.46", false},
+		{"192.0.2.1", false},
+	} {
+		t.Run(tt.ip, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set("X-Real-IP", tt.ip)
+			req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)")
+			got, err := bot.Rules.Check(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tt.want {
+				t.Errorf("discord match = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGoodConfigs(t *testing.T) {
 
 	finfos, err := os.ReadDir("../config/testdata/good")
