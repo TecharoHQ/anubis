@@ -10,7 +10,7 @@ To use Anubis with HAProxy, you have two variants:
   - useful for complex setups
   - routing can be done in HAProxy
   - define ACLs in HAProxy for domains, paths etc which are required/excluded regarding Anubis
-  - HAProxy 3.0 recommended
+  - HAProxy 3.0 or above recommended
 
 ## Simple Variant
 
@@ -86,6 +86,7 @@ import advancedAnubis from "!!raw-loader!./haproxy/advanced-config.env";
 <CodeBlock language="bash">{advancedAnubis}</CodeBlock>
 
 It's important to use `HS512_SECRET` which HAProxy understands. Please replace `<SECRET-HERE>` with your own secret string (alphanumerical string with 128 characters recommended).
+Setting `DYNAMIC_COOKIE_SUFFIX` to `false` is required from Anubis v1.28 as HAProxy can only use a specific cookie name.
 
 You can set Anubis to force a challenge for every request using the following policy file:
 

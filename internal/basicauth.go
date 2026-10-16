@@ -9,13 +9,13 @@ import (
 )
 
 // BasicAuth wraps next in HTTP Basic authentication using the provided
-// credentials. If either username or password is empty, next is returned
-// unchanged and a debug log line is emitted.
+// credentials. If both credentials are empty, next is returned unchanged.
+// Partial credentials reject all requests.
 //
 // Credentials are compared in constant time to avoid leaking information
 // through timing side channels.
 func BasicAuth(realm, username, password string, next http.Handler) http.Handler {
-	if username == "" || password == "" {
+	if username == "" && password == "" {
 		slog.Debug("skipping middleware, basic auth credentials are empty")
 		return next
 	}
@@ -25,6 +25,10 @@ func BasicAuth(realm, username, password string, next http.Handler) http.Handler
 	challenge := fmt.Sprintf("Basic realm=%q, charset=\"UTF-8\"", realm)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if username == "" || password == "" {
+			unauthorized(w, challenge)
+			return
+		}
 		user, pass, ok := r.BasicAuth()
 		if !ok {
 			unauthorized(w, challenge)

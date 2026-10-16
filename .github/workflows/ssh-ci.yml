@@ -15,6 +15,8 @@ jobs:
     #runs-on: alrest-techarohq
     runs-on: ubuntu-latest
     strategy:
+      # Each host fails for its own reasons, don't let one hide the other.
+      fail-fast: false
       matrix:
         host:
           - riscv64
@@ -23,7 +25,7 @@ jobs:
           #- aarch64-16k
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-tags: true
           fetch-depth: 0
@@ -36,9 +38,24 @@ jobs:
           name: id_rsa
           known_hosts: ${{ secrets.CI_SSH_KNOWN_HOSTS }}
 
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "stable"
+
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          cache: false
+          target: wasm32-unknown-unknown
+      - name: Setup `wasmtime`
+        uses: bytecodealliance/actions/wasmtime/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1.1.3
+
+      # The wasm modules and their wasm2js output are the same on every
+      # architecture, so build them here and let rigging.sh ship them. The
+      # target hosts are slow at this, and the riscv64 one can't do it at all.
+      - name: Build WebAssembly artifacts
+        run: |
+          bash ./wasm/scripts/build_wasm.sh
+          bash ./wasm/scripts/build_wasm2js.sh
 
       - name: Run CI
         run: go run ./utils/cmd/backoff-retry bash test/ssh-ci/rigging.sh ${{ matrix.host }}

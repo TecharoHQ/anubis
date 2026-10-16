@@ -37,7 +37,10 @@ func (Factory) Build(ctx context.Context, data json.RawMessage) (store.Interface
 		return nil, fmt.Errorf("%w: %w", store.ErrBadConfig, err)
 	}
 
-	bdb, err := bbolt.Open(config.Path, 0600, nil)
+	bdb, err := bbolt.Open(config.Path, 0600, &bbolt.Options{
+		FreelistType:   bbolt.FreelistMapType,
+		NoFreelistSync: true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("can't open bbolt database %s: %w", config.Path, err)
 	}

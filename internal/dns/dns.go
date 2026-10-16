@@ -18,12 +18,14 @@ var (
 )
 
 type Dns struct {
+	lg    *slog.Logger
 	cache *DnsCache
 	ctx   context.Context
 }
 
-func New(ctx context.Context, cache *DnsCache) *Dns {
+func New(ctx context.Context, cache *DnsCache, lg *slog.Logger) *Dns {
 	return &Dns{
+		lg:    lg,
 		cache: cache,
 		ctx:   ctx,
 	}
@@ -31,7 +33,8 @@ func New(ctx context.Context, cache *DnsCache) *Dns {
 
 // ReverseDNS performs a reverse DNS lookup for the given IP address and trims the trailing dot from the results.
 func (d *Dns) ReverseDNS(addr string) ([]string, error) {
-	slog.Debug("DNS: performing reverse lookup", "addr", addr)
+	lg := d.lg.With()
+	lg.Debug("DNS: performing reverse lookup", "addr", addr)
 
 	if cached, ok := d.getCachedReverse(addr); ok {
 		return cached, nil
@@ -40,14 +43,14 @@ func (d *Dns) ReverseDNS(addr string) ([]string, error) {
 	names, err := DNSLookupAddr(addr)
 	if err != nil {
 		if dnsErr, ok := err.(*net.DNSError); ok && dnsErr.IsNotFound {
-			slog.Debug("DNS: no PTR record found", "addr", addr)
+			lg.Debug("DNS: no PTR record found", "addr", addr)
 			return []string{}, nil
 		}
-		slog.Error("DNS: reverse lookup failed", "addr", addr, "err", err)
+		lg.Error("DNS: reverse lookup failed", "addr", addr, "err", err)
 		return nil, err
 	}
 
-	slog.Debug("DNS: reverse lookup successful", "addr", addr, "names", names)
+	lg.Debug("DNS: reverse lookup successful", "addr", addr, "names", names)
 
 	trimmedNames := make([]string, len(names))
 	for i, name := range names {
@@ -60,7 +63,8 @@ func (d *Dns) ReverseDNS(addr string) ([]string, error) {
 
 // LookupHost performs a forward DNS lookup for the given hostname.
 func (d *Dns) LookupHost(host string) ([]string, error) {
-	slog.Debug("DNS: performing forward lookup", "host", host)
+	lg := d.lg.With()
+	lg.Debug("DNS: performing forward lookup", "host", host)
 
 	if cached, ok := d.getCachedForward(host); ok {
 		return cached, nil
@@ -69,14 +73,14 @@ func (d *Dns) LookupHost(host string) ([]string, error) {
 	addrs, err := DNSLookupHost(host)
 	if err != nil {
 		if dnsErr, ok := err.(*net.DNSError); ok && dnsErr.IsNotFound {
-			slog.Debug("DNS: no A/AAAA record found", "host", host)
+			lg.Debug("DNS: no A/AAAA record found", "host", host)
 			return []string{}, nil
 		}
-		slog.Error("DNS: forward lookup failed", "host", host, "err", err)
+		lg.Error("DNS: forward lookup failed", "host", host, "err", err)
 		return nil, err
 	}
 
-	slog.Debug("DNS: forward lookup successful", "host", host, "addrs", addrs)
+	lg.Debug("DNS: forward lookup successful", "host", host, "addrs", addrs)
 	d.forwardCachePut(host, addrs)
 	return addrs, nil
 }
@@ -84,28 +88,30 @@ func (d *Dns) LookupHost(host string) ([]string, error) {
 // verifyFCrDNSInternal performs the second half of the FCrDNS check, using a
 // pre-fetched list of names to perform the forward lookups.
 func (d *Dns) verifyFCrDNSInternal(addr string, names []string) bool {
+	lg := d.lg.With()
 	for _, name := range names {
 		if cached, err := d.LookupHost(name); err == nil {
 			if slices.Contains(cached, addr) {
-				slog.Info("DNS: forward lookup confirmed original IP", "name", name, "addr", addr)
+				lg.Info("DNS: forward lookup confirmed original IP", "name", name, "addr", addr)
 				return true
 			}
 			continue
 		}
 	}
 
-	slog.Info("DNS: could not confirm original IP in forward lookups", "addr", addr)
+	lg.Info("DNS: could not confirm original IP in forward lookups", "addr", addr)
 	return false
 }
 
 // VerifyFCrDNS performs a forward-confirmed reverse DNS (FCrDNS) lookup for the given IP address,
 // optionally matching against a provided pattern.
 func (d *Dns) VerifyFCrDNS(addr string, pattern *string) bool {
+	lg := d.lg.With()
 	var patternVal string
 	if pattern != nil {
 		patternVal = *pattern
 	}
-	slog.Debug("DNS: performing FCrDNS lookup", "addr", addr, "pattern", patternVal)
+	lg.Debug("DNS: performing FCrDNS lookup", "addr", addr, "pattern", patternVal)
 
 	names, err := d.ReverseDNS(addr)
 	if err != nil {
@@ -117,24 +123,24 @@ func (d *Dns) VerifyFCrDNS(addr string, pattern *string) bool {
 
 	// If a pattern is provided, check for a match.
 	if pattern != nil {
-		anyNameMatched := false
+		re, err := regexp.Compile(*pattern)
+		if err != nil {
+			lg.Error("DNS: verifyFCrDNS invalid regex pattern", "err", err)
+			return false
+		}
+
+		var matchedNames []string
 		for _, name := range names {
-			matched, err := regexp.MatchString(*pattern, name)
-			if err != nil {
-				slog.Error("DNS: verifyFCrDNS invalid regex pattern", "err", err)
-				return false // Invalid pattern is a failure.
-			}
-			if matched {
-				anyNameMatched = true
-				break
+			if re.MatchString(name) {
+				matchedNames = append(matchedNames, name)
 			}
 		}
 
-		if !anyNameMatched {
-			slog.Debug("DNS: FCrDNS no PTR matches the pattern", "addr", addr, "pattern", *pattern)
+		if len(matchedNames) == 0 {
 			return false
 		}
-		slog.Debug("DNS: FCrDNS PTR matched pattern, proceeding with forward check", "addr", addr, "pattern", *pattern)
+
+		names = matchedNames
 	}
 
 	// If we're here, either there was no pattern, or the pattern matched.

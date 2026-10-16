@@ -114,8 +114,6 @@ func TestBasicAuthPassthrough(t *testing.T) {
 		username string
 		password string
 	}{
-		{name: "empty username", username: "", password: "hunter2"},
-		{name: "empty password", username: "admin", password: ""},
 		{name: "both empty", username: "", password: ""},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -132,6 +130,22 @@ func TestBasicAuthPassthrough(t *testing.T) {
 			}
 			if rec.Body.String() != "ok" {
 				t.Errorf("body = %q, want %q", rec.Body.String(), "ok")
+			}
+		})
+	}
+}
+
+func TestBasicAuthPartialCredentialsFailClosed(t *testing.T) {
+	for _, tc := range []struct{ user, pass string }{{"admin", ""}, {"", "secret"}} {
+		t.Run(tc.user+tc.pass, func(t *testing.T) {
+			called := false
+			h := BasicAuth("test", tc.user, tc.pass, http.HandlerFunc(func(http.ResponseWriter, *http.Request) { called = true }))
+			r := httptest.NewRequest("GET", "/", nil)
+			r.SetBasicAuth(tc.user, tc.pass)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, r)
+			if called || w.Code != http.StatusUnauthorized {
+				t.Fatalf("called=%v status=%d", called, w.Code)
 			}
 		})
 	}

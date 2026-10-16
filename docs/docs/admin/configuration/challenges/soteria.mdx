@@ -1,0 +1,73 @@
+# Soteria (WebAssembly, SIMD)
+
+import EnterpriseOnly from "@site/src/components/EnterpriseOnly";
+
+<EnterpriseOnly link="../../botstopper/" />
+
+[Soteria](https://github.com/Xe/soteria) is an experimental dynamic challenge implementation abusing SIMD instructions in WebAssembly to run four challenge programs at once. All challenge programs are synthesized on the fly akin to RandomX, but re-synthesizes the challenge program every so often to be more forgiving to less powerful hardware. Clients that do not have WebAssembly support or support for WebAssembly SIMD operations cannot run this challenge method. Please take this into consideration when planning your deployment.
+
+As an additional bit of grace granted to less powerful hardware, Soteria cuts the challenge difficulty and complexity when the client is explicitly a mobile phone.
+
+## Configuration
+
+Soteria scales exponentially based on the difficulty configured in the policy file. Here are examples for light, medium, and hard challenges:
+
+### Light challenge
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: soteria
+      difficulty: 14
+      extensions:
+        - headless
+```
+
+### Moderate challenge
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: soteria
+      difficulty: 17
+      extensions:
+        - headless
+```
+
+### Hard challenge
+
+```yaml
+thresholds:
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 20
+    action: CHALLENGE
+    challenge:
+      algorithm: soteria
+      difficulty: 20
+      extensions:
+        - headless
+```
+
+## Technical notes
+
+An upcoming blogpost will go into detail about how Soteria works in detail, but here are the highlights:
+
+- Soteria VM operations are run against four copies of synthesized challenge programs at once using SIMD operations to eke all performance out of mobile phone hardware possible.
+- The Soteria VM is based on a [Very Long Instruction Word](https://en.wikipedia.org/wiki/Very_long_instruction_word) architecture, enabling optimizations specific to that instruction set type.
+- As clients calculate four programs at once, they are required to submit four solutions which are chained in order to prevent challenge program reuse.
+- Requests classified as being from mobile phones have the difficulty and solution complexity cut drastically in order to be equitable to them. Soteria's architecture should be amenable to phones already, but this additional bit of grace will help make sure of it.

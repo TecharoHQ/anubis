@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -16,8 +17,10 @@ import (
 var (
 	ErrNoBotRulesDefined                 = errors.New("config: must define at least one (1) bot rule")
 	ErrBotMustHaveName                   = errors.New("config.Bot: must set name")
-	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, expression, or Thoth keyword")
+	ErrBotMustHaveUserAgentOrPath        = errors.New("config.Bot: must set one of user_agent_regex, path_regex, headers_regex, remote_addresses, remote_addresses_url, expression, asns, or geoip")
 	ErrBotMustHaveUserAgentOrPathNotBoth = errors.New("config.Bot: must set either user_agent_regex, path_regex, and not both")
+	ErrBotMustHaveRemoteAddrOrURLNotBoth = errors.New("config.Bot: must set either remote_addresses or remote_addresses_url, and not both")
+	ErrInvalidRemoteAddressesURL         = errors.New("config.Bot: invalid remote_addresses_url")
 	ErrUnknownAction                     = errors.New("config.Bot: unknown action")
 	ErrInvalidUserAgentRegex             = errors.New("config.Bot: invalid user agent regex")
 	ErrInvalidPathRegex                  = errors.New("config.Bot: invalid path regex")
@@ -59,13 +62,14 @@ type BotConfig struct {
 	Challenge      *ChallengeRules   `json:"challenge,omitempty" yaml:"challenge,omitempty"`
 	Weight         *Weight           `json:"weight,omitempty" yaml:"weight,omitempty"`
 
-	// Thoth features
+	// IP metadata features, backed by the top-level geoip block
 	GeoIP *GeoIP `json:"geoip,omitempty"`
 	ASNs  *ASNs  `json:"asns,omitempty"`
 
-	Name       string   `json:"name" yaml:"name"`
-	Action     Rule     `json:"action" yaml:"action"`
-	RemoteAddr []string `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+	Name               string   `json:"name" yaml:"name"`
+	Action             Rule     `json:"action" yaml:"action"`
+	RemoteAddr         []string `json:"remote_addresses,omitempty" yaml:"remote_addresses,omitempty"`
+	RemoteAddressesURL *string  `json:"remote_addresses_url,omitempty" yaml:"remote_addresses_url,omitempty"`
 }
 
 func (b BotConfig) Zero() bool {
@@ -76,6 +80,7 @@ func (b BotConfig) Zero() bool {
 		len(b.HeadersRegex) != 0,
 		b.Action != "",
 		len(b.RemoteAddr) != 0,
+		b.RemoteAddressesURL != nil,
 		b.Challenge != nil,
 		b.GeoIP != nil,
 		b.ASNs != nil,
@@ -98,6 +103,7 @@ func (b *BotConfig) Valid() error {
 	allFieldsEmpty := b.UserAgentRegex == nil &&
 		b.PathRegex == nil &&
 		len(b.RemoteAddr) == 0 &&
+		b.RemoteAddressesURL == nil &&
 		len(b.HeadersRegex) == 0 &&
 		b.ASNs == nil &&
 		b.GeoIP == nil
@@ -108,6 +114,10 @@ func (b *BotConfig) Valid() error {
 
 	if b.UserAgentRegex != nil && b.PathRegex != nil {
 		errs = append(errs, ErrBotMustHaveUserAgentOrPathNotBoth)
+	}
+
+	if len(b.RemoteAddr) > 0 && b.RemoteAddressesURL != nil {
+		errs = append(errs, ErrBotMustHaveRemoteAddrOrURLNotBoth)
 	}
 
 	if b.UserAgentRegex != nil {
@@ -154,6 +164,12 @@ func (b *BotConfig) Valid() error {
 		}
 	}
 
+	if b.RemoteAddressesURL != nil {
+		if err := validateRemoteAddressesURL(*b.RemoteAddressesURL); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if b.Expression != nil {
 		if err := b.Expression.Valid(); err != nil {
 			errs = append(errs, err)
@@ -184,16 +200,29 @@ func (b *BotConfig) Valid() error {
 	return nil
 }
 
+func validateRemoteAddressesURL(raw string) error {
+	raw = strings.TrimSpace(raw)
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
+		return fmt.Errorf("%w: %q", ErrInvalidRemoteAddressesURL, raw)
+	}
+	return nil
+}
+
 type ChallengeRules struct {
-	Algorithm  string `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
-	Difficulty int    `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
-	ReportAs   int    `json:"report_as,omitempty" yaml:"report_as,omitempty"`
+	Algorithm  string   `json:"algorithm,omitempty" yaml:"algorithm,omitempty"`
+	Difficulty int      `json:"difficulty,omitempty" yaml:"difficulty,omitempty"`
+	ReportAs   int      `json:"report_as,omitempty" yaml:"report_as,omitempty"`
+	Extensions []string `json:"extensions,omitempty" yaml:"extensions,omitempty"`
 }
 
 var (
 	ErrChallengeDifficultyTooLow  = errors.New("config.ChallengeRules: difficulty is too low (must be >= 0)")
 	ErrChallengeDifficultyTooHigh = errors.New("config.ChallengeRules: difficulty is too high (must be <= 64)")
 	ErrChallengeMustHaveAlgorithm = errors.New("config.ChallengeRules: must have algorithm name set")
+	ErrChallengeExtensionUnknown  = errors.New("config.ChallengeRules: unknown challenge extension")
+	ErrChallengeExtensionEmpty    = errors.New("config.ChallengeRules: extension name must not be empty")
+	ErrChallengeExtensionRepeated = errors.New("config.ChallengeRules: extension name was repeated")
 )
 
 func (cr ChallengeRules) Valid() error {
@@ -209,6 +238,20 @@ func (cr ChallengeRules) Valid() error {
 
 	if cr.Difficulty > 64 {
 		errs = append(errs, fmt.Errorf("%w, got: %d", ErrChallengeDifficultyTooHigh, cr.Difficulty))
+	}
+
+	if len(cr.Extensions) != 0 {
+		seen := make(map[string]struct{}, len(cr.Extensions))
+		for _, name := range cr.Extensions {
+			_, repeated := seen[name]
+			switch {
+			case name == "":
+				errs = append(errs, ErrChallengeExtensionEmpty)
+			case repeated:
+				errs = append(errs, fmt.Errorf("%w: %q", ErrChallengeExtensionRepeated, name))
+			}
+			seen[name] = struct{}{}
+		}
 	}
 
 	if len(errs) != 0 {
@@ -274,6 +317,7 @@ type fileConfig struct {
 	Logging     *Logging            `json:"logging"`
 	Metrics     *Metrics            `json:"metrics,omitempty"`
 	Honeypot    *Honeypot           `json:"honeypot"`
+	GeoIP       *GeoIPDatabases     `json:"geoip,omitempty"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -327,6 +371,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.GeoIP != nil {
+		if err := c.GeoIP.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -372,6 +422,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		Logging:     c.Logging,
 		Metrics:     c.Metrics,
 		Honeypot:    c.Honeypot,
+		GeoIP:       c.GeoIP,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -465,6 +516,7 @@ type Config struct {
 	DNSTTL      DnsTTL
 	Metrics     *Metrics
 	Honeypot    *Honeypot
+	GeoIP       *GeoIPDatabases
 }
 
 func (c Config) Valid() error {

@@ -4,12 +4,12 @@ import (
 	"math/rand/v2"
 	"strings"
 
+	"cel.dev/cel-go/cel"
+	"cel.dev/cel-go/common/types"
+	"cel.dev/cel-go/common/types/ref"
+	"cel.dev/cel-go/common/types/traits"
+	"cel.dev/cel-go/ext"
 	"github.com/TecharoHQ/anubis/internal/dns"
-	"github.com/google/cel-go/cel"
-	"github.com/google/cel-go/common/types"
-	"github.com/google/cel-go/common/types/ref"
-	"github.com/google/cel-go/common/types/traits"
-	"github.com/google/cel-go/ext"
 )
 
 // BotEnvironment creates a new CEL environment, this is the set of
@@ -17,7 +17,7 @@ import (
 // Anubis can fail loudly and early when something is invalid instead
 // of blowing up at runtime.
 func BotEnvironment(dnsObj *dns.Dns) (*cel.Env, error) {
-	return New(
+	opts := []cel.EnvOption{
 		// Variables exposed to CEL programs:
 		cel.Variable("remoteAddress", cel.StringType),
 		cel.Variable("contentLength", cel.IntType),
@@ -191,7 +191,9 @@ func BotEnvironment(dnsObj *dns.Dns) (*cel.Env, error) {
 				}),
 			),
 		),
-	)
+	}
+
+	return New(append(opts, getBotVariables()...)...)
 }
 
 // NewThreshold creates a new CEL environment for threshold checking.

@@ -1,0 +1,19 @@
+bots:
+  - name: everyone
+    user_agent_regex: .
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 2
+      extensions:
+        - test-extension
+
+thresholds:
+  - name: extreme-suspicion
+    expression: weight >= 20
+    action: CHALLENGE
+    challenge:
+      algorithm: preact
+      difficulty: 1
+      extensions:
+        - test-extension

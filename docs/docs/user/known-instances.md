@@ -124,4 +124,5 @@ This page contains a non-exhaustive list with all websites using Anubis.
   <summary>Valve Corporation</summary>
   - https://developer.valvesoftware.com/wiki/Main_Page
   - https://wiki.teamfortress.com/wiki/Main_Page
+  - https://gitlab.steamos.cloud/
   </details>

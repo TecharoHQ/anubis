@@ -173,9 +173,9 @@ func TestGetOGTags(t *testing.T) {
 		}
 	}
 
-	t.Run("ensure image is cached as allow", func(t *testing.T) {
-		if _, err := cache.cache.Underlying.Get(t.Context(), "ogtags:allow:example.com/image.jpg"); errors.Is(err, store.ErrNotFound) {
-			t.Fatal("ogtags allow caching for example.com/image.jpg did not work")
+	t.Run("metadata does not authorize assets", func(t *testing.T) {
+		if _, err := cache.cache.Underlying.Get(t.Context(), "ogtags:allow:example.com/image.jpg"); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("metadata created an authorization cache entry")
 		}
 	})
 }

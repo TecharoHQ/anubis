@@ -1,8 +1,11 @@
 # programming languages
-brew "go@1.26"
+brew "go@1.27"
 brew "node"
 brew "ko"
 brew "esbuild"
 brew "zstd"
 brew "brotli"
 brew "msitools"
+brew "rustup"
+brew "wasmtime"
+brew "binaryen"

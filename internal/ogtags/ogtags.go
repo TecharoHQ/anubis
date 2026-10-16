@@ -104,8 +104,9 @@ func NewOGTagCache(target string, conf config.OpenGraph, backend store.Interface
 	}
 
 	client := &http.Client{
-		Timeout:   httpTimeout,
-		Transport: transport,
+		Timeout:       httpTimeout,
+		CheckRedirect: sameOriginRedirect,
+		Transport:     transport,
 	}
 
 	return &OGTagCache{

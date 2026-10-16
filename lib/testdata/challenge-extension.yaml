@@ -1,0 +1,11 @@
+bots:
+  - name: everyone
+    user_agent_regex: .
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 0
+      extensions:
+        - test-extension
+
+dnsbl: false

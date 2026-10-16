@@ -165,6 +165,62 @@ func TestBotValid(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "only filter by remote addresses url",
+			bot: BotConfig{
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p("https://openai.com/searchbot.json"),
+			},
+			err: nil,
+		},
+		{
+			name: "filter by user agent and remote addresses url",
+			bot: BotConfig{
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				UserAgentRegex:     p("OAI-SearchBot"),
+				RemoteAddressesURL: p("https://openai.com/searchbot.json"),
+			},
+			err: nil,
+		},
+		{
+			name: "invalid remote addresses url",
+			bot: BotConfig{
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p("not a url"),
+			},
+			err: ErrInvalidRemoteAddressesURL,
+		},
+		{
+			name: "remote addresses url ftp scheme",
+			bot: BotConfig{
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p("ftp://example.com/bots.json"),
+			},
+			err: ErrInvalidRemoteAddressesURL,
+		},
+		{
+			name: "remote addresses url empty",
+			bot: BotConfig{
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddressesURL: p(""),
+			},
+			err: ErrInvalidRemoteAddressesURL,
+		},
+		{
+			name: "remote addresses and remote addresses url",
+			bot: BotConfig{
+				Name:               "openai-searchbot",
+				Action:             RuleAllow,
+				RemoteAddr:         []string{"0.0.0.0/0"},
+				RemoteAddressesURL: p("https://openai.com/searchbot.json"),
+			},
+			err: ErrBotMustHaveRemoteAddrOrURLNotBoth,
+		},
+		{
 			name: "weight rule without weight",
 			bot: BotConfig{
 				Name:           "weight-adjust-if-mozilla",
@@ -252,7 +308,7 @@ func TestConfigValidBad(t *testing.T) {
 
 			_, err = Load(fin, filepath.Join("testdata", "bad", st.Name()))
 			if err == nil {
-				t.Fatal("validation should have failed but didn't somehow")
+				t.Fatalf("validation should have failed but didn't somehow: %v", err)
 			} else {
 				t.Log(err)
 			}
@@ -294,6 +350,12 @@ func TestBotConfigZero(t *testing.T) {
 	b.RemoteAddr = []string{"::/0"}
 	if b.Zero() {
 		t.Error("config.BotConfig with remote addresses is zero value")
+	}
+
+	var d BotConfig
+	d.RemoteAddressesURL = p("https://openai.com/searchbot.json")
+	if d.Zero() {
+		t.Error("config.BotConfig with remote_addresses_url is zero value")
 	}
 
 	b.Challenge = &ChallengeRules{

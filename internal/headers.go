@@ -63,7 +63,7 @@ func CustomRealIPHeader(customRealIPHeaderValue string, next http.Handler) http.
 	})
 }
 
-// RemoteXRealIP sets the X-Real-Ip header to the request's real IP if
+// RemoteXRealIP sets the X-Real-IP header to the request's real IP if
 // the setting is enabled by the user.
 func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler) http.Handler {
 	if !useRemoteAddress {
@@ -75,7 +75,7 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 		// For local sockets there is no real remote address but the localhost
 		// address should be sensible.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r.Header.Set("X-Real-Ip", "127.0.0.1")
+			r.Header.Set("X-Real-IP", "127.0.0.1")
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -85,7 +85,7 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 		if err != nil {
 			panic(err) // this should never happen
 		}
-		r.Header.Set("X-Real-Ip", host)
+		r.Header.Set("X-Real-IP", host)
 		if addr, err := netip.ParseAddr(host); err == nil {
 			r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
 		}
@@ -93,14 +93,14 @@ func RemoteXRealIP(useRemoteAddress bool, bindNetwork string, next http.Handler)
 	})
 }
 
-// XForwardedForToXRealIP sets the X-Real-Ip header based on the contents
+// XForwardedForToXRealIP sets the X-Real-IP header based on the contents
 // of the X-Forwarded-For header.
 func XForwardedForToXRealIP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-Ip") == "" && xffHeader != "" {
+		if xffHeader := r.Header.Get("X-Forwarded-For"); r.Header.Get("X-Real-IP") == "" && xffHeader != "" {
 			ip := xff.Parse(xffHeader)
-			slog.DebugContext(r.Context(), "setting X-Real-Ip from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
-			r.Header.Set("X-Real-Ip", ip)
+			slog.DebugContext(r.Context(), "setting X-Real-IP from X-Forwarded-For", "to", ip, "x-forwarded-for", xffHeader)
+			r.Header.Set("X-Real-IP", ip)
 			if addr, err := netip.ParseAddr(ip); err == nil {
 				r = r.WithContext(context.WithValue(r.Context(), realIPKey{}, addr))
 			}

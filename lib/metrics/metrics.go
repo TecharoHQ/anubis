@@ -63,10 +63,8 @@ func (s *Server) run(ctx context.Context, lg *slog.Logger) error {
 		}
 	})
 
-	srv := http.Server{
-		Handler:  mux,
-		ErrorLog: internal.GetFilteredHTTPLogger(),
-	}
+	srv := internal.NewHTTPServer(mux)
+	srv.ReadTimeout = time.Minute
 
 	ln, metricsURL, err := internal.SetupListener(s.Config.Network, s.Config.Bind, s.Config.SocketMode)
 	if err != nil {

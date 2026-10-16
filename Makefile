@@ -13,6 +13,8 @@ deps:
 assets: PATH:=$(PWD)/node_modules/.bin:$(PATH)
 assets: deps
 	$(GO) generate ./...
+	bash ./wasm/scripts/build_wasm.sh
+	bash ./wasm/scripts/build_wasm2js.sh
 	./web/build.sh
 	./xess/build.sh
 

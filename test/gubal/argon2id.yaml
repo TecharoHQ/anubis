@@ -1,0 +1,12 @@
+# Baseline sweep policy: challenge every visitor with Anubis's proof-of-work.
+# A real, non-headless browser (the whole point of this sweep) solves the
+# challenge and reaches the backend; a bare HTTP client does not. The challenge
+# interstitial itself contains "Anubis", so the smoke-job's `grep -qi anubis`
+# pre-check passes under this policy.
+bots:
+  - name: everything-else
+    user_agent_regex: .
+    action: CHALLENGE
+    challenge:
+      difficulty: 10
+      algorithm: argon2id

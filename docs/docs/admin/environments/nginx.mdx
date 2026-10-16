@@ -46,7 +46,7 @@ import anubisTest from "!!raw-loader!./nginx/server-anubistest-techaro-lol.conf"
 
 You can copy the `location /` block into a separate file named something like `conf-anubis.inc` and then include it inline to other `server` blocks:
 
-import anubisInclude from "!!raw-loader!./nginx/conf-anubis.inc";
+import anubisInclude from "!!raw-loader!./nginx/conf-anubis.conf";
 
 <CodeBlock language="nginx">{anubisInclude}</CodeBlock>
 

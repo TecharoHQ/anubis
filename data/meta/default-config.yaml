@@ -3,6 +3,7 @@
   # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
   import: (data)/bots/_deny-pathological.yaml
 - import: (data)/bots/aggressive-brazilian-scrapers.yaml
+- import: (data)/common/domain-fronting.yaml
 
 # Aggressively block AI/LLM related bots/agents by default
 - import: (data)/meta/ai-block-aggressive.yaml
@@ -40,8 +41,8 @@
 #     difficulty: 16  # impossible
 #     algorithm: slow # intentionally waste CPU cycles and time
 
-# Requires a subscription to Thoth to use, see
-# https://anubis.techaro.lol/docs/admin/thoth#geoip-based-filtering
+# Requires GeoIP configuration, see:
+# https://anubis.techaro.lol/docs/admin/geoip
 - name: countries-with-aggressive-scrapers
   action: WEIGH
   geoip:
@@ -51,8 +52,8 @@
   weight:
     adjust: 10
 
-# Requires a subscription to Thoth to use, see
-# https://anubis.techaro.lol/docs/admin/thoth#asn-based-filtering
+# Requires GeoIP configuration, see:
+# https://anubis.techaro.lol/docs/admin/geoip
 - name: aggressive-asns-without-functional-abuse-contact
   action: WEIGH
   asns:

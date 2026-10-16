@@ -1,6 +1,10 @@
 package lib
 
+// URL-encoded separators adjacent to the test hostname produce these tokens.
+// cspell:ignore Fevil Cevil
+
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/lib/policy"
 )
 
@@ -191,7 +196,7 @@ func TestRedirectSecurity(t *testing.T) {
 	s := &Server{
 		opts: Options{
 			PublicUrl:       "https://anubis.example.com",
-			RedirectDomains: []string{},
+			RedirectDomains: []string{"example.com"},
 		},
 		logger: slog.Default(),
 		policy: &policy.ParsedConfig{},
@@ -241,7 +246,6 @@ func TestRedirectSecurity(t *testing.T) {
 			case "serveHTTPNext":
 				req := httptest.NewRequest("GET", "/.within.website/?redir="+url.QueryEscape(tt.redirParam), nil)
 				req.Host = tt.reqHost
-				req.URL.Host = tt.reqHost
 				rr := httptest.NewRecorder()
 
 				s.ServeHTTPNext(rr, req)
@@ -291,5 +295,94 @@ func TestRedirectSecurity(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestValidateRedirect(t *testing.T) {
+	s := &Server{opts: Options{RedirectDomains: []string{"allowed.example", "*.allowed.example", "allowed.example:8443"}}}
+	for _, tt := range []struct {
+		target string
+		want   error
+	}{
+		{"/safe/path", nil},
+		{"relative/path", nil},
+		{"/safe%2Fpath?q=%2F%2Fevil.com#fragment", nil},
+		{"https://ALLOWED.example/path", nil},
+		{"http://sub.allowed.example/", nil},
+		{"https://allowed.example:8443/", nil},
+		{"https://allowed.example:9443/", ErrRedirectDomainNotAllowed},
+		{"https://evil.com/", ErrRedirectDomainNotAllowed},
+		{"https://allowed.example@evil.com/", ErrRedirectDomainNotAllowed},
+		{"https:///evil.com/", ErrInvalidRedirect},
+		{"http:/evil.com/", ErrInvalidRedirect},
+		{"https:evil.com", ErrInvalidRedirect},
+		{"//evil.com", ErrInvalidRedirect},
+		{"//allowed.example", ErrInvalidRedirect},
+		{"///evil.com", ErrInvalidRedirect},
+		{"////evil.com", ErrInvalidRedirect},
+		{"/%2Fevil.com", ErrInvalidRedirect},
+		{"/%2F%2Fevil.com", ErrInvalidRedirect},
+		{"/%5Cevil.com", ErrInvalidRedirect},
+		{`/\evil.com`, ErrInvalidRedirect},
+		{`https://allowed.example\@evil.com/`, ErrInvalidRedirect},
+		{" https://evil.com/", ErrInvalidRedirect},
+		{"/\tevil.com", ErrInvalidRedirect},
+		{"javascript:alert(1)", ErrInvalidRedirect},
+		{"data:text/plain,test", ErrInvalidRedirect},
+		{"file:///etc/passwd", ErrInvalidRedirect},
+		{"/%zz", ErrInvalidRedirect},
+	} {
+		t.Run(tt.target, func(t *testing.T) {
+			_, err := s.validateRedirect(tt.target)
+			if !errors.Is(err, tt.want) {
+				t.Fatalf("validateRedirect(%q) = %v, want %v", tt.target, err, tt.want)
+			}
+		})
+	}
+}
+
+func TestRedirectHandlersRejectAmbiguousTargets(t *testing.T) {
+	// These are wire query strings, not already decoded form values.
+	for _, query := range []string{
+		"https:///evil.com/", "http:/evil.com/", "https:evil.com",
+		"//evil.com", "/%2Fevil.com", `/\evil.com`, "///evil.com",
+		"////evil.com", "/%2F%2Fevil.com", "/%252Fevil.com",
+		"/%255Cevil.com", "%20https://evil.com", "/%09/evil.com",
+		"javascript:alert(1)", "//allowed.example",
+	} {
+		t.Run(query, func(t *testing.T) {
+			for _, domains := range [][]string{nil, {"allowed.example"}} {
+				s := &Server{opts: Options{RedirectDomains: domains}, logger: slog.Default(), policy: &policy.ParsedConfig{}}
+				for name, handler := range map[string]http.HandlerFunc{"next": s.ServeHTTPNext, "pass": s.PassChallenge} {
+					for _, cookie := range []bool{false, true} {
+						req := httptest.NewRequest(http.MethodGet, "/.within.website/?redir="+query, nil)
+						if cookie {
+							req.AddCookie(&http.Cookie{Name: s.cookieName(anubis.TestCookieName), Value: "test"})
+						}
+						rr := httptest.NewRecorder()
+						handler(rr, req)
+						if rr.Code != http.StatusBadRequest || rr.Header().Get("Location") != "" || len(rr.Result().Cookies()) != 0 {
+							t.Errorf("%s: expected 400 without redirect or cookies, got %d, %v", name, rr.Code, rr.Header())
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestRedirectAllowedDestination(t *testing.T) {
+	for _, domains := range [][]string{nil, {"allowed.example"}} {
+		s := &Server{opts: Options{RedirectDomains: domains}, logger: slog.Default(), policy: &policy.ParsedConfig{}}
+		for _, base := range []string{"", "https://auth.example"} {
+			for _, target := range []string{"https://allowed.example/safe%2Fpath?q=%2F%2Fevil.com#fragment", "/safe%2Fpath?q=%2F%2Fevil.com#fragment"} {
+				req := httptest.NewRequest(http.MethodGet, base+"/.within.website/?redir="+url.QueryEscape(target), nil)
+				rr := httptest.NewRecorder()
+				s.ServeHTTPNext(rr, req)
+				if rr.Code != http.StatusFound || rr.Header().Get("Location") != target {
+					t.Errorf("target %q: got %d, Location %q", target, rr.Code, rr.Header().Get("Location"))
+				}
+			}
+		}
 	}
 }

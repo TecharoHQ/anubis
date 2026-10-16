@@ -1,0 +1,11 @@
+bots:
+  - name: everything
+    action: CHALLENGE
+    path_regex: .*
+
+geoip:
+  asn:
+    path: /var/lib/anubis/GeoLite2-ASN.mmdb
+  auto_update:
+    license_key_env: ANUBIS_TEST_MAXMIND_LICENSE_KEY_THAT_IS_NOT_SET
+    interval: 5m

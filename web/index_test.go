@@ -79,3 +79,13 @@ func TestBasePrefixInLinks(t *testing.T) {
 		})
 	}
 }
+
+func TestHoneypotLinkEscapesHref(t *testing.T) {
+	var out strings.Builder
+	if err := honeypotLink(`/path" onclick="bad"><script>bad</script>`).Render(t.Context(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out.String(), `href="/path" onclick=`) || strings.Contains(out.String(), "<script>bad") {
+		t.Fatalf("unsafe output: %s", out.String())
+	}
+}

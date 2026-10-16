@@ -42,7 +42,7 @@ func GetRequestLogger(base *slog.Logger, r *http.Request) *slog.Logger {
 		"accept_language", r.Header.Get("Accept-Language"),
 		"priority", r.Header.Get("Priority"),
 		"x-forwarded-for", r.Header.Get("X-Forwarded-For"),
-		"x-real-ip", r.Header.Get("X-Real-Ip"),
+		"x-real-ip", r.Header.Get("X-Real-IP"),
 	)
 }
 

@@ -15,7 +15,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-//go:generate ./build.sh
 //go:generate go tool github.com/a-h/templ/cmd/templ generate
 
 func init() {
@@ -27,7 +26,7 @@ type Impl struct {
 	Algorithm string
 }
 
-func (i *Impl) Setup(mux *http.ServeMux) {}
+func (i *Impl) Setup(mux *http.ServeMux) error { return nil }
 
 func (i *Impl) Issue(w http.ResponseWriter, r *http.Request, lg *slog.Logger, in *chall.IssueInput) (templ.Component, error) {
 	loc := localization.GetLocalizer(r)
@@ -81,7 +80,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 	hex.Encode(hexBuf[:], sum)
 
 	if subtle.ConstantTimeCompare([]byte(response), hexBuf[:]) != 1 {
-		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: wanted response %s but got %s", chall.ErrFailed, string(hexBuf[:]), response))
+		return chall.NewError("validate", "invalid response", chall.ErrFailed)
 	}
 
 	// compare the leading zeroes

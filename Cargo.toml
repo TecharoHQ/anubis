@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["wasm/anubis", "wasm/pow/*"]
+
+[profile.release]
+#strip = true
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+panic = "abort"

@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/google/cel-go/common/types"
+	"cel.dev/cel-go/common/types"
 )
 
 func TestURLValues(t *testing.T) {

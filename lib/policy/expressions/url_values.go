@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/google/cel-go/common/types"
-	"github.com/google/cel-go/common/types/ref"
-	"github.com/google/cel-go/common/types/traits"
+	"cel.dev/cel-go/common/types"
+	"cel.dev/cel-go/common/types/ref"
+	"cel.dev/cel-go/common/types/traits"
 )
 
 // URLValues is a type wrapper to expose url.Values into CEL programs.

@@ -1,0 +1,28 @@
+---
+title: Challenge Extensions
+position: 0
+---
+
+Challenge Extensions are extra conditions you can layer on top of existing challenges. This allows Anubis to assert more behaviour from clients without having to modify existing challenge implementations.
+
+To enable extensions on an existing challenge, add it to the `extensions` field under your challenge definition:
+
+```yaml
+thresholds:
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight > 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      algorithm: sha256
+      difficulty: 8
+      report_as: 8
+      extensions:
+        - css-load
+```
+
+This will augment the [sha256 challenge](../wasm.mdx#sha256) with the [`css-load`](./css-load.mdx) extension.
+
+Extensions are designed to be very cheap and easy to add to existing challenges and can be useful for evading bypass/detection logic for Anubis solving scripts.
