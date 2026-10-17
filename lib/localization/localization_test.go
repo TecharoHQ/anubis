@@ -35,6 +35,7 @@ func TestLocalizationService(t *testing.T) {
 		"vi":      "Đang tải...",
 		"zh-Hans": "加载中...",
 		"zh-Hant": "載入中...",
+		"zh-TW":   "載入中...",
 		"sv":      "Laddar...",
 		"bg":      "Зареждане...",
 	}
