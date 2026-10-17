@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/TecharoHQ/anubis/lib/challenge"
+	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 )
@@ -48,7 +49,11 @@ func Names() []string {
 type Impl interface {
 	// Setup registers any relevant extension routes. Routes MUST include
 	// anubis.BasePrefix.
-	Setup(mux *http.ServeMux, st store.Interface) error
+	//
+	// cfg is the parsed Anubis configuration, giving extensions access to
+	// their configuration and to shared resources such as the GeoIP
+	// databases.
+	Setup(mux *http.ServeMux, st store.Interface, cfg *policy.ParsedConfig) error
 
 	// Head returns additional data that is put into the HTML <head> block
 	// on the challenge page.

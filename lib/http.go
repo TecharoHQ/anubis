@@ -312,7 +312,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		asn, asnDesc := asnFromContext(r.Context())
 		challengesIssued.WithLabelValues("embedded", asn, asnDesc).Add(1)
 	}
-	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
+	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule, r.URL.String())
 	if err != nil {
 		lg.ErrorContext(r.Context(), "can't get challenge", "err", err)
 		algorithm := "unknown"

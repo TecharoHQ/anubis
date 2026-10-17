@@ -318,6 +318,7 @@ type fileConfig struct {
 	Metrics     *Metrics            `json:"metrics,omitempty"`
 	Honeypot    *Honeypot           `json:"honeypot"`
 	GeoIP       *GeoIPDatabases     `json:"geoip,omitempty"`
+	SystemOne   *SystemOne          `json:"systemone,omitempty"`
 }
 
 func (c *fileConfig) Valid() error {
@@ -377,6 +378,12 @@ func (c *fileConfig) Valid() error {
 		}
 	}
 
+	if c.SystemOne != nil {
+		if err := c.SystemOne.Valid(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	if len(errs) != 0 {
 		return fmt.Errorf("config is not valid:\n%w", errors.Join(errs...))
 	}
@@ -423,6 +430,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 		Metrics:     c.Metrics,
 		Honeypot:    c.Honeypot,
 		GeoIP:       c.GeoIP,
+		SystemOne:   c.SystemOne,
 	}
 
 	if c.OpenGraph.TimeToLive != "" {
@@ -517,6 +525,7 @@ type Config struct {
 	Metrics     *Metrics
 	Honeypot    *Honeypot
 	GeoIP       *GeoIPDatabases
+	SystemOne   *SystemOne
 }
 
 func (c Config) Valid() error {
