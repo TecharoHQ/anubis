@@ -35,6 +35,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/geoip"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -113,6 +114,15 @@ type Server struct {
 
 func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
 	lg := internal.GetRequestLogger(s.logger, r)
+
+	// Thread the GeoIP database through the request context so that downstream
+	// consumers, including challenge extensions' Head and Validate methods, can
+	// perform MaxMind lookups for the request.
+	if s.policy.GeoIP != nil {
+		if _, ok := geoip.FromContext(r.Context()); !ok {
+			r = r.WithContext(geoip.With(r.Context(), s.policy.GeoIP))
+		}
+	}
 
 	if s.policy.LogASN && s.policy.GeoIP.HasASN() {
 		if addr, err := netip.ParseAddr(r.Header.Get("X-Real-IP")); err == nil {
