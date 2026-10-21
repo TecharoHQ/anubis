@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Allow Renovate in git clients for github/gitlab api endpoint
+- Add Catalan (ca) localization.
 
 ### Fixed
 

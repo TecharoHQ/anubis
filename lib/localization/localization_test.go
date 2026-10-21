@@ -14,6 +14,7 @@ func TestLocalizationService(t *testing.T) {
 	service := NewLocalizationService()
 
 	loadingStrMap := map[string]string{
+		"ca":    "S’està carregant…",
 		"de":    "Wird geladen …",
 		"en":    "Loading...",
 		"es":    "Cargando...",
