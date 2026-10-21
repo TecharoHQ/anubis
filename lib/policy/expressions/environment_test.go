@@ -205,7 +205,7 @@ func TestBotEnvironment(t *testing.T) {
 				},
 				{
 					name:        "invalid path type",
-					description: "a path should be a sting",
+					description: "a path should be a string",
 					expression:  `size(segments(path)) != 0`,
 					env: map[string]any{
 						"path": 4,
