@@ -53,6 +53,44 @@ func TestPassChallengeRequiresIssuedPolicy(t *testing.T) {
 	}
 }
 
+func TestChallengeSavesTargetURL(t *testing.T) {
+	pol := loadPolicies(t, "testdata/rule_change.yaml", 0)
+	srv := spawnAnubis(t, Options{Next: http.NewServeMux(), Policy: pol})
+
+	req := httptest.NewRequest(http.MethodGet, "/old?foo=bar", nil)
+	req.Header.Set("X-Real-IP", "192.0.2.1")
+
+	rec := httptest.NewRecorder()
+	srv.maybeReverseProxyOrPage(rec, req)
+	resp := rec.Result()
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != pol.StatusCodes.Challenge {
+		t.Fatalf("status = %d, want %d", resp.StatusCode, pol.StatusCodes.Challenge)
+	}
+
+	var id string
+	wantCookie := srv.cookieName(anubis.TestCookieName)
+	for _, c := range resp.Cookies() {
+		if c.Name == wantCookie {
+			id = c.Value
+			break
+		}
+	}
+	if id == "" {
+		t.Fatal("challenge cookie not set")
+	}
+
+	j := store.JSON[challenge.Challenge]{Underlying: srv.store}
+	chall, err := j.Get(req.Context(), "challenge:"+id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := chall.TargetURL, "/old?foo=bar"; got != want {
+		t.Fatalf("TargetURL = %q, want %q", got, want)
+	}
+}
+
 func TestChallengeCannotTransferToAnotherRule(t *testing.T) {
 	pol := loadPolicies(t, "testdata/rule_change.yaml", 0)
 	srv := spawnAnubis(t, Options{Next: http.NewServeMux(), Policy: pol})
@@ -63,7 +101,7 @@ func TestChallengeCannotTransferToAnotherRule(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	issued, err := srv.issueChallenge(req.Context(), req, lg, cr, rule)
+	issued, err := srv.issueChallenge(req.Context(), req, lg, cr, rule, req.URL.String())
 	if err != nil {
 		t.Fatal(err)
 	}
