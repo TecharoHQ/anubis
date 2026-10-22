@@ -14,7 +14,7 @@ Please do not sidestep the build logic shipped by Anubis. We assume that the bui
 
 In order to build a production-ready binary of Anubis, you need the following packages in your environment:
 
-- [Go](https://go.dev) at least version 1.26
+- [Go](https://go.dev) at least version 1.27.3
 - [esbuild](https://esbuild.github.io/)
 - [Rust and Cargo](https://rust-lang.org) at least version 1.80 with the [wasm32-unknown-unknown](https://doc.rust-lang.org/rustc/platform-support/wasm32-unknown-unknown.html) target installed
 - [Node.JS & NPM](https://nodejs.org/en) (latest LTS)

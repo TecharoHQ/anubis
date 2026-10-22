@@ -369,6 +369,7 @@ msiinfo
 msitools
 msiversion
 mtimes
+mudhra
 multicore
 multifile
 multisite
