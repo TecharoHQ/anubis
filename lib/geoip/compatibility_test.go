@@ -227,7 +227,9 @@ func createCompatibilityDB(
 	}
 
 	t.Cleanup(func() {
-		reader.Close()
+		if err := reader.Close(); err != nil {
+			t.Error(err)
+		}
 	})
 
 	return reader
