@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow Renovate in git clients for github/gitlab api endpoint.
 - Bump minimum Go version to 1.27.3 in light of eMudhra.
 
+### Crawlers
+
+- Allow [ibou.com](https://ibou.com), a new French Search Engine, by default via its crawling network. See https://ibou.com/manifesto-en.html
+
 ### Fixed
 
 - Add `utils/cmd/botgenerate` for automatically updating crawler IP ranges. Also apply the updates.
