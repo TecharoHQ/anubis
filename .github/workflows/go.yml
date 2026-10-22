@@ -37,22 +37,9 @@ jobs:
       - name: Setup `wasmtime`
         uses: bytecodealliance/actions/wasmtime/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1.1.3
 
-      - name: Cache playwright binaries
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: playwright-cache
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-1.62.1
-
       - name: install node deps
         run: |
           npm ci
-
-      - name: install playwright browsers
-        run: |
-          npx playwright@1.62.1 install --with-deps
-          npx playwright@1.62.1 run-server --port 9001 &
 
       - name: Build
         run: npm run build

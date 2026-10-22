@@ -14,7 +14,7 @@ Please do not sidestep the build logic shipped by Anubis. We assume that the bui
 
 In order to build a production-ready binary of Anubis, you need the following packages in your environment:
 
-- [Go](https://go.dev) at least version 1.26
+- [Go](https://go.dev) at least version 1.27.3
 - [esbuild](https://esbuild.github.io/)
 - [Rust and Cargo](https://rust-lang.org) at least version 1.80 with the [wasm32-unknown-unknown](https://doc.rust-lang.org/rustc/platform-support/wasm32-unknown-unknown.html) target installed
 - [Node.JS & NPM](https://nodejs.org/en) (latest LTS)
@@ -33,14 +33,14 @@ Anubis does not require a C compiler to build, meaning it is fully compatible wi
 
 :::note
 
-To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.27.0` (this can be done from any version of Go):
+To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.27.3` (this can be done from any version of Go):
 
 ```text
-go install golang.org/dl/go1.27.0@latest
-go1.27.0 download
+go install golang.org/dl/go1.27.3@latest
+go1.27.3 download
 ```
 
-Then make a symbolic link from `go1.27.0` to `go` in your `$PATH`.
+Then make a symbolic link from `go1.27.3` to `go` in your `$PATH`.
 
 :::
 
