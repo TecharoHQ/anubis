@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add Catalan (ca) localization.
 - Allow Renovate in git clients for github/gitlab api endpoint.
 - Bump minimum Go version to 1.27.3 in light of eMudhra.
 
