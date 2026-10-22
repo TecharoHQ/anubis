@@ -6,7 +6,7 @@ Anubis is a Web AI Firewall Utility (WAIFU) written in Go. This is security soft
 
 Prerequisites:
 
-- Go 1.26 or later.
+- Go 1.27.3 or later.
 - Node.js (any supported LTS version).
 - Rust version 1.80 or later.
 - Optionally: Wasmtime
