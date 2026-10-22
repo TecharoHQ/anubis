@@ -33,14 +33,14 @@ Anubis does not require a C compiler to build, meaning it is fully compatible wi
 
 :::note
 
-To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.27.0` (this can be done from any version of Go):
+To upgrade your version of Go without system package manager support, install `golang.org/dl/go1.27.3` (this can be done from any version of Go):
 
 ```text
-go install golang.org/dl/go1.27.0@latest
-go1.27.0 download
+go install golang.org/dl/go1.27.3@latest
+go1.27.3 download
 ```
 
-Then make a symbolic link from `go1.27.0` to `go` in your `$PATH`.
+Then make a symbolic link from `go1.27.3` to `go` in your `$PATH`.
 
 :::
 
