@@ -1,6 +1,8 @@
 import algorithms from "./algorithms";
+import { loadTranslator, type Translator } from "./lib/i18n";
 
 const defaultDifficulty = 4;
+let t: Translator = (key) => key;
 
 const status: HTMLParagraphElement = document.getElementById(
   "status",
@@ -41,11 +43,11 @@ const setupControls = () => {
 
 const benchmarkTrial = async (stats, difficulty, algorithm, signal) => {
   if (!(difficulty >= 1)) {
-    throw new Error(`Invalid difficulty: ${difficulty}`);
+    throw new Error(`${t("invalid_difficulty")} ${difficulty}`);
   }
   const process = algorithms[algorithm];
   if (process == null) {
-    throw new Error(`Unknown algorithm: ${algorithm}`);
+    throw new Error(`${t("unknown_algorithm")} ${algorithm}`);
   }
 
   const rawChallenge = new Uint8Array(32);
@@ -79,13 +81,13 @@ const updateStatus = () => {
   const mainRate = stats.iters / stats.time;
   const compareRate = comparison.iters / comparison.time;
   if (Number.isFinite(mainRate)) {
-    status.innerText = `Average hashrate: ${mainRate.toFixed(3)}kH/s`;
+    status.innerText = `${t("average_hashrate")} ${mainRate.toFixed(3)}kH/s`;
     if (Number.isFinite(compareRate)) {
       const change = ((mainRate - compareRate) / mainRate) * 100;
-      status.innerText += ` vs ${compareRate.toFixed(3)}kH/s (${change.toFixed(2)}% change)`;
+      status.innerText += ` ${t("vs")} ${compareRate.toFixed(3)}kH/s (${change.toFixed(2)}% ${t("change")})`;
     }
   } else {
-    status.innerText = "Benchmarking...";
+    status.innerText = t("benchmarking");
   }
 };
 
@@ -166,8 +168,18 @@ const reset = () => {
   void benchmarkLoop(controller);
 };
 
-setupControls();
-difficultyInput.addEventListener("change", reset);
-algorithmSelect.addEventListener("change", reset);
-compareSelect.addEventListener("change", reset);
-reset();
+void (async () => {
+  t = await loadTranslator({
+    invalid_difficulty: "Invalid difficulty:",
+    unknown_algorithm: "Unknown algorithm:",
+    average_hashrate: "Average hashrate:",
+    vs: "vs",
+    change: "change",
+    benchmarking: "Benchmarking...",
+  });
+  setupControls();
+  difficultyInput.addEventListener("change", reset);
+  algorithmSelect.addEventListener("change", reset);
+  compareSelect.addEventListener("change", reset);
+  reset();
+})();

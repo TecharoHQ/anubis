@@ -1,6 +1,6 @@
 import { waitForExtensions } from "@lib/extensions";
 import algorithms from "./algorithms";
-import { fetchWithBackoff } from "./lib/backoff";
+import { loadTranslator } from "./lib/i18n";
 import { g, u, j } from "@lib/xeact.mjs";
 
 // Tell the inline bootstrap in the challenge page that this script made it off
@@ -24,37 +24,6 @@ const imageURL = (
     cacheBuster,
   });
 
-// Use the browser language from the HTML lang attribute which is set by the server settings or request headers
-const getBrowserLanguage = async () => document.documentElement.lang;
-
-// Load translations from JSON files
-//
-// This runs before anything else on the challenge page, so it must never throw:
-// an unhandled rejection here leaves the user staring at "Loading..." forever.
-// An untranslated challenge page still passes challenges, so the last resort is
-// an empty table, which makes t() fall through to the raw key.
-const loadTranslations = async (
-  lang: string,
-): Promise<Record<string, string>> => {
-  const basePrefix = j("anubis_base_prefix");
-  if (basePrefix === null) {
-    return {};
-  }
-
-  try {
-    const response = await fetchWithBackoff(
-      `${basePrefix}/.within.website/x/cmd/anubis/static/locales/${lang}.json`,
-    );
-    return (await response.json()) as Record<string, string>;
-  } catch (error) {
-    console.warn(`Failed to load translations for ${lang}`, error);
-    if (lang !== "en") {
-      return await loadTranslations("en");
-    }
-    return {};
-  }
-};
-
 const getRedirectUrl = (): string | null => {
   const publicUrl = j("anubis_public_url");
   if (publicUrl === null) {
@@ -66,20 +35,6 @@ const getRedirectUrl = (): string | null => {
   }
   return window.location.href;
 };
-
-let translations: Record<string, string> = {};
-let currentLang;
-
-// Initialize translations
-const initTranslations = async () => {
-  currentLang = await getBrowserLanguage();
-  translations = await loadTranslations(currentLang);
-};
-
-const t = (key: string): string =>
-  translations[`js_${key}`] ||
-  translations[key] ||
-  `unknown translatable string: ${key}`;
 
 interface OhNoesParams {
   titleMsg: string;
@@ -93,8 +48,7 @@ interface OhNoesParams {
     return;
   }
 
-  // Initialize translations first
-  await initTranslations();
+  const t = await loadTranslator();
 
   const dependencies = [
     {
