@@ -22,22 +22,47 @@ In this example, we will use 4 Containers:
 This is a small diagram depicting the flow.
 Keep in mind that `8080` or `80` can be anything depending on your containers.
 
+Sequence diagram for an authorized connection :
 ```mermaid
-flowchart LR
-user[User]
-traefik[Traefik]
-anubis[Anubis]
-target[Target]
+sequenceDiagram
+    participant U as User
+    participant T as Traefik
+    participant A as Anubis
+    participant S as Target
+    U->>T: :443 - Requesting service
+    T->>A: :8080 - Check authorization to Anubis
+    A-->>T: 200 OK - Authorized
+    T->>S: :80 - Forward request to target
+    S-->>U: Answer from target
+```
 
-user-->|:443 - Requesting Service|traefik
-traefik-->|:8080 - Check authorization to Anubis|anubis
-anubis-->|redirect if failed|traefik
-user-->|:8080 - make the challenge|traefik
-anubis-->|redirect back to target|traefik
-traefik-->|:80 - Passing to the target|target
+Sequence diagram for a user getting challenged :
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant T as Traefik
+    participant A as Anubis
+    participant S as Target
+    U->>T: :443 - Requesting service
+    T->>A: :8080 - Check authorization to Anubis
+    A-->>U: Redirect to challenge page
+    U->>T: :443 - Get challenge page
+    T->>A: :8080 - Get challenge page
+    A-->>U: Send challenge
+    Note left of U: Solves challenge
+    U->>T: :443 - Send solved challenge
+    T->>A:
+    A-->>U: Access cookie
+    U->>T: :443 - Requesting service
+    T->>A: :8080 - Check authorization to Anubis again
+    A-->>T: Authorized
+    T->>S: :80 - Forward request to target
+    S-->>U: Answer from target
 ```
 
 ## Full Example Config
+
+To use Anubis with Traefik we use a [forwardAuth](https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/forwardauth/) middleware, take look at the documentation if you want to understand how it works in details.
 
 This example contains 3 services: anubis, one that is protected and the other one that is not.
 
@@ -62,6 +87,7 @@ services:
       - traefik.docker.network=traefik
       # Anubis middleware
       - traefik.http.middlewares.anubis.forwardauth.address=http://anubis:8080/.within.website/x/cmd/anubis/api/check
+      - traefik.http.middlewares.anubis.forwardauth.maxResponseBodySize=1048576
       # Redirect any HTTP to HTTPS
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
       - traefik.http.routers.web.rule=PathPrefix(`/`)
@@ -82,14 +108,17 @@ services:
       - PUBLIC_URL=https://anubis.example.com
       # Should match your domain for proper cookie scoping
       - COOKIE_DOMAIN=example.com
+      - POLICY_FNAME=/botPolicies.yaml
     networks:
       - traefik
+    volumes:
+      - ./botPolicies.yaml:/botPolicies.yaml
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
-      - traefik.http.routers.anubis.rule=Host(`anubis.example.com`) # Only Matching Requests for example.com
+      - traefik.http.routers.anubis.rule=Host(`anubis.example.com`) # Only Matching Requests for anubis.example.com
       - traefik.http.routers.anubis.entrypoints=websecure # Listen on HTTPS
-      - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik where to receive requests
+      - traefik.http.services.anubis.loadbalancer.server.port=8080 # Telling Traefik which port anubis is listening on
       - traefik.http.routers.anubis.service=anubis # Telling Traefik to use the above specified port
       - traefik.http.routers.anubis.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
 
@@ -102,10 +131,10 @@ services:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
       - traefik.http.routers.target.rule=Host(`example.com`) # Only Matching Requests for example.com
-      - traefik.http.routers.target.entrypoints=websecure # Listening on the exclusive Anubis Network
-      - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik where to receive requests
+      - traefik.http.routers.target.entrypoints=websecure # Listen on HTTPS
+      - traefik.http.services.target.loadbalancer.server.port=80 # Telling Traefik which port target is listening on
       - traefik.http.routers.target.service=target # Telling Traefik to use the above specified port
-      - traefik.http.routers.target.tls.certresolver=le # Telling Traefik to resolve a Cert for Anubis
+      - traefik.http.routers.target.tls.certresolver=le # Telling Traefik to resolve a Cert for target
       - traefik.http.routers.target.middlewares=anubis@docker # Use the Anubis middleware
 
   # Not Protected by Anubis
@@ -116,9 +145,9 @@ services:
     labels:
       - traefik.enable=true # Enabling Traefik
       - traefik.docker.network=traefik # Telling Traefik which network to use
-      - traefik.http.routers.target2.rule=Host(`another.example.com`) # Only Matching Requests for example.com
-      - traefik.http.routers.target2.entrypoints=websecure # Listening on the exclusive Anubis Network
-      - traefik.http.services.target2.loadbalancer.server.port=80 # Telling Traefik where to receive requests
+      - traefik.http.routers.target2.rule=Host(`another.example.com`) # Only Matching Requests for another.example.com
+      - traefik.http.routers.target2.entrypoints=websecure # Listen on HTTPS
+      - traefik.http.services.target2.loadbalancer.server.port=80 # Telling Traefik which port target2 is listening on
       - traefik.http.routers.target2.service=target2 # Telling Traefik to use the above specified port
       - traefik.http.routers.target2.tls.certresolver=le # Telling Traefik to resolve a Cert for this Target
 
@@ -149,4 +178,33 @@ certificatesResolvers:
 
 providers:
   docker: {}
+```
+
+For the forwardAuth middleware to work Anubis needs to return a status code different that 2XX otherwise Traefik will forward the request to the target.
+
+**botPolicies.yaml**
+
+```yml
+bots:
+  # Use the default config
+  - import: (data)/meta/default-config.yaml
+
+status_codes:
+  CHALLENGE: 200
+  DENY: 403
+```
+
+## Using the same domain for Anubis and the target
+
+It is possible to use the same domain for anubis and the protected target with a few changes to the configuration.
+
+**compose.yml**
+
+```diff
+    environment:
+-      - PUBLIC_URL=https://anubis.example.com
++      - PUBLIC_URL=https://example.com
+    labels:
+-      - traefik.http.routers.anubis.rule=Host(`example.com`) # Only Matching Requests for anubis.example.com
++      - traefik.http.routers.anubis.rule=Host(`example.com`) && PathPrefix(`/.within.website`) # Match requests for example.com/.within.website
 ```
