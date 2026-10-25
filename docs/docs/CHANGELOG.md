@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Make localization failures non-fatal. Missing translations (including through fallback languages) will show the message ID instead, so if you see underscored_messages_like_this then there's something missing in the catalogs.
+
 <!-- This changes the project to: -->
 
 ## v1.28.2: Wuk Lamat Echo 2
