@@ -195,7 +195,7 @@ func (c *RemoteAddressesURLChecker) refreshOnce(ctx context.Context) time.Durati
 
 	c.cycleStart = time.Now()
 	c.consecutiveFail = 0
-	Fetch_Successes.WithLabelValues(string(c.url)).Set(float64(c.cycleStart))
+	Fetch_Successes.WithLabelValues(string(c.url)).Set(float64(c.cycleStart.Unix()))
 	return c.refreshInterval
 }
 
