@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add metric `anubis_build_info` with build information in the spirit of `node_exporter_build_info`. 
+  - Note that the Anubis version can be set to surprising values if you are building out of a forked GitHub repo clone, as `go build` peeks at the most recent Git tag. GitHub does not sync tags using the web UI sync button. 
+  - If you need a clean/reproducible build, use an exported tree generated with `git checkout-index -a --prefix=${destination}/`, then `make assets` and `make prebaked-build` in that tree. More information can be found at [Building Anubis](https://anubis.techaro.lol/docs/developer/building-anubis).
 <!-- This changes the project to: -->
 
 ## v1.28.2: Wuk Lamat Echo 2
