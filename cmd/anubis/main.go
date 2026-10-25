@@ -21,6 +21,8 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"syscall"
@@ -38,6 +40,8 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/joho/godotenv/autoload"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
@@ -92,6 +96,11 @@ var (
 	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
 
 	preserveRefererQueryParam = flag.Bool("preserve-referer-query-param", false, "if true, appends the original external Referer host as utm_source/utm_medium query parameters to the post-challenge redirect URL, for analytics tools that rely on document.referrer or UTM tags instead of the HTTP Referer header. See https://github.com/TecharoHQ/anubis/issues/1596")
+	 
+	 anubisVersion = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		 Name: "anubis_build_info",
+		 Help: "Anubis build information",
+	 }, []string{"version", "goversion", "goos", "goarch"})
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
@@ -286,6 +295,9 @@ func run(ctx context.Context) {
 	lg.InfoContext(ctx, "starting up Anubis")
 
 	wg := new(sync.WaitGroup)
+	
+	bi, ok := debug.ReadBuildInfo()
+	anubisVersion.WithLabelValues(anubis.Version, bi.GoVersion, runtime.GOOS, runtime.GOARCH).Set(1)
 
 	var rp http.Handler
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
