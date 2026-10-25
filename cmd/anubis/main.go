@@ -297,7 +297,9 @@ func run(ctx context.Context) {
 	wg := new(sync.WaitGroup)
 	
 	bi, ok := debug.ReadBuildInfo()
-	anubisVersion.WithLabelValues(anubis.Version, bi.GoVersion, runtime.GOOS, runtime.GOARCH).Set(1)
+	if ok {
+		anubisVersion.WithLabelValues(anubis.Version, bi.GoVersion, runtime.GOOS, runtime.GOARCH).Set(1)
+	}
 
 	var rp http.Handler
 	// when using anubis via Systemd and environment variables, then it is not possible to set targe to an empty string but only to space
