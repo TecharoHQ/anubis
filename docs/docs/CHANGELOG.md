@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Silence USE_SIMPLIFIED_EXPLANATION warning in default configuration. This flag is deprecated, remove it from your command line and/or environment. 
+
 <!-- This changes the project to: -->
 
 ## v1.28.2: Wuk Lamat Echo 2
