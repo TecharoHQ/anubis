@@ -97,10 +97,10 @@ var (
 
 	preserveRefererQueryParam = flag.Bool("preserve-referer-query-param", false, "if true, appends the original external Referer host as utm_source/utm_medium query parameters to the post-challenge redirect URL, for analytics tools that rely on document.referrer or UTM tags instead of the HTTP Referer header. See https://github.com/TecharoHQ/anubis/issues/1596")
 	 
-	 anubisVersion = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	anubisVersion = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		 Name: "anubis_build_info",
 		 Help: "Anubis build information",
-	 }, []string{"version", "goversion", "goos", "goarch"})
+	}, []string{"version", "goversion", "goos", "goarch"})
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
