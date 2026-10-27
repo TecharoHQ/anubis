@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Log the Open Graph settings in effect at startup instead of the command-line flag values.
+
 ## v1.28.2: Wuk Lamat Echo 2
 
 - Add Catalan (ca) localization.
