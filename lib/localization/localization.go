@@ -121,6 +121,16 @@ func (sl *SimpleLocalizer) T(messageID string) string {
 	return sl.Localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: messageID})
 }
 
+// TDefault localizes messageID and falls back to the supplied English text when
+// the selected locale does not define the message yet.
+func (sl *SimpleLocalizer) TDefault(messageID, fallback string) string {
+	result, err := sl.Localizer.Localize(&i18n.LocalizeConfig{MessageID: messageID})
+	if err != nil || result == "" {
+		return fallback
+	}
+	return result
+}
+
 // Get the language that is used by the localizer by retrieving a well-known string that is required to be present
 func (sl *SimpleLocalizer) GetLang() string {
 	_, tag, err := sl.Localizer.LocalizeWithTag(&i18n.LocalizeConfig{MessageID: "loading"})
