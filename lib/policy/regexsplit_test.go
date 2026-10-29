@@ -1,5 +1,8 @@
 package policy
 
+// Expanded test patterns and near-miss inputs produce these tokens.
+// cspell:ignore abcf adef claudebot FFFD Othe
+
 import (
 	"fmt"
 	"regexp"
