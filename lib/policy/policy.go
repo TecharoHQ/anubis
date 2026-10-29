@@ -64,6 +64,7 @@ type ParsedConfig struct {
 	Logger            *slog.Logger
 	Metrics           *config.Metrics
 	GeoIP             *geoip.DB
+	SystemOne         *config.SystemOne
 	LogASN            bool
 	NeedJA4H          bool
 }
@@ -74,6 +75,7 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
 		Metrics:     orig.Metrics,
+		SystemOne:   orig.SystemOne,
 	}
 }
 
