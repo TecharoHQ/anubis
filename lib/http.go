@@ -392,6 +392,7 @@ func (s *Server) RenderIndex(w http.ResponseWriter, r *http.Request, cr policy.C
 		page,
 		templ.WithStatus(s.opts.Policy.StatusCodes.Challenge),
 	)))
+	s.setRetryAfter(w, s.policy.StatusCodes.Challenge)
 	handler.ServeHTTP(w, r)
 }
 
@@ -436,11 +437,22 @@ func (s *Server) RenderBench(w http.ResponseWriter, r *http.Request) {
 	).ServeHTTP(w, r)
 }
 
+func (s *Server) setRetryAfter(w http.ResponseWriter, status int) {
+	if s.policy == nil || s.policy.RetryAfter == "" {
+		return
+	}
+	if status != http.StatusTooManyRequests && status != http.StatusServiceUnavailable {
+		return
+	}
+	w.Header().Set("Retry-After", s.policy.RetryAfter)
+}
+
 func (s *Server) respondWithError(w http.ResponseWriter, r *http.Request, message, code string) {
 	s.respondWithStatus(w, r, message, code, http.StatusInternalServerError)
 }
 
 func (s *Server) respondWithStatus(w http.ResponseWriter, r *http.Request, msg, code string, status int) {
+	s.setRetryAfter(w, status)
 	localizer := localization.GetLocalizer(r)
 
 	component := web.Base(

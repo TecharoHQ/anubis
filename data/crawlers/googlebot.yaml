@@ -1,5 +1,8 @@
+# Source: https://developers.google.com/static/crawling/ipranges/common-crawlers.json
+# Keep remote_addresses synchronized with Google's published common crawler ranges.
+# User-Agent matching does not replace IP address verification.
 - name: googlebot
-  user_agent_regex: \+http\://www\.google\.com/bot\.html
+  user_agent_regex: (\+http\://www\.google\.com/bot\.html|Googlebot-Image/1\.0|Google-InspectionTool/1\.0)
   action: ALLOW
   remote_addresses:
     - 2001:4860:4801:10::/64
