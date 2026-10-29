@@ -57,6 +57,7 @@ type ParsedConfig struct {
 	Bots              []Bot
 	Thresholds        []*Threshold
 	StatusCodes       config.StatusCodes
+	RetryAfter        string
 	DefaultDifficulty int
 	DNSBL             bool
 	DnsCache          *dns.DnsCache
@@ -73,6 +74,7 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 		orig:        orig,
 		OpenGraph:   orig.OpenGraph,
 		StatusCodes: orig.StatusCodes,
+		RetryAfter:  orig.RetryAfter,
 		Metrics:     orig.Metrics,
 	}
 }
