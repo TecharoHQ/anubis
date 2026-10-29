@@ -116,6 +116,11 @@ var sources = []Source{
 		Rule: "qwantbot",
 		URL:  "https://help.qwant.com/wp-content/uploads/sites/latest/qwantbot.json",
 	},
+	{
+		File: "ibou-search.yaml",
+		Rule: "ibou-search",
+		URL:  "https://www.ibou.com/ibousearch-ip-ranges.json",
+	},
 }
 
 func init() {
