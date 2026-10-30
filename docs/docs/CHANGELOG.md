@@ -13,8 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
-- Allow Renovate in git clients for github/gitlab api endpoint
 - Add `XFF_TRUSTED_PROXIES` (`--xff-trusted-proxies`) for running Anubis behind a reverse proxy that connects from a private address. Anubis then skips those proxies in `X-Forwarded-For` and keeps the client address, even when the client is on a private network ([#1270](https://github.com/TecharoHQ/anubis/issues/1270), [#1893](https://github.com/TecharoHQ/anubis/issues/1893)).
+
+### Security
+
+#### golang.org/x/net -> v0.62.0 for CVE-2026-97045, CVE-2026-78661
+
+Bump [golang.org/x/net](https://pkg.go.dev/golang.org/x/net) to [v0.62.0](https://github.com/golang/net/releases/tag/v0.62.0) in response to the following security advisories:
+
+- [CVE-2026-97045](https://github.com/golang/go/issues/82622): HTML raw-text rendering across namespace transitions.
+- [CVE-2026-78661](https://github.com/golang/go/issues/82224): quadratic text-node coalescing during HTML parsing.
+
+Note that from the Anubis threat model, this is not seen as particularly problematic because Anubis assumes that the backend is trusted or at least that it's notably difficult for a threat actor to cause the OpenGraph parser to fail in this particular manner. Additionally, this requires an administrator to explicitly enable OpenGraph support, so it is additionally seen as not particularly problematic.
+
+## v1.28.2: Wuk Lamat Echo 2
+
+- Add Catalan (ca) localization.
+- Allow Renovate in git clients for github/gitlab api endpoint.
+- Bump minimum Go version to 1.27.3 in light of eMudhra (fixes CVE-2026-111943).
 
 ### Fixed
 
