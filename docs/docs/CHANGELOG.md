@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add Prometheus metric `anubis_remote_addresses_last_success_timestamp_seconds`, keyed by URL, that lists the timestamp of the most recent successful remote address list fetch & load.
 <!-- This changes the project to: -->
 
 ### Security
