@@ -29,24 +29,24 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
+    "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.0.2",
-    "baseline-browser-mapping": "^2.11.26",
-    "cspell": "^10.3.5",
-    "cssnano": "^9.1.0",
-    "cssnano-preset-advanced": "^9.1.0",
+    "baseline-browser-mapping": "^2.11.29",
+    "cspell": "^10.4.0",
+    "cssnano": "^9.9.0",
+    "cssnano-preset-advanced": "^10.0.0",
     "esbuild": "^0.28.2",
     "husky": "^9.1.7",
     "playwright": "^1.61.1",
     "postcss-cli": "^12.0.0",
-    "postcss-import": "^17.0.0",
+    "postcss-import": "^17.0.1",
     "postcss-import-url": "^7.2.0",
     "postcss-url": "^10.1.4",
-    "prettier": "^3.9.9"
+    "prettier": "^3.9.10"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "preact": "^10.29.8",
+    "preact": "^11.0.1",
     "wasm-feature-detect": "^1.9.0"
   },
   "commitlint": {
