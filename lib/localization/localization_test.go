@@ -203,11 +203,11 @@ func TestAcceptLanguageUndetermined(t *testing.T) {
 
 			sl := &SimpleLocalizer{Localizer: service.GetLocalizerFromRequest(req)}
 
-			// T uses MustLocalize, so an unresolved message panics and serving the
-			// challenge page fails. GetLang alone cannot catch that: it swallows the
-			// lookup error and reports "en" either way.
 			if got := sl.T("making_sure_not_bot"); got == "" {
 				t.Errorf("Accept-Language %q: empty translation", tc.acceptLanguage)
+			}
+			if got := sl.T("making_sure_not_bot"); got == "making_sure_not_bot" {
+				t.Errorf("Accept-Language %q: translation lookup failed, no message for ID making_sure_not_bot", tc.acceptLanguage)
 			}
 			if got := sl.GetLang(); got != tc.expectedLang {
 				t.Errorf("Accept-Language %q: expected %s, got %s", tc.acceptLanguage, tc.expectedLang, got)
