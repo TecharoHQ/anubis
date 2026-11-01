@@ -2,8 +2,6 @@ package ogtags
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,12 +16,12 @@ import (
 
 func TestFetchHTMLDocument(t *testing.T) {
 	tests := []struct {
-		name          string
-		htmlContent   string
-		contentType   string
-		statusCode    int
-		contentLength int64
-		expectError   bool
+		name        string
+		htmlContent string
+		contentType string
+		statusCode  int
+		wantError   string
+		expectError bool
 	}{
 		{
 			name: "Valid HTML",
@@ -58,11 +56,12 @@ func TestFetchHTMLDocument(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:          "Too large content",
-			contentType:   "text/html",
-			statusCode:    http.StatusOK,
-			expectError:   true,
-			contentLength: 5 * 1024 * 1024, // 5MB (over 2MB limit)
+			name:        "Too large content",
+			htmlContent: strings.Repeat("X", maxContentLength+1),
+			contentType: "text/html",
+			statusCode:  http.StatusOK,
+			expectError: true,
+			wantError:   "content too large: exceeded",
 		},
 	}
 
@@ -72,14 +71,8 @@ func TestFetchHTMLDocument(t *testing.T) {
 				if tt.contentType != "" {
 					w.Header().Set("Content-Type", tt.contentType)
 				}
-				if tt.contentLength > 0 {
-					// Simulate content length but avoid sending too much actual data
-					w.Header().Set("Content-Length", fmt.Sprintf("%d", tt.contentLength))
-					io.CopyN(w, strings.NewReader("X"), tt.contentLength) //nolint:errcheck
-				} else {
-					w.WriteHeader(tt.statusCode)
-					w.Write([]byte(tt.htmlContent)) //nolint:errcheck
-				}
+				w.WriteHeader(tt.statusCode)
+				w.Write([]byte(tt.htmlContent)) //nolint:errcheck
 			}))
 			defer ts.Close()
 
@@ -93,6 +86,9 @@ func TestFetchHTMLDocument(t *testing.T) {
 			if tt.expectError {
 				if err == nil {
 					t.Error("expected error, got nil")
+				}
+				if tt.wantError != "" && (err == nil || !strings.Contains(err.Error(), tt.wantError)) {
+					t.Errorf("expected error containing %q, got %v", tt.wantError, err)
 				}
 				if doc != nil {
 					t.Error("expected nil document on error, got non-nil")
