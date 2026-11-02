@@ -25,7 +25,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log into registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: techarohq
@@ -53,14 +53,14 @@ jobs:
           push: true
 
       - name: Apply k8s manifests to limsa lominsa
-        uses: actions-hub/kubectl@4a69b4074d038d7bc36682b7d0862db29c181ed4 # v1.37.1
+        uses: actions-hub/kubectl@d95b167fd6c1be77bcace93d188d57d19dfc5258 # v1.37.2
         env:
           KUBE_CONFIG: ${{ secrets.LIMSA_LOMINSA_KUBECONFIG }}
         with:
           args: apply -k docs/manifest
 
       - name: Apply k8s manifests to limsa lominsa
-        uses: actions-hub/kubectl@4a69b4074d038d7bc36682b7d0862db29c181ed4 # v1.37.1
+        uses: actions-hub/kubectl@d95b167fd6c1be77bcace93d188d57d19dfc5258 # v1.37.2
         env:
           KUBE_CONFIG: ${{ secrets.LIMSA_LOMINSA_KUBECONFIG }}
         with:
