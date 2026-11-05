@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Match a single header value once in header rules (`user_agent_regex`, `headers_regex`); it was matched again as the comma-joined list of values, which is the same string.
+
 ### Security
 
 #### golang.org/x/net -> v0.62.0 for CVE-2026-97045, CVE-2026-78661

@@ -171,6 +171,39 @@ func TestHeaderMatchesChecker(t *testing.T) {
 	}
 }
 
+// Several values are matched one by one and then joined with a comma, so a
+// pattern spanning two values still matches; a single value is matched once.
+func TestHeaderMatchesCheckerValues(t *testing.T) {
+	hmc, err := NewHeaderMatchesChecker("X-Test", "^a,b$")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tt := range []struct {
+		name   string
+		values []string
+		ok     bool
+	}{
+		{"joined", []string{"a", "b"}, true},
+		{"single", []string{"a,b"}, true},
+		{"single_no_match", []string{"a"}, false},
+		{"none", nil, false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			r, err := http.NewRequest(http.MethodGet, "/", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, v := range tt.values {
+				r.Header.Add("X-Test", v)
+			}
+			ok, err := hmc.Check(r)
+			if err != nil || ok != tt.ok {
+				t.Errorf("Check = %v, %v; want %v", ok, err, tt.ok)
+			}
+		})
+	}
+}
+
 func TestHeaderExistsChecker(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
