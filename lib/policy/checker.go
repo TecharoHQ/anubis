@@ -89,6 +89,11 @@ func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
 			return true, nil
 		}
 	}
+	// With a single value the joined string is that value, already
+	// matched above.
+	if len(values) == 1 {
+		return false, nil
+	}
 	if hmc.regexp.MatchString(strings.Join(values, ",")) {
 		return true, nil
 	}
