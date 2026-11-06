@@ -25,3 +25,28 @@ If you do not control the web server upstream of Anubis, the `custom-real-ip-hea
 The `X-Real-IP` header will be automatically inferred from `X-Forwarded-For` if not set, setting it explicitly is not necessary as long as `X-Forwarded-For` contains only the real client IP. However setting it explicitly can eliminate spoofed values if your web server doesn't set this.
 
 See [Cloudflare](environments/cloudflare.mdx) for an example configuration.
+
+## Trusted proxies
+
+The rules above assume that private addresses in `X-Forwarded-For` belong to your own infrastructure. That breaks when your users are on a private network too, for example an office network, a VPN, or other services in the same Kubernetes cluster. A proxy that connects to Anubis from a private address makes it worse:
+
+- With `XFF_STRIP_PRIVATE=true`, the client and the proxy are both removed, so the upstream gets no `X-Forwarded-For` at all and every private client looks the same.
+- With `XFF_STRIP_PRIVATE=false`, the proxy is the right-most address left, so every client, public ones included, looks like the proxy.
+
+To fix this, tell Anubis which addresses your proxies connect from with `XFF_TRUSTED_PROXIES` (or `--xff-trusted-proxies`). It takes a comma-separated list of IP addresses and CIDR ranges:
+
+```
+XFF_TRUSTED_PROXIES=10.0.0.5,192.168.100.0/24
+```
+
+Anubis then reads `X-Forwarded-For` from right to left, starting with the address that connected to it. It skips loopback addresses and anything in the list, and the first address that is left is the client. That address is passed upstream as the only entry in `X-Forwarded-For`, even if it is private, CGNAT or link-local. Everything to its left was written by the client and is ignored. If every address in the chain is trusted, the left-most one is used.
+
+```
+Connection from:  10.0.0.5
+Incoming:         X-Forwarded-For: 198.51.100.7, 192.168.1.20
+Upstream:         X-Forwarded-For: 192.168.1.20
+```
+
+If your proxy does not set `X-Real-IP`, Anubis sets it to the same client address. `XFF_STRIP_PRIVATE` has no effect while `XFF_TRUSTED_PROXIES` is set.
+
+Only list the addresses your proxies connect from. Do not list the networks your users are on and avoid listing a whole Kubernetes pod network: anything that connects to Anubis from a trusted address can choose which client address Anubis passes on. Your proxy also has to add to or overwrite `X-Forwarded-For`. If it passes the client's header through unchanged, the client controls the result.

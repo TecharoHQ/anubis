@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- Add `XFF_TRUSTED_PROXIES` (`--xff-trusted-proxies`) for running Anubis behind a reverse proxy that connects from a private address. Anubis then skips those proxies in `X-Forwarded-For` and keeps the client address, even when the client is on a private network ([#1270](https://github.com/TecharoHQ/anubis/issues/1270), [#1893](https://github.com/TecharoHQ/anubis/issues/1893)).
+
 ### Security
 
 #### golang.org/x/net -> v0.62.0 for CVE-2026-97045, CVE-2026-78661
