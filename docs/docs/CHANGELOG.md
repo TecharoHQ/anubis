@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+### Added
+
+- Support Valkey/Redis authentication through `ANUBIS_VALKEY_USERNAME` and `ANUBIS_VALKEY_PASSWORD` environment variables.
+
 ### Security
 
 #### golang.org/x/net -> v0.62.0 for CVE-2026-97045, CVE-2026-78661

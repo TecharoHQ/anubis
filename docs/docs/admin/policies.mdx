@@ -405,6 +405,46 @@ store:
 
 This would have the Valkey client connect to host `valkey.int.techaro.lol` on port `6379` with database `0` (the default database).
 
+#### Authentication using environment variables
+
+Valkey and Redis authentication credentials can optionally be supplied through environment variables instead of embedding them in the connection URL.
+
+| Environment variable     | Description                                     |
+| :----------------------- | :---------------------------------------------- |
+| `ANUBIS_VALKEY_USERNAME` | Username for authenticating to Valkey or Redis. |
+| `ANUBIS_VALKEY_PASSWORD` | Password for authenticating to Valkey or Redis. |
+
+Both variables are optional. When unset, credentials from the connection URL are preserved. When set, environment variables take precedence over the corresponding URL credentials, including when explicitly set to an empty string.
+
+For Kubernetes deployments, credentials can be injected from a Secret using `secretKeyRef`:
+
+```yaml
+env:
+  - name: ANUBIS_VALKEY_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: anubis-valkey-auth
+        key: username
+  - name: ANUBIS_VALKEY_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: anubis-valkey-auth
+        key: password
+```
+
+The policy configuration can then use a connection URL without credentials:
+
+```yaml
+store:
+  backend: valkey
+  parameters:
+    url: "redis://valkey:6379/0"
+```
+
+This avoids storing authentication credentials in the policy ConfigMap. Ensure that access to Kubernetes Secrets and container environments is appropriately restricted.
+
+These environment variables apply to standalone Valkey/Redis and Redis Cluster connections. Redis Sentinel authentication continues to use its existing `sentinel.username` and `sentinel.password` configuration.
+
 #### Redis™ Sentinel
 
 If you are using [Redis™ Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/) for a high availability setup, you need to configure the `sentinel` object. This object takes the following configuration options:

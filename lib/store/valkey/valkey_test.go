@@ -12,6 +12,8 @@ import (
 )
 
 func TestImpl(t *testing.T) {
+	unsetEnvForTest(t, "ANUBIS_VALKEY_USERNAME")
+	unsetEnvForTest(t, "ANUBIS_VALKEY_PASSWORD")
 	if os.Getenv("DONT_USE_NETWORK") != "" {
 		t.Skip("test requires network egress")
 		return
