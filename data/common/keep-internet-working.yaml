@@ -3,7 +3,10 @@
   path_regex: ^/\.well-known/.*$
   action: ALLOW
 - name: favicon
-  path_regex: ^/favicon\.(?:ico|png|gif|jpg|jpeg|svg)$
+  path_regex: ^/(?:favicon(?:-[0-9]+x[0-9]+)?|apple-touch-icon(?:-precomposed(?:-[0-9]+x[0-9]+)?|-[0-9]+x[0-9]+(?:-precomposed)?)?|mstile-[0-9]+x[0-9]+)\.(?:bmp|gif|ico|jpe?g|png|ppm|tiff?|svg|webp|avif)$
+  action: ALLOW
+- name: web-app-manifest
+  path_regex: ^/(?:site\.webmanifest|manifest\.json)$
   action: ALLOW
 - name: robots-txt
   path_regex: ^/robots\.txt$
