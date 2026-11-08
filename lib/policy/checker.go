@@ -66,7 +66,7 @@ func (rac *RemoteAddrChecker) Hash() string {
 
 type HeaderMatchesChecker struct {
 	header string
-	regexp *regexp.Regexp
+	regexp matcher
 	hash   string
 }
 
@@ -79,7 +79,7 @@ func NewHeaderMatchesChecker(header, rexStr string) (checker.Impl, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: regex %s failed parse: %w", ErrMisconfiguration, rexStr, err)
 	}
-	return &HeaderMatchesChecker{strings.TrimSpace(header), rex, internal.FastHash(header + ": " + rexStr)}, nil
+	return &HeaderMatchesChecker{strings.TrimSpace(header), splitAlternation(rex), internal.FastHash(header + ": " + rexStr)}, nil
 }
 
 func (hmc *HeaderMatchesChecker) Check(r *http.Request) (bool, error) {
@@ -179,7 +179,7 @@ func NewHeadersChecker(headermap map[string]string) (checker.Impl, error) {
 			continue
 		}
 
-		result = append(result, &HeaderMatchesChecker{key, rex, internal.FastHash(key + ": " + rexStr)})
+		result = append(result, &HeaderMatchesChecker{key, splitAlternation(rex), internal.FastHash(key + ": " + rexStr)})
 	}
 
 	if len(errs) != 0 {
