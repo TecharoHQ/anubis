@@ -18,6 +18,8 @@ import (
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
 	"github.com/gaissmai/bart"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 const (
@@ -26,6 +28,13 @@ const (
 	remoteAddressesURLMaxRetries      = 5
 	remoteAddressesURLHTTPTimeout     = 30 * time.Second
 	remoteAddressesURLMaxBodyBytes    = 8 << 20
+)
+
+var (
+	Fetch_Successes = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "anubis_remote_addresses_last_success_timestamp_seconds",
+		Help: "Timestamp of last successful remote address fetch",
+	}, []string{"url"})
 )
 
 // RemoteAddressesURLChecker matches client IPs against a prefix list fetched
@@ -186,6 +195,7 @@ func (c *RemoteAddressesURLChecker) refreshOnce(ctx context.Context) time.Durati
 
 	c.cycleStart = time.Now()
 	c.consecutiveFail = 0
+	Fetch_Successes.WithLabelValues(string(c.url)).Set(float64(c.cycleStart.Unix()))
 	return c.refreshInterval
 }
 
