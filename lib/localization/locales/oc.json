@@ -5,7 +5,7 @@
   "protected_from": "de",
   "made_with": "Fach amb ❤️ al 🇨🇦",
   "mascot_design": "Concepcion de la mascòta per",
-  "jshelter_note": "Es una mesura contra los robòts e las requèstas maliciosas, similar a un CAPTCHA. Pasmens, al luòc d’aver de far lo trabalh vos meteis, vòstre navegador deu resòlvre un calcul per demostrar qu’es un client valid. Aquò s’apèla una <a href=\"https://en.wikipedia.org/wiki/Proof_of_work\">pròva de trabalh</a>. Lo calcul se fa en qualques segondas e puèi podètz accedir al site web. Mercés per vòstra compreneson e paciéncia.",
+  "jshelter_note": "Notatz qu’Anubis requerís l’utilizacion de foncionalitats modèrnas de JavaScript que d’extensions coma JShelter desactivan. Desactivatz JShelter o d’autras extensions d’aquel tipe per aqueste domeni.",
   "version_info": "Aqueste site Web utiliza Anubis en version",
   "try_again": "Tornar ensajar",
   "go_home": "Acuèlh",
