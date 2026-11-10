@@ -252,7 +252,7 @@ func New(opts Options) (*Server, error) {
 
 	for _, implKind := range extension.Names() {
 		impl, _ := extension.Get(implKind)
-		if err := impl.Setup(mux, result.store); err != nil {
+		if err := impl.Setup(mux, result.store, result.policy); err != nil {
 			challSetupErrs = append(challSetupErrs, fmt.Errorf("error setting up challenge method %s: %w", implKind, err))
 		}
 	}

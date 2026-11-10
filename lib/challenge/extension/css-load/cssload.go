@@ -13,6 +13,7 @@ import (
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/challenge/extension"
+	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/store"
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ func (i *Impl) cssFolder() string {
 	return anubis.BasePrefix + "/.within.website/x/cmd/anubis/ext/css-load"
 }
 
-func (i *Impl) Setup(mux *http.ServeMux, st store.Interface) error {
+func (i *Impl) Setup(mux *http.ServeMux, st store.Interface, cfg *policy.ParsedConfig) error {
 	i.st = st
 
 	mux.HandleFunc(fmt.Sprintf("GET %s/{challengeID}", i.cssFolder()), i.renderCSS)
