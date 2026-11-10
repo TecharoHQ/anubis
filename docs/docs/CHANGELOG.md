@@ -30,6 +30,10 @@ Note that from the Anubis threat model, this is not seen as particularly problem
 - Allow Renovate in git clients for github/gitlab api endpoint.
 - Bump minimum Go version to 1.27.3 in light of eMudhra (fixes CVE-2026-111943).
 
+### Crawlers
+
+- Allow [ibou.com](https://ibou.com), a new French Search Engine, by default via its crawling network. See https://ibou.com/manifesto-en.html
+
 ### Fixed
 
 - Add `utils/cmd/botgenerate` for automatically updating crawler IP ranges. Also apply the updates.
