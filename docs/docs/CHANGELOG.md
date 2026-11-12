@@ -24,6 +24,10 @@ Bump [golang.org/x/net](https://pkg.go.dev/golang.org/x/net) to [v0.62.0](https:
 
 Note that from the Anubis threat model, this is not seen as particularly problematic because Anubis assumes that the backend is trusted or at least that it's notably difficult for a threat actor to cause the OpenGraph parser to fail in this particular manner. Additionally, this requires an administrator to explicitly enable OpenGraph support, so it is additionally seen as not particularly problematic.
 
+### Fixed
+
+- Update stale default in docs for COOKIE_PARTITIONED
+
 ## v1.28.2: Wuk Lamat Echo 2
 
 - Add Catalan (ca) localization.
