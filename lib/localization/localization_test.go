@@ -165,7 +165,7 @@ func TestAcceptLanguageQualityFactors(t *testing.T) {
 		{"pt_BR_regional", "pt-BR", "pt-BR"},
 		{"pt_PT_regional", "pt-PT", "pt-PT"},
 		{"simple_sk", "sk", "sk"},
-   		{"sk_SK_with_lower_priority_cs", "sk-SK,cs;q=0.8,en;q=0.5", "sk"},
+		{"sk_SK_with_lower_priority_cs", "sk-SK,cs;q=0.8,en;q=0.5", "sk"},
 		{"complex_header", "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7,de;q=0.5", "fr"},
 	}
 
