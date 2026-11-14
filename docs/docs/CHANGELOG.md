@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 <!-- This changes the project to: -->
+- Adds Max-Age expiry to the client's cookie to prevent clients with a skewed clock (being ahead) to immediately expire cookies when the TTL is shorter than the time skew.
 
 ### Security
 
