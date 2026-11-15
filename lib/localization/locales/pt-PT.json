@@ -60,5 +60,13 @@
   "js_finished_reading": "Terminei de ler. Continuar →",
   "js_calculation_error": "Erro de cálculo!",
   "js_calculation_error_msg": "Não foi possível calcular o desafio:",
-  "script_load_error": "O Anubis não conseguiu carregar o JavaScript. O servidor pode estar sobrecarregado. Recarregue a página para tentar novamente."
+  "script_load_error": "O Anubis não conseguiu carregar o JavaScript. O servidor pode estar sobrecarregado. Recarregue a página para tentar novamente.",
+  "imprint": "Informação legal",
+  "sad_anubis": "Anubis triste",
+  "js_invalid_difficulty": "Dificuldade inválida:",
+  "js_unknown_algorithm": "Algoritmo desconhecido:",
+  "js_average_hashrate": "Taxa de hash média:",
+  "js_vs": "vs.",
+  "js_change": "de alteração",
+  "js_benchmarking": "A testar o desempenho..."
 }
