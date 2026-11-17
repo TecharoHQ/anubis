@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- This changes the project to: -->
 
+- With `--preserve-referer-query-param`, visits from Google, Bing, DuckDuckGo, Yahoo and Ecosia are now tagged as `<engine> / organic`: `utm_source` is set to the engine name (except for Ecosia, whose source is set to `ecosia.org`, matching Google Analytics) and `utm_medium` is set to `organic` instead of `referral`.
+- Anubis now also leaves the post-challenge redirect URL alone when it contains `gbraid` or `wbraid`, in addition to other parameters that carry campaign or referrer attribution.
+
 ### Security
 
 #### golang.org/x/net -> v0.62.0 for CVE-2026-97045, CVE-2026-78661
