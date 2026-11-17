@@ -91,7 +91,7 @@ var (
 	thothToken           = flag.String("thoth-token", "", "deprecated: Thoth support was removed, use the geoip block in the policy file")
 	jwtRestrictionHeader = flag.String("jwt-restriction-header", "X-Real-IP", "If set, the JWT is only valid if the current value of this header matched the value when the JWT was created")
 
-	preserveRefererQueryParam = flag.Bool("preserve-referer-query-param", false, "if true, appends the original external Referer host as utm_source/utm_medium query parameters to the post-challenge redirect URL, for analytics tools that rely on document.referrer or UTM tags instead of the HTTP Referer header. See https://github.com/TecharoHQ/anubis/issues/1596")
+	preserveRefererQueryParam = flag.Bool("preserve-referer-query-param", false, "if true, appends the original external Referer host as utm_source/utm_medium query parameters to the post-challenge redirect URL, for analytics tools that rely on document.referrer or UTM tags instead of the HTTP Referer header. Well-known search engines are tagged as <engine> / organic. See https://github.com/TecharoHQ/anubis/issues/1596")
 )
 
 func keyFromHex(value string) (ed25519.PrivateKey, error) {
