@@ -151,7 +151,9 @@ droneblresponse
 dropin
 dsilence
 duckduckbot
+duckduckgo
 echaro
+ecosia
 eerror
 elif
 ellenjoe
@@ -206,6 +208,7 @@ fullchain
 fvbommel
 gaissmai
 Galvus
+gbraid
 gclid
 gdead
 gdeadbee
@@ -273,6 +276,7 @@ iaskspider
 iaso
 iat
 icacls
+icann
 ifm
 imafdcsu
 Imagesift
@@ -397,6 +401,7 @@ nolint
 NONINFRINGEMENT
 nontrapping
 nosleep
+notbing
 nullglob
 oci
 OCOB
@@ -621,6 +626,7 @@ WAIFU
 Warde
 wasmtime
 wazero
+wbraid
 wcg
 webapps
 weblate

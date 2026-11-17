@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- This changes the project to: -->
 
 - Add a third WASM compilation tier: `mvp` that contains WebAssembly MVP only semantics. These modules sacrifice all possible performance gains for compatibility.
+- With `--preserve-referer-query-param`, visits from Google, Bing, DuckDuckGo, Yahoo and Ecosia are now tagged as `<engine> / organic`: `utm_source` is set to the engine name (except for Ecosia, whose source is set to `ecosia.org`, matching Google Analytics) and `utm_medium` is set to `organic` instead of `referral`.
+- Anubis now also leaves the post-challenge redirect URL alone when it contains `gbraid` or `wbraid`, in addition to other parameters that carry campaign or referrer attribution.
 
 ### Security
 
