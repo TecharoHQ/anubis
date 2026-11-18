@@ -73,6 +73,7 @@ caninetools
 canonialheader
 Cardyb
 CAs
+cdylib
 celchecker
 celphase
 cerr
@@ -580,6 +581,7 @@ unbreakdocker
 Uncacheable
 unfeatures
 unifiedjs
+uninlined
 unintrusive
 unipromos
 unixhttpd
