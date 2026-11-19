@@ -64,7 +64,7 @@ yourdomain.example.com {
   reverse_proxy http://anubis:3000 {
     header_up X-Real-IP {remote_host}
     header_up X-Http-Version {http.request.proto}
-    header_up X-TLS-SNI-Name {tls_server_name}
+    header_up X-TLS-SNI-Name {http.request.tls.server_name}
   }
 }
 ```
