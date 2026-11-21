@@ -17,6 +17,7 @@ import (
 	"github.com/TecharoHQ/anubis/internal"
 	"github.com/TecharoHQ/anubis/lib/config"
 	"github.com/TecharoHQ/anubis/lib/geoip/geoiptest"
+	"go.etcd.io/bbolt"
 )
 
 func TestDefaultPolicyMustParse(t *testing.T) {
@@ -390,4 +391,22 @@ bots:
 	}
 
 	t.Fatal("remote addresses url list was not loaded in time")
+}
+
+func TestValidateConfigDoesNotOpenStore(t *testing.T) {
+	ctx := geoiptest.WithMockGeoIP(t)
+
+	dbPath := filepath.Join(t.TempDir(), "anubis.db")
+	locked, err := bbolt.Open(dbPath, 0600, &bbolt.Options{Timeout: time.Second})
+	if err != nil {
+		t.Fatalf("lock bbolt database: %v", err)
+	}
+	defer locked.Close() //nolint:errcheck
+
+	policyYAML := fmt.Sprintf("bots:\n  - name: test\n    action: ALLOW\n    path_regex: ^/\nstore:\n  backend: bbolt\n  parameters:\n    path: %q\n", dbPath)
+	fin := strings.NewReader(policyYAML)
+
+	if _, err := ValidateConfig(ctx, fin, "policy.yaml", anubis.DefaultDifficulty, "info", false); err != nil {
+		t.Fatalf("ValidateConfig should not open the store: %v", err)
+	}
 }
