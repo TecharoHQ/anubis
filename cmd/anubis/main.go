@@ -107,8 +107,68 @@ func keyFromHex(value string) (ed25519.PrivateKey, error) {
 	return ed25519.NewKeyFromSeed(keyBytes), nil
 }
 
+// healthCheckMetricsConfig mirrors run(): the policy file's metrics block wins over flags.
+func healthCheckMetricsConfig() (*config.Metrics, error) {
+	flagCfg := &config.Metrics{Bind: *metricsBind, Network: *metricsBindNetwork}
+
+	if *policyFname == "" {
+		return flagCfg, nil
+	}
+
+	fin, err := os.Open(*policyFname)
+	if err != nil {
+		return nil, fmt.Errorf("can't open policy file %s: %w", *policyFname, err)
+	}
+	defer fin.Close() //nolint:errcheck
+
+	cfg, err := config.Load(fin, *policyFname)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.Metrics != nil {
+		return cfg.Metrics, nil
+	}
+
+	return flagCfg, nil
+}
+
 func doHealthCheck() error {
-	resp, err := http.Get("http://localhost" + *metricsBind + "/healthz")
+	cfg, err := healthCheckMetricsConfig()
+	if err != nil {
+		return err
+	}
+
+	return checkHealth(cfg)
+}
+
+func checkHealth(cfg *config.Metrics) error {
+	network, address, err := internal.ResolveBind(cfg.Network, cfg.Bind)
+	if err != nil {
+		return fmt.Errorf("can't resolve metrics bind: %w", err)
+	}
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				var d net.Dialer
+				return d.DialContext(ctx, network, address)
+			},
+		},
+	}
+
+	// The host is ignored by DialContext; it only fills the Host header.
+	req, err := http.NewRequest(http.MethodGet, "http://localhost/healthz", nil)
+	if err != nil {
+		return err
+	}
+
+	if cfg.BasicAuth != nil {
+		req.SetBasicAuth(cfg.BasicAuth.Username, cfg.BasicAuth.Password)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to fetch metrics: %w", err)
 	}
