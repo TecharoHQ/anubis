@@ -73,6 +73,7 @@ caninetools
 canonialheader
 Cardyb
 CAs
+cdylib
 celchecker
 celphase
 cerr
@@ -152,6 +153,7 @@ dsilence
 duckduckbot
 echaro
 eerror
+elif
 ellenjoe
 emacs
 embe
@@ -502,6 +504,7 @@ shirou
 shoneypot
 shopt
 Sidetrade
+signext
 simprint
 Siri
 sitemap
@@ -580,6 +583,7 @@ unbreakdocker
 Uncacheable
 unfeatures
 unifiedjs
+uninlined
 unintrusive
 unipromos
 unixhttpd
