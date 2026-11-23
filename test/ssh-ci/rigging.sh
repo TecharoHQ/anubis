@@ -41,12 +41,16 @@ git archive HEAD | ssh "${Target}" tar xC "${RunFolder}"
 PrebuiltGlobs=(
 	web/static/wasm/simd128/*.wasm
 	web/static/wasm/baseline/*.wasm
+	web/static/wasm/mvp/*.wasm
 	web/js/gen/wasm2js/*.wasm.js
 )
 shopt -s nullglob
 # shellcheck disable=SC2206 # the globs are meant to expand
 Prebuilt=(${PrebuiltGlobs[@]})
 shopt -u nullglob
+if [ -f web/static/wasm/.build-complete ]; then
+	Prebuilt+=(web/static/wasm/.build-complete)
+fi
 if [ "${#Prebuilt[@]}" -ne 0 ]; then
 	tar c "${Prebuilt[@]}" | ssh "${Target}" tar xC "${RunFolder}"
 else

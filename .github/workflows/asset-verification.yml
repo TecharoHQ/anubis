@@ -59,6 +59,15 @@ jobs:
         run: |
           npm run assets
 
+      - name: Verify strict MVP WebAssembly artifacts
+        run: go test ./wasm -run '^TestMVP(Artifacts|ValidatorRejectsExtensions)$' -count=1 -v
+
+      - name: Install Chromium for WebAssembly selection tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Test WebAssembly selection and compilation fallback
+        run: npm run test:wasm-frontend
+
       - name: Check for uncommitted changes after asset build
         id: check-changes-after
         run: |

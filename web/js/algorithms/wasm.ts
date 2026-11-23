@@ -6,7 +6,14 @@ import {
   runWorkers,
 } from "@lib/worker";
 import { fetchWithBackoff } from "@lib/backoff";
-import { simd } from "wasm-feature-detect";
+import {
+  bulkMemory,
+  signExtensions,
+  mutableGlobals,
+  saturatedFloatToInt,
+  simd,
+  multiValue,
+} from "wasm-feature-detect";
 import isWASMSupported from "@lib/wasm-supported";
 import wasm2js from "./wasm2js";
 
@@ -34,6 +41,59 @@ const compileModule = async (
   }
 };
 
+const supportedTiers = async (): Promise<string[]> => {
+  // Probe failures are unsupported features, not challenge failures.
+  const supported = async (probe: () => Promise<boolean>): Promise<boolean> => {
+    try {
+      return await probe();
+    } catch {
+      return false;
+    }
+  };
+  const baseline = await Promise.all(
+    [bulkMemory, signExtensions, mutableGlobals, saturatedFloatToInt].map(
+      supported,
+    ),
+  );
+  if (!baseline.every(Boolean)) {
+    return ["mvp"];
+  }
+
+  const vector = await Promise.all([simd, multiValue].map(supported));
+  return vector.every(Boolean)
+    ? ["simd128", "baseline", "mvp"]
+    : ["baseline", "mvp"];
+};
+
+const compileAlgorithm = async (
+  { basePrefix, version, algorithm }: ProcessOptions,
+  signal: AbortSignal | null,
+): Promise<WebAssembly.Module> => {
+  const tiers = await supportedTiers();
+  for (let index = 0; index < tiers.length; index++) {
+    const tier = tiers[index];
+    try {
+      return await compileModule(
+        `${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${tier}/${algorithm}.wasm?cacheBuster=${version}`,
+        signal,
+      );
+    } catch (err) {
+      if (
+        !(err instanceof WebAssembly.CompileError) ||
+        signal?.aborted ||
+        index === tiers.length - 1
+      ) {
+        throw err;
+      }
+      console.warn(
+        `anubis: ${tier} WebAssembly compilation failed, trying ${tiers[index + 1]}`,
+        err,
+      );
+    }
+  }
+  throw new Error("anubis: no eligible WebAssembly tier");
+};
+
 export default async function process(
   options: ProcessOptions,
   data: string,
@@ -55,11 +115,7 @@ export default async function process(
     );
   }
 
-  const wasmFeatures = (await simd()) ? "simd128" : "baseline";
-  const module = await compileModule(
-    `${basePrefix}/.within.website/x/cmd/anubis/static/wasm/${wasmFeatures}/${algorithm}.wasm?cacheBuster=${version}`,
-    signal,
-  );
+  const module = await compileAlgorithm(options, signal);
 
   return runWorkers({
     webWorkerURL: `${basePrefix}/.within.website/x/cmd/anubis/static/js/worker/wasm.mjs?cacheBuster=${version}`,

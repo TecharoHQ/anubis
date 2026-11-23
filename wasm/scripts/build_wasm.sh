@@ -5,8 +5,9 @@ shopt -s nullglob
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-src_dirs=(./wasm/pow ./wasm/anubis)
-dst_dirs=(./web/static/wasm/simd128 ./web/static/wasm/baseline)
+src_dirs=(./wasm/pow ./wasm/anubis ./wasm/scripts ./Cargo.toml ./Cargo.lock ./utils/wasm/wasm2js/wasm-opt_130.wasm)
+dst_dirs=(./web/static/wasm/simd128 ./web/static/wasm/baseline ./web/static/wasm/mvp)
+completion_marker=./web/static/wasm/.build-complete
 
 # rustc enables reference-types, multivalue and friends by default for
 # wasm32-unknown-unknown. With reference-types on, LLVM encodes the call_indirect
@@ -24,14 +25,25 @@ dst_dirs=(./web/static/wasm/simd128 ./web/static/wasm/baseline)
 # module outright if it ever picks up a feature not on the list, so a toolchain
 # upgrade becomes a loud build failure rather than a browser that cannot start.
 #
-# Keep this a pure decode/re-encode with no optimization passes: the wasm build of
-# wasm-opt exhausts its stack on -O2, and we would rather not have an optimizer
-# rewriting proof-of-work code.
+# Keep the existing tiers a pure decode/re-encode. The MVP tier uses explicit
+# lowering passes only; the wasm build of wasm-opt exhausts its stack on -O2.
 #
 # Chrome shipped sign-ext and mutable-globals in 74, bulk-memory and
 # nontrapping-fptoint in 75, multivalue in 85 and simd in 91.
 baseline_features="-mvp --enable-sign-ext --enable-mutable-globals --enable-bulk-memory --enable-nontrapping-float-to-int"
 simd128_features="${baseline_features} --enable-multivalue --enable-simd"
+
+# Check every algorithm in every tier before trusting timestamps. A failed build
+# can leave a directory populated with only some of its modules.
+all_modules_present() {
+	local manifest module dir
+	for manifest in ./wasm/pow/*/Cargo.toml; do
+		module="$(basename "$(dirname "${manifest}")")"
+		for dir in "${dst_dirs[@]}"; do
+			[ -s "${dir}/${module}.wasm" ] || return 1
+		done
+	done
+}
 
 run_wasm_opt() {
 	if command -v wasm-opt 2>&1 >/dev/null; then
@@ -92,12 +104,13 @@ newest_src="$(mtimes "${src_dirs[@]}" -type f | sort -n | tail -1)"
 # (e.g. the output dirs haven't been created, in which case find would error out).
 oldest_dst="$(mtimes "${dst_dirs[@]}" -type f -name '*.wasm' 2>/dev/null | sort -n | head -1 || true)"
 
-if all_populated '*.wasm' "${dst_dirs[@]}" && [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
+if [ -f "$completion_marker" ] && all_modules_present && [ -n "$oldest_dst" ] && awk "BEGIN { exit !($newest_src <= $oldest_dst) }"; then
 	echo "wasm artifacts are up to date, skipping build"
 	exit 0
 fi
 
-mkdir -p ./web/static/wasm/{simd128,baseline}
+mkdir -p "${dst_dirs[@]}"
+rm -f "$completion_marker"
 
 cargo clean --quiet
 
@@ -113,4 +126,16 @@ cargo build --quiet --release --target wasm32-unknown-unknown
 copy_modules ./target/wasm32-unknown-unknown/release ./web/static/wasm/baseline
 reencode ./web/static/wasm/baseline ${baseline_features}
 
+# Derive MVP from the non-SIMD build without a third Cargo compilation. Lower
+# extensions while they are enabled, then validate and re-encode with MVP alone.
+# Stripping stale compiler feature metadata prevents re-enabling extensions.
+copy_modules ./web/static/wasm/baseline ./web/static/wasm/mvp
+reencode ./web/static/wasm/mvp ${baseline_features} \
+	--llvm-memory-copy-fill-lowering \
+	--signext-lowering \
+	--llvm-nontrapping-fptoint-lowering \
+	--strip-target-features
+reencode ./web/static/wasm/mvp -mvp
+
 cargo clean --quiet
+touch "$completion_marker"
