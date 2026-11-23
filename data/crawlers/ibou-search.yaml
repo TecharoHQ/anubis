@@ -1,0 +1,7 @@
+- name: ibou-search
+  user_agent_regex: \+https\://www\.ibou\.com/crawlers\.html
+  action: ALLOW
+  remote_addresses:
+  # https://www.ibou.com/ibousearch-ip-ranges.json
+    - 2a0e:6240:e000::/44
+    - 188.241.38.0/24
