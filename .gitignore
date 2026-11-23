@@ -27,3 +27,5 @@ web/static/locales/*.json
 target/*
 web/static/wasm/baseline/*.wasm
 web/static/wasm/simd128/*.wasm
+web/static/wasm/mvp/*.wasm
+web/static/wasm/.build-complete

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run assets && SKIP_INTEGRATION=1 go test ./...",
+    "test:wasm-frontend": "node --test web/js/algorithms/wasm.test.mjs",
     "test:spelling": "git diff --name-only HEAD | npx cspell --file-list stdin",
     "test:spelling:all:": "cspell .",
     "test:spelling:sort": "node .vscode/scripts/sort-project-words.mjs",

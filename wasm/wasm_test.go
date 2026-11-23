@@ -59,7 +59,7 @@ func TestAlgos(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, kind := range []string{"baseline", "simd128"} {
+	for _, kind := range []string{"baseline", "simd128", "mvp"} {
 		for _, fname := range fnames {
 			t.Run(kind+"/"+fname.Name(), func(t *testing.T) {
 				if testing.Short() && fname.Name() == "argon2id.wasm" && runtime.GOARCH != "amd64" && runtime.GOARCH != "arm64" {
@@ -110,7 +110,7 @@ func bench(b *testing.B, kind, fname string, difficulties []uint32) {
 }
 
 func BenchmarkArgon2ID(b *testing.B) {
-	for _, kind := range []string{"baseline", "simd128"} {
+	for _, kind := range []string{"baseline", "simd128", "mvp"} {
 		b.Run(kind, func(b *testing.B) {
 			bench(b, kind, "argon2id.wasm", []uint32{4, 6, 8})
 		})
@@ -118,7 +118,7 @@ func BenchmarkArgon2ID(b *testing.B) {
 }
 
 func BenchmarkHashX(b *testing.B) {
-	for _, kind := range []string{"baseline", "simd128"} {
+	for _, kind := range []string{"baseline", "simd128", "mvp"} {
 		b.Run(kind, func(b *testing.B) {
 			bench(b, kind, "hashx.wasm", []uint32{4, 6, 8})
 		})
@@ -126,7 +126,7 @@ func BenchmarkHashX(b *testing.B) {
 }
 
 func BenchmarkSHA256(b *testing.B) {
-	for _, kind := range []string{"baseline", "simd128"} {
+	for _, kind := range []string{"baseline", "simd128", "mvp"} {
 		b.Run(kind, func(b *testing.B) {
 			bench(b, kind, "sha256.wasm", []uint32{4, 6, 8, 10, 12, 14, 16})
 		})
