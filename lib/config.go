@@ -62,33 +62,64 @@ type Options struct {
 }
 
 func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int, logLevel string, subrequestMode bool) (*policy.ParsedConfig, error) {
-	var fin io.ReadCloser
-	var err error
-
-	if fname != "" {
-		fin, err = os.Open(fname)
-		if err != nil {
-			return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
-		}
-	} else {
-		fname = "(data)/botPolicies.yaml"
-		fin, err = data.BotPolicies.Open("botPolicies.yaml")
-		if err != nil {
-			return nil, fmt.Errorf("[unexpected] can't parse builtin policy file %s: %w", fname, err)
-		}
+	fin, fname, err := openPolicy(fname)
+	if err != nil {
+		return nil, err
 	}
-
-	defer func(fin io.ReadCloser) {
-		err := fin.Close()
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to close policy file", "file", fname, "err", err)
-		}
-	}(fin)
+	defer closePolicy(ctx, fname, fin)
 
 	anubisPolicy, err := policy.ParseConfig(ctx, fin, fname, defaultDifficulty, logLevel, subrequestMode)
 	if err != nil {
 		return nil, fmt.Errorf("can't parse policy file %s: %w", fname, err)
 	}
+	if err := validateParsedConfig(anubisPolicy); err != nil {
+		return nil, err
+	}
+
+	return anubisPolicy, err
+}
+
+// ValidatePoliciesOrDefault checks a policy the same way LoadPoliciesOrDefault
+// does, but without opening the configured storage backend.
+func ValidatePoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty int, logLevel string, subrequestMode bool) error {
+	fin, fname, err := openPolicy(fname)
+	if err != nil {
+		return err
+	}
+	defer closePolicy(ctx, fname, fin)
+
+	anubisPolicy, err := policy.ValidateConfig(ctx, fin, fname, defaultDifficulty, logLevel, subrequestMode)
+	if err != nil {
+		return fmt.Errorf("can't parse policy file %s: %w", fname, err)
+	}
+
+	return validateParsedConfig(anubisPolicy)
+}
+
+func openPolicy(fname string) (io.ReadCloser, string, error) {
+	if fname != "" {
+		fin, err := os.Open(fname)
+		if err != nil {
+			return nil, fname, fmt.Errorf("can't parse policy file %s: %w", fname, err)
+		}
+		return fin, fname, nil
+	}
+
+	fname = "(data)/botPolicies.yaml"
+	fin, err := data.BotPolicies.Open("botPolicies.yaml")
+	if err != nil {
+		return nil, fname, fmt.Errorf("[unexpected] can't parse builtin policy file %s: %w", fname, err)
+	}
+	return fin, fname, nil
+}
+
+func closePolicy(ctx context.Context, fname string, fin io.ReadCloser) {
+	if err := fin.Close(); err != nil {
+		slog.ErrorContext(ctx, "failed to close policy file", "file", fname, "err", err)
+	}
+}
+
+func validateParsedConfig(anubisPolicy *policy.ParsedConfig) error {
 	var validationErrs []error
 
 	for _, b := range anubisPolicy.Bots {
@@ -107,10 +138,10 @@ func LoadPoliciesOrDefault(ctx context.Context, fname string, defaultDifficulty 
 	}
 
 	if len(validationErrs) != 0 {
-		return nil, fmt.Errorf("can't do final validation of Anubis config: %w", errors.Join(validationErrs...))
+		return fmt.Errorf("can't do final validation of Anubis config: %w", errors.Join(validationErrs...))
 	}
 
-	return anubisPolicy, err
+	return nil
 }
 
 func checkExtensions(ruleName string, cr *config.ChallengeRules) error {

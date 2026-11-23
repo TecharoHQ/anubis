@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"flag"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -25,6 +28,43 @@ func TestCheckPolicy(t *testing.T) {
 
 			if got := checkPolicy(context.Background()); got != tt.want {
 				t.Errorf("checkPolicy(%q) = %d, want %d", tt.fname, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseCheckFlags(t *testing.T) {
+	for _, tt := range []struct {
+		name    string
+		args    []string
+		want    string
+		wantErr bool
+	}{
+		{"flag with separate value", []string{"-policy-fname", "policy.yaml"}, "policy.yaml", false},
+		{"flag with equals value", []string{"-policy-fname=policy.yaml"}, "policy.yaml", false},
+		{"stray positional arg", []string{"policy.yaml"}, "", true},
+		{"flag after stray positional arg", []string{"policy.yaml", "-policy-fname", "other.yaml"}, "", true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			fs := flag.NewFlagSet("check", flag.ContinueOnError)
+			fs.SetOutput(io.Discard)
+			fname := fs.String("policy-fname", "", "policy file")
+
+			err := parseCheckFlags(fs, tt.args)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected an error, got nil")
+				}
+				if !strings.Contains(err.Error(), "unexpected arguments") {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if *fname != tt.want {
+				t.Errorf("policy-fname = %q, want %q", *fname, tt.want)
 			}
 		})
 	}

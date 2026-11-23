@@ -78,6 +78,17 @@ func newParsedConfig(orig *config.Config) *ParsedConfig {
 }
 
 func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int, logLevel string, subrequestMode bool) (*ParsedConfig, error) {
+	return parseConfig(ctx, fin, fname, defaultDifficulty, logLevel, subrequestMode, false)
+}
+
+// ValidateConfig parses and validates a policy without opening the configured
+// storage backend. This lets an administrator check a policy used by a running
+// instance, which may hold an exclusive lock on its database.
+func ValidateConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int, logLevel string, subrequestMode bool) (*ParsedConfig, error) {
+	return parseConfig(ctx, fin, fname, defaultDifficulty, logLevel, subrequestMode, true)
+}
+
+func parseConfig(ctx context.Context, fin io.Reader, fname string, defaultDifficulty int, logLevel string, subrequestMode bool, validateOnly bool) (*ParsedConfig, error) {
 	c, err := config.Load(fin, fname)
 	if err != nil {
 		return nil, err
@@ -134,17 +145,25 @@ func ParseConfig(ctx context.Context, fin io.Reader, fname string, defaultDiffic
 	stFac, ok := store.Get(c.Store.Backend)
 	switch ok {
 	case true:
-		store, err := stFac.Build(ctx, c.Store.Parameters)
-		if err != nil {
-			validationErrs = append(validationErrs, err)
+		if validateOnly {
+			if err := stFac.Valid(c.Store.Parameters); err != nil {
+				validationErrs = append(validationErrs, err)
+			}
 		} else {
-			result.Store = store
+			store, err := stFac.Build(ctx, c.Store.Parameters)
+			if err != nil {
+				validationErrs = append(validationErrs, err)
+			} else {
+				result.Store = store
+			}
 		}
 	case false:
 		validationErrs = append(validationErrs, config.ErrUnknownStoreBackend)
 	}
 
-	result.DnsCache = dns.NewDNSCache(result.orig.DNSTTL.Forward, result.orig.DNSTTL.Reverse, result.Store)
+	if !validateOnly {
+		result.DnsCache = dns.NewDNSCache(result.orig.DNSTTL.Forward, result.orig.DNSTTL.Reverse, result.Store)
+	}
 	result.Dns = dns.New(ctx, result.DnsCache, lg.With("component", "dns"))
 
 	for _, b := range c.Bots {
