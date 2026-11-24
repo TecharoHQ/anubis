@@ -11,7 +11,7 @@ import (
 
 templ base(title string, body templ.Component, impressum *config.Impressum, honeypot *config.Honeypot, challenge any, ogTags map[string]string, localizer *localization.SimpleLocalizer) {
 	<!DOCTYPE html>
-	<html lang={ localizer.GetLang() }>
+	<html lang={ localizer.GetLang() } class={ templ.KV("verification-page", challenge != nil) }>
 		<head>
 			<title>{ title }</title>
 			<link rel="stylesheet" href={ anubis.BasePrefix + xess.URL }/>
@@ -57,6 +57,81 @@ templ base(title string, body templ.Component, impressum *config.Impressum, hone
             width: 0;
             transition: width 0.25s ease-in;
         }
+
+        .verification-page {
+            display: block;
+            min-height: 100%;
+            height: auto;
+        }
+
+        .verification-page body {
+            box-sizing: border-box;
+            display: grid;
+            min-height: 100vh;
+            height: auto;
+            margin: 0;
+            padding: 1rem;
+            place-items: center;
+            color-scheme: light;
+            background: #f3f5f8;
+            color: #192538;
+            font-family: system-ui, sans-serif;
+        }
+
+        .verification-page main {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 32rem;
+            padding: clamp(1.25rem, 5vw, 2.75rem);
+            border: 1px solid #d9e0e9;
+            border-radius: 1rem;
+            background: #fff;
+        }
+
+        .verification-page #title {
+            margin: 0 0 0.75rem;
+            font: 650 clamp(1.45rem, 5vw, 2rem)/1.25 system-ui, sans-serif;
+        }
+
+        .verification-page #image {
+            display: none;
+        }
+
+        .verification-page #status {
+            color: #425169;
+        }
+
+        .verification-page #progress {
+            height: 0.5rem;
+            margin: 0.75rem auto;
+            outline: 0;
+            background: #e5eaf1;
+        }
+
+        .verification-page .bar-inner {
+            background: #275fbd;
+        }
+
+        .verification-page details {
+            margin-top: 1.25rem;
+        }
+
+        .verification-page footer {
+            margin-top: 1.25rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5eaf1;
+            color: #425169;
+            font-size: 0.8125rem;
+        }
+
+        .verification-page footer p {
+            margin: 0.375rem 0;
+        }
+
+        .verification-page a {
+            color: #2054aa;
+            background-color: transparent;
+        }
     	</style>
 			@templ.JSONScript("anubis_version", anubis.Version)
 			@templ.JSONScript("anubis_challenge", challenge)
@@ -70,23 +145,27 @@ templ base(title string, body templ.Component, impressum *config.Impressum, hone
 			<main>
 				<h1 id="title" class="centered-div">{ title }</h1>
 				@body
-				<footer>
-					<div class="centered-div">
-						<p>
-							{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> { localizer.T("protected_from") } <a
-	href="https://techaro.lol"
->Techaro</a>. { localizer.T("made_with") }.
-						</p>
-						<p>{ localizer.T("mascot_design") } <a href="https://bsky.app/profile/celphase.bsky.social">{ localizer.T("celphase") }</a>.</p>
-						if impressum != nil {
-							<p>
-								@templ.Raw(impressum.Footer)
-								-- <a href={ templ.SafeURL(anubis.BasePrefix + fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
-							</p>
-						}
-						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
-					</div>
-				</footer>
+				if challenge == nil || impressum != nil {
+					<footer>
+						<div class="centered-div">
+							if challenge == nil {
+								<p>
+									{ localizer.T("protected_by") } <a href="https://github.com/TecharoHQ/anubis">Anubis</a> { localizer.T("protected_from") } <a href="https://techaro.lol">Techaro</a>. { localizer.T("made_with") }.
+								</p>
+								<p>{ localizer.T("mascot_design") } <a href="https://bsky.app/profile/celphase.bsky.social">{ localizer.T("celphase") }</a>.</p>
+							}
+							if impressum != nil {
+								<p>
+									@templ.Raw(impressum.Footer)
+									-- <a href={ templ.SafeURL(anubis.BasePrefix + fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
+								</p>
+							}
+							if challenge == nil {
+								<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
+							}
+						</div>
+					</footer>
+				}
 			</main>
 		</body>
 	</html>
