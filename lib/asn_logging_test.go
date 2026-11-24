@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/TecharoHQ/anubis/lib/geoip"
 	"github.com/TecharoHQ/anubis/lib/geoip/geoiptest"
 )
 
@@ -42,5 +43,23 @@ func TestGetRequestLoggerASN(t *testing.T) {
 				t.Errorf("want (%q, %q), got (%q, %q)", tt.wantASN, tt.wantDesc, asn, desc)
 			}
 		})
+	}
+}
+
+// TestGetRequestLoggerThreadsGeoIP ensures extensions can reach the GeoIP
+// database from the request context in their Head and Validate methods.
+func TestGetRequestLoggerThreadsGeoIP(t *testing.T) {
+	pol := loadPolicies(t, "", 4)
+	db := geoiptest.DB(t)
+	pol.GeoIP = db
+
+	srv := spawnAnubis(t, Options{Policy: pol})
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	_, req = srv.getRequestLogger(req)
+
+	got, ok := geoip.FromContext(req.Context())
+	if !ok || got != db {
+		t.Fatalf("geoip database not threaded through request context: ok=%v got=%p want=%p", ok, got, db)
 	}
 }

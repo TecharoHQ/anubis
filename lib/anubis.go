@@ -35,6 +35,7 @@ import (
 	"github.com/TecharoHQ/anubis/lib/challenge"
 	"github.com/TecharoHQ/anubis/lib/challenge/extension"
 	"github.com/TecharoHQ/anubis/lib/config"
+	"github.com/TecharoHQ/anubis/lib/geoip"
 	"github.com/TecharoHQ/anubis/lib/localization"
 	"github.com/TecharoHQ/anubis/lib/policy"
 	"github.com/TecharoHQ/anubis/lib/policy/checker"
@@ -114,6 +115,15 @@ type Server struct {
 func (s *Server) getRequestLogger(r *http.Request) (*slog.Logger, *http.Request) {
 	lg := internal.GetRequestLogger(s.logger, r)
 
+	// Thread the GeoIP database through the request context so that downstream
+	// consumers, including challenge extensions' Head and Validate methods, can
+	// perform MaxMind lookups for the request.
+	if s.policy.GeoIP != nil {
+		if _, ok := geoip.FromContext(r.Context()); !ok {
+			r = r.WithContext(geoip.With(r.Context(), s.policy.GeoIP))
+		}
+	}
+
 	if s.policy.LogASN && s.policy.GeoIP.HasASN() {
 		if addr, err := netip.ParseAddr(r.Header.Get("X-Real-IP")); err == nil {
 			if asNumber, description, ok := s.policy.GeoIP.LookupASN(addr); ok {
@@ -179,7 +189,7 @@ func (s *Server) shouldRetryMissingTestCookie(r *http.Request) bool {
 	return s.store.Set(r.Context(), key, []byte("1"), 30*time.Minute) == nil
 }
 
-func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.Logger, cr policy.CheckResult, rule *policy.Bot) (*challenge.Challenge, error) {
+func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.Logger, cr policy.CheckResult, rule *policy.Bot, targetURL string) (*challenge.Challenge, error) {
 	if cr.Rule != config.RuleChallenge {
 		slog.ErrorContext(ctx, "this should be impossible, asked to issue a challenge but the rule is not a challenge rule", "cr", cr, "rule", rule)
 		//return nil, errors.New("[unexpected] this codepath should be impossible, asked to issue a challenge for a non-challenge rule")
@@ -210,6 +220,7 @@ func (s *Server) issueChallenge(ctx context.Context, r *http.Request, lg *slog.L
 		IssuedAt:       time.Now(),
 		Difficulty:     rule.Challenge.Difficulty,
 		PolicyRuleHash: rule.Hash(),
+		TargetURL:      targetURL,
 		Extensions:     slices.Clone(rule.Challenge.Extensions),
 		Metadata: map[string]string{
 			"User-Agent": r.Header.Get("User-Agent"),
@@ -565,7 +576,7 @@ func (s *Server) MakeChallenge(w http.ResponseWriter, r *http.Request) {
 	}
 	lg = lg.With("check_result", cr)
 
-	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule)
+	chall, err := s.issueChallenge(r.Context(), r, lg, cr, rule, redir)
 	if err != nil {
 		lg.ErrorContext(r.Context(), "failed to fetch or issue challenge", "err", err)
 		w.WriteHeader(http.StatusInternalServerError)

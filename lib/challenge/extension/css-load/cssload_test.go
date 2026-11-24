@@ -20,7 +20,7 @@ func TestCSSLoad(t *testing.T) {
 	mux := http.NewServeMux()
 	i := &Impl{}
 
-	if err := i.Setup(mux, st); err != nil {
+	if err := i.Setup(mux, st, nil); err != nil {
 		t.Fatalf("can't setup css-load extension: %v", err)
 	}
 
@@ -75,7 +75,7 @@ func FuzzRenderCSS(f *testing.F) {
 	mux := http.NewServeMux()
 	i := &Impl{}
 
-	if err := i.Setup(mux, st); err != nil {
+	if err := i.Setup(mux, st, nil); err != nil {
 		f.Fatalf("can't setup css-load extension: %v", err)
 	}
 
