@@ -159,9 +159,15 @@ func (s *Server) SetCookie(w http.ResponseWriter, cookieOpts CookieOpts) {
 		sameSite = http.SameSiteLaxMode
 	}
 
+	// Browsers compare Expires to their own clock, so a client whose clock runs
+	// ahead of the server's by more than the expiry drops the cookie on arrival.
+	// Max-Age counts from when the cookie is received and takes precedence over
+	// Expires, which stays for clients without Max-Age support.
+	// See https://github.com/TecharoHQ/anubis/issues/1142
 	http.SetCookie(w, &http.Cookie{
 		Name:        s.cookieName(name),
 		Value:       cookieOpts.Value,
+		MaxAge:      int(cookieOpts.Expiry.Seconds()),
 		Expires:     time.Now().Add(cookieOpts.Expiry),
 		SameSite:    sameSite,
 		Domain:      domain,

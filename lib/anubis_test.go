@@ -403,6 +403,9 @@ func TestCookieSettings(t *testing.T) {
 			if got := time.Until(ckie.Expires); (got - tc.expiration).Abs() > time.Minute {
 				t.Errorf("cookie expiry is wrong, wanted ~%s remaining, got: %s", tc.expiration, got)
 			}
+			if got := time.Duration(ckie.MaxAge) * time.Second; got != tc.expiration {
+				t.Errorf("cookie max age is wrong, wanted %s, got: %s", tc.expiration, got)
+			}
 		})
 	}
 }

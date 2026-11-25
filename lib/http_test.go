@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/internal"
@@ -17,6 +18,8 @@ func TestSetCookie(t *testing.T) {
 		host       string
 		cookieName string
 		options    Options
+		expiry     time.Duration
+		wantExpiry time.Duration
 	}{
 		{
 			name:       "basic",
@@ -36,6 +39,21 @@ func TestSetCookie(t *testing.T) {
 			host:       "techaro.lol",
 			cookieName: anubis.CookieName,
 		},
+		{
+			name:       "expiry from cookie expiration option",
+			options:    Options{CookieExpiration: 5 * time.Minute},
+			host:       "",
+			cookieName: anubis.CookieName,
+			wantExpiry: 5 * time.Minute,
+		},
+		{
+			name:       "explicit expiry overrides cookie expiration option",
+			options:    Options{CookieExpiration: 5 * time.Minute},
+			host:       "",
+			cookieName: anubis.CookieName,
+			expiry:     30 * time.Minute,
+			wantExpiry: 30 * time.Minute,
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := spawnAnubis(t, tt.options)
@@ -43,7 +61,7 @@ func TestSetCookie(t *testing.T) {
 
 			tt.cookieName = srv.cookieName(tt.cookieName)
 
-			srv.SetCookie(rw, CookieOpts{Value: "test", Host: tt.host})
+			srv.SetCookie(rw, CookieOpts{Value: "test", Host: tt.host, Expiry: tt.expiry})
 
 			resp := rw.Result()
 			cookies := resp.Cookies()
@@ -52,6 +70,12 @@ func TestSetCookie(t *testing.T) {
 
 			if ckie.Name != tt.cookieName {
 				t.Errorf("wanted cookie named %q, got cookie named %q", tt.cookieName, ckie.Name)
+			}
+			if got := time.Duration(ckie.MaxAge) * time.Second; got != tt.wantExpiry {
+				t.Errorf("wanted cookie max age of %s, got: %s", tt.wantExpiry, got)
+			}
+			if got := time.Until(ckie.Expires); (got - tt.wantExpiry).Abs() > time.Minute {
+				t.Errorf("wanted cookie to expire in ~%s, got: %s", tt.wantExpiry, got)
 			}
 		})
 	}
