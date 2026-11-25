@@ -118,7 +118,12 @@ type SimpleLocalizer struct {
 
 // T provides a concise way to localize messages
 func (sl *SimpleLocalizer) T(messageID string) string {
-	return sl.Localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: messageID})
+	s, err := sl.Localizer.Localize(&i18n.LocalizeConfig{MessageID: messageID})
+	if err == nil {
+		return s
+	} else {
+		return messageID
+	}
 }
 
 // Get the language that is used by the localizer by retrieving a well-known string that is required to be present
