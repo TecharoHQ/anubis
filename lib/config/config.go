@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ var (
 	ErrCantSetBotAndImportValuesAtOnce   = errors.New("config.BotOrImport: can't set bot rules and import values at the same time")
 	ErrMustSetBotOrImportRules           = errors.New("config.BotOrImport: rule definition is invalid, you must set either bot rules or an import statement, not both")
 	ErrStatusCodeNotValid                = errors.New("config.StatusCode: status code not valid, must be between 100 and 599")
+	ErrInvalidRetryAfter                 = errors.New("config: retry_after must be delay-seconds or an HTTP-date in IMF-fixdate format")
 )
 
 type Rule string
@@ -282,6 +284,18 @@ func (boi *BotOrImport) Valid() error {
 	return ErrMustSetBotOrImportRules
 }
 
+func validRetryAfter(value string) bool {
+	if value == "" {
+		return true
+	}
+	if strings.Trim(value, "0123456789") == "" {
+		_, err := strconv.ParseUint(value, 10, 64)
+		return err == nil
+	}
+	d, err := http.ParseTime(value)
+	return err == nil && d.UTC().Format(http.TimeFormat) == value
+}
+
 type StatusCodes struct {
 	Challenge int `json:"CHALLENGE"`
 	Deny      int `json:"DENY"`
@@ -312,6 +326,7 @@ type fileConfig struct {
 	Bots        []BotOrImport       `json:"bots"`
 	Thresholds  []Threshold         `json:"thresholds"`
 	StatusCodes StatusCodes         `json:"status_codes"`
+	RetryAfter  string              `json:"retry_after,omitempty"`
 	DNSBL       bool                `json:"dnsbl"`
 	DNSTTL      DnsTTL              `json:"dns_ttl"`
 	Logging     *Logging            `json:"logging"`
@@ -341,6 +356,10 @@ func (c *fileConfig) Valid() error {
 
 	if err := c.StatusCodes.Valid(); err != nil {
 		errs = append(errs, err)
+	}
+
+	if !validRetryAfter(c.RetryAfter) {
+		errs = append(errs, fmt.Errorf("%w: %q", ErrInvalidRetryAfter, c.RetryAfter))
 	}
 
 	for i, t := range c.Thresholds {
@@ -418,6 +437,7 @@ func Load(fin io.Reader, fname string) (*Config, error) {
 			Override:     c.OpenGraph.Override,
 		},
 		StatusCodes: c.StatusCodes,
+		RetryAfter:  c.RetryAfter,
 		Store:       c.Store,
 		Logging:     c.Logging,
 		Metrics:     c.Metrics,
@@ -511,6 +531,7 @@ type Config struct {
 	Bots        []BotConfig
 	Thresholds  []Threshold
 	StatusCodes StatusCodes
+	RetryAfter  string
 	Logging     *Logging
 	DNSBL       bool
 	DNSTTL      DnsTTL

@@ -136,6 +136,28 @@ func TestClearCookieWithDynamicDomain(t *testing.T) {
 	}
 }
 
+func TestSetRetryAfterHeader(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		status int
+		want   string
+	}{
+		{name: "too many requests", status: http.StatusTooManyRequests, want: "120"},
+		{name: "service unavailable", status: http.StatusServiceUnavailable, want: "120"},
+		{name: "other status", status: http.StatusForbidden, want: ""},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := spawnAnubis(t, Options{})
+			srv.policy.RetryAfter = "120"
+			rw := httptest.NewRecorder()
+			srv.setRetryAfter(rw, tt.status)
+			if got := rw.Header().Get("Retry-After"); got != tt.want {
+				t.Errorf("wanted Retry-After %q, got %q", tt.want, got)
+			}
+		})
+	}
+}
+
 func TestRenderIndexRedirect(t *testing.T) {
 	s := &Server{
 		opts: Options{
