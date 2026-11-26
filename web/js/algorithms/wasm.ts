@@ -100,6 +100,7 @@ export default async function process(
   difficulty: number = 5,
   signal: AbortSignal | null = null,
   progressCallback?: ProgressCallback,
+  scale: number = 2,
   threads: number = defaultThreads(),
 ): Promise<ProcessResult> {
   const { basePrefix, version, algorithm } = options;
@@ -123,5 +124,6 @@ export default async function process(
     threads,
     signal,
     progressCallback,
+    scale,
   });
 }
