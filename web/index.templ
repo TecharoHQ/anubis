@@ -81,7 +81,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, hone
 						if impressum != nil {
 							<p>
 								@templ.Raw(impressum.Footer)
-								-- <a href={ templ.SafeURL(anubis.BasePrefix + fmt.Sprintf("%simprint", anubis.APIPrefix)) }>Imprint</a>
+								-- <a href={ templ.SafeURL(anubis.BasePrefix + fmt.Sprintf("%simprint", anubis.APIPrefix)) }>{ localizer.TDefault("imprint", "Imprint") }</a>
 							</p>
 						}
 						<p>{ localizer.T("version_info") } <code>{ anubis.Version }</code>.</p>
@@ -94,7 +94,7 @@ templ base(title string, body templ.Component, impressum *config.Impressum, hone
 
 templ errorPage(message, mail, code string, localizer *localization.SimpleLocalizer) {
 	<div class="centered-div">
-		<img id="image" alt="Sad Anubis" style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
+		<img id="image" alt={ localizer.TDefault("sad_anubis", "Sad Anubis") } style="width:100%;max-width:256px;" src={ anubis.BasePrefix + "/.within.website/x/cmd/anubis/static/img/reject.webp?cacheBuster=" + anubis.Version }/>
 		<p>{ message }.</p>
 		if code != "" {
 			<code><pre>{ code }</pre></code>
