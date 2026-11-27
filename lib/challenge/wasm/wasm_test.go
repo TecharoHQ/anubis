@@ -256,6 +256,16 @@ func testValidateAdversarial(t *testing.T, algorithm string) {
 			wantErr: challenge.ErrInvalidFormat,
 		},
 		{
+			name: "elapsedTime-too-large",
+			values: map[string]string{
+				"nonce":       validNonce,
+				"elapsedTime": "1e308",
+				"response":    validResponse,
+			},
+			input:   goodInput(),
+			wantErr: challenge.ErrInvalidFormat,
+		},
+		{
 			name: "response-not-hex",
 			values: map[string]string{
 				"nonce":       validNonce,

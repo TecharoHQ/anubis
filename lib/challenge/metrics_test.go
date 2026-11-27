@@ -11,6 +11,7 @@ func TestParseElapsedTime(t *testing.T) {
 		{in: "0", want: 0},
 		{in: "69", want: 69},
 		{in: "12.5", want: 12.5},
+		{in: "1800000", want: MaxElapsedTime},
 		{in: "taco", wantErr: true},
 		{in: "NaN", wantErr: true},
 		{in: "nan", wantErr: true},
@@ -18,6 +19,8 @@ func TestParseElapsedTime(t *testing.T) {
 		{in: "+Inf", wantErr: true},
 		{in: "-Inf", wantErr: true},
 		{in: "-1", wantErr: true},
+		{in: "1800001", wantErr: true},
+		{in: "1e308", wantErr: true},
 		{in: "1e999", wantErr: true},
 	} {
 		t.Run(tt.in, func(t *testing.T) {

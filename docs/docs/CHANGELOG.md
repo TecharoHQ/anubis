@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Reject non-finite (`NaN`, `Inf`) and negative `elapsedTime` values during proof-of-work and WebAssembly challenge validation so client-controlled inputs cannot poison the `anubis_time_taken` Prometheus histogram.
+- Reject non-finite (`NaN`, `Inf`), negative, and excessively large `elapsedTime` values during proof-of-work and WebAssembly challenge validation so client-controlled inputs cannot poison the `anubis_time_taken` Prometheus histogram.
 
 ### Security
 

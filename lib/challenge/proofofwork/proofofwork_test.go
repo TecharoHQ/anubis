@@ -197,6 +197,16 @@ func TestBasic(t *testing.T) {
 			challengeStr: challengeStr,
 		},
 		{
+			name: "excessive-elapsedTime",
+			req: mkRequest(t, map[string]string{
+				"nonce":       "0",
+				"elapsedTime": "1e308",
+				"response":    response,
+			}),
+			err:          challenge.ErrInvalidFormat,
+			challengeStr: challengeStr,
+		},
+		{
 			name: "invalid-response",
 			req: mkRequest(t, map[string]string{
 				"nonce":       "0",
