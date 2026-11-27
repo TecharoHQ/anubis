@@ -226,6 +226,36 @@ func testValidateAdversarial(t *testing.T, algorithm string) {
 			wantErr: challenge.ErrInvalidFormat,
 		},
 		{
+			name: "elapsedTime-nan",
+			values: map[string]string{
+				"nonce":       validNonce,
+				"elapsedTime": "NaN",
+				"response":    validResponse,
+			},
+			input:   goodInput(),
+			wantErr: challenge.ErrInvalidFormat,
+		},
+		{
+			name: "elapsedTime-inf",
+			values: map[string]string{
+				"nonce":       validNonce,
+				"elapsedTime": "+Inf",
+				"response":    validResponse,
+			},
+			input:   goodInput(),
+			wantErr: challenge.ErrInvalidFormat,
+		},
+		{
+			name: "elapsedTime-negative",
+			values: map[string]string{
+				"nonce":       validNonce,
+				"elapsedTime": "-1",
+				"response":    validResponse,
+			},
+			input:   goodInput(),
+			wantErr: challenge.ErrInvalidFormat,
+		},
+		{
 			name: "response-not-hex",
 			values: map[string]string{
 				"nonce":       validNonce,

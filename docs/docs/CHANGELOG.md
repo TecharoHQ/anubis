@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a third WASM compilation tier: `mvp` that contains WebAssembly MVP only semantics. These modules sacrifice all possible performance gains for compatibility.
 
+### Fixed
+
+- Reject non-finite (`NaN`, `Inf`) and negative `elapsedTime` values during proof-of-work and WebAssembly challenge validation so client-controlled inputs cannot poison the `anubis_time_taken` Prometheus histogram.
+
 ### Security
 
 #### golang.org/x/net -> v0.62.0 for CVE-2026-97045, CVE-2026-78661

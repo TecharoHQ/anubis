@@ -71,7 +71,7 @@ func (i *Impl) Validate(r *http.Request, lg *slog.Logger, in *chall.ValidateInpu
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w elapsedTime", chall.ErrMissingField))
 	}
 
-	elapsedTime, err := strconv.ParseFloat(elapsedTimeStr, 64)
+	elapsedTime, err := chall.ParseElapsedTime(elapsedTimeStr)
 	if err != nil {
 		return chall.NewError("validate", "invalid response", fmt.Errorf("%w: elapsedTime: %w", chall.ErrInvalidFormat, err))
 	}
