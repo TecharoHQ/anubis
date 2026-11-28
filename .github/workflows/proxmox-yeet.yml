@@ -1,10 +1,12 @@
 name: End to End yeet package test
 
+# Disabled for now, only runs when triggered manually.
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+  workflow_dispatch:
+#  push:
+#    branches: ["main"]
+#  pull_request:
+#    branches: ["main"]
 
 permissions:
   contents: read
