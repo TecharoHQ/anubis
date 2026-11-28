@@ -26,6 +26,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/TecharoHQ/anubis"
 	"github.com/TecharoHQ/anubis/decaymap"
@@ -812,7 +813,42 @@ func (s *Server) PassChallenge(w http.ResponseWriter, r *http.Request) {
 var refererAttributionQueryParams = []string{
 	"ref", "source",
 	"utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
-	"gclid", "msclkid",
+	"gclid", "gbraid", "wbraid", "msclkid",
+}
+
+// searchEngineSources maps well-known search engine domains to the source name
+// analytics tools record for them natively. The domain and its subdomains match.
+// Google is handled separately in searchEngineSource.
+var searchEngineSources = map[string]string{
+	"bing.com":         "bing",
+	"duckduckgo.com":   "duckduckgo",
+	"ecosia.org":       "ecosia.org",
+	"search.yahoo.com": "yahoo",
+}
+
+// searchEngineSource returns the analytics source name of the well-known search
+// engine that hostname belongs to, or "" if there is none.
+func searchEngineSource(hostname string) string {
+	hostname = strings.ToLower(hostname)
+
+	// Google runs search on google.<tld> and www.google.<tld> for every country.
+	// Only ICANN suffixes count, since anyone can register google.<suffix> under
+	// a private suffix such as netlify.app.
+	if suffix, icann := publicsuffix.PublicSuffix(hostname); icann {
+		switch strings.TrimSuffix(hostname, "."+suffix) {
+		case "google", "www.google":
+			return "google"
+		}
+	}
+
+	for h := hostname; h != ""; {
+		if source, ok := searchEngineSources[h]; ok {
+			return source
+		}
+		_, h, _ = strings.Cut(h, ".")
+	}
+
+	return ""
 }
 
 // withRefererAttributionQuery appends utm_source/utm_medium query parameters
@@ -846,8 +882,13 @@ func (s *Server) withRefererAttributionQuery(redir, origReferer, host string) st
 		}
 	}
 
-	q.Set("utm_source", refURL.Host)
-	q.Set("utm_medium", "referral")
+	source, medium := refURL.Host, "referral"
+	if engine := searchEngineSource(refURL.Hostname()); engine != "" {
+		source, medium = engine, "organic"
+	}
+
+	q.Set("utm_source", source)
+	q.Set("utm_medium", medium)
 	u.RawQuery = q.Encode()
 	return u.String()
 }
