@@ -167,6 +167,46 @@ func TestBasic(t *testing.T) {
 			challengeStr: challengeStr,
 		},
 		{
+			name: "nan-elapsedTime",
+			req: mkRequest(t, map[string]string{
+				"nonce":       "0",
+				"elapsedTime": "NaN",
+				"response":    response,
+			}),
+			err:          challenge.ErrInvalidFormat,
+			challengeStr: challengeStr,
+		},
+		{
+			name: "inf-elapsedTime",
+			req: mkRequest(t, map[string]string{
+				"nonce":       "0",
+				"elapsedTime": "+Inf",
+				"response":    response,
+			}),
+			err:          challenge.ErrInvalidFormat,
+			challengeStr: challengeStr,
+		},
+		{
+			name: "negative-elapsedTime",
+			req: mkRequest(t, map[string]string{
+				"nonce":       "0",
+				"elapsedTime": "-1",
+				"response":    response,
+			}),
+			err:          challenge.ErrInvalidFormat,
+			challengeStr: challengeStr,
+		},
+		{
+			name: "excessive-elapsedTime",
+			req: mkRequest(t, map[string]string{
+				"nonce":       "0",
+				"elapsedTime": "1e308",
+				"response":    response,
+			}),
+			err:          challenge.ErrInvalidFormat,
+			challengeStr: challengeStr,
+		},
+		{
 			name: "invalid-response",
 			req: mkRequest(t, map[string]string{
 				"nonce":       "0",
