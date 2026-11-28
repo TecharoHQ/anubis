@@ -1,0 +1,86 @@
+# OpenBSD
+
+Anubis is available on OpenBSD via the `www/anubis` port. `relayd(8)` can be used to proxy
+requests destined for a backend HTTP server (e.g. `httpd(8)`), protecting all of
+its served domains. This involves moving TLS termination into `relayd(8)`.
+
+Assuming we are protecting `techaro.lol`, `httpd.conf(5)` could be configured like so:
+
+```text
+# /etc/httpd.conf
+
+# Note all servers are listening on lo0 instead of egress.
+
+server "techaro.lol" {
+    listen on lo0 port 8080
+
+    location "/.well-known/acme-challenge/*" {
+        root "/acme"
+        request strip 2
+    }
+
+    location * {
+        block return 301 "https://$HTTP_HOST$REQUEST_URI"
+    }
+}
+
+server "subdomain1.techaro.lol" {
+    listen on lo0 port 8443
+
+    root "/subdomain1"
+}
+
+server "subdomain2.techaro.lol" {
+    listen on lo0 port 8443
+
+    root "/subdomain2"
+}
+```
+
+And `relayd.conf(5)` like so:
+
+```text
+# /etc/relayd.conf
+
+http protocol "https" {
+    # Similar syntax to httpd.conf(5); relayd will look
+    # for the key  at /etc/ssl/private/techaro.lol.key
+    # and the cert at /etc/ssl/techaro.lol.crt.
+    tls keypair techaro.lol
+}
+
+# http is proxied straight to httpd, bypassing Anubis,
+# because it is only used for ACME.
+relay "http" {
+    listen on egress port 80
+
+    forward to 127.0.0.1 port 8080
+}
+
+relay "https" {
+    listen on egress port 443 tls
+    protocol "https"
+
+    match request header set "X-Real-IP" value "$REMOTE_ADDR"
+
+    # Make sure this aligns with the port Anubis is running
+    # on.
+    forward to 127.0.0.1 port 8923
+}
+```
+
+Finally, point anubis to your HTTP server:
+
+```text
+# /etc/anubis.env
+
+# .. default config ..
+export TARGET=http://localhost:8443
+```
+
+And start everything up:
+
+```
+rcctl enable httpd anubis relayd
+rcctl start httpd anubis relayd
+```
