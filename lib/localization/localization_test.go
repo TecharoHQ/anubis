@@ -27,6 +27,7 @@ func TestLocalizationService(t *testing.T) {
 		"nb":    "Laster inn...",
 		"nl":    "Laden...",
 		"nn":    "Lastar inn...",
+		"oc":    "Cargament...",
 		"pl":    "Ładowanie...",
 		"pt-BR": "Carregando...",
 		"pt-PT": "A carregar...",
