@@ -36,17 +36,23 @@ func parseBindNetFromAddr(address string) (string, string, error) {
 	}
 }
 
+// ResolveBind returns the network and address to use, inferring the network from the address when it is empty.
+func ResolveBind(network, address string) (string, string, error) {
+	if network == "" {
+		// keep compatibility
+		return parseBindNetFromAddr(address)
+	}
+
+	return network, address, nil
+}
+
 // SetupListener sets up a network listener based on the input from configuration
 // envvars. It returns a network listener and the URL to that listener or an error.
 func SetupListener(network, address, socketMode string) (net.Listener, string, error) {
 	formattedAddress := ""
 	var err error
 
-	if network == "" {
-		// keep compatibility
-		network, address, err = parseBindNetFromAddr(address)
-	}
-
+	network, address, err = ResolveBind(network, address)
 	if err != nil {
 		return nil, "", fmt.Errorf("can't parse bind and network: %w", err)
 	}
